@@ -1,0 +1,40 @@
+/*
+ * fim/m68k/proc2_startup.s - FIM_$PROC2_STARTUP, first entry of a new
+ * process into user mode (m68k/SAU2, SAU5)
+ *
+ * The SAU2 and SAU5 images have the same code here; the address and
+ * byte columns below are the SAU2 image's.
+ *
+ * Transcribed from the SAU2 image, 0x00E217B6..0x00E217D3 (map
+ * FIM_$PROC2_STARTUP to FIM_$SINGLE_STEP, 30 bytes), in its own
+ * section.
+ *
+ *   void FIM_$PROC2_STARTUP(startup_context_t *ctx)     ctx at 0x4(SP)
+ *
+ * Builds a format-0 exception frame at the top of the process's OS stack
+ * (FIM_$SETUP_RETURN) holding SR = 0 (user mode, IPL 0) and PC = ctx[1],
+ * sets USP = ctx[0], clears A6 and leaves through FIM_$EXIT's rte.
+ *
+ * Byte gate (tools/asm_compare.py): identical to the image modulo
+ * relocations (FIM_$SETUP_RETURN, in fim/m68k/fault_return.s, by
+ * R_68K_PC16 as the image's `bsr.w').
+ */
+
+        .section ".text.FIM_$PROC2_STARTUP","ax",@progbits
+        .even
+
+        .extern FIM_$SETUP_RETURN       /* fim/m68k/fault_return.s, image 0xE21878 */
+        .extern FIM_$EXIT               /* fim/m68k/exit.s, map 0xE228BC */
+
+        .global FIM_$PROC2_STARTUP
+FIM_$PROC2_STARTUP:
+        movea.l (0x4,%sp),%a5                   /* e217b6  A5 = ctx */
+        bsr.w   FIM_$SETUP_RETURN               /* e217ba  6100 00bc: A0 = OS stack top - 2 */
+        clr.w   (%a0)                           /* e217be  format 0, vector 0 */
+        move.l  (0x4,%a5),-(%a0)                /* e217c0  PC = ctx[1] */
+        clr.w   -(%a0)                          /* e217c4  SR = 0 */
+        movea.l (%a5),%a1                       /* e217c6 */
+        move.l  %a1,%usp                        /* e217c8  USP = ctx[0] */
+        movea.l %a0,%sp                         /* e217ca */
+        suba.l  %a6,%a6                         /* e217cc */
+        jmp     (FIM_$EXIT).l                   /* e217ce  4ef9 00e2 28bc */

@@ -1,0 +1,477 @@
+{ io/dctes.pas - the DCTES module, the static device controller table
+  entries and their list.
+
+  Image addresses:
+    sau2  0x00E2C8BC  DCTES data (WIRED_DATA, 0xD0 bytes)
+    sau5  0x00E2DB28  DCTES data (WIRED_DATA, 0x158 bytes)
+    sau9  0x3C430FB4  DCTES data (WIRED_DATA, 0x774 bytes)
+
+  A map module of data only, `module dctes, , wired_data;': the DCTES
+  segment in WIRED_DATA, its DCTEs and DEV_DCTES, which lists them from
+  the last to the first, ended by nil.  The units reach them by their
+  absolute addresses.
+
+  The SAU2's are RING_DCTE, FLP_DCTE and WIN_DCTE; the SAU5's CTAPE_DCTE
+  (`ct_qic02'), SMD_DCTE_1 and SMD_DCTE_0 (`smd_disk'), RING_DCTE and
+  WIN_DCTE.  Each is kind 1, 64 bytes, controller 0, with its init and
+  interrupt routines and register block.
+
+  The SAU9's (`named_dctes') are kind 2, 28 of them: two 802.5 rings,
+  two Ethernets, two rings, eight SCSI tapes and eight SCSI disks (one
+  per target), the SCSI bus, the timer and four serial lines.  Each has
+  its unit's name and, at 0x1C, the PROM's device record for it
+  (os/os.ins.pas's os_$prom_device_t, written as its bytes: its name is
+  the longword at byte 3), which IO_$INIT matches
+  against the PROM's configuration record; and, for the units with
+  one, its I/O descriptor (io/io_desc.pas) in disk_dinit.
+
+  RING_DCTE's vector is 16#1B on the SAU2 (SYSBUS_$INIT installs it), 0
+  on the SAU5.  The DCTEs are static_dcte_t, dcte_t with a univ_ptr init
+  routine: dpc refuses the routines' `addr' as dcte_t's routine pointer.
+
+  Check: tools/pascal_check.sh.
+}
+
+{ TODO(sau) the DCTES blocks of the SAUs not translated
+
+  Only the SAU2's and the SAU5's blocks are written.  The others differ
+  beyond the parts used here: the SAU4's and SAU6's RING_DCTE vectors
+  (16#90, 16#88), the SAU4's FLP_DCTE (0x50 bytes) and its WIN_DCTE's
+  register page, the SAU6's Ethernet and second Winchester and tape
+  DCTEs, the SAU7's kind-2 and kind-3 DCTEs (0x3A4 bytes).
+  io_$dev_dctes_last (io/io.ins.pas) is chosen for the written lists
+  only. }
+module dctes, , wired_data;
+
+%include 'base/base.ins.pas';
+%include 'ec/ec.ins.pas';
+%include 'ml/ml.ins.pas';
+%include 'time/time.ins.pas';
+%include 'pkt/pkt.ins.pas';
+%include 'misc/crash_system.ins.pas';
+%include 'os/os.ins.pas';
+%include 'io/io.ins.pas';
+%include 'node/node.ins.pas';
+%include 'proc1/proc1.ins.pas';
+%include 'netbuf/netbuf.ins.pas';
+%include 'network/network.ins.pas';
+%include 'netlog/netlog.ins.pas';
+%include 'route/route.ins.pas';
+%include 'sock/sock.ins.pas';
+%include 'net/net.ins.pas';
+%include 'rip/rip.ins.pas';
+%include 'net_io/net_io.ins.pas';
+%include 'mac_os/mac_os.ins.pas';
+%include 'fim/fim.ins.pas';
+%include 'mst/mst.ins.pas';
+%include 'mmu/mmu.ins.pas';
+%include 'parity/parity.ins.pas';
+%include 'cal/cal.ins.pas';
+%include 'dma/dma.ins.pas';
+%include 'wp/wp.ins.pas';
+%include 'disk/disk.ins.pas';
+%include 'flp/flp.ins.pas';
+%include 'win/win.ins.pas';
+%include 'sm/sm.ins.pas';                     { SM_$CINIT, SM_BLK_HDR }
+%include 'sm_c/sm_c.ins.pas';                 { SM_C_$CINIT }
+%include 'ring/ring.ins.pas';
+%include 'ring/ring_driver.ins.pas';
+%if named_dctes %then
+%include 'ethernet/ethernet.ins.pas';
+%include 'timer/timer.ins.pas';
+%endif
+
+type
+  { A static DCTE, 0x40 bytes: io/io.ins.pas's dcte_t with the init
+    routine's cell a univ_ptr (above). }
+  static_dcte_t = record
+    kind: pinteger;                       { 0x00 }
+    length: pinteger;                     { 0x02 }
+    ctype: pinteger;                      { 0x04 }
+    cnum: pinteger;                       { 0x06 }
+    nextp: dcte_ptr_t;                    { 0x08 }
+    csrsytr: univ_ptr;                    { 0x0C }
+    cstatus: status_$t;                   { 0x10 }
+    name: array[1..8] of char;            { 0x14 }
+    reserved_1c: array[1..12] of char;    { 0x1C }
+    vector_ptr: integer32;                { 0x28 }
+    io_va: univ_ptr;                      { 0x2C }
+    io_pa: integer32;                     { 0x30 }
+    disk_dinit: univ_ptr;                 { 0x34 }
+    disk_do_io: univ_ptr;                 { 0x38 }
+    disk_error_que: integer32;            { 0x3C }
+  end;
+
+%if named_dctes %then
+{ Three of the SAU9 DCTEs' initialization routines, declared here as
+  their headers do (ring_8025/ring_8025.ins.pas, win_scsi/win_scsi.ins.pas,
+  sio16550/sio16550.ins.pas): those headers need their own modules'
+  header sets, which conflict with this one.  Only their addresses are
+  used. }
+%if ring_8025_driver %then
+function ring_8025_$init(var dcte: dcte_t): integer32; extern;
+%endif
+%if win_scsi_disk %then
+function win_scsi_$cinit(var dcte: dcte_t): integer32; extern;
+%endif
+%if sio16550_lines %then
+function sio16550_$init(var dcte: dcte_t): integer32; extern;
+%endif
+
+var
+  { The units' I/O descriptors (map symbols of IO_DESC,
+    io/io_desc.pas).  Only their addresses are used. }
+%if ring_8025_driver %then
+  ring_8025_2_io_desc, ring_8025_1_io_desc: extern char;
+%endif
+%if ethernet_driver %then
+  ethernet2_io_desc, ethernet1_io_desc: extern char;
+%endif
+%if ring8_controller %then
+  ring2_io_desc, ring1_io_desc: extern char;
+%endif
+%if scsi_driver %then
+  scsi9_io_desc: extern char;
+%endif
+%if sio16550_lines %then
+  sio3_io_desc, sio2_io_desc, sio1_io_desc, sio0_io_desc: extern char;
+%endif
+
+{ The module's objects, every one a map symbol defined here (ref 7.2.1,
+  Method 1, and 7.2.2, Method 2, for DEV_DCTES, declared extern in
+  io/io.ins.pas), in the order of the block. }
+var
+%if ring_8025_driver %then
+  ring_8025_dcte_1: define static_dcte_t := { +0x000 }
+    [kind := 2, length := 64, ctype := io_ctype_ring_8025, cnum := 1,
+     nextp := nil, csrsytr := addr(ring_8025_$init),
+     name := 'itr1    ',
+     reserved_1c := [chr(16#33), chr(1), chr(0), 'T', ' ', ' ',
+                     ' ', chr(0), chr(0), chr(0), chr(0), chr(0)],
+     disk_dinit := addr(ring_8025_2_io_desc),
+     disk_error_que := 16#00170000];
+  ring_8025_dcte_0: define static_dcte_t := { +0x040 }
+    [kind := 2, length := 64, ctype := io_ctype_ring_8025, cnum := 0,
+     nextp := nil, csrsytr := addr(ring_8025_$init),
+     name := 'itr0    ',
+     reserved_1c := [chr(16#33), chr(0), chr(0), 'T', ' ', ' ',
+                     ' ', chr(0), chr(0), chr(0), chr(0), chr(0)],
+     disk_dinit := addr(ring_8025_1_io_desc),
+     disk_error_que := 16#00170000];
+%endif
+%if ethernet_driver %then
+  eth_dcte_1: define static_dcte_t :=     { +0x080 }
+    [kind := 2, length := 64, ctype := io_ctype_ethernet, cnum := 1,
+     nextp := nil, csrsytr := addr(ethernet_$init),
+     name := 'enet1   ',
+     reserved_1c := [chr(16#33), chr(1), chr(0), 'E', ' ', ' ',
+                     ' ', chr(0), chr(0), chr(0), chr(0), chr(0)],
+     disk_dinit := addr(ethernet2_io_desc),
+     disk_error_que := 16#00170000];
+  eth_dcte_0: define static_dcte_t :=     { +0x0C0 }
+    [kind := 2, length := 64, ctype := io_ctype_ethernet, cnum := 0,
+     nextp := nil, csrsytr := addr(ethernet_$init),
+     name := 'enet0   ',
+     reserved_1c := [chr(16#33), chr(0), chr(0), 'E', ' ', ' ',
+                     ' ', chr(0), chr(0), chr(0), chr(0), chr(0)],
+     disk_dinit := addr(ethernet1_io_desc),
+     disk_error_que := 16#00170000];
+%endif
+%if ring8_controller %then
+  ring2_dcte: define static_dcte_t :=     { +0x100 }
+    [kind := 2, length := 64, ctype := io_ctype_ring, cnum := 1,
+     nextp := nil, csrsytr := addr(ring_$init),
+     name := 'ring1   ',
+     reserved_1c := [chr(16#33), chr(1), chr(0), 'R', ' ', ' ',
+                     ' ', chr(0), chr(0), chr(0), chr(0), chr(0)],
+     disk_dinit := addr(ring2_io_desc),
+     disk_error_que := 16#00180000];
+  ring1_dcte: define static_dcte_t :=     { +0x140 }
+    [kind := 2, length := 64, ctype := io_ctype_ring, cnum := 0,
+     nextp := nil, csrsytr := addr(ring_$init),
+     name := 'ring0   ',
+     reserved_1c := [chr(16#33), chr(0), chr(0), 'R', ' ', ' ',
+                     ' ', chr(0), chr(0), chr(0), chr(0), chr(0)],
+     disk_dinit := addr(ring1_io_desc),
+     disk_error_que := 16#00180000];
+%endif
+%if ct_scsi %then
+  scsi_ctape_dcte_7: define static_dcte_t := { +0x180 }
+    [kind := 2, length := 64, ctype := io_ctype_ctape, cnum := 7,
+     nextp := nil, csrsytr := addr(ct_$cinit),
+     name := 'ctape7  ',
+     reserved_1c := [chr(16#21), chr(0), chr(0), 'S', 'T', ' ',
+                     ' ', chr(0), chr(0), chr(0), chr(0), chr(0)]];
+  scsi_ctape_dcte_6: define static_dcte_t := { +0x1C0 }
+    [kind := 2, length := 64, ctype := io_ctype_ctape, cnum := 6,
+     nextp := nil, csrsytr := addr(ct_$cinit),
+     name := 'ctape6  ',
+     reserved_1c := [chr(16#21), chr(0), chr(0), 'S', 'T', ' ',
+                     ' ', chr(0), chr(0), chr(0), chr(0), chr(0)]];
+  scsi_ctape_dcte_5: define static_dcte_t := { +0x200 }
+    [kind := 2, length := 64, ctype := io_ctype_ctape, cnum := 5,
+     nextp := nil, csrsytr := addr(ct_$cinit),
+     name := 'ctape5  ',
+     reserved_1c := [chr(16#21), chr(0), chr(0), 'S', 'T', ' ',
+                     ' ', chr(0), chr(0), chr(0), chr(0), chr(0)]];
+  scsi_ctape_dcte_4: define static_dcte_t := { +0x240 }
+    [kind := 2, length := 64, ctype := io_ctype_ctape, cnum := 4,
+     nextp := nil, csrsytr := addr(ct_$cinit),
+     name := 'ctape4  ',
+     reserved_1c := [chr(16#21), chr(0), chr(0), 'S', 'T', ' ',
+                     ' ', chr(0), chr(0), chr(0), chr(0), chr(0)]];
+  scsi_ctape_dcte_3: define static_dcte_t := { +0x280 }
+    [kind := 2, length := 64, ctype := io_ctype_ctape, cnum := 3,
+     nextp := nil, csrsytr := addr(ct_$cinit),
+     name := 'ctape3  ',
+     reserved_1c := [chr(16#21), chr(0), chr(0), 'S', 'T', ' ',
+                     ' ', chr(0), chr(0), chr(0), chr(0), chr(0)]];
+  scsi_ctape_dcte_2: define static_dcte_t := { +0x2C0 }
+    [kind := 2, length := 64, ctype := io_ctype_ctape, cnum := 2,
+     nextp := nil, csrsytr := addr(ct_$cinit),
+     name := 'ctape2  ',
+     reserved_1c := [chr(16#21), chr(0), chr(0), 'S', 'T', ' ',
+                     ' ', chr(0), chr(0), chr(0), chr(0), chr(0)]];
+  scsi_ctape_dcte_1: define static_dcte_t := { +0x300 }
+    [kind := 2, length := 64, ctype := io_ctype_ctape, cnum := 1,
+     nextp := nil, csrsytr := addr(ct_$cinit),
+     name := 'ctape1  ',
+     reserved_1c := [chr(16#21), chr(0), chr(0), 'S', 'T', ' ',
+                     ' ', chr(0), chr(0), chr(0), chr(0), chr(0)]];
+  scsi_ctape_dcte_0: define static_dcte_t := { +0x340 }
+    [kind := 2, length := 64, ctype := io_ctype_ctape, cnum := 0,
+     nextp := nil, csrsytr := addr(ct_$cinit),
+     name := 'ctape0  ',
+     reserved_1c := [chr(16#21), chr(0), chr(0), 'S', 'T', ' ',
+                     ' ', chr(0), chr(0), chr(0), chr(0), chr(0)]];
+%endif
+%if win_scsi_disk %then
+  win_scsi_dcte_0: define static_dcte_t := { +0x380 }
+    [kind := 2, length := 64, ctype := io_ctype_win, cnum := 0,
+     nextp := nil, csrsytr := addr(win_scsi_$cinit),
+     name := 'win0    ',
+     reserved_1c := [chr(16#13), chr(0), chr(0), 'S', 'D', ' ',
+                     ' ', chr(0), chr(0), chr(0), chr(0), chr(0)],
+     disk_error_que := 16#00170000];
+  win_scsi_dcte_1: define static_dcte_t := { +0x3C0 }
+    [kind := 2, length := 64, ctype := io_ctype_win, cnum := 1,
+     nextp := nil, csrsytr := addr(win_scsi_$cinit),
+     name := 'win1    ',
+     reserved_1c := [chr(16#13), chr(1), chr(0), 'S', 'D', ' ',
+                     ' ', chr(0), chr(0), chr(0), chr(0), chr(0)],
+     disk_error_que := 16#00170000];
+  win_scsi_dcte_2: define static_dcte_t := { +0x400 }
+    [kind := 2, length := 64, ctype := io_ctype_win, cnum := 2,
+     nextp := nil, csrsytr := addr(win_scsi_$cinit),
+     name := 'win2    ',
+     reserved_1c := [chr(16#13), chr(2), chr(0), 'S', 'D', ' ',
+                     ' ', chr(0), chr(0), chr(0), chr(0), chr(0)],
+     disk_error_que := 16#00170000];
+  win_scsi_dcte_3: define static_dcte_t := { +0x440 }
+    [kind := 2, length := 64, ctype := io_ctype_win, cnum := 3,
+     nextp := nil, csrsytr := addr(win_scsi_$cinit),
+     name := 'win3    ',
+     reserved_1c := [chr(16#13), chr(3), chr(0), 'S', 'D', ' ',
+                     ' ', chr(0), chr(0), chr(0), chr(0), chr(0)],
+     disk_error_que := 16#00170000];
+  win_scsi_dcte_4: define static_dcte_t := { +0x480 }
+    [kind := 2, length := 64, ctype := io_ctype_win, cnum := 4,
+     nextp := nil, csrsytr := addr(win_scsi_$cinit),
+     name := 'win4    ',
+     reserved_1c := [chr(16#13), chr(4), chr(0), 'S', 'D', ' ',
+                     ' ', chr(0), chr(0), chr(0), chr(0), chr(0)],
+     disk_error_que := 16#00170000];
+  win_scsi_dcte_5: define static_dcte_t := { +0x4C0 }
+    [kind := 2, length := 64, ctype := io_ctype_win, cnum := 5,
+     nextp := nil, csrsytr := addr(win_scsi_$cinit),
+     name := 'win5    ',
+     reserved_1c := [chr(16#13), chr(5), chr(0), 'S', 'D', ' ',
+                     ' ', chr(0), chr(0), chr(0), chr(0), chr(0)],
+     disk_error_que := 16#00170000];
+  win_scsi_dcte_6: define static_dcte_t := { +0x500 }
+    [kind := 2, length := 64, ctype := io_ctype_win, cnum := 6,
+     nextp := nil, csrsytr := addr(win_scsi_$cinit),
+     name := 'win6    ',
+     reserved_1c := [chr(16#13), chr(6), chr(0), 'S', 'D', ' ',
+                     ' ', chr(0), chr(0), chr(0), chr(0), chr(0)],
+     disk_error_que := 16#00170000];
+  win_scsi_dcte_7: define static_dcte_t := { +0x540 }
+    [kind := 2, length := 64, ctype := io_ctype_win, cnum := 7,
+     nextp := nil, csrsytr := addr(win_scsi_$cinit),
+     name := 'win7    ',
+     reserved_1c := [chr(16#13), chr(7), chr(0), 'S', 'D', ' ',
+                     ' ', chr(0), chr(0), chr(0), chr(0), chr(0)],
+     disk_error_que := 16#00170000];
+%endif
+%if scsi_driver %then
+  scsi9_dcte: define static_dcte_t :=     { +0x580 }
+    [kind := 2, length := 64, ctype := io_ctype_none, cnum := 0,
+     nextp := nil, csrsytr := addr(scsi_$init),
+     name := 'scsi    ',
+     disk_dinit := addr(scsi9_io_desc)];
+%endif
+%if timer_dcte %then
+  timer_dcte: define static_dcte_t :=     { +0x5C0 }
+    [kind := 2, length := 64, ctype := io_ctype_none, cnum := 0,
+     nextp := nil, csrsytr := addr(timer_$init),
+     name := 'timer   '];
+%endif
+%if sio16550_lines %then
+  sio3_dcte: define static_dcte_t :=      { +0x600 }
+    [kind := 2, length := 64, ctype := io_ctype_none, cnum := 3,
+     nextp := nil, csrsytr := addr(sio16550_$init),
+     name := 'sio3    ',
+     reserved_1c := [chr(16#53), chr(3), chr(0), 'S', 'I', 'O',
+                     ' ', chr(0), chr(0), chr(0), chr(0), chr(0)],
+     disk_dinit := addr(sio3_io_desc)];
+  sio2_dcte: define static_dcte_t :=      { +0x640 }
+    [kind := 2, length := 64, ctype := io_ctype_none, cnum := 2,
+     nextp := nil, csrsytr := addr(sio16550_$init),
+     name := 'sio2    ',
+     reserved_1c := [chr(16#53), chr(2), chr(0), 'S', 'I', 'O',
+                     ' ', chr(0), chr(0), chr(0), chr(0), chr(0)],
+     disk_dinit := addr(sio2_io_desc)];
+  sio1_dcte: define static_dcte_t :=      { +0x680 }
+    [kind := 2, length := 64, ctype := io_ctype_none, cnum := 1,
+     nextp := nil, csrsytr := addr(sio16550_$init),
+     name := 'sio1    ',
+     reserved_1c := [chr(16#53), chr(1), chr(0), 'S', 'I', 'O',
+                     ' ', chr(0), chr(0), chr(0), chr(0), chr(0)],
+     disk_dinit := addr(sio1_io_desc)];
+  sio0_dcte: define static_dcte_t :=      { +0x6C0 }
+    [kind := 2, length := 64, ctype := io_ctype_none, cnum := 0,
+     nextp := nil, csrsytr := addr(sio16550_$init),
+     name := 'sio0    ',
+     reserved_1c := [chr(16#53), chr(0), chr(0), 'K', 'B', 'D',
+                     ' ', chr(0), chr(0), chr(0), chr(0), chr(0)],
+     disk_dinit := addr(sio0_io_desc)];
+%endif
+
+{ The list, the block's DCTEs from the last to the first. }
+define
+  dev_dctes := [
+%if sio16550_lines %then
+                addr(sio0_dcte),
+                addr(sio1_dcte),
+                addr(sio2_dcte),
+                addr(sio3_dcte),
+%endif
+%if timer_dcte %then
+                addr(timer_dcte),
+%endif
+%if scsi_driver %then
+                addr(scsi9_dcte),
+%endif
+%if win_scsi_disk %then
+                addr(win_scsi_dcte_7),
+                addr(win_scsi_dcte_6),
+                addr(win_scsi_dcte_5),
+                addr(win_scsi_dcte_4),
+                addr(win_scsi_dcte_3),
+                addr(win_scsi_dcte_2),
+                addr(win_scsi_dcte_1),
+                addr(win_scsi_dcte_0),
+%endif
+%if ct_scsi %then
+                addr(scsi_ctape_dcte_0),
+                addr(scsi_ctape_dcte_1),
+                addr(scsi_ctape_dcte_2),
+                addr(scsi_ctape_dcte_3),
+                addr(scsi_ctape_dcte_4),
+                addr(scsi_ctape_dcte_5),
+                addr(scsi_ctape_dcte_6),
+                addr(scsi_ctape_dcte_7),
+%endif
+%if ring8_controller %then
+                addr(ring1_dcte),
+                addr(ring2_dcte),
+%endif
+%if ethernet_driver %then
+                addr(eth_dcte_0),
+                addr(eth_dcte_1),
+%endif
+%if ring_8025_driver %then
+                addr(ring_8025_dcte_0),
+                addr(ring_8025_dcte_1),
+%endif
+                nil];
+                                          { +0x700 }
+%else
+var
+  { The I/O pages the DCTEs name (map symbols of IODEFS,
+    arch/m68k/sau2/iodefs.s on the SAU2): RING2, the ring's; DISK, the
+    floppy's, and WIN, the Winchester's (one page, 0xFFA800, with
+    CALENDAR); TAPE, the cartridge tape's (the same page on the SAU5).
+    Only their addresses are used. }
+  ring2: extern char;
+%if floppy_disk %then
+  disk: extern char;
+%endif
+  win: extern char;
+%if ct_qic02 %then
+  tape: extern char;
+%endif
+
+{ The module's objects, every one a map symbol defined here (ref 7.2.1,
+  Method 1, and 7.2.2, Method 2, for DEV_DCTES, declared extern in
+  io/io.ins.pas), in the order of the block. }
+var
+%if ct_qic02 %then
+  ctape_dcte: define static_dcte_t :=     { +0x00 on the SAU5 }
+    [kind := 1, length := 64, ctype := io_ctype_ctape, cnum := 0,
+     nextp := nil, csrsytr := addr(ct_$cinit),
+     disk_dinit := addr(tape), disk_do_io := addr(ct_$int),
+     disk_error_que := 16#00170000];
+%endif
+%if smd_disk %then
+  smd_dcte_1: define static_dcte_t :=     { +0x40 on the SAU5 }
+    [kind := 1, length := 64, ctype := io_ctype_smd, cnum := 0,
+     nextp := nil, csrsytr := addr(sm_c_$cinit),
+     io_va := addr(sm_blk_hdr), disk_error_que := 16#00150000];
+  smd_dcte_0: define static_dcte_t :=     { +0x80 on the SAU5 }
+    [kind := 1, length := 64, ctype := io_ctype_smd, cnum := 0,
+     nextp := nil, csrsytr := addr(sm_$cinit),
+     io_va := addr(sm_blk_hdr), disk_error_que := 16#00150000];
+%endif
+  ring_dcte: define static_dcte_t :=      { +0x00; +0xC0 on the SAU5 }
+    [kind := 1, length := 64, ctype := io_ctype_ring, cnum := 0,
+     nextp := nil, csrsytr := addr(ring_$init),
+%if ring8_controller %then
+     disk_dinit := addr(ring2), disk_do_io := nil,
+%else
+     disk_dinit := addr(ring2), disk_do_io := addr(ring_$int),
+%endif
+%if sysbus_routines %then
+     disk_error_que := 16#0018001B];
+%else
+     disk_error_que := 16#00180000];
+%endif
+%if floppy_disk %then
+  flp_dcte: define static_dcte_t :=       { +0x40 }
+    [kind := 1, length := 64, ctype := io_ctype_flp, cnum := 0,
+     nextp := nil, csrsytr := addr(flp_$cinit),
+     disk_dinit := addr(disk), disk_do_io := addr(flp_$int),
+     disk_error_que := 16#00170000];
+%endif
+  win_dcte: define static_dcte_t :=       { +0x80; +0x100 on the SAU5 }
+    [kind := 1, length := 64, ctype := io_ctype_win, cnum := 0,
+     nextp := nil, csrsytr := addr(win_$cinit),
+     disk_dinit := addr(win), disk_do_io := addr(win_$int),
+     disk_error_que := 16#00170000];
+
+{ The list, the block's DCTEs from the last to the first. }
+define
+  dev_dctes := [addr(win_dcte),
+%if floppy_disk %then
+                addr(flp_dcte),
+%endif
+                addr(ring_dcte),
+%if smd_disk %then
+                addr(smd_dcte_0), addr(smd_dcte_1),
+%endif
+%if ct_qic02 %then
+                addr(ctape_dcte),
+%endif
+                nil];
+                                          { +0xC0; +0x140 on the SAU5 }
+%endif

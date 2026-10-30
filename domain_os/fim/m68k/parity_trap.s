@@ -1,0 +1,77 @@
+/*
+ * fim/m68k/parity_trap.s - FIM_$PARITY_TRAP, the memory parity interrupt
+ * (m68k/SAU2, SAU5)
+ *
+ * The SAU2 and SAU5 images have the same code here; the address and
+ * byte columns below are the SAU2 image's.
+ *
+ * Transcribed from the SAU2 image, 0x00E21F84..0x00E21FE5 (map
+ * FIM_$PARITY_TRAP to PARITY_$INFO, 98 bytes), in its own section.
+ *
+ * PARITY_$CHK classifies the error and fills PARITY_$INFO (the parity
+ * record at the start of FIM_WIRED's data run, fim/m68k/wired_data.s).  Whatever it
+ * returns, the record's in-progress flag word (+0x02) is cleared.  If the
+ * error is not the process's (D0.b >= 0) the interrupt is dismissed through
+ * PROC1_$INT_EXIT.  Otherwise the interrupt frame is turned into a 68010
+ * format-8 bus-error frame (0x3A bytes more: SR and PC copied down, format
+ * byte 0x80, fault address = err_va, SSW = err_status, data = err_data),
+ * the fault descriptor (status "memory parity error" 0x0012001E, signal
+ * 0x13, class 0x3000) pushed, the IPL dropped to 0, and FIM_$COM entered
+ * with (&frame, &descriptor), as FIM_$BUS_ERR does.
+ *
+ * Byte gate (tools/asm_compare.py): identical to the image modulo
+ * relocations; the PC-relative reads of the parity record keep their form
+ * (R_68K_PC16 on PARITY_$INFO + field; the block follows this routine in
+ * the link, as in the image).  The absolute jmp to FIM_$COM
+ * (fim/m68k/com.s) is relocated.
+ *
+ * Not on the SAUs whose vector 31 is FIM_$NMI (`fim_nmi',
+ * base/config.ins.pas): their maps have no FIM_$PARITY_TRAP.
+ */
+
+        .include "base/config.inc"
+        .if     !fim_nmi
+
+        .section ".text.FIM_$PARITY_TRAP","ax",@progbits
+        .even
+
+        .extern PARITY_$CHK             /* parity/, map 0xE0AE68 */
+        .extern PROC1_$INT_EXIT         /* proc1/m68k/int_handler.s, map 0xE208FE */
+
+        /* PARITY_$INFO (fim/m68k/wired_data.s, map 0xE21FE6; the record's
+         * layout is parity/parity.ins.pas's) */
+        .extern PARITY_$INFO
+        .set    PARITY_CHK_FLAG,   PARITY_$INFO + 0x02  /* 0xE21FE8 chk_in_progress, reserved_03 */
+        .set    PARITY_ERR_VA,     PARITY_$INFO + 0x0C  /* 0xE21FF2 */
+        .set    PARITY_ERR_STATUS, PARITY_$INFO + 0x10  /* 0xE21FF6 */
+        .set    PARITY_ERR_DATA,   PARITY_$INFO + 0x12  /* 0xE21FF8 */
+
+        .extern FIM_COM                 /* fim/m68k/com.s: FIM_$COM, map 0xE213A4 */
+
+        .global FIM_$PARITY_TRAP
+FIM_$PARITY_TRAP:
+        movem.l %d0-%d1/%a0-%a1,-(%sp)          /* e21f84 */
+        jsr     (PARITY_$CHK).l                 /* e21f88  4eb9 00e0 ae68 */
+        lea     (PARITY_CHK_FLAG:w,%pc),%a0     /* e21f8e  41fa 0058 */
+        clr.w   (%a0)                           /* e21f92 */
+        tst.b   %d0                             /* e21f94 */
+        bmi.b   .Lpt_fault                      /* e21f96 */
+        jmp     (PROC1_$INT_EXIT).l             /* e21f98  4ef9 00e2 08fe */
+.Lpt_fault:
+        movem.l (%sp)+,%d0-%d1/%a0-%a1          /* e21f9e */
+        suba.w  #0x3a,%sp                       /* e21fa2  9efc 003a */
+        move.w  (0x3a,%sp),(%sp)                /* e21fa6  SR */
+        move.l  (0x3c,%sp),(0x2,%sp)            /* e21faa  PC */
+        move.b  #0x80,(0x6,%sp)                 /* e21fb0  format 8 */
+        move.l  (PARITY_ERR_VA:w,%pc),(0xa,%sp)     /* e21fb6  2f7a 003a 000a */
+        move.w  (PARITY_ERR_STATUS:w,%pc),(0x8,%sp) /* e21fbc  3f7a 0038 0008 */
+        move.w  (PARITY_ERR_DATA:w,%pc),(0x18,%sp)  /* e21fc2  3f7a 0034 0018 */
+        move.w  #0x3000,-(%sp)                  /* e21fc8  fault class */
+        move.w  #0x13,-(%sp)                    /* e21fcc  signal number */
+        move.l  #0x0012001E,-(%sp)              /* e21fd0  "memory parity error" */
+        andi.w  #0xf8ff,%sr                     /* e21fd6  IPL 0 */
+        pea     (%sp)                           /* e21fda  &descriptor */
+        pea     (0xc,%sp)                       /* e21fdc  &frame */
+        jmp     (FIM_COM).l                     /* e21fe0  4ef9 00e2 13a4 */
+
+        .endif

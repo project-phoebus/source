@@ -1,0 +1,52 @@
+/*
+ * fim/m68k/uii.s - FIM_$UII, the unimplemented-instruction (line A) handler
+ * (m68k/SAU2, SAU5)
+ *
+ * The SAU2 and SAU5 images have the same code here; the address and
+ * byte columns below are the SAU2 image's.
+ *
+ * Transcribed from the SAU2 image, 0x00E2146C..0x00E2149B (map FIM_$UII to
+ * FIM_$COPROC, 48 bytes), in its own section so tools/gen_layout_ld.py links
+ * it at its map position.
+ *
+ * A supervisor-mode line-A trap on an 0xA0xx / 0xA1xx opcode is a stopwatch
+ * probe planted by STOP_$HOOK and goes to STOP_$WATCH_UII; everything else
+ * is a fault.  Like every FIM_UNWIRED fault stub, the fault arm calls the
+ * common fault entry at 0x00E213A0 (`pea (4,SP)' falling into FIM_$COM) and
+ * never returns: the entry reads the three words that follow the call
+ * through the pushed return address - the fault status, the signal number
+ * and the fault class flags.
+ *
+ * Byte gate (tools/asm_compare.py): identical to the image modulo
+ * relocations (the call to the common fault entry, fim/m68k/com.s, is the
+ * image's `bsr.w', R_68K_PC16).
+ */
+
+        .section ".text.FIM_$UII","ax",@progbits
+        .even
+
+        .extern STOP_$WATCH_UII         /* stop/m68k/watch.s, map 0xE81A56 */
+
+        .extern FIM_COMMON_FAULT        /* fim/m68k/com.s, image 0xE213A0 */
+
+        .global FIM_$UII
+FIM_$UII:
+        btst.b  #5,(%sp)                        /* e2146c  SR.S: trapped in supervisor mode? */
+        beq.b   .Luii_fault                     /* e21470  user mode: a fault */
+        move.l  %a0,-(%sp)                      /* e21472 */
+        movea.l (0x6,%sp),%a0                   /* e21474  A0 = the trapping PC */
+        cmpi.b  #0xa0,(%a0)                     /* e21478  0xA0xx: stopwatch probe? */
+        beq.b   .Luii_stopwatch                 /* e2147c */
+        cmpi.b  #0xa1,(%a0)                     /* e2147e  0xA1xx */
+        bne.b   .Luii_restore                   /* e21482 */
+.Luii_stopwatch:
+        movea.l (%sp)+,%a0                      /* e21484 */
+        jmp     (STOP_$WATCH_UII).l             /* e21486  4ef9 00e8 1a56 */
+.Luii_restore:
+        movea.l (%sp)+,%a0                      /* e2148c */
+.Luii_fault:
+        bsr.w   FIM_COMMON_FAULT                /* e2148e  6100 ff10 */
+        .long   0x0012000A                      /* e21492  status "unimplemented instruction" */
+        .short  0x0007                          /* e21496  signal number 7 */
+        .short  0xA000                          /* e21498  fault class flags (FIM_FAULT_CLASS_OTHER) */
+        .short  0x0000                          /* e2149a  pad; FIM_$COPROC is at 0xE2149C */

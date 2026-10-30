@@ -1,0 +1,31 @@
+{ smd_$validate_unit - whether a display unit number names a display.
+
+  Image addresses:
+    sau2  0x00E6D700  smd_$validate_unit (module-local)
+    sau5  0x00E6F97C  smd_$validate_unit (module-local)
+    sau9  0x3C47434C  smd_$validate_unit (module-local)
+
+  - Only unit 1 exists (units 1 and 2 with `two_display_units',
+    base/config.ins.pas); the result is true when its display type is
+    not smd_$none.  With `display_devices' any unit from 1 to the
+    count of devices added is valid, whatever its type.
+
+  Status stored: none.
+}
+
+function smd_$validate_unit(unit: integer): boolean; internal;
+begin
+%if display_devices %then
+  smd_$validate_unit := (unit >= 1) and (unit <= smd_$wired_data.unit_count);
+%else
+%if two_display_units %then
+  if (unit = 1) or else (unit = 2) then
+%else
+  if unit = 1 then
+%endif
+    smd_$validate_unit :=
+      smd_$display_com[unit].display_type <> smd_$none
+  else
+    smd_$validate_unit := false;
+%endif
+end;

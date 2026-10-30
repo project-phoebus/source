@@ -1,0 +1,43 @@
+/*
+ * fim/m68k/cleanup.s - FIM_$CLEANUP, establish a cleanup handler
+ * (m68k/SAU2, SAU5)
+ *
+ * The SAU2 and SAU5 images have the same code here; the address and
+ * byte columns below are the SAU2 image's.
+ *
+ * Transcribed from the SAU2 image, 0x00E21634..0x00E2165B (map FIM_$CLEANUP
+ * to FIM_$RLS_CLEANUP, 40 bytes), in its own section.
+ *
+ *   status_$t FIM_$CLEANUP(fim_cleanup_entry_t *rec)    rec at 0x4(SP)
+ *
+ * setjmp-like: stores (link = the current head of this process's chain,
+ * return address, A5, A6, SP) into *rec, makes rec the head of
+ * FIM_$CLEANUP_STACK[PROC1_$CURRENT] and returns status_$cleanup_handler_set.
+ * FIM_$SIGNAL later "returns" here a second time with the fault status.
+ *
+ * Byte gate (tools/asm_compare.py): identical to the image modulo
+ * relocations.  FIM_$CLEANUP_STACK is defined with FIM_$SIGNAL
+ * (fim/m68k/signal.s), where the image has it; the image's `lea (0x70,PC)'
+ * reaches it PC-relatively and so does ours (R_68K_PC16).
+ */
+
+        .section ".text.FIM_$CLEANUP","ax",@progbits
+        .even
+
+        .extern PROC1_$CURRENT          /* a word, proc1/proc1.ins.pas, map 0xE20608 */
+        .extern FIM_$CLEANUP_STACK      /* fim/m68k/signal.s, image 0xE216B2 */
+
+        .global FIM_$CLEANUP
+FIM_$CLEANUP:
+        move.w  (PROC1_$CURRENT).l,%d0          /* e21634  3039 00e2 0608 */
+        movea.l (0x4,%sp),%a1                   /* e2163a */
+        lsl.w   #2,%d0                          /* e2163e */
+        lea     (FIM_$CLEANUP_STACK:w,%pc),%a0  /* e21640  41fa 0070 */
+        adda.w  %d0,%a0                         /* e21644  A0 = &stack[current] */
+        move.l  (%sp),%d1                       /* e21646  D1 = return address */
+        move.l  (%a0),%d0                       /* e21648  D0 = previous head */
+        movea.l (0x4,%sp),%a1                   /* e2164a */
+        movem.l %d0-%d1/%a5-%a7,(%a1)           /* e2164e  link, ret, A5, A6, SP */
+        move.l  %a1,(%a0)                       /* e21652  new head */
+        move.l  #0x00120035,%d0                 /* e21654  status_$cleanup_handler_set */
+        rts                                     /* e2165a */

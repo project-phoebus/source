@@ -1,0 +1,12 @@
+{ FIM_$GET_FIM_ADDR - the current address space's user FIM handler.
+
+  Image addresses:
+    sau2  0x00E0AA04  FIM_$GET_FIM_ADDR
+
+  Status stored: none.
+}
+
+function fim_$get_fim_addr: integer32;
+begin
+  fim_$get_fim_addr := fim_$user_fim_addr[proc1_$as_id];
+end;

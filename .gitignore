@@ -1,0 +1,6 @@
+.vscode/
+.claude/reemit/
+.claude/
+__pycache__/
+domain_os/dist/
+tmp/

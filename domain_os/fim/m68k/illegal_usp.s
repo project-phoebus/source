@@ -1,0 +1,29 @@
+/*
+ * fim/m68k/illegal_usp.s - FIM_$ILLEGAL_USP, the invalid-user-stack fault
+ * stub (m68k/SAU2, SAU5)
+ *
+ * The SAU2 and SAU5 images have the same code here; the address and
+ * byte columns below are the SAU2 image's.
+ *
+ * Transcribed from the SAU2 image, 0x00E2158A..0x00E21595 (map
+ * FIM_$ILLEGAL_USP to STOP_$WATCH_TRACE_FLAG, 12 bytes), in its own
+ * section.  A call to the common fault entry at 0x00E213A0 followed by
+ * the descriptor words it reads through the return address (see
+ * fim/m68k/uii.s).
+ *
+ * Byte gate (tools/asm_compare.py): identical to the image modulo
+ * relocations (the call to the common fault entry, fim/m68k/com.s, is the
+ * image's `bsr.w', R_68K_PC16).
+ */
+
+        .section ".text.FIM_$ILLEGAL_USP","ax",@progbits
+        .even
+
+        .extern FIM_COMMON_FAULT        /* fim/m68k/com.s, image 0xE213A0 */
+
+        .global FIM_$ILLEGAL_USP
+FIM_$ILLEGAL_USP:
+        bsr.w   FIM_COMMON_FAULT                /* e2158a  6100 fe14 */
+        .long   0x0012000D                      /* e2158e  status "invalid user stack pointer" */
+        .short  0x0013                          /* e21592  signal number 0x13 */
+        .short  0xA000                          /* e21594  fault class flags */

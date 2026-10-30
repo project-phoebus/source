@@ -1,0 +1,34 @@
+/*
+ * fim/m68k/generate.s - FIM_$GENERATE, raise a fault from software
+ * (m68k/SAU2, SAU5)
+ *
+ * The SAU2 and SAU5 images have the same code here; the address and
+ * byte columns below are the SAU2 image's.
+ *
+ * Transcribed from the SAU2 image, 0x00E214A8..0x00E214AF (map FIM_$GENERATE
+ * to FIM_$FP_BSUN, 8 bytes: 6 of code and the segment's longword pad),
+ * in its own section.
+ *
+ *   void FIM_$GENERATE(status_$t status)    status at 0x4(SP)
+ *
+ * Drops its return address, pops the status into D0 and branches into
+ * FIM_$SOFT_FAULT at 0x00E21458, which pushes the (status, signal 0x13,
+ * class 0xA000) descriptor and enters FIM_$COM as a fault taken at the
+ * caller's return point.
+ *
+ * Byte gate (tools/asm_compare.py): identical to the image modulo
+ * relocations (the `bra.s' into FIM_$SOFT_FAULT, fim/m68k/soft_fault.s, is
+ * R_68K_PC8 against FIM_SOFT_FAULT_TAIL).
+ */
+
+        .section ".text.FIM_$GENERATE","ax",@progbits
+        .even
+
+        .extern FIM_SOFT_FAULT_TAIL     /* fim/m68k/soft_fault.s, image 0xE21458 = FIM_$SOFT_FAULT+0xC */
+
+        .global FIM_$GENERATE
+FIM_$GENERATE:
+        addq.w  #4,%sp                          /* e214a8  drop the return address */
+        move.l  (%sp)+,%d0                      /* e214aa  D0 = status */
+        bra.s   FIM_SOFT_FAULT_TAIL             /* e214ac  60aa */
+        .short  0x0000                          /* e214ae  pad; FIM_$FP_BSUN is at 0xE214B0 */
