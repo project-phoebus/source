@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E75748  RING_$INT
+    sau3  0x00E76F48  RING_$INT
     sau5  0x00E7CAC8  RING_$INT
 
   - A transmit completion advances the unit's transmit eventcount; a

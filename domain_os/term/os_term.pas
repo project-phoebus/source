@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E2C98C  OS_TERM data (WIRED_DATA, 0x64 bytes)
     sau2  0x00E82428  OS_TERM data (.DATA, 4 bytes)
+    sau3  0x00E2B6D8  OS_TERM data (WIRED_DATA, 0x64 bytes)
+    sau3  0x00E83B3C  OS_TERM data (.DATA, 4 bytes)
 
   One compilation unit, `module os_term;': the map's OS_TERM code
   segments in WIRED_PROC (TERM_$GET_REAL_LINE, KBD_$GET_DESC,

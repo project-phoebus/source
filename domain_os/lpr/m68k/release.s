@@ -14,6 +14,13 @@
 | status) (lpr/lpr.ins.pas) and which returns without touching either
 | argument.  LPR_END_ADDR (`I E70A44', LPR_$PROC_END) follows.
 |
+| With the driver (`lpr_driver', base/config.ins.pas: the SAU3, SAU4)
+| LPR_$RELEASE is compiled (lpr/release.pas) and LPR_$PROC_START a mark
+| at the first byte of LPR_'s .TEXT code: this file assembles to
+| nothing.
+|
+        .include "base/config.inc"
+        .if     !lpr_driver
         .section ".text.LPR_$RELEASE","ax",@progbits
         .balign 2
 
@@ -24,3 +31,4 @@ LPR_$PROC_START:                        | 0xE70A40
 LPR_$RELEASE:
         rts                             | e70a40  4e75
         .word   0                       | e70a42  0000  pad to the segment size
+        .endif

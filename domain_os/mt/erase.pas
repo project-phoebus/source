@@ -1,6 +1,7 @@
 { MT_$ERASE - erase tape on a magnetic tape unit.
 
   Image addresses:
+    sau3  0x00E70940  MT_$ERASE
     sau5  0x00E764AA  MT_$ERASE
 
   - option mt_erase_count takes a count above 0 (mt_op_erase),

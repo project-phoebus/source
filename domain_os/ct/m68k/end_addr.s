@@ -1,7 +1,7 @@
 |
 | ct/m68k/end_addr.s - CT_END_ADDR, the end of the CT code range
 |
-| The SAU2 and SAU5 images have the same code here; the address and
+| The SAU2, SAU3 and SAU5 images have the same code here; the address and
 | byte columns below are the SAU2 image's.
 |
 | Byte gate (tools/asm_compare.py, `make check-asm'): the image's four

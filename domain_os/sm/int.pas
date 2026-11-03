@@ -1,6 +1,7 @@
 { SM_$INT - the storage module controller's interrupt routine.
 
   Image addresses:
+    sau3  0x00E6DED2  SM_$INT
     sau5  0x00E6F22A  SM_$INT
 
   - After a DMA parity error the drive's parity flag is set from

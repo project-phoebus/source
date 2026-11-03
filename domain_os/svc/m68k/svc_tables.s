@@ -1,6 +1,6 @@
 |
 | svc/m68k/svc_tables.s - the SVC dispatch tables at the tail of SVC_CATCHER
-| (SAU2, SAU5, SAU9)
+| (SAU2, SAU3, SAU5, SAU9)
 |
 | The SAU2 and SAU5 images have the same tables except 67 entries that
 | name a driver's routine on the SAU5 and SVC_$UNIMPLEMENTED on the SAU2,
@@ -19,8 +19,16 @@
 | the SAU2's segment laid out elsewhere, the tables at 0xE825A2 and
 | 0x3C48C5A2.  The SAU5's SVC_CATCHER is the SAU2's segment
 | 0x72C4 higher (`D E82308 SVC_CATCHER size = E40'): its tables start at
-| 0xE825A2, every distance below the same.  The addresses below are the
-| SAU2 image's.
+| 0xE825A2, every distance below the same.  The SAU3's (`D E7C708
+| SVC_CATCHER size = E40') is the same segment, the tables at 0xE7C9A2;
+| it has no display (`display_driver'): the 70 calls of the display
+| driver, the touch pad and DTTY_$RELOAD_FONT are SVC_$UNIMPLEMENTED
+| (svc_display, svc_display_ctl, svc_display_ctl_invalid below; the four
+| SMD_ stubs the SAU3 keeps, SMD_$N_DEVICES, SMD_$INQ_DISP_TYPE,
+| SMD_$INQ_DISP_INFO and SMD_$INQ_DISP_UID, stay), and it fills 13 the
+| SAU2 does not: LPR_ lpr_driver (4), IIC_ iic_driver (8) and
+| PBU_$GET_STATUS pbu_get_status (pbu/sau3/pbu_asm.s).  The addresses
+| below are the SAU2 image's.
 |
 | Byte gate (tools/asm_compare.py, `make check-asm'): every entry is a
 | relocation, resolved against the image's word; the argument counts and
@@ -88,6 +96,38 @@
         .endif
         .endm
 
+| A call of the display driver (or the touch pad's): SVC_$UNIMPLEMENTED
+| on the SAUs without `display_driver'.
+        .macro  svc_display name
+        .if display_driver
+        .long   \name
+        .else
+        .long   SVC_$UNIMPLEMENTED
+        .endif
+        .endm
+
+| A call of the display controller's driver: also SVC_$UNIMPLEMENTED on
+| the SAUs whose driver drives its displays through device descriptors
+| (`display_devices').
+        .macro  svc_display_ctl name
+        .if display_driver && !display_devices
+        .long   \name
+        .else
+        .long   SVC_$UNIMPLEMENTED
+        .endif
+        .endm
+
+| The same, an invalid call's entry with `display_devices'.
+        .macro  svc_display_ctl_invalid name
+        .if !display_driver
+        .long   SVC_$UNIMPLEMENTED
+        .elseif display_devices
+        .long   SVC_$TRAP8_INVALID
+        .else
+        .long   \name
+        .endif
+        .endm
+
         .section ".text.svc_tables","ax",@progbits
 
         .globl  SVC_$TRAP0_TABLE
@@ -95,20 +135,20 @@ SVC_$TRAP0_TABLE:            | 0xE7B2DE, 32 entries
         .long   PROC2_$DELETE               | 0x00
         .long   FIM_$GET_FIM_ADDR           | 0x01
         .long   SVC_$TRAP8_INVALID          | 0x02
-        .long   DTTY_$RELOAD_FONT           | 0x03
+        svc_display DTTY_$RELOAD_FONT       | 0x03
         .long   FILE_$UNLOCK_ALL            | 0x04
         svc_entry peb_board, PEB_$ASSOC     | 0x05 (SVC_$UNIMPLEMENTED without the part)
         svc_entry peb_board, PEB_$DISSOC    | 0x06 (SVC_$UNIMPLEMENTED without the part)
         .long   PROC2_$MY_PID               | 0x07
-        .long   SMD_$OP_WAIT_U              | 0x08
-        .long   TPAD_$RE_RANGE              | 0x09
+        svc_display SMD_$OP_WAIT_U          | 0x08
+        svc_display TPAD_$RE_RANGE          | 0x09
         .long   SVC_$TRAP8_INVALID          | 0x0A
         svc_entry color_board, COLOR_$DISSOC        | 0x0B (SVC_$UNIMPLEMENTED without the part)
         .long   SVC_$TRAP8_INVALID          | 0x0C
         .long   ACL_$UP                     | 0x0D
         .long   ACL_$DOWN                   | 0x0E
         svc_entry color_board, COLOR_$INT_INIT      | 0x0F (SVC_$UNIMPLEMENTED without the part)
-        .long   TPAD_$INQ_DTYPE             | 0x10
+        svc_display TPAD_$INQ_DTYPE         | 0x10
         .long   SVC_$TRAP8_INVALID          | 0x11
         .long   CACHE_$CLEAR                | 0x12
         .long   RIP_$ANNOUNCE_NS            | 0x13
@@ -141,25 +181,25 @@ SVC_$TRAP1_TABLE:            | 0xE7B35E, 66 entries
         .long   CAL_$REMOVE_LOCAL_OFFSET    | 0x0B
         .long   CAL_$SET_DRIFT              | 0x0C
         .long   DISK_$GET_ERROR_INFO        | 0x0D
-        .long   SVC_$UNIMPLEMENTED          | 0x0E
+        svc_entry lpr_driver, LPR_$ACQUIRE  | 0x0E (SVC_$UNIMPLEMENTED without the part)
         .long   MSG_$CLOSE                  | 0x0F
         .long   PROC2_$WHO_AM_I             | 0x10
-        .long   SMD_$CLEAR_KBD_CURSOR       | 0x11
+        svc_display SMD_$CLEAR_KBD_CURSOR   | 0x11
         .long   SVC_$TRAP8_INVALID          | 0x12
         .long   SVC_$TRAP8_INVALID          | 0x13
-        .long   SMD_$SEND_RESPONSE          | 0x14
-        .long   SMD_$STOP_TP_CURSOR         | 0x15
+        svc_display SMD_$SEND_RESPONSE      | 0x14
+        svc_display SMD_$STOP_TP_CURSOR     | 0x15
         .long   SVC_$TRAP8_INVALID          | 0x16
         .long   SVC_$TRAP8_INVALID          | 0x17
-        .long   SMD_$UNMAP_DISPLAY_U        | 0x18
+        svc_display SMD_$UNMAP_DISPLAY_U    | 0x18
         .long   UID_$GEN                    | 0x19
         .long   TONE_$TIME                  | 0x1A
         .long   SMD_$INQ_DISP_TYPE          | 0x1B
-        svc_entry !display_devices, SMD_$INVERT_S| 0x1C (SVC_$UNIMPLEMENTED without the part)
-        svc_entry !display_devices, SMD_$INQ_MM_BLT| 0x1D (SVC_$UNIMPLEMENTED without the part)
+        svc_display_ctl SMD_$INVERT_S       | 0x1C
+        svc_display_ctl SMD_$INQ_MM_BLT     | 0x1D
         svc_entry color_board, COLOR_$INQ_DONE_WAIT | 0x1E (SVC_$UNIMPLEMENTED without the part)
-        .long   TPAD_$SET_CURSOR            | 0x1F
-        svc_entry !display_devices, SMD_$EOF_WAIT| 0x20 (SVC_$UNIMPLEMENTED without the part)
+        svc_display TPAD_$SET_CURSOR        | 0x1F
+        svc_display_ctl SMD_$EOF_WAIT       | 0x20
         .long   SVC_$UNIMPLEMENTED          | 0x21
         .long   NAME_$GET_WDIR_UID          | 0x22
         .long   NAME_$GET_NDIR_UID          | 0x23
@@ -171,14 +211,14 @@ SVC_$TRAP1_TABLE:            | 0xE7B35E, 66 entries
         .long   MSG_$GET_MY_NODE            | 0x29
         .long   SVC_$TRAP8_INVALID          | 0x2A
         .long   SVC_$TRAP8_INVALID          | 0x2B
-        .long   SVC_$UNIMPLEMENTED          | 0x2C
+        svc_entry iic_driver, IIC_$EXISTS   | 0x2C (SVC_$UNIMPLEMENTED without the part)
         .long   SVC_$TRAP8_INVALID          | 0x2D
         svc_entry gpu_driver, COLOR2_$ASSOC | 0x2E (SVC_$UNIMPLEMENTED without the part)
         svc_entry gpu_driver, COLOR2_$BUSY_WAIT     | 0x2F (SVC_$UNIMPLEMENTED without the part)
         .long   GPU_$INIT                   | 0x30
         svc_entry gpu_driver, GPU_$FLUSH    | 0x31 (SVC_$UNIMPLEMENTED without the part)
-        .long   SMD_$INIT_STATE             | 0x32
-        .long   SMD_$CLR_TRK_RECT           | 0x33
+        svc_display SMD_$INIT_STATE         | 0x32
+        svc_display SMD_$CLR_TRK_RECT       | 0x33
         .long   PROC2_$GET_SIG_MASK         | 0x34
         .long   FIM_$FRESTORE               | 0x35
         .long   TIME_$GET_TIME_OF_DAY       | 0x36
@@ -213,8 +253,8 @@ SVC_$TRAP2_TABLE:            | 0xE7B466, 133 entries
         .long   FILE_$MK_IMMUTABLE          | 0x0E
         .long   FILE_$PURIFY                | 0x0F
         .long   GET_BUILD_TIME              | 0x10
-        .long   SVC_$UNIMPLEMENTED          | 0x11
-        .long   SVC_$UNIMPLEMENTED          | 0x12
+        svc_entry lpr_driver, LPR_$RELEASE  | 0x11 (SVC_$UNIMPLEMENTED without the part)
+        svc_entry lpr_driver, LPR_$STATE    | 0x12 (SVC_$UNIMPLEMENTED without the part)
         .long   MSG_$ALLOCATE               | 0x13
         .long   MSG_$OPEN                   | 0x14
         .long   MSG_$WAIT                   | 0x15  2 args: (socket, timeout); the * status_$t is local to 0x00E59BA4 * ("link.w A6,-0x8" / "pea (-0x4,A6)") * and the boolean comes back in D0.b
@@ -227,20 +267,20 @@ SVC_$TRAP2_TABLE:            | 0xE7B466, 133 entries
         .long   PROC2_$QUIT                 | 0x1C
         .long   PROC2_$RESUME               | 0x1D
         .long   PROC2_$SUSPEND              | 0x1E
-        svc_entry !display_devices, SMD_$BLT_U| 0x1F (SVC_$UNIMPLEMENTED without the part)
-        svc_entry_invalid !display_devices, SMD_$CLEAR_WINDOW| 0x20 (SVC_$TRAP8_INVALID without the part)
+        svc_display_ctl SMD_$BLT_U          | 0x1F
+        svc_display_ctl_invalid SMD_$CLEAR_WINDOW| 0x20
         .long   SVC_$TRAP8_INVALID          | 0x21
-        svc_entry !display_devices, SMD_$DRAW_BOX| 0x22 (SVC_$UNIMPLEMENTED without the part)
+        svc_display_ctl SMD_$DRAW_BOX       | 0x22
         .long   SVC_$TRAP8_INVALID          | 0x23
-        svc_entry !display_devices, SMD_$LOAD_FONT| 0x24 (SVC_$UNIMPLEMENTED without the part)
+        svc_display_ctl SMD_$LOAD_FONT      | 0x24
         .long   SVC_$TRAP8_INVALID          | 0x25
-        .long   SMD_$MAP_DISPLAY_U          | 0x26
-        .long   SMD_$MOVE_KBD_CURSOR        | 0x27
+        svc_display SMD_$MAP_DISPLAY_U      | 0x26
+        svc_display SMD_$MOVE_KBD_CURSOR    | 0x27
         .long   SVC_$TRAP8_INVALID          | 0x28
-        .long   SMD_$RETURN_DISPLAY         | 0x29
+        svc_display SMD_$RETURN_DISPLAY     | 0x29
         .long   SVC_$TRAP8_INVALID          | 0x2A
         .long   SVC_$TRAP8_INVALID          | 0x2B
-        svc_entry !display_devices, SMD_$UNLOAD_FONT| 0x2C (SVC_$UNIMPLEMENTED without the part)
+        svc_display_ctl SMD_$UNLOAD_FONT    | 0x2C
         .long   SVC_$TRAP8_INVALID          | 0x2D
         .long   PEB_$GET_INFO               | 0x2E
         .long   SVC_$TRAP8_INVALID          | 0x2F
@@ -255,7 +295,7 @@ SVC_$TRAP2_TABLE:            | 0xE7B466, 133 entries
         .long   SVC_$TRAP8_INVALID          | 0x38
         .long   SVC_$TRAP8_INVALID          | 0x39
         .long   SVC_$TRAP8_INVALID          | 0x3A
-        .long   SMD_$INQ_KBD_CURSOR         | 0x3B
+        svc_display SMD_$INQ_KBD_CURSOR     | 0x3B
         .long   ACL_$ENTER_SUBS             | 0x3C
         .long   SVC_$TRAP8_INVALID          | 0x3D
         .long   SVC_$UNIMPLEMENTED          | 0x3E
@@ -263,7 +303,7 @@ SVC_$TRAP2_TABLE:            | 0xE7B466, 133 entries
         .long   SVC_$UNIMPLEMENTED          | 0x40
         svc_entry color_board, COLOR_$ASSOC | 0x41 (SVC_$UNIMPLEMENTED without the part)
         .long   FILE_$DELETE_FORCE_WHEN_UNLOCKED| 0x42
-        svc_entry !display_devices, SMD_$SET_CLIP_WINDOW| 0x43 (SVC_$UNIMPLEMENTED without the part)
+        svc_display_ctl SMD_$SET_CLIP_WINDOW| 0x43
         svc_entry ct_driver, CT_$ACQUIRE    | 0x44 (SVC_$UNIMPLEMENTED without the part)
         .long   HINT_$ADD                   | 0x45
         .long   DIR_$FIX_DIR                | 0x46
@@ -278,19 +318,19 @@ SVC_$TRAP2_TABLE:            | 0xE7B466, 133 entries
         .long   ACL_$DELETE_PROJ            | 0x4F
         .long   XPD_$GET_FP                 | 0x50
         .long   XPD_$PUT_FP                 | 0x51
-        .long   SMD_$SET_TP_REPORTING       | 0x52
-        .long   SMD_$DISABLE_TRACKING       | 0x53
-        .long   SVC_$UNIMPLEMENTED          | 0x54
-        .long   SVC_$UNIMPLEMENTED          | 0x55
+        svc_display SMD_$SET_TP_REPORTING   | 0x52
+        svc_display SMD_$DISABLE_TRACKING   | 0x53
+        svc_entry iic_driver, IIC_$ACQUIRE  | 0x54 (SVC_$UNIMPLEMENTED without the part)
+        svc_entry iic_driver, IIC_$RELEASE  | 0x55 (SVC_$UNIMPLEMENTED without the part)
         .long   SVC_$TRAP8_INVALID          | 0x56
         .long   SVC_$TRAP8_INVALID          | 0x57
         .long   HINT_$ADDI                  | 0x58
-        .long   SVC_$UNIMPLEMENTED          | 0x59
+        svc_entry iic_driver, IIC_$RECEIVE_CHECK| 0x59 (SVC_$UNIMPLEMENTED without the part)
         svc_entry gpu_driver, COLOR2_$GET_EC        | 0x5A (SVC_$UNIMPLEMENTED without the part)
         svc_entry pbu_driver, PBU_$ALLOCATE_EC      | 0x5B (SVC_$UNIMPLEMENTED without the part)
-        .long   SMD_$SET_DISP_UNIT          | 0x5C
-        .long   SMD_$VIDEO_CTL              | 0x5D
-        .long   SMD_$SET_CURSOR_POS         | 0x5E
+        svc_display SMD_$SET_DISP_UNIT      | 0x5C
+        svc_display SMD_$VIDEO_CTL          | 0x5D
+        svc_display SMD_$SET_CURSOR_POS     | 0x5E
         .long   TERM_$SEND_KBD_STRING       | 0x5F
         .long   AUDIT_$CONTROL              | 0x60
         .long   PROC2_$SIGBLOCK             | 0x61
@@ -311,8 +351,8 @@ SVC_$TRAP2_TABLE:            | 0xE7B466, 133 entries
         .long   ACL_$INHERIT_SUBSYS         | 0x70
         .long   ACL_$SET_LOCAL_LOCKSMITH    | 0x71
         .long   SVC_$TRAP8_INVALID          | 0x72
-        .long   SMD_$DISSOC                 | 0x73
-        .long   SMD_$BUSY_WAIT              | 0x74
+        svc_display SMD_$DISSOC             | 0x73
+        svc_display SMD_$BUSY_WAIT          | 0x74
         .long   TTY_$K_RESET                | 0x75
         .long   SVC_$TRAP8_INVALID          | 0x76
         .long   SVC_$TRAP8_INVALID          | 0x77
@@ -321,7 +361,7 @@ SVC_$TRAP2_TABLE:            | 0xE7B466, 133 entries
         svc_entry scsi_driver, SCSI_$RELEASE| 0x7A (SVC_$UNIMPLEMENTED without the part)
         svc_entry scsi_driver, SCSI_$RESET_DEVICE| 0x7B (SVC_$UNIMPLEMENTED without the part)
         .long   SVC_$TRAP8_INVALID          | 0x7C
-        .long   TPAD_$RE_RANGE_UNIT         | 0x7D
+        svc_display TPAD_$RE_RANGE_UNIT     | 0x7D
         .long   DISK_$FORMAT_WHOLE          | 0x7E
         .long   MAC_$CLOSE                  | 0x7F
         .long   MAC_$NET_TO_PORT_NUM        | 0x80
@@ -356,7 +396,7 @@ SVC_$TRAP3_TABLE:            | 0xE7B67A, 155 entries
         .long   FILE_$SET_DIRPTR            | 0x15
         .long   FILE_$SET_TROUBLE           | 0x16
         .long   SVC_$TRAP8_INVALID          | 0x17
-        .long   SVC_$UNIMPLEMENTED          | 0x18
+        svc_entry lpr_driver, LPR_$WRITE    | 0x18 (SVC_$UNIMPLEMENTED without the part)
         svc_entry mt_driver, MT_$CONTROL    | 0x19 (SVC_$UNIMPLEMENTED without the part)
         svc_entry mt_driver, MT_$RELEASE    | 0x1A (SVC_$UNIMPLEMENTED without the part)
         .long   SVC_$TRAP8_INVALID          | 0x1B
@@ -365,15 +405,15 @@ SVC_$TRAP3_TABLE:            | 0xE7B67A, 155 entries
         svc_entry pbu_driver, PBU_$SETUP    | 0x1E (SVC_$UNIMPLEMENTED without the part)
         .long   PROC2_$LIST                 | 0x1F
         .long   FIM_$SINGLE_STEP            | 0x20
-        .long   SMD_$ASSOC                  | 0x21
-        .long   SMD_$BORROW_DISPLAY         | 0x22
-        svc_entry_invalid !display_devices, SMD_$CLEAR_CURSOR| 0x23 (SVC_$TRAP8_INVALID without the part)
-        svc_entry !display_devices, SMD_$DISPLAY_CURSOR| 0x24 (SVC_$UNIMPLEMENTED without the part)
-        .long   SMD_$SET_TP_CURSOR          | 0x25
+        svc_display SMD_$ASSOC              | 0x21
+        svc_display SMD_$BORROW_DISPLAY     | 0x22
+        svc_display_ctl_invalid SMD_$CLEAR_CURSOR| 0x23
+        svc_display_ctl SMD_$DISPLAY_CURSOR | 0x24
+        svc_display SMD_$SET_TP_CURSOR      | 0x25
         .long   TIME_$WAIT                  | 0x26
         .long   RINGLOG_$CNTL               | 0x27
-        .long   SMD_$ALLOC_HDM              | 0x28
-        .long   SMD_$FREE_HDM               | 0x29
+        svc_display SMD_$ALLOC_HDM          | 0x28
+        svc_display SMD_$FREE_HDM           | 0x29
         .long   SVC_$TRAP8_INVALID          | 0x2A
         .long   OS_$GET_EC                  | 0x2B
         .long   TIME_$GET_EC                | 0x2C
@@ -381,7 +421,7 @@ SVC_$TRAP3_TABLE:            | 0xE7B67A, 155 entries
         .long   PROC2_$UPID_TO_UID          | 0x2E
         .long   MSG_$GET_EC                 | 0x2F
         .long   DISK_$AS_OPTIONS            | 0x30
-        .long   SMD_$GET_EC                 | 0x31
+        svc_display SMD_$GET_EC             | 0x31
         .long   NAME_$SET_ACL               | 0x32
         .long   FILE_$SET_REFCNT            | 0x33
         .long   SVC_$TRAP8_INVALID          | 0x34
@@ -391,15 +431,15 @@ SVC_$TRAP3_TABLE:            | 0xE7B67A, 155 entries
         .long   SVC_$TRAP8_INVALID          | 0x38
         .long   SVC_$TRAP8_INVALID          | 0x39
         .long   SVC_$TRAP8_INVALID          | 0x3A
-        .long   SVC_$UNIMPLEMENTED          | 0x3B
+        svc_entry pbu_get_status, PBU_$GET_STATUS| 0x3B (SVC_$UNIMPLEMENTED without the part)
         .long   AS_$GET_INFO                | 0x3C
         .long   FILE_$SET_DTM               | 0x3D
         .long   FILE_$SET_DTU               | 0x3E
         .long   SVC_$TRAP8_INVALID          | 0x3F
         .long   LOG_$READ                   | 0x40
         .long   PROC2_$SET_PGROUP           | 0x41
-        .long   SMD_$SET_BLANK_TIMEOUT      | 0x42
-        .long   SMD_$INQ_BLANK_TIMEOUT      | 0x43
+        svc_display SMD_$SET_BLANK_TIMEOUT  | 0x42
+        svc_display SMD_$INQ_BLANK_TIMEOUT  | 0x43
         .long   FILE_$REMOVE_WHEN_UNLOCKED  | 0x44
         svc_entry ct_driver, CT_$RELEASE    | 0x45 (SVC_$UNIMPLEMENTED without the part)
         .long   PROC2_$UPGID_TO_UID         | 0x46
@@ -421,21 +461,21 @@ SVC_$TRAP3_TABLE:            | 0xE7B67A, 155 entries
         .long   SVC_$TRAP8_INVALID          | 0x56
         .long   MSG_$SET_HPIPC              | 0x57
         .long   DIR_$VALIDATE_ROOT_ENTRY    | 0x58
-        .long   SMD_$ENABLE_TRACKING        | 0x59
+        svc_display SMD_$ENABLE_TRACKING    | 0x59
         .long   FILE_$READ_LOCK_ENTRYUI     | 0x5A
-        .long   SVC_$UNIMPLEMENTED          | 0x5B
+        svc_entry iic_driver, IIC_$STATISTICS| 0x5B (SVC_$UNIMPLEMENTED without the part)
         .long   ROUTE_$SERVICE              | 0x5C
         .long   SVC_$TRAP8_INVALID          | 0x5D
-        .long   SVC_$UNIMPLEMENTED          | 0x5E
+        svc_entry iic_driver, IIC_$SELF_TEST| 0x5E (SVC_$UNIMPLEMENTED without the part)
         svc_entry gpu_driver, GPU_$SET_PAGE_LIMITS  | 0x5F (SVC_$UNIMPLEMENTED without the part)
         svc_entry pbu_driver, PBU_$ADVANCE_EC       | 0x60 (SVC_$UNIMPLEMENTED without the part)
         svc_entry pbu_driver, PBU_$RELEASE_EC       | 0x61 (SVC_$UNIMPLEMENTED without the part)
         .long   XPD_$GET_EVENT_AND_DATA     | 0x62
-        .long   SMD_$GET_IDM_EVENT          | 0x63
+        svc_display SMD_$GET_IDM_EVENT      | 0x63
         .long   MSG_$TEST_FOR_MESSAGE       | 0x64
-        .long   SMD_$ADD_TRK_RECT           | 0x65
-        .long   SMD_$DEL_TRK_RECT           | 0x66
-        .long   SMD_$SET_KBD_TYPE           | 0x67
+        svc_display SMD_$ADD_TRK_RECT       | 0x65
+        svc_display SMD_$DEL_TRK_RECT       | 0x66
+        svc_display SMD_$SET_KBD_TYPE       | 0x67
         .long   SVC_$UNIMPLEMENTED          | 0x68
         .long   FILE_$SET_AUDITED           | 0x69
         .long   PROC2_$ACKNOWLEDGE          | 0x6A
@@ -466,18 +506,18 @@ SVC_$TRAP3_TABLE:            | 0xE7B67A, 155 entries
         svc_entry pbu_driver, PBU_$DMA_STATUS       | 0x83 (SVC_$UNIMPLEMENTED without the part)
         .long   SVC_$TRAP8_INVALID          | 0x84
         .long   MST_$UNMAPS_AND_FREE_AREA   | 0x85
-        .long   SMD_$ASSOC_CSRS             | 0x86
+        svc_display SMD_$ASSOC_CSRS         | 0x86
         .long   SMD_$INQ_DISP_INFO          | 0x87
         .long   SMD_$INQ_DISP_UID           | 0x88
-        .long   SMD_$DISPLAY_LOGO           | 0x89
+        svc_display SMD_$DISPLAY_LOGO       | 0x89
         .long   TERM_$SET_REAL_LINE_DISCIPLINE| 0x8A
         .long   TIME_$ADJUST_TIME_OF_DAY    | 0x8B
         .long   PROC2_$UID_TO_UPID          | 0x8C
         .long   PROC2_$SET_SESSION_ID       | 0x8D
-        .long   SMD_$GET_UNIT_EVENT         | 0x8E
-        .long   TPAD_$SET_UNIT_CURSOR       | 0x8F
-        .long   TPAD_$SET_PUNCH_IMPACT      | 0x90
-        .long   TPAD_$INQ_PUNCH_IMPACT      | 0x91
+        svc_display SMD_$GET_UNIT_EVENT     | 0x8E
+        svc_display TPAD_$SET_UNIT_CURSOR   | 0x8F
+        svc_display TPAD_$SET_PUNCH_IMPACT  | 0x90
+        svc_display TPAD_$INQ_PUNCH_IMPACT  | 0x91
         .long   TTY_$K_INQ_SESSION_ID       | 0x92
         .long   TTY_$K_SET_SESSION_ID       | 0x93
         .long   MAC_$OPEN                   | 0x94
@@ -485,8 +525,8 @@ SVC_$TRAP3_TABLE:            | 0xE7B67A, 155 entries
         .long   XNS_IDP_$RECEIVE            | 0x96
         .long   XNS_IDP_$GET_PORT_INFO      | 0x97
         svc_entry display_devices, SMD_$SHARE_DEVICE| 0x98 (SVC_$UNIMPLEMENTED without the part)
-        .long   SMD_$SET_UNIT_CURSOR_POS    | 0x99
-        .long   SMD_$CLR_AND_LOAD_TRK_RECT  | 0x9A
+        svc_display SMD_$SET_UNIT_CURSOR_POS| 0x99
+        svc_display SMD_$CLR_AND_LOAD_TRK_RECT| 0x9A
 
         .globl  SVC_$TRAP4_TABLE
 SVC_$TRAP4_TABLE:            | 0xE7B8E6, 131 entries
@@ -529,11 +569,11 @@ SVC_$TRAP4_TABLE:            | 0xE7B8E6, 131 entries
         svc_entry pbu_driver, PBU_$GET_PTR  | 0x24 (SVC_$UNIMPLEMENTED without the part)
         .long   PCHIST_$CNTL                | 0x25
         .long   PROC2_$GET_INFO             | 0x26
-        svc_entry !display_devices, SMD_$BLT| 0x27 (SVC_$UNIMPLEMENTED without the part)
+        svc_display_ctl SMD_$BLT            | 0x27
         .long   SVC_$TRAP8_INVALID          | 0x28
         .long   SVC_$TRAP8_INVALID          | 0x29
-        .long   SMD_$SIGNAL                 | 0x2A
-        svc_entry_invalid !display_devices, SMD_$SOFT_SCROLL| 0x2B (SVC_$TRAP8_INVALID without the part)
+        svc_display SMD_$SIGNAL             | 0x2A
+        svc_display_ctl_invalid SMD_$SOFT_SCROLL| 0x2B
         .long   SVC_$TRAP8_INVALID          | 0x2C
         .long   TERM_$INQUIRE               | 0x2D
         .long   SVC_$TRAP8_INVALID          | 0x2E
@@ -570,10 +610,10 @@ SVC_$TRAP4_TABLE:            | 0xE7B8E6, 131 entries
         .long   FILE_$READ_LOCK_ENTRYI      | 0x4D
         .long   ROUTE_$INCOMING             | 0x4E
         svc_entry gpu_driver, GPU_$DIAG_WIRE        | 0x4F (SVC_$UNIMPLEMENTED without the part)
-        .long   SMD_$INQ_KBD_TYPE           | 0x50
+        svc_display SMD_$INQ_KBD_TYPE       | 0x50
         .long   ROUTE_$GET_EC               | 0x51
         .long   SVC_$TRAP8_INVALID          | 0x52
-        .long   SMD_$DM_COND_EVENT_WAIT     | 0x53
+        svc_display SMD_$DM_COND_EVENT_WAIT | 0x53
         .long   DISK_$READ_MFG_BADSPOTS     | 0x54
         .long   DISK_$GET_MNT_INFO          | 0x55
         .long   PROC2_$SET_SIG_MASK         | 0x56
@@ -646,8 +686,8 @@ SVC_$TRAP5_TABLE:            | 0xE7BAF2, 99 entries
         svc_entry pbu_driver, PBU_$CONTROL  | 0x13 (SVC_$UNIMPLEMENTED without the part)
         svc_entry pbu_driver, PBU2_$WIRE_MAP        | 0x14 (SVC_$UNIMPLEMENTED without the part)
         svc_entry pbu_driver, PBU_$WRITE_CSR        | 0x15 (SVC_$UNIMPLEMENTED without the part)
-        .long   TPAD_$INQUIRE               | 0x16
-        .long   TPAD_$SET_MODE              | 0x17
+        svc_display TPAD_$INQUIRE           | 0x16
+        svc_display TPAD_$SET_MODE          | 0x17
         .long   VFMT_$MAIN                  | 0x18
         .long   VOLX_$GET_INFO              | 0x19
         .long   VTOC_$GET_UID               | 0x1A
@@ -712,13 +752,13 @@ SVC_$TRAP5_TABLE:            | 0xE7BAF2, 99 entries
         .long   FILE_$CHANGE_LOCK_D         | 0x55
         .long   XPD_$READ_PROC_ASYNC        | 0x56
         .long   SVC_$TRAP8_INVALID          | 0x57
-        .long   SMD_$MAP_DISPLAY_MEMORY     | 0x58
+        svc_display SMD_$MAP_DISPLAY_MEMORY | 0x58
         .long   SVC_$TRAP8_INVALID          | 0x59
         .long   SVC_$TRAP8_INVALID          | 0x5A
         .long   SVC_$TRAP8_INVALID          | 0x5B
         .long   SVC_$TRAP8_INVALID          | 0x5C
         svc_entry scsi_driver, SCSI_$UNWIRE | 0x5D (SVC_$UNIMPLEMENTED without the part)
-        .long   SMD_$UNMAP_DISPLAY_MEMORY   | 0x5E
+        svc_display SMD_$UNMAP_DISPLAY_MEMORY| 0x5E
         svc_entry display_devices, SMD_$SET_COLOR_TABLE| 0x5F (SVC_$UNIMPLEMENTED without the part)
         .long   RIP_$TABLE_D                | 0x60
         .long   XNS_ERROR_$SEND             | 0x61
@@ -737,7 +777,7 @@ SVC_$TRAP7_TABLE:            | 0xE7BC7E, 59 entries
         svc_entry mt_driver, MT_$WAIT       | 0x08 (SVC_$UNIMPLEMENTED without the part)
         .long   SVC_$TRAP8_INVALID          | 0x09
         .long   SVC_$TRAP8_INVALID          | 0x0A
-        svc_entry_invalid !display_devices, SMD_$WRITE_STRING| 0x0B (SVC_$TRAP8_INVALID without the part)
+        svc_display_ctl_invalid SMD_$WRITE_STRING| 0x0B
         .long   SVC_$TRAP8_INVALID          | 0x0C
         .long   VFMT_$FORMAT10              | 0x0D
         .long   VFMT_$FORMAT10              | 0x0E  Same handler as 0x0D
@@ -748,7 +788,7 @@ SVC_$TRAP7_TABLE:            | 0xE7BC7E, 59 entries
         .long   DISK_$DIAG_IO               | 0x13
         .long   SVC_$TRAP8_INVALID          | 0x14
         .long   SVC_$TRAP8_INVALID          | 0x15
-        svc_entry !display_devices, SMD_$WRITE_STR_CLIP| 0x16 (SVC_$UNIMPLEMENTED without the part)
+        svc_display_ctl SMD_$WRITE_STR_CLIP | 0x16
         svc_entry ct_driver, CT_$DIAG       | 0x17 (SVC_$UNIMPLEMENTED without the part)
         .long   TIME_$SET_ITIMER            | 0x18
         .long   OSINFO_$GET_SEG_TABLE       | 0x19
@@ -762,8 +802,8 @@ SVC_$TRAP7_TABLE:            | 0xE7BC7E, 59 entries
         .long   ASKNODE_$WHO_REMOTE         | 0x21
         .long   MST_$REMAP                  | 0x22
         .long   DIR_$ROOT_ADDU              | 0x23
-        .long   SVC_$UNIMPLEMENTED          | 0x24
-        .long   SVC_$UNIMPLEMENTED          | 0x25
+        svc_entry iic_driver, IIC_$SEND     | 0x24 (SVC_$UNIMPLEMENTED without the part)
+        svc_entry iic_driver, IIC_$RECEIVE  | 0x25 (SVC_$UNIMPLEMENTED without the part)
         .long   SVC_$TRAP8_INVALID          | 0x26
         svc_entry gpu_driver, GPU_$DIAG_ACQUIRE     | 0x27 (SVC_$UNIMPLEMENTED without the part)
         .long   ASKNODE_$WHO_NOTOPO         | 0x28
@@ -800,8 +840,8 @@ SVC_$TRAP8_TABLE:            | 0xE7BD6A, 56 entries
         .long   MSG_$SAR                    | 0x09  17 args
         .long   MSG_$SEND                   | 0x0A  11 args
         .long   SVC_$TRAP8_INVALID          | 0x0B  7 args (invalid)
-        .long   SMD_$LOAD_CRSR_BITMAP       | 0x0C  8 args
-        .long   SMD_$READ_CRSR_BITMAP       | 0x0D  8 args
+        svc_display SMD_$LOAD_CRSR_BITMAP   | 0x0C  8 args
+        svc_display SMD_$READ_CRSR_BITMAP   | 0x0D  8 args
         .long   VFMT_$FORMAT10              | 0x0E  14 args, 0xE825E4 (the VFMT_$FORMAT10/ENCODE10 trampoline)
         .long   VFMT_$FORMAT10              | 0x0F  9 args, 0xE825E4 (VFMT_$FORMAT5/ENCODE5)
         .long   VFMT_$FORMAT10              | 0x10  14 args, 0xE825E4
@@ -840,8 +880,8 @@ SVC_$TRAP8_TABLE:            | 0xE7BD6A, 56 entries
         svc_entry scsi_driver, SCSI_$DO_COMMAND| 0x31 (SVC_$UNIMPLEMENTED without the part)
         svc_entry scsi_driver, SCSI_$WAIT   | 0x32 (SVC_$UNIMPLEMENTED without the part)
         .long   PROC2_$CREATE               | 0x33  11 args
-        .long   TPAD_$SET_UNIT_MODE         | 0x34  7 args
-        .long   TPAD_$INQUIRE_UNIT          | 0x35  7 args
+        svc_display TPAD_$SET_UNIT_MODE     | 0x34  7 args
+        svc_display TPAD_$INQUIRE_UNIT      | 0x35  7 args
         svc_entry scsi_driver, SCSI_$DO_SYS_DEVICE_CMD| 0x36 (SVC_$UNIMPLEMENTED without the part)
         .long   MSG_$RCV_HW                 | 0x37  14 args
 

@@ -2,6 +2,8 @@
 
   Image addresses:
     sau2  0x00E5910E  PBU_$INIT
+    sau3  0x00E5A102  map_owner_pages (nested)
+    sau3  0x00E5A1B2  PBU_$INIT
     sau5  0x00E5A5AE  map_owner_pages (nested)
     sau5  0x00E5A65E  PBU_$INIT
 
@@ -9,8 +11,9 @@
     SAU2).
   - With the driver (`pbu_driver'): init_lock initializes the exclusion
     lock (IO_$INIT's call).
-  - Without the Multibus, high_ok is whether the memory ends at or below
-    16#380000; with it, PBU_$PPN_OWNERS' pages are mapped and cleared.
+  - With the VME bus (`vme_bus') and without the Multibus, high_ok is
+    whether the memory ends at or below 16#380000; otherwise
+    PBU_$PPN_OWNERS' pages are mapped and cleared.
   - map_owner_pages (nested) takes its pages from MMAP_$ALLOC_FREE under
     init_lock, else WP_$CALLOC; a failure crashes the system.
 
@@ -60,9 +63,12 @@ begin
     ml_$exclusion_init(pbu_$exclusion_lock);
   pbu_$mcb.present := mbus_$present;
   pbu_$mcb.high_ok := mbus_$high_ok;
+%if vme_bus %then
   if not pbu_$mcb.present then
     pbu_$mcb.high_ok := mmap_$hppn * 1024 <= 16#380000
-  else begin
+  else
+%endif
+  begin
     first := mmap_$lppn & 16#FFFFFE00;
     last := (mmap_$hppn + 16#1FF) & 16#FFFFFE00;
     start := integer32(addr(pbu_$ppn_owners[first])) & 16#FFFFFC00;

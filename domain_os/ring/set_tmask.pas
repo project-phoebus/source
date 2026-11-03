@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E768E8  RING_$SET_TMASK
+    sau3  0x00E780D8  RING_$SET_TMASK
 
   - For each unit whose mask differs, as ring_$set_hw_mask, but counting
     RING_$SET_TMASK_CHG_CNT.

@@ -1,6 +1,7 @@
 { PBU2_$DMA_START - start a PBU unit's DMA transfer.
 
   Image addresses:
+    sau3  0x00E89C7C  PBU2_$DMA_START
     sau5  0x00E92040  PBU2_$DMA_START
 
   - Not supported on the SAU5; nothing else is read.

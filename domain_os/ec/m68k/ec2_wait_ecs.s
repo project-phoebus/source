@@ -2,7 +2,7 @@
 | ec/m68k/ec2_wait_ecs.s - EC2_$WAIT_ECS, the per-process level-1
 | eventcounts EC2_$WAIT blocks on
 |
-| The SAU2 and SAU5 images have the same code here; the address and
+| The SAU2, SAU3 and SAU5 images have the same code here; the address and
 | byte columns below are the SAU2 image's.
 |
 | Byte gate (tools/asm_compare.py, `make check-asm'): the

@@ -1,6 +1,7 @@
 { SM_C_$CINIT - initialize the SM_C controller at boot.
 
   Image addresses:
+    sau3  0x00E6F33A  SM_C_$CINIT
     sau5  0x00E74E9E  SM_C_$CINIT
 
   - The result is status_$ok, or status_$io_controller_not_in_system

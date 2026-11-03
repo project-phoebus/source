@@ -87,9 +87,13 @@
  * SMD_$CURSOR_TABLE (+0x52E) and unit 2's display record
  * (SMD_$DISPLAY_COM + 0x60, +0x63E): the data segment's sections are
  * laid out contiguously in the map's order.
+ *
+ * Not on the SAUs without the display driver (`display_driver',
+ * base/config.ins.pas): the SAU3 map has no SMD_WIRED segment.
  */
 
         .include "base/config.inc"
+        .if     display_driver
 
         .if !display_devices
         .section ".text.MATROX_$BOARD_INSTALLED","ax",@progbits
@@ -228,3 +232,5 @@ SMD_$KTT:                                       /* e273fe */
         .if !display_devices
         .word   0                               /* e274fe: to the segment's end */
         .endif
+
+        .endif  /* display_driver */

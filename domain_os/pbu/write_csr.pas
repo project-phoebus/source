@@ -1,6 +1,7 @@
 { PBU_$WRITE_CSR - write a PBU unit's CSR.
 
   Image addresses:
+    sau3  0x00E5A0AA  PBU_$WRITE_CSR
     sau5  0x00E5A556  PBU_$WRITE_CSR
 
   - The CSR is passed by address, and its address is the one written:

@@ -1,7 +1,7 @@
 /*
- * misc/m68k/disp_lites.s - DISP_LITES (SAU2, SAU5)
+ * misc/m68k/disp_lites.s - DISP_LITES (SAU2, SAU3, SAU5)
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.
  *
  * Byte gate (tools/asm_compare.py, `make check'): encodings identical to
@@ -33,6 +33,10 @@
  *
  * The SAUs with these lights only (`display_lights', base/config.ins.pas):
  * the SAU7..SAU9 maps have no DISP_LITES.
+ *
+ * The SAU3 has no display: its DISP_LITES (`D E1D9FC DISP_LITES size =
+ * 4') is a return and a zero word to the segment's end
+ * (`display_lights_stub').
  */
 
         .include "base/config.inc"
@@ -107,5 +111,14 @@ Ldisp_lites_exit:
         andi.w  #0xf8ff,%sr             /* 00e1eabe  IPL 0 */
         movem.l (%sp)+,%d2-%d5          /* 00e1eac2 */
         rts                             /* 00e1eac6 */
+
+        .elseif display_lights_stub
+
+        .section ".text.DISP_LITES","ax",@progbits
+        .globl  DISP_LITES
+
+DISP_LITES:
+        rts                             /* sau3 00e1d9fc  4e75 */
+        .word   0                       /* sau3 00e1d9fe: to the segment's end */
 
         .endif

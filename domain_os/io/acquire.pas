@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E1A528  IO_$ACQUIRE
     sau2  0x00E1A4DC  int_ids_match (nested)
+    sau3  0x00E195C0  IO_$ACQUIRE
+    sau3  0x00E19574  int_ids_match (nested)
     sau5  0x00E1A870  IO_$ACQUIRE
     sau5  0x00E1A824  int_ids_match (nested)
 

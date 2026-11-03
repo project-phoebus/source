@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6D1E8  VTOP_OR_CRASH
+    sau3  0x00E6D794  VTOP_OR_CRASH
     sau5  0x00E6E8C4  VTOP_OR_CRASH
     sau9  0x3C473DC4  VTOP_OR_CRASH
 

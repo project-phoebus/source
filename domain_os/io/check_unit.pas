@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E1A4A4  io_$check_unit
+    sau3  0x00E1953C  io_$check_unit
     sau5  0x00E1A7EC  io_$check_unit
 
   - The result is whether the status is ok.

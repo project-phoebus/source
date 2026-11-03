@@ -1,6 +1,6 @@
 /*
  * fim/m68k/spurious_int.s - FIM_$SPURIOUS_INT and its counters
- * (m68k/SAU2, SAU5)
+ * (m68k/SAU2, SAU3, SAU5)
  *
  * The SAU2 and SAU5 images have the same code here except the distance
  * from the FIM_WIRED segment's start (A5, below) to the routine: 0x690 on
@@ -44,7 +44,9 @@
  *
  * The routine reaches its cells off A5 = FIM_$TRACE_BIT, the start of
  * FIM_WIRED, so the distance from there is the SAU's layout: on the SAU9
- * (FIM_$NMI and MMU_$BUS_STATUS ahead of it, `fim_nmi') 0x6EC.
+ * (FIM_$NMI and MMU_$BUS_STATUS ahead of it, `fim_nmi') 0x6EC; on the
+ * SAU3 (the PBU arms without the display window's 0x3E bytes,
+ * `display_driver' in fim/m68k/bus_err.s) 0x6A8.
  */
 
         .include "base/config.inc"
@@ -53,7 +55,11 @@
         .even
 
         .if pbu_driver
+        .if display_driver
         .set    .Lspur_dist, 0x6e4      /* sau5: 0xE22C3C - 0xE22558 */
+        .else
+        .set    .Lspur_dist, 0x6a8      /* sau3: 0xE20E70 - 0xE207C8 */
+        .endif
         .elseif fim_nmi
         .set    .Lspur_dist, 0x6ec      /* sau9: 0x3C424B8C - 0x3C4244A0 */
         .else

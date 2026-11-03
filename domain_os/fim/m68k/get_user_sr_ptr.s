@@ -2,7 +2,7 @@
  * fim/m68k/get_user_sr_ptr.s - FIM_$GET_USER_SR_PTR (m68k/SAU2, SAU5,
  * SAU9)
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.  The SAU9's (0x3C4253CE,
  * 0xD6 bytes) tries no 68010 frames (format 8: only the SAUs that run
  * on an MC68010, `pft_mmu', base/config.ins.pas) and takes PROT

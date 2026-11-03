@@ -1,13 +1,15 @@
 { PBU_$DISSOC - unmap a PBU unit's controller memory.
 
   Image addresses:
+    sau3  0x00E58DD0  PBU_$DISSOC
     sau5  0x00E58F94  PBU_$DISSOC
 
   - Undoes PBU2_$ASSOC: the memory's I/O map space is freed (a failure
     crashes the system) and its pages' MMU entries removed.
   - The page wraps from 16#400 to 16#E00 on a bus other than the VME
     bus, where PBU2_$ASSOC tests for the Multibus: the same on the
-    SAU5, whose units are on those two buses.
+    SAU5, whose units are on those two buses.  Without the VME bus
+    (`vme_bus') the wrap does not test the bus.
 
   Status stored:
     status_$ok: the memory was unmapped
@@ -43,7 +45,11 @@ begin
   for i := 1 to npages do begin
     mmu_$remove(ppn);
     ppn := ppn + 1;
+%if vme_bus %then
     if (ppn = 16#400) and then (dcte^.unit_info.bus <> io_$bus_vme) then
+%else
+    if ppn = 16#400 then
+%endif
       ppn := 16#E00;
   end;
   dcte^.assoc_length := 0;

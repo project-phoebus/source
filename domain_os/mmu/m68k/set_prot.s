@@ -1,7 +1,7 @@
 /*
  * MMU_$SET_PROT - Replace a page's protection field, returning the old one
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.
  *
  * Original address: 0x00E2422A, 48 bytes (0xE2422A..0xE24259).

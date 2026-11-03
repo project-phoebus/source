@@ -1,7 +1,7 @@
 /*
  * CACHE_$CLEAR - Clear/invalidate the CPU instruction cache
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.
  *
  * Reads the CACR (Cache Control Register), sets bit 3 (CI - Clear

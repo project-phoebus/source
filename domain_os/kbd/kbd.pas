@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E2DDE4  KBD data (WIRED_DATA, 0xD4 bytes)
+    sau3  0x00E2C9C0  KBD data (WIRED_DATA, 0x64 bytes)
     sau9  0x3C433274  KBD data (WIRED_DATA, 0x108 bytes)
     sau9  0x3C49E084  KBD data (DATA$, 0x14 bytes)
 
@@ -36,6 +37,11 @@
   data section is not WIRED_DATA, since they reach the block by its
   absolute address; their one static, with `kbd_commands', is in DATA$.
 
+  Without `display_driver' (the SAU3) there is no keyboard: the unit is
+  KBD_$PUT (WIRED_PROC, 0x14 bytes) and the four PROCEDURE$ routines
+  (0x4C bytes), each only refusing the call, and the block is
+  TERM_$TPAD_BUFFER alone (0x64 bytes, at +0x00).
+
   The variables and the define'd one are interleaved in the block's
   order, as in log/log.pas (its TODO: the reference does not say where a
   variable declared extern and then defined is allocated).
@@ -65,6 +71,7 @@ module kbd, wired_proc, wired_data;
   module variables), in the order of the block, and the global routines
   and the variable this module defines (ref 7.3.4 and 7.2.2, Method 2),
   in map order. }
+%if display_driver %then
 var
   { +0x00: the mode codes kbd_$get_mode looks a key up in, and
     KBD_$GET_CHAR_AND_MODE maps a mode to (no map symbol, so not
@@ -97,19 +104,25 @@ var
     [first := 32, limit := 32],           { 13 }
     [first := 33, limit := 35],           { 14 }
     [first := 0, limit := 0]];            { 15 }
+%endif
 
 define
   term_$tpad_buffer;                      { +0x58..+0xBB, all zero }
+%if display_driver %then
   kbd_$rcv;
   kbd_$crash_init;
   kbd_$output_buffer_drained;
+%endif
   kbd_$put;
+%if display_driver %then
   kbd_$init;
+%endif
   kbd_$get_char_and_mode;
   kbd_$set_kbd_mode;
   kbd_$set_kbd_type;
   kbd_$inq_kbd_type;
 
+%if display_driver %then
 var
   { +0xBC: the descriptor KBD_$INIT last set up, which KBD_$CRASH_INIT
     returns to the first mode; nil until then.  Only the `kbd_commands'
@@ -178,8 +191,10 @@ var
     [key := chr(0), action := 6, next_state := 15],  { state 3's }
     [key := chr(0), action := 12, next_state := 0]]; { state 4's }
 %endif
+%endif
 
 { ---- WIRED_PROC ---- }
+%if display_driver %then
 %include 'kbd/state_lookup.pas';            { kbd_$state_lookup  }
 %include 'kbd/get_mode.pas';                { kbd_$get_mode      }
 %if kbd_commands %then
@@ -196,10 +211,13 @@ var
                                               kbd_$translate_key }
 %include 'kbd/crash_init.pas';              { KBD_$CRASH_INIT    }
 %include 'kbd/output_buffer_drained.pas';   { KBD_$OUTPUT_BUFFER_DRAINED }
+%endif
 %include 'kbd/put.pas';                     { KBD_$PUT           }
 
 { ---- OS_INIT_PROC ---- }
+%if display_driver %then
 %include 'kbd/init.pas';                    { KBD_$INIT          }
+%endif
 
 { ---- PROCEDURE$ ---- }
 %include 'kbd/get_char_and_mode.pas';       { KBD_$GET_CHAR_AND_MODE }

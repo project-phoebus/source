@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6D222  os_$free_ppn (module-local)
+    sau3  0x00E6D7CE  os_$free_ppn (module-local)
     sau5  0x00E6E8FE  os_$free_ppn (module-local)
 
   - The page's mapping is removed, then the page freed.

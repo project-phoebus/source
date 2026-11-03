@@ -1,6 +1,6 @@
 | NULLPROC - Null/Idle Process for Domain/OS (SAU2, SAU5, SAU9 - M68K)
 |
-| The SAU2, SAU5 and SAU9 images have the same code here except the idle
+| The SAU2, SAU3, SAU5 and SAU9 images have the same code here except the idle
 | loop's first instruction: where the null process spins
 | (`null_process_spins', base/config.ins.pas: the SAU9's, sau9
 | 0x3C428470) it is `andi.w #0xF8FF,SR', which forces IPL 0, in place of

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E1AB28  KBD_$RESET
+    sau3  0x00E1A190  KBD_$RESET
     sau9  0x3C41D660  KBD_$RESET
 
   - An empty procedure but with `kbd_tone'.  With it, the two reset

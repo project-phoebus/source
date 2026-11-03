@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E70124  SMD_$INQ_DISP_INFO
+    sau3  0x00E6E68E  SMD_$INQ_DISP_INFO
     sau5  0x00E72650  SMD_$INQ_DISP_INFO
     sau9  0x3C4767D0  SMD_$INQ_DISP_INFO
 
@@ -12,6 +13,8 @@
   - With `display_devices' (base/config.ins.pas) a valid unit's result
     is its device's information, copied whole.
 
+  - Without `display_driver' (no display: the SAU3) every unit is refused, the
+    result cleared.
   Status stored:
     status_$ok: the unit is valid
     smd_$illegal_unit: the unit is not valid
@@ -19,9 +22,10 @@
 procedure smd_$inq_disp_info(in unit: integer;
                              out info: smd_disp_info_result_t;
                              out status: status_$t);
-%if two_display_units %then
+%if two_display_units or not display_driver %then
 var
-  disp_unit: integer;
+  disp_unit: integer;                     { without `display_driver' its
+                                            slot only }
 %endif
 begin
   info.display_type := smd_$none;
@@ -29,6 +33,9 @@ begin
   info.dims.mem_height := 0;
   info.dims.width := 0;
   info.dims.height := 0;
+%if not display_driver %then
+  status.all := smd_$illegal_unit;
+%else
   status.all := status_$ok;
   if not smd_$validate_unit(unit) then begin
     status.all := smd_$illegal_unit;
@@ -70,5 +77,6 @@ begin
       info.dims.mem_height := 1024;
     end;
   end;
+%endif
 %endif
 end;

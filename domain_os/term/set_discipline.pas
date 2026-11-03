@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E1AB2A  TERM_$SET_DISCIPLINE
+    sau3  0x00E1A192  TERM_$SET_DISCIPLINE
     sau9  0x3C41D6AC  TERM_$SET_DISCIPLINE
 
   - TERM_$SET_REAL_LINE_DISCIPLINE for the real line.

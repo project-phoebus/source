@@ -1,7 +1,7 @@
 /*
  * MMU_$POWER_OFF - Is bit 2 of the FPU-owner / power word set?
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.
  *
  * Original address: 0x00E2428C, 18 bytes (0xE2428C..0xE2429D).

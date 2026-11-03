@@ -1,6 +1,7 @@
 { PBU_$RELEASE_INT - set down a kernel driver's PBU unit.
 
   Image addresses:
+    sau3  0x00E59288  PBU_$RELEASE_INT
     sau5  0x00E59458  PBU_$RELEASE_INT
 
   - Undoes PBU_$ACQUIRE_INT: a unit the caller may use, or a publicly

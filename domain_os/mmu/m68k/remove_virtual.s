@@ -1,7 +1,7 @@
 /*
  * MMU_$REMOVE_VIRTUAL - Unlink an address space's pages at a run of VAs
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.
  *
  * Original address: 0x00E23E38, 212 bytes (0xE23E38..0xE23F0B).

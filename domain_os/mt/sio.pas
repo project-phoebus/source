@@ -1,6 +1,7 @@
 { MT_$SIO - finish the controller's current request and start the next.
 
   Image addresses:
+    sau3  0x00E70FD8  MT_$SIO
     sau5  0x00E76B48  MT_$SIO
 
   - With nil (MT_$INT, the controller's interrupt) it finishes the
@@ -110,8 +111,8 @@ begin
       for k := 1 to cur^.npages do
         iomap[page + k - 1] := cur^.ppns[k] + mt_iomap_bias;
 %else
-      { TODO(sau) the SAU3's and SAU4's I/O map entries (words: the
-        storage module drivers' other form, mt/set_iomap.pas). }
+      for k := 1 to cur^.npages do
+        iomap[page + k - 1].entry := cur^.ppns[k] + mt_iomap_bias;
 %endif
       if (cur^.op = mt_op_write) and then (up^.hdr_addr <> 0) then begin
         src := univ_ptr(up^.hdr_addr + cur^.hdr_offset);

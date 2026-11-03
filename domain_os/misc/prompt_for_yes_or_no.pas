@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E33778  prompt_for_yes_or_no (module-local)
+    sau3  0x00E31BC0  prompt_for_yes_or_no (module-local)
 
   - Up to six characters from terminal line 1; a first character Y or y
     is true, N or n false, anything else prints "Please answer" and

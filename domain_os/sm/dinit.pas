@@ -1,6 +1,7 @@
 { SM_$DINIT - bring a storage module drive up.
 
   Image addresses:
+    sau3  0x00E6E0B4  SM_$DINIT
     sau5  0x00E6F40C  SM_$DINIT
 
   - The driver is wired and the command block mapped first; an
@@ -41,7 +42,7 @@ begin
 %if long_iomap %then
   iomap[sm_iomap_cb] := sm_cb_ppn + sm_iomap_bias;
 %else
-  { the SAU3's and SAU4's entry (the TODO(sau) in cinit.pas) }
+  iomap[sm_iomap_cb].entry := sm_cb_ppn + sm_iomap_bias;
 %endif
   ml_$lock(sm_dcte^.disk_error_que_hi);
 

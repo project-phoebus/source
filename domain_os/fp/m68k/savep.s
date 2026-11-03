@@ -2,7 +2,7 @@
  * fp/m68k/savep.s - the FP cells of the FIM_WIRED segment: FP_$SAVEP,
  * FP_$OWNER, FP_$EXCLUSION (m68k/SAU2, SAU5)
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.
  *
  * 0x00E218D0..0x00E218E7 in the SAU2 image (map FP_$SAVEP, FP_$OWNER; 24

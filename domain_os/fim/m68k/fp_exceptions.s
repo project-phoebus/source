@@ -2,7 +2,7 @@
  * fim/m68k/fp_exceptions.s - the 68881 exception vector stubs FIM_$FP_BSUN
  * .. FIM_$FP_SIG_NAN (m68k/SAU2, SAU5)
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.
  *
  * Transcribed from the SAU2 image, 0x00E214B0..0x00E2152F (128 bytes), part

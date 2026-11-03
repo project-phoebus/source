@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E769C4  RING_$STOP
+    sau3  0x00E781B4  RING_$STOP
 
   - Under the unit's transmit lock, the unit is marked not running and
     its mask set to 0.

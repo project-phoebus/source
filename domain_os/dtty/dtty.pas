@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E2E00C  DTTY data (WIRED_DATA, 0xC bytes)
+    sau3  0x00E2CB98  DTTY data (WIRED_DATA, 4 bytes)
 
   One compilation unit, in two code sections and one data section: the
   map's DTTY code segments in WIRED_PROC (0x1C8 bytes: four module-local
@@ -29,6 +30,10 @@
     +0x08  DTTY_$USE_DTTY     1  map symbol; TTY_$I_GET_DESC tests it
     +0x09  3 bytes: the bytes' words' low halves and the rounding to 4
 
+  Without `display_driver' (the SAU3) the unit is DTTY_$INIT alone (0x1C
+  bytes in OS_INIT_PROC; no WIRED_PROC code) and the block 4 bytes:
+  DTTY_$CTRL at +0x00, DTTY_$USE_DTTY at +0x02.
+
   The defined variables are interleaved with the others in the block's
   order, as log/log.pas's (its TODO on where a defined extern variable
   is allocated applies).
@@ -48,20 +53,26 @@ module dtty, wired_proc, wired_data;
   and its variables in the order of the data block (above; ref 7.2.2,
   Method 2, for the defined ones). }
 define
+%if display_driver %then
   dtty_$write_string;
   dtty_$tstart;
   dtty_$reload_font;
+%endif
   dtty_$init;
 
+%if display_driver %then
 var
   dtty_$disp_type: smd_$display_type_t;   { +0x00 }
+%endif
 
 define
   dtty_$ctrl;                             { +0x02 }
 
+%if display_driver %then
 var
   dtty_flag_04: boolean;                  { +0x04 }
   dtty_flag_06: boolean;                  { +0x06 }
+%endif
 
 define
   dtty_$use_dtty;                         { +0x08 }
@@ -77,6 +88,7 @@ const
   dtty_second_display_unit = 2;
 
 { ---- WIRED_PROC ---- }
+%if display_driver %then
 %include 'dtty/get_disp_type.pas';          { dtty_$get_disp_type }
 %include 'dtty/clear_window.pas';           { dtty_$clear_window }
 %include 'dtty/report_error.pas';           { dtty_$report_error }
@@ -84,6 +96,7 @@ const
 %include 'dtty/write_string.pas';           { DTTY_$WRITE_STRING }
 %include 'dtty/tstart.pas';                 { DTTY_$TSTART       }
 %include 'dtty/reload_font.pas';            { DTTY_$RELOAD_FONT  }
+%endif
 
 { ---- OS_INIT_PROC ---- }
 %include 'dtty/init.pas';                   { DTTY_$INIT         }

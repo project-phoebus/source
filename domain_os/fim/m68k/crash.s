@@ -1,7 +1,8 @@
 /*
- * fim/m68k/crash.s - FIM_$CRASH, the fatal-fault report (m68k/SAU2, SAU5)
+ * fim/m68k/crash.s - FIM_$CRASH, the fatal-fault report (m68k/SAU2, SAU3,
+ * SAU5)
  *
- * The SAU2 and SAU5 images have the same code here except the report
+ * The SAU2, SAU3 and SAU5 images have the same code here except the report
  * template's two extra line feeds after its first "\r\n\r\n" on the SAU5
  * (base/config.ins.pas's part `crash_report_blank_lines'; SAU5 0xE1F5CE).
  * The SAU5's routine is at 0x00E1F52C, CRASH_SYSTEM at 0x00E1F300, the
@@ -42,13 +43,16 @@
  * format is: bytes > 0 literal, '%' ends the line, 0x00 prefixes a word
  * printed as 4 hex digits, a negative byte prefixes a long printed as 8.
  *
- * Not on the SAUs whose crash may restart the node (`crash_reboot',
+ * The SAU3 has the same FIM_$CRASH (0xE1D864), its module the SAU2's
+ * with a restart (`crash_prom_restart', misc/m68k/crash_system.s).  Not
+ * on the other SAUs whose crash may restart the node (`crash_reboot',
  * base/config.ins.pas): their CRASH_SYSTEM module is another form, with
  * FIM_$CRASH in it (the SAU9's misc/sau9/crash_system.s).
  */
 
         .include "base/config.inc"
-        .if     !crash_reboot
+        /* (not `a || b': `|' starts a comment in m68k gas) */
+        .if     !(crash_reboot && !crash_prom_restart)
 
         .section ".text.FIM_$CRASH","ax",@progbits
         .even

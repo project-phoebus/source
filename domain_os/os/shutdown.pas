@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6D476  OS_$SHUTDOWN
+    sau3  0x00E6D850  OS_$SHUTDOWN
     sau5  0x00E6EB52  OS_$SHUTDOWN
     sau9  0x3C474082  OS_$SHUTDOWN
 

@@ -1,6 +1,7 @@
 { sm_$wire - wire the storage module driver's code and data, once.
 
   Image addresses:
+    sau3  0x00E6DC2E  sm_$wire (module-local)
     sau5  0x00E6EF86  sm_$wire (module-local)
 
   - The PBU, then the module's code and data; the pages go into

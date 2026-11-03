@@ -1,6 +1,7 @@
 { PBU_$GET_INFO - the PBU manager's information.
 
   Image addresses:
+    sau3  0x00E590FE  PBU_$GET_INFO
     sau5  0x00E592CE  PBU_$GET_INFO
 
   - The three words 1, 2 and 1.

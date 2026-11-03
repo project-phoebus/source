@@ -1,6 +1,7 @@
 { sm_c_$wire - wire the SM_C driver's code and the command block, once.
 
   Image addresses:
+    sau3  0x00E6EDD0  sm_c_$wire (module-local; the map's SM_C_$PROC_START)
     sau5  0x00E74934  sm_c_$wire (module-local; the map's SM_C_$PROC_START)
 
   - Wires the PBU, the module's code (at most 15 pages) and the command

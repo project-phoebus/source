@@ -1,6 +1,7 @@
 { sm_c_$start_drive - bring an SM_C drive up and read its id.
 
   Image addresses:
+    sau3  0x00E6F232  sm_c_$start_drive (module-local)
     sau5  0x00E74D96  sm_c_$start_drive (module-local)
 
   Assume we're called with the controller's ML lock held.

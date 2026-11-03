@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0AB28  SYSBUS_$INIT
+    sau3  0x00E0AC18  SYSBUS_$INIT
     sau9  0x3C40C6D0  SYSBUS_$INIT
 
   - With `sysbus_int_vec': SYSBUS_$INT goes on the vectors 16#A0..16#AF
@@ -11,16 +12,16 @@
   - Without it (the SAU2): DISK_INTERRUPT and RING_INTERRUPT go on their
     vectors; each DCTE of controller type 0, 1 or 2 has its entry, do_io
     and dinit kept in the module's slots for the type (the last of each
-    type wins).
+    type wins).  Without `winchester_config' (the SAU3) only the ring's
+    vector and DCTE.
   - A fragment of the ATBUS_ module.
 
   Status stored: none.
 }
 
-{ TODO(sau) SYSBUS_$INIT on the SAU3, SAU4 and SAU6
+{ TODO(sau) SYSBUS_$INIT on the SAU4 and SAU6
 
-  The SAU3's traps only RING_INTERRUPT and notes only the ring DCTE;
-  the SAU4's and SAU6's trap their SYSBUS_$INT's two ranges of vectors
+  The SAU4's and SAU6's trap their SYSBUS_$INT's two ranges of vectors
   (sysbus/int.pas) and set 32 and 24 entries.  The `sysbus_int_vec' arm
   below is the SAU9's.  To be written as conditional arms when those
   SAUs are translated. }
@@ -52,12 +53,15 @@ procedure sysbus_$init;
 var
   dcte: dcte_ptr_t;
 begin
+%if winchester_config %then
   io_$trap(io_vector_disk, addr(disk_interrupt));
+%endif
   io_$trap(io_vector_ring, addr(ring_interrupt));
 
   dcte := io_$dcte_list;
   while dcte <> nil do begin
     case dcte^.ctype of
+%if winchester_config %then
       io_ctype_win: begin
         type0_dcte := dcte;
         type0_do_io := dcte^.disk_do_io;
@@ -68,6 +72,7 @@ begin
         type1_do_io := dcte^.disk_do_io;
         type1_dinit := dcte^.disk_dinit;
       end;
+%endif
       io_ctype_ring: begin
         type2_dcte := dcte;
         type2_do_io := dcte^.disk_do_io;

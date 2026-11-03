@@ -2,7 +2,7 @@
  * fim/m68k/frestore.s - FIM_$FRESTORE, reload an FPU context saved by
  * FIM_$FSAVE (m68k/SAU2, SAU5)
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.
  *
  * Transcribed from the SAU2 image, 0x00E21CD4..0x00E21D47 (map

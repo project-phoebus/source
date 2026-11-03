@@ -1,7 +1,7 @@
 /*
  * PROC1_$DISPATCH_* - Process dispatcher functions
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.  The SAU9's (`parity_err_regs',
  * base/config.ins.pas: its MMU's error registers) keeps the memory
  * error lanes in the outgoing process's PCB and clears a pending error

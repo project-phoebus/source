@@ -2,7 +2,7 @@
 | time/m68k/time_asm.s - the hand-written TIME_ASM data segment up to the
 | timer interrupt: the calendar read, the timer and clock entries, the
 | clock cells, TIME_$SET_VECTOR and the two deferred-interrupt elements
-| (m68k/SAU2, SAU5)
+| (m68k/SAU2, SAU3, SAU5)
 |
 | The SAU2 and SAU5 images have the same code here except in the calendar
 | read's body, where the SAU5 reaches the MSM5832 through a word port at
@@ -15,6 +15,15 @@
 | TIME_ASM size = 484') is the SAU2's 0x113C higher throughout.  The
 | address and byte columns are the SAU2 image's, except on the lines of
 | the `.if calendar_word_port' arms, which carry the SAU5 image's.
+|
+| The SAU3's calendar has a page of its own (CALENDAR 0xFFA400) with the
+| registers at its start (`calendar_own_page'): control at +0, reached as
+| (A0), the write data at +2 and the read data at +4, inverted as on the
+| SAU2.  Each of the body's seven (0x20,A0) operands is (A0) there, two
+| bytes shorter, and the word ahead of TIME_$TIMER_HANDLER, which keeps
+| the handler on a longword in the SAU2's and SAU5's segment, is not
+| there: the SAU3's TIME_ASM (`D E29768 TIME_ASM size = 474') is 0x10
+| bytes shorter, the handler at TIME_$DI_RTE + 0x10 (0xE29A8C).
 |
 | TIME_$WRT_VT_TIMER is here too, with its timer block a TIMR relocation
 | (a fixup-table cell, 0xE2AF8E), not a literal.
@@ -93,6 +102,10 @@
         .if calendar_word_port
         .set    CAL_CTL, 0x200                  | sau5: control (word port)
         .set    CAL_RDATA, 0x201                | sau5: read data, true
+        .elseif calendar_own_page
+        .set    CAL_CTL, 0                      | sau3: control, (A0)
+        .set    CAL_WDATA, 2                    | sau3: write data
+        .set    CAL_RDATA, 4                    | sau3: read data, inverted
         .else
         .set    CAL_CTL, 0x20                   | control
         .set    CAL_WDATA, 0x22                 | write data
@@ -431,6 +444,8 @@ TIME_$DI_VT:                            | 0xE2B10E
         .space  16
 TIME_$DI_RTE:                           | 0xE2B11E
         .space  16
+        .if !calendar_own_page
         .word   0                       | 0xE2B12E, before TIME_$TIMER_HANDLER
+        .endif
 
         .endif

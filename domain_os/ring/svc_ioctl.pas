@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E776B8  RING_$SVC_IOCTL
+    sau3  0x00E78EA8  RING_$SVC_IOCTL
 
   - Command 1 answers 1; 2 adds packet-type ranges to the channel
     (merged with its adjoining entries, or appended); 3 removes ranges

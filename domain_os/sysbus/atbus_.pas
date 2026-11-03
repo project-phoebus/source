@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E22904  ATBUS_ data (WIRED_DATA, 0x2C bytes)
+    sau3  0x00E218D8  ATBUS_ data (WIRED_DATA, 0x2C bytes)
     sau9  0x3C425548  ATBUS_ data (WIRED_DATA, 0x80 bytes)
 
   One compilation unit, `module atbus_, wired_proc, wired_data;': the
@@ -24,6 +25,9 @@
     a do_io routine, a DCTE and a dinit pointer for controller types 2
     (ring), 1 (floppy) and 0 (Winchester), at +0x00, +0x10 and +0x20;
     the longwords at +0x0C and +0x1C are stand-ins (TODO below).
+    Without `winchester_config' (the SAU3) there is no DISK_INTERRUPT,
+    and only the ring's slots are filled (0x84 bytes; the block is the
+    same).
 
   The SAU5's map has no ATBUS_ segment: the body is configured out by
   `sysbus_routines'.  The SAU7..SAU9's second ATBUS_ compilation unit,
@@ -36,11 +40,10 @@ module atbus_, wired_proc, wired_data;
 
 { TODO(sau) the other SAUs' ATBUS_ code
 
-  The SAU3's ATBUS_ segment holds RING_INTERRUPT, SYSBUS_$INIT and
-  SYSBUS_$DEFINE_INT (0x84 bytes, no DISK_INTERRUPT); the SAU4's and
-  SAU6's SYSBUS_$INT, SYSBUS_$UNDEF_INT, SYSBUS_$DEFINE_INT and
-  SYSBUS_$INIT in other forms than the SAU9's (with SYSBUS_$INT_VEC,
-  and on the SAU6 SYSBUS_$DUP_VEC before it).  Their conditionals go in
+  The SAU4's and SAU6's SYSBUS_$INT, SYSBUS_$UNDEF_INT,
+  SYSBUS_$DEFINE_INT and SYSBUS_$INIT are in other forms than the
+  SAU9's (with SYSBUS_$INT_VEC, and on the SAU6 SYSBUS_$DUP_VEC before
+  it).  Their conditionals go in
   this file and its fragments, each with its own part, when they are
   translated. }
 
@@ -110,13 +113,17 @@ var
 { The global routines this module defines (ref 7.3.4, Method 2), in map
   order. }
 define
+%if winchester_config %then
   disk_interrupt;
+%endif
   ring_interrupt;
   sysbus_$init;
   sysbus_$define_int;
 
 { ---- WIRED_PROC ---- }
+%if winchester_config %then
 %include 'disk/interrupt.pas';            { DISK_INTERRUPT     }
+%endif
 %include 'ring/interrupt.pas';            { RING_INTERRUPT     }
 %include 'sysbus/init.pas';               { SYSBUS_$INIT       }
 %include 'sysbus/define_int.pas';         { SYSBUS_$DEFINE_INT }

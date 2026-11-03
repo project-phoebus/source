@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E333DC  SIO2681_$INIT
+    sau3  0x00E3192C  SIO2681_$INIT
 
   - The chip and both channels (A on the block's first half, B on its
     second; each the other's peer) are recorded in the chip's

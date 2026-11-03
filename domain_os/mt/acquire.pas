@@ -1,7 +1,9 @@
 { MT_$ACQUIRE - acquire a magnetic tape unit for the calling process.
 
   Image addresses:
+    sau3  0x00E7017E  MT_$ACQUIRE
     sau5  0x00E75CE8  MT_$ACQUIRE
+    sau3  0x00E700A4  init_unit (nested)
     sau5  0x00E75C0C  init_unit (nested)
 
   - The first acquisition wires the driver's pages (the MT page and the

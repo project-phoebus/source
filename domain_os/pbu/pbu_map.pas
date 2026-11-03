@@ -2,6 +2,7 @@
   map and DMA entries and its wait.
 
   Image addresses:
+    sau3  0x00E8A054  PBU_MAP data (PBU_WIRED_DATA, 0xC bytes)
     sau5  0x00E9241C  PBU_MAP data (PBU_WIRED_DATA, 0xC bytes)
 
   On the SAUs with the PBU driver (`pbu_driver', base/config.ins.pas):
@@ -10,6 +11,10 @@
   (0x44C bytes on the SAU5: two module-local routines, the DMA entries,
   PBU2_$MAP, PBU2_$UNMAP, PBU_$WAIT) and its data segment in
   PBU_WIRED_DATA (0xC bytes).
+
+  On the SAU3 the same routines in 0x450 bytes: PBU2_$MAP and
+  PBU2_$UNMAP write word I/O map entries (no `long_iomap'), the
+  module-local routines take `pbu_8_units' (pbu/pbu.ins.pas).
 
   Without the driver the module compiles to nothing.
 
@@ -20,7 +25,7 @@
 
   Not part of the module: PBU_$PAGE_END, the map's symbol at the
   module's first byte, a marker: the end of the PBU page's hand-written
-  part (pbu/sau5/pbu_asm.s).
+  part (pbu/sau5/pbu_asm.s, pbu/sau3/pbu_asm.s).
 
   The data block, 0xC bytes, zero: a longword nothing names, then the
   map's PBU_$DCTE_INT_PTR and PBU_$VME_DISABLE_COUNT, defined variables
@@ -47,12 +52,13 @@ module pbu_map, pbu_wired_proc, pbu_wired_data;
 %include 'pbu/pbu.ins.pas';
 
 %if pbu_driver %then
-{ TODO(sau) the SAU3, SAU4 and SAU6..SAU8 PBU_MAP code
+{ TODO(sau) the SAU4 and SAU6..SAU8 PBU_MAP code
 
-  The module's code below is the SAU5's.  tools/sau_catalog.py finds
-  PBU2_$MAP and PBU2_$UNMAP different on each of the SAU3..SAU8, the
-  DMA entries real on the SAU7 and SAU8 (the SAU3..SAU6 share the
-  SAU5's stubs), and PBU_$WAIT in four families; the code segments
+  The module's code below is the SAU5's and the SAU3's.
+  tools/sau_catalog.py finds PBU2_$MAP and PBU2_$UNMAP different on
+  each of the SAU3..SAU8, the DMA entries real on the SAU7 and SAU8 (the
+  SAU3..SAU6 share the SAU5's stubs), and PBU_$WAIT in four families
+  (the SAU3's is the SAU5's); the code segments
   differ in size (0x450 on the SAU3, 0x434 on the SAU4, 0x44C on the
   SAU5, 0x42C on the SAU6, 0xA84 on the SAU7, 0x5F4 on the SAU8). }
 

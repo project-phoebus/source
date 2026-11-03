@@ -3,17 +3,17 @@
 The processor bus unit support in Domain Pascal: configured out of the
 SR10.2 SAU2 and SAU9 kernels but for its eventcount pool, and the
 user-device manager with `pbu_driver` (`../base/config.ins.pas`: the
-SAU3..SAU8), translated from the SAU5 image.
+SAU3..SAU8), translated from the SAU5 and SAU3 images.
 
 ## Layout
 
-| module file | map module | section | SAU2 | SAU5 |
-|-------------|-----------|---------|------|------|
-| `pbu.pas`, `module pbu;` | PBU | .TEXT | 0x18 bytes: PBU_$FREE_ASID (empty), PBU_$FAULTED_UNITS, PBU_$INIT (empty) | 0x1FC0 bytes: five module-local routines (two nested) and 32 globals |
-| `pbu.pas` | PBU | .DATA | none | 0x5C bytes: the PBU page's wired pages, their count, the default transfer control |
-| `ec2_pbu.pas`, `module ec2_pbu, pbu_wired_proc, pbu_wired_data;` | EC2_PBU | PBU_WIRED_PROC, PBU_WIRED_DATA | 0x60 + 0x300 bytes | the same |
-| `pbu_map.pas`, `module pbu_map, pbu_wired_proc, pbu_wired_data;` | PBU_MAP | PBU_WIRED_PROC, PBU_WIRED_DATA | none (empty object) | 0x44C bytes: two module-local routines, the DMA entries, PBU2_$MAP, PBU2_$UNMAP, PBU_$WAIT; 0xC bytes of data |
-| `sau5/pbu_asm.s` | PBU_ASM | PBU_PAGE (data) | none | 0x770 bytes, hand assembly: SM_$CB, PBU_$MCB, PBU_$INT_COM, PBU_$TRAP6, PBU_$DCTES, PBU_$DCTE_TABLE and the DCTEs, PBU_$ENABLE_DEVICE ... |
+| module file | map module | section | SAU2 | SAU3 | SAU5 |
+|-------------|-----------|---------|------|------|------|
+| `pbu.pas`, `module pbu;` | PBU | .TEXT | 0x18 bytes: PBU_$FREE_ASID (empty), PBU_$FAULTED_UNITS, PBU_$INIT (empty) | 0x1ADC bytes: four module-local routines (one nested) and 32 globals | 0x1FC0 bytes: five module-local routines (two nested) and 32 globals |
+| `pbu.pas` | PBU | .DATA | none | 0x5C bytes, as the SAU5's | 0x5C bytes: the PBU page's wired pages, their count, the default transfer control |
+| `ec2_pbu.pas`, `module ec2_pbu, pbu_wired_proc, pbu_wired_data;` | EC2_PBU | PBU_WIRED_PROC, PBU_WIRED_DATA | 0x60 + 0x300 bytes | the same | the same |
+| `pbu_map.pas`, `module pbu_map, pbu_wired_proc, pbu_wired_data;` | PBU_MAP | PBU_WIRED_PROC, PBU_WIRED_DATA | none (empty object) | 0x450 bytes, the SAU5's routines with word I/O map entries; 0xC bytes of data | 0x44C bytes: two module-local routines, the DMA entries, PBU2_$MAP, PBU2_$UNMAP, PBU_$WAIT; 0xC bytes of data |
+| `sau3/pbu_asm.s`, `sau5/pbu_asm.s` | PBU_ASM | PBU_PAGE (data) | none | 0x7A4 bytes, hand assembly: the SAU5's with 8 units and PBU_$GET_STATUS | 0x770 bytes, hand assembly: SM_$CB, PBU_$MCB, PBU_$INT_COM, PBU_$TRAP6, PBU_$DCTES, PBU_$DCTE_TABLE and the DCTEs, PBU_$ENABLE_DEVICE ... |
 
 EC2_PBU has a 0x300-byte data segment in PBU_WIRED_DATA: EC2_$PBU_ECS
 (32 records of 0x18 bytes, zero), a `define`d variable (extern in
@@ -29,8 +29,20 @@ linker script's, when there is one.
 `tools/pascal_check.sh`'s default list takes, besides
 `<sub>/<sub>.pas`, every other `.pas` of a subsystem with a line
 starting `module `.  `sau5/pbu_asm.s` is assembled by the Makefile's
-`*/$(TARGET_SAU)/*.s` for a SAU5 build only; its bytes were checked
-against the image by linking it alone at its address.
+`*/$(TARGET_SAU)/*.s` for a SAU5 build only, `sau3/pbu_asm.s` for a
+SAU3 build; the bytes of each were checked against its image by linking
+it alone at its address.
+
+The SAU3's PBU is the SAU5's source with the parts of
+`../base/config.ins.pas` ("The PBU units"): without `vme_bus` there are
+no VME units, windows or refusals (PBU_$SETUP, PBU_$SETDOWN,
+PBU2_$ASSOC and its nested window_free, PBU2_$ALLOCATE_MAP,
+PBU_$CONTROL, PBU2_$WIRE_MAP, PBU_$DISSOC, PBU_$INIT); `pbu_8_units`
+gives 8 units and a byte of owners per page (`pbu.ins.pas`); without
+`long_iomap` an I/O map entry is a word and a unit's control its high
+word (PBU_$CONTROL, PBU2_$WIRE_MAP, pbu_clear_iomap, PBU2_$MAP,
+PBU2_$UNMAP); without `pbu_wire_special` PBU_$WIRE_SPECIAL only refuses.
+The other routines are the SAU5's code.
 
 ## Routines and their fragments
 
@@ -90,6 +102,7 @@ against the image by linking it alone at its address.
 | PBU_$TRAP6, PBU_$GET_DIAG_PTR, PBU_$INT_FAULT_COM | none: hand assembly, `sau5/pbu_asm.s` |
 | SM_BLK_HDR, PBU_$DCTES, PBU_$DCTE_TABLE | none: hand assembly, `sau5/pbu_asm.s` |
 | PBU_$DEVICE_INTERRUPTING, PBU_$DISABLE_DEVICE, PBU_$ENABLE_DEVICE | none: hand assembly, `sau5/pbu_asm.s` |
+| PBU_ASM on the SAU3, PBU_$GET_STATUS | none: hand assembly, `sau3/pbu_asm.s` |
 | (data) | EC2_$PBU_ECS is `ec2_pbu.pas`'s defined variable |
 
 `pbu.ins.pas`, the home of every PBU declaration: the statuses, the
@@ -124,10 +137,11 @@ EC2_PBU has no conformance unit.
 - The map names one object, EC2_$PBU_ECS, in the EC2_PBU module's data,
   which this Pascal defines.
 - The SAU5 DDF, DCTE and control layouts are inferred from the code
-  (pbu.ins.pas).
+  (pbu.ins.pas), the SAU3's control and I/O map entry likewise.
+- PBU_$WIRE_SPECIAL's SAU3 body: the TODO(pascal) in `wire_special.pas`.
 
 ### TODO(sau)
 
-- The SAU3, SAU4 and SAU6..SAU8 PBU and PBU_MAP code, each SAU's own
+- The SAU4 and SAU6..SAU8 PBU and PBU_MAP code, each SAU's own
   (`pbu.pas`, `pbu_map.pas`);
-  PBU_TABLES' size per SAU (`pbu.ins.pas`).
+  PBU_TABLES' size on the SAU4 and SAU7 (`pbu.ins.pas`).

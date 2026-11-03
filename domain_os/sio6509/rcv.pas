@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E1D53E  SIO6509_$RCV
+    sau3  0x00E1C6B2  SIO6509_$RCV
 
   - When the chip's status byte's bit 7 says a character is there, it
     goes to SIO_$I_RCV with the line's SIO descriptor and the error

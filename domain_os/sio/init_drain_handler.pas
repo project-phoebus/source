@@ -7,6 +7,7 @@
   - The transmit buffer, TTY_$I_OUTPUT_BUFFER_DRAINED as the callback
     and the owner as its argument; the DTTE argument is not read.
   - A fragment of the OS_TERM_INIT module.
+  - Compiled only with `display_driver' (base/config.ins.pas).
 
   Status stored: none.
 }

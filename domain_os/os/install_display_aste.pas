@@ -4,6 +4,7 @@
     sau2  0x00E6D29A  OS_$INSTALL_DISPLAY_ASTE
     sau9  0x3C473E8E  OS_$INSTALL_DISPLAY_ASTE
 
+  - Compiled only with `display_driver' (base/config.ins.pas).
   - The object's pages are the frames behind va, consecutive from the
     first; touch also maps the object at va and touches every page.
   - Without `pft_mmu' the frames go in as I/O pages, and the

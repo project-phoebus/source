@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E35028  RING data (OS_INIT_DATA, 4 bytes)
     sau2  0x00E86400  RING data (RING_DATA, 0x5D0 bytes)
+    sau3  0x00E33428  RING data (OS_INIT_DATA, 4 bytes)
+    sau3  0x00E86800  RING data (RING_DATA, 0x5D0 bytes)
     sau5  0x00E37828  RING data (OS_INIT_DATA, 4 bytes)
     sau5  0x00E8EC00  RING data (RING_DATA, 0x5D0 bytes)
     sau9  0x3C43BC28  RING data (OS_INIT_DATA, 0xB0 bytes)

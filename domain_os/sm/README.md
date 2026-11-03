@@ -2,8 +2,8 @@
 
 The storage module disk driver, on the SAUs whose kernel has the storage
 module drivers (the part `smd_disk`, `../base/config.ins.pas`: the
-SR10.2 SAU3..SAU6).  Translated from the SAU5 image; the SAU2 build
-compiles the module to an empty object.
+SR10.2 SAU3..SAU6).  Translated from the SAU5 image, with the SAU3's
+I/O map entries; the SAU2 build compiles the module to an empty object.
 
 ## Layout
 
@@ -47,7 +47,7 @@ headings the driver calls (TODO(merge)).
 
 ## Open items
 
-- TODO(sau): the SAU3's and SAU4's I/O map entries (`cinit.pas`); the
-  SAU4's and SAU6's own SM code.
+- TODO(sau): the SAU4's I/O map entries (`cinit.pas`); the SAU4's and
+  SAU6's own SM code.
 - TODO(pascal): the data block's open longword at +0x1C (`sm.pas`).
 - TODO(merge): the PBU headings (`sm.ins.pas`).

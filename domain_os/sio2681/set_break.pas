@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E1D114  SIO2681_$SET_BREAK
+    sau3  0x00E1C288  SIO2681_$SET_BREAK
 
   - Under the driver's spin lock the start-break command (enable true)
     or the stop-break command is written; the line's output is then

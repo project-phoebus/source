@@ -2,6 +2,7 @@
   unit has it wired.
 
   Image addresses:
+    sau3  0x00E89BE0  pbu_map_owned_ppn (module-local)
     sau5  0x00E91FAC  pbu_map_owned_ppn (module-local)
 
   - 0 for a page not mapped, or for a page of MMAP_$LPPN..MMAP_$HPPN

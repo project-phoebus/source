@@ -1,6 +1,7 @@
 { pbu/pbu.pas - the PBU module, processor bus unit support.
 
   Image addresses:
+    sau3  0x00E82448  PBU data (.DATA, 0x5C bytes)
     sau5  0x00E88048  PBU data (.DATA, 0x5C bytes)
 
   Configured out of the SAU2 and SAU9 kernels: there one compilation
@@ -16,7 +17,11 @@
 
   On the SAU5 one code segment in .TEXT (0x1FC0 bytes: five module-local
   routines, two of them nested, and the 32 globals) and one data segment
-  in .DATA (0x5C bytes).
+  in .DATA (0x5C bytes).  On the SAU3 the same with 0x1ADC bytes of code:
+  four module-local routines (PBU2_$ASSOC's nested window_free is the
+  VME bus's, `vme_bus'), 8 units (`pbu_8_units'), word I/O map entries
+  (no `long_iomap') and PBU_$WIRE_SPECIAL without its body (no
+  `pbu_wire_special').
 
   Not part of the module (pbu_driver):
 
@@ -33,6 +38,7 @@
 
     +0x00  pbu_wired_pages  the PBU page's wired pages, 21
     +0x54  pbu_default_ctl  a new DCTE's transfer control, 16#48000
+                            (16#80000000 without `long_iomap')
     +0x58  pbu_wired_count  the count of pbu_wired_pages
     (the block's last two bytes are the compiler's padding)
 
@@ -63,18 +69,24 @@ module pbu;
 %endif
 
 %if pbu_driver %then
-{ TODO(sau) the SAU3, SAU4 and SAU6..SAU8 PBU code
+{ TODO(sau) the SAU4 and SAU6..SAU8 PBU code
 
-  The module's code below is the SAU5's.  27 of the 32 PBU routines
-  differ between the SAUs with the driver (tools/sau_catalog.py), and
-  the code segments differ in size (0x1ADC on the SAU3, 0x1938 on the
-  SAU4, 0x1FC0 on the SAU5, 0x1F7C on the SAU6): those SAUs need their
-  own forms, with their own parts, when they are translated. }
+  The module's code below is the SAU5's and the SAU3's.  27 of the 32
+  PBU routines differ between the SAUs with the driver
+  (tools/sau_catalog.py), and the code segments differ in size (0x1ADC
+  on the SAU3, 0x1938 on the SAU4, 0x1FC0 on the SAU5, 0x1F7C on the
+  SAU6): the other SAUs need their own forms, with their own parts,
+  when they are translated. }
 
 var
   pbu_wired_pages: array[1..pbu_max_wired_pages] of integer32;  { +0x00 }
+%if long_iomap %then
   pbu_default_ctl: pbu_$ctl_t := [wide := true, bit_15 := true];
                                                 { +0x54: 16#48000 }
+%else
+  pbu_default_ctl: pbu_$ctl_t := [bit_15 := true];
+                                                { +0x54: 16#80000000 }
+%endif
   pbu_wired_count: integer;                     { +0x58 }
 %endif
 

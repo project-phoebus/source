@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E2DEB8  SIO_IO data (WIRED_DATA, 0xC8 bytes)
     sau2  0x00E351EC  SIO_IO data (OS_INIT_DATA, 0x8 bytes)
+    sau3  0x00E2CA24  SIO_IO data (WIRED_DATA, 0xC8 bytes)
+    sau3  0x00E335EC  SIO_IO data (OS_INIT_DATA, 0x8 bytes)
 
   One compilation unit: the map's SIO_IO code segments in WIRED_PROC
   (0x69C bytes, SIO2681_$INT .. SIO2681_$XMIT, SIO6509_$RCV,

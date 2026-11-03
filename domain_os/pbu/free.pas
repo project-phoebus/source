@@ -1,6 +1,7 @@
 { PBU_$FREE - free I/O map space a kernel driver's unit allocated.
 
   Image addresses:
+    sau3  0x00E58EFA  PBU_$FREE
     sau5  0x00E590C8  PBU_$FREE
 
   - Under the exclusion lock: IO_$FREE of the space at iova (a failure

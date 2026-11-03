@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E337F4  OS_$INIT
+    sau3  0x00E31C3C  OS_$INIT
     sau5  0x00E357E8  OS_$INIT
     sau9  0x3C439E2E  OS_$INIT
 
@@ -34,8 +35,8 @@
     display (DISPLAY3_$UID) and starts COLOR2 and the graphics processor.
   - `disp2_probe': a second display is probed and installed as
     DISPLAY2_$UID; its answer is kept in DISP2_PRESENT.
-  - `power_off_check': OS_$INIT_POWER_OFF_CHECK runs after
-    SMD_$INIT_BLINK (os/init_power_off_check.pas).
+  - `power_off_check': OS_$INIT_POWER_OFF_CHECK runs before
+    PACCT_$INIT (os/init_power_off_check.pas).
   - Without `pft_mmu': COLD's segment goes whole; the type-4
     protections are page write bits and segment map entries.
   - `large_address_space': the page maps of global B's two unused
@@ -46,6 +47,11 @@
     until the operator runs CALENDAR.
   - `crash_reboot': a server whose node number is not the volume's
     shuts down and restarts by itself.
+  - Without `display_driver': no display, touch pad or blinking
+    cursor; the terminal's mode is 1 and MST_$DISKLESS_INIT's color
+    flag false.
+  - `lpr_driver', `iic_driver': the line printer and the internet
+    interface controller are started.
 
   Status stored: none.
 }
@@ -56,15 +62,15 @@
   compares the index with 44), where the two parts' cells give 45: not
   looked at. }
 
-{ TODO(sau) the forms of the SAU3, SAU4, SAU6..SAU8 not compared
+{ TODO(sau) the forms of the SAU4, SAU6..SAU8 not compared
 
   The arms of `pft_mmu', `large_vm', `crash_reboot', `ring_node_id',
   `smd_display_memory', `calendar_service_mode' and `pmmu_page_maps'
   follow the SAU9's code, their banks the other SAUs' maps and calls.
   Not compared there: TIME_$INIT's argument without the calendar probe
-  (the SAU9's `true'), CAL_$VERIFY's two literals (the SAU9's), the node
-  check of the SAU3 (CRASH without SERVER_$FLAG), the SAU8's
-  page-descriptor and vector forms. }
+  on the SAU4, SAU6..SAU8 (the SAU9's and the SAU3's `true'),
+  CAL_$VERIFY's two literals (the SAU9's), the SAU8's page-descriptor
+  and vector forms. }
 
 { TODO(pascal) OS_$INIT's frame
 
@@ -85,7 +91,13 @@
   the copies first, from the top; no declaration order of the locals
   puts the copies there under dpc's rule.  The var section keeps the
   grouping by part; the image's order is the evidence for the compiler's
-  rule. }
+  rule.
+
+  The SAU3's frame is 20 bytes smaller than the SAU2's (0x1E8 bytes):
+  it has no slots for probe_result (`display_driver') and for
+  time_flags, boot_clock and rounded_clock, which only `boot_time_lock'
+  uses; the three are declared under every configuration here, as the
+  SAU9's frame has not been compared. }
 
 [section(os_init_proc, os_init_data)]
 %if prom_config_record %then
@@ -265,7 +277,9 @@ var
   stack_low: os_$init_byte_array_ptr_t;   { the start of the cleared KB }
   idx: integer;
   disk_chksum_arg: boolean;
+%if display_driver %then
   probe_result: char;
+%endif
   asid: integer;
   boot_clock: time_$clock_t;
   rounded_clock: time_$clock_t;
@@ -281,7 +295,9 @@ var
   stored_node: integer32;
   proc2_start: fim_$startup_context_t;
   saved_net: integer32;
+%if display_driver %then
   disp_type: smd_$display_type_t;
+%endif
 %if prom_config_record %then
   cfg: os_$prom_config_t;                 { the PROM's record's copy }
   cfg_ptr: integer32;                     { its address, for IO_$INIT and
@@ -531,6 +547,9 @@ begin
 %if ring_node_id %then
   node_$me := ring_$get_id(0);
 %endif
+%if lpr_driver %then
+  lpr_$init;
+%endif
 %if large_vm %then
   mem_$init;
 %endif
@@ -554,6 +573,7 @@ begin
   term_ctrl := 1;
   if 4 in boot.flags then
     term_ctrl := 2;
+%if display_driver %then
   if 0 in boot.flags then
     if 1 in boot.flags then
       term_mode := 1
@@ -565,6 +585,9 @@ begin
     term_mode := 0;
     term_ctrl := 1;
   end;
+%else
+  term_mode := 1;
+%endif
 %endif
   term_$init(term_mode, term_ctrl);
 
@@ -591,8 +614,10 @@ begin
   proc1_$set_type(proc1_$current, 1);
 %endif
 
+%if display_driver %then
   smd_$init;
   tpad_$init;
+%endif
   dtty_$init(term_mode, term_ctrl);
   ec2_$init_s;
   print_build_time;
@@ -819,6 +844,7 @@ begin
     os_$chksum(0, 0, 0, disk_chksum_arg, status);
   end;
 
+%if display_driver %then
 %if smd_display_memory %then
   { the display memory, SMD's }
   smd_$install_disp_mem;
@@ -858,6 +884,7 @@ begin
     os_$install_display_aste(display2_$uid, 16#FA0000, 16#20000, true);
 %endif
 %endif
+%endif
 
 %if boot_time_lock %then
   { the purifiers wait on this lock while the time is fetched below }
@@ -887,6 +914,9 @@ begin
   acl_$enter_super;
   sock_$init;
   network_$init;
+%if iic_driver %then
+  iic_$init;
+%endif
 %if boot_time_lock %then
 
   { with no calendar of its own, the node takes
@@ -1171,6 +1201,7 @@ begin
   mmu_$page_write_bit(addr(trap_page), 16#13);
 %endif
 
+%if display_driver %then
   { the display's type, unit 1 then 2 (constant
     cells); tested on the move's flags }
   disp_type := smd_$inq_disp_type(1);
@@ -1178,10 +1209,16 @@ begin
     disp_type := smd_$inq_disp_type(2);
   mst_$diskless_init(disp_type = smd_$color_display, network_$mother_node,
                      node_$me);
+%else
+  { no display, so none in color }
+  mst_$diskless_init(false, network_$mother_node, node_$me);
+%endif
 
   { the last subsystems; then process 2, which
     does not return }
+%if display_driver %then
   smd_$init_blink;
+%endif
 %if power_off_check %then
   os_$init_power_off_check;
 %endif

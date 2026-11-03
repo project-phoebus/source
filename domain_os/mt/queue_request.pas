@@ -2,6 +2,7 @@
   requests, and build and queue a request.
 
   Image addresses:
+    sau3  0x00E6FC66  mt_$queue_request
     sau5  0x00E757CE  mt_$queue_request
 
   - Unless op is mt_op_check_only, every unit's finished requests are

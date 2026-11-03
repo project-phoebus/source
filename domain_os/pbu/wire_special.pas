@@ -2,8 +2,11 @@
   physical addresses.
 
   Image addresses:
+    sau3  0x00E59F52  PBU_$WIRE_SPECIAL
     sau5  0x00E5A1C4  PBU_$WIRE_SPECIAL
 
+  - With the routine's body (`pbu_wire_special'); without it nothing is
+    wired: count is 0, the status status_$pbu_not_supported.
   - With options member 0 each page must be wired for the unit already;
     otherwise it is wired (PBU_$SAVE_PPN), a page already wired ending
     the loop, another failure unwiring the pages so far.
@@ -25,8 +28,10 @@
     status_$pbu_bad_buffer_address: a page outside MMAP_$LPPN..HPPN
     pbu_$save_ppn's status: a page was wired already
     pbu_$save_ppn's status, its fail bit set: a page could not be wired
+    status_$pbu_not_supported: without the body
 }
 
+%if pbu_wire_special %then
 procedure pbu_$wire_special(in unit: integer;
                             in options: pbu_$wire_options_t;
                             in buffer: univ pbu_$buffer_t;
@@ -131,3 +136,24 @@ unlock:
   else
     count := 0;
 end;
+%else
+
+{ TODO(pascal) the SAU3 body's load of pa_list's address
+
+  The SAU3's (and the SAU4's) body loads pa_list's address from its
+  argument slot first and does nothing with it; then count and the
+  status are stored.  No statement on pa_list that leaves only that load
+  is known; the two assignments below give the rest. }
+
+procedure pbu_$wire_special(in unit: integer;
+                            in options: pbu_$wire_options_t;
+                            in buffer: univ pbu_$buffer_t;
+                            in length: linteger;
+                            out pa_list: univ pbu_$pa_list_t;
+                            in max: integer; out count: integer;
+                            out status: status_$t);
+begin
+  count := 0;
+  status.all := status_$pbu_not_supported;
+end;
+%endif

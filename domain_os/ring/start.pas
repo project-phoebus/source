@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E76830  RING_$START
+    sau3  0x00E78020  RING_$START
 
   - The driver is wired and the unit marked running; its receive
     process is started if it is not yet, and its transmit mask gets the

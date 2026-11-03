@@ -1,7 +1,7 @@
 /*
  * vfmt/m68k/writen.s - VFMT_$WRITEN, the "write" procedure-variable thunk
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.
  *
  * Original address: 0x00E6B0A4

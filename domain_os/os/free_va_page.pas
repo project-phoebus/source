@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6D240  os_$free_va_page (module-local)
+    sau3  0x00E6D7EC  os_$free_va_page (module-local)
     sau5  0x00E6E91C  os_$free_va_page (module-local)
     sau9  0x3C473DFE  os_$free_va_page (module-local)
 

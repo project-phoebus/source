@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E13A9C  PMAP_$PURIFIER_L
+    sau3  0x00E13B10  PMAP_$PURIFIER_L
     sau9  0x3C415DD4  PMAP_$PURIFIER_L
 
   - A process's body: it never returns.

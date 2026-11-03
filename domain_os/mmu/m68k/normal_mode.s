@@ -1,7 +1,7 @@
 /*
  * MMU_$NORMAL_MODE - Is the MMU status register's "normal mode" bit set?
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.
  *
  * Original address: 0x00E24280, 12 bytes (0xE24280..0xE2428B).

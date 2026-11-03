@@ -2,7 +2,7 @@
 | proc1/m68k/atomic_op.s - PROC1_$BEGIN_ATOMIC_OP, PROC1_$END_ATOMIC_OP
 | and the dispatcher's crash stub between them
 |
-| The SAU2 and SAU5 images have the same code here; the address and
+| The SAU2, SAU3 and SAU5 images have the same code here; the address and
 | byte columns below are the SAU2 image's.
 |
 | Byte gate (tools/asm_compare.py, `make check-asm'): the

@@ -2,6 +2,7 @@
   resources, and shut the controller down after the last unit.
 
   Image addresses:
+    sau3  0x00E6FF94  mt_$release_unit
     sau5  0x00E75AFC  mt_$release_unit
 
   - When it was the last acquired unit, a failure to free the

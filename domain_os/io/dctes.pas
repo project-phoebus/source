@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E2C8BC  DCTES data (WIRED_DATA, 0xD0 bytes)
+    sau3  0x00E2B608  DCTES data (WIRED_DATA, 0xD0 bytes)
     sau5  0x00E2DB28  DCTES data (WIRED_DATA, 0x158 bytes)
     sau9  0x3C430FB4  DCTES data (WIRED_DATA, 0x774 bytes)
 
@@ -13,7 +14,8 @@
 
   The SAU2's are RING_DCTE, FLP_DCTE and WIN_DCTE; the SAU5's CTAPE_DCTE
   (`ct_qic02'), SMD_DCTE_1 and SMD_DCTE_0 (`smd_disk'), RING_DCTE and
-  WIN_DCTE.  Each is kind 1, 64 bytes, controller 0, with its init and
+  WIN_DCTE; the SAU3's SMD_DCTE_1, SMD_DCTE_0 and RING_DCTE (no
+  WIN_DCTE without `winchester_config').  Each is kind 1, 64 bytes, controller 0, with its init and
   interrupt routines and register block.
 
   The SAU9's (`named_dctes') are kind 2, 28 of them: two 802.5 rings,
@@ -25,8 +27,8 @@
   against the PROM's configuration record; and, for the units with
   one, its I/O descriptor (io/io_desc.pas) in disk_dinit.
 
-  RING_DCTE's vector is 16#1B on the SAU2 (SYSBUS_$INIT installs it), 0
-  on the SAU5.  The DCTEs are static_dcte_t, dcte_t with a univ_ptr init
+  RING_DCTE's vector is 16#1B on the SAU2 and SAU3 (SYSBUS_$INIT
+  installs it), 0 on the SAU5.  The DCTEs are static_dcte_t, dcte_t with a univ_ptr init
   routine: dpc refuses the routines' `addr' as dcte_t's routine pointer.
 
   Check: tools/pascal_check.sh.
@@ -34,8 +36,8 @@
 
 { TODO(sau) the DCTES blocks of the SAUs not translated
 
-  Only the SAU2's and the SAU5's blocks are written.  The others differ
-  beyond the parts used here: the SAU4's and SAU6's RING_DCTE vectors
+  Only the SAU2's, SAU3's, SAU5's and SAU9's blocks are written.  The
+  others differ beyond the parts used here: the SAU4's and SAU6's RING_DCTE vectors
   (16#90, 16#88), the SAU4's FLP_DCTE (0x50 bytes) and its WIN_DCTE's
   register page, the SAU6's Ethernet and second Winchester and tape
   DCTEs, the SAU7's kind-2 and kind-3 DCTEs (0x3A4 bytes).
@@ -407,7 +409,9 @@ var
 %if floppy_disk %then
   disk: extern char;
 %endif
+%if winchester_config %then
   win: extern char;
+%endif
 %if ct_qic02 %then
   tape: extern char;
 %endif
@@ -424,16 +428,19 @@ var
      disk_error_que := 16#00170000];
 %endif
 %if smd_disk %then
-  smd_dcte_1: define static_dcte_t :=     { +0x40 on the SAU5 }
+  smd_dcte_1: define static_dcte_t :=     { +0x40 on the SAU5; +0x00 on
+                                            the SAU3 }
     [kind := 1, length := 64, ctype := io_ctype_smd, cnum := 0,
      nextp := nil, csrsytr := addr(sm_c_$cinit),
      io_va := addr(sm_blk_hdr), disk_error_que := 16#00150000];
-  smd_dcte_0: define static_dcte_t :=     { +0x80 on the SAU5 }
+  smd_dcte_0: define static_dcte_t :=     { +0x80 on the SAU5; +0x40 on
+                                            the SAU3 }
     [kind := 1, length := 64, ctype := io_ctype_smd, cnum := 0,
      nextp := nil, csrsytr := addr(sm_$cinit),
      io_va := addr(sm_blk_hdr), disk_error_que := 16#00150000];
 %endif
-  ring_dcte: define static_dcte_t :=      { +0x00; +0xC0 on the SAU5 }
+  ring_dcte: define static_dcte_t :=      { +0x00; +0xC0 on the SAU5;
+                                            +0x80 on the SAU3 }
     [kind := 1, length := 64, ctype := io_ctype_ring, cnum := 0,
      nextp := nil, csrsytr := addr(ring_$init),
 %if ring8_controller %then
@@ -453,15 +460,20 @@ var
      disk_dinit := addr(disk), disk_do_io := addr(flp_$int),
      disk_error_que := 16#00170000];
 %endif
+%if winchester_config %then
   win_dcte: define static_dcte_t :=       { +0x80; +0x100 on the SAU5 }
     [kind := 1, length := 64, ctype := io_ctype_win, cnum := 0,
      nextp := nil, csrsytr := addr(win_$cinit),
      disk_dinit := addr(win), disk_do_io := addr(win_$int),
      disk_error_que := 16#00170000];
+%endif
 
 { The list, the block's DCTEs from the last to the first. }
 define
-  dev_dctes := [addr(win_dcte),
+  dev_dctes := [
+%if winchester_config %then
+                addr(win_dcte),
+%endif
 %if floppy_disk %then
                 addr(flp_dcte),
 %endif
@@ -473,5 +485,6 @@ define
                 addr(ctape_dcte),
 %endif
                 nil];
-                                          { +0xC0; +0x140 on the SAU5 }
+                                          { +0xC0; +0x140 on the SAU5;
+                                            +0xC0 on the SAU3 }
 %endif

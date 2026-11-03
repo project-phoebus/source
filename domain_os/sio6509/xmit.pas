@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E1D586  SIO6509_$XMIT
+    sau3  0x00E1C6FA  SIO6509_$XMIT
 
   - The 6509 console line transmits through DTTY, not through this
     entry.

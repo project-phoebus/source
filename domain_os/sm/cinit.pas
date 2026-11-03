@@ -1,6 +1,7 @@
 { SM_$CINIT - initialize the storage module controller at boot.
 
   Image addresses:
+    sau3  0x00E6DF5C  SM_$CINIT
     sau5  0x00E6F2B4  SM_$CINIT
 
   - When the PBU is present and the controller answers the probe, the
@@ -17,11 +18,11 @@
   Status stored: none.
 }
 
-{ TODO(sau) SM_$CINIT's I/O map entry on the SAU3 and SAU4
+{ TODO(sau) the SAU4's I/O map entries
 
-  The SAU3's SM_$CINIT is this code but for the entry: the page
-  number's low word plus 16#8000, stored as a word; the SAU4's stores
-  another form.  The `%else' arm, to be written from those images. }
+  The SAU4's I/O map is a word an entry, at its own address, and its
+  SM_$DINIT and SM_$DO_IO store the page number alone; its SM_$CINIT
+  and SM_$INT differ elsewhere too.  Neither arm below is its form. }
 
 function sm_$cinit(var dcte: dcte_t): integer32;
 label
@@ -54,7 +55,8 @@ begin
   iomap[sm_iomap_cb] :=
     mmu_$vtop(integer32(addr(sm_$cb)), status) + sm_iomap_bias;
 %else
-  { the SAU3's and SAU4's entry (TODO(sau) above) }
+  iomap[sm_iomap_cb].entry :=
+    mmu_$vtop(integer32(addr(sm_$cb)), status) + sm_iomap_bias;
 %endif
   discard(disk_$register(sm_pbu_unit, sm_dcte^.cnum, sm_unit_count,
                          sm_dcte^.disk_error_que_hi,

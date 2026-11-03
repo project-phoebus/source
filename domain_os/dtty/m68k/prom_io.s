@@ -1,6 +1,6 @@
 | dtty/m68k/prom_io.s - PROM I/O routines for Display TTY
 |
-| The SAU2 and SAU5 images have the same code here; the address and
+| The SAU2, SAU3 and SAU5 images have the same code here; the address and
 | byte columns below are the SAU2 image's.  With `trap_page_high'
 | (base/config.ins.pas: the SAU7, SAU9) the trap page, and with it the
 | PROM's entry cells, is not at 0: each cell is reached at TRAP_PAGE

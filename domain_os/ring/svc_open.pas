@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E76DF2  RING_$SVC_OPEN
+    sau3  0x00E785E2  RING_$SVC_OPEN
 
   Status stored:
     ring_$open_internal's status: the channel was opened, or not

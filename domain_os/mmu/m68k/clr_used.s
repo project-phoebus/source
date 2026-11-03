@@ -1,7 +1,7 @@
 /*
  * MMU_$CLR_USED - Clear the REFERENCED bit of a physical page's PFT entry
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.
  *
  * Original address: 0x00E2425A, 20 bytes.  Callers: 0x00E0A300, 0x00E0F368.

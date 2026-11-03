@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E34B14  OS_$BOOT_ERRCHK
+    sau3  0x00E32E5A  OS_$BOOT_ERRCHK
     sau5  0x00E36C5A  OS_$BOOT_ERRCHK
     sau9  0x3C43B1AE  OS_$BOOT_ERRCHK
 

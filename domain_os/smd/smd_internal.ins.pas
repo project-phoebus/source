@@ -730,9 +730,12 @@ type
   smd_blink_func_t = ^procedure;
 
 { The overlay section SMD_$WIRED_DATA (above): ring/ringlog.ins.pas's form,
-  the variable named after the section. }
+  the variable named after the section.  Not on the SAUs without the
+  display driver (`display_driver'): the SAU3's map has no such section. }
+%if display_driver %then
 var (smd_$wired_data)
   smd_$wired_data: smd_$wired_data_t;
+%endif
 
 var
   { SMD_$DISPLAY_COM (map symbol in SMD_WIRED's hand-written data): the

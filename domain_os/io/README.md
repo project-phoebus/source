@@ -9,9 +9,9 @@ segments' name), in three code sections:
 
 | section | code | routines | attribute |
 |---------|------|----------|-----------|
-| WIRED_PROC | 0x5D0 bytes (SAU5 0xBB8) | CHK (misc/), IO_$GET_DCTE, the module-local io_$check_unit, IO_$ACQUIRE (with the nested int_ids_match) .. IO_$ALLOC | none (the heading's) |
-| OS_INIT_PROC | 0x22C bytes (SAU5 0x270, SAU9 0x4D0) | io_$build_dcte_list (module-local), io_$match_device (module-local, `prom_config_record`), IO_$INIT, IO_$LOG_SELF_TESTS (`prom_config_record`) | `[section(os_init_proc, os_init_data)]` |
-| PROCEDURE$ | 0x8C bytes (SAU5 0xB8) | IO_$GET_CONFIG | `[section(procedure$, data$)]` |
+| WIRED_PROC | 0x5D0 bytes (SAU3 0xB9C, SAU5 0xBB8) | CHK (misc/), IO_$GET_DCTE, the module-local io_$check_unit, IO_$ACQUIRE (with the nested int_ids_match) .. IO_$ALLOC | none (the heading's) |
+| OS_INIT_PROC | 0x22C bytes (SAU3 0x278, SAU5 0x270, SAU9 0x4D0) | io_$build_dcte_list (module-local), io_$match_device (module-local, `prom_config_record`), IO_$INIT, IO_$LOG_SELF_TESTS (`prom_config_record`) | `[section(os_init_proc, os_init_data)]` |
+| PROCEDURE$ | 0x8C bytes (SAU3 0xA4, SAU5 0xB8) | IO_$GET_CONFIG | `[section(procedure$, data$)]` |
 
 Data: the map's IO_ data segment, 0x554 bytes in WIRED_DATA (0x684 on
 the SAU5, with PBU_$EXCLUSION_LOCK a sixth map symbol), with five
@@ -90,6 +90,29 @@ SMD_DCTE_1, SMD_DCTE_0, RING_DCTE, WIN_DCTE).  The parts are in
 `base/config.ins.pas`; the other modules' headings IO_ needs on the SAU5
 are at the end of `io.ins.pas` (TODO(merge)).
 
+The SAU3's IO_ is the SAU5's source (`pbu_driver`, `io_regions` with
+64 region nodes, `mbus_bus`) with the SAU2's `dma_driver` and
+`sysbus_routines`: its WIRED_PROC segment is 0xB9C bytes, OS_INIT_PROC
+0x278, the data block 0x9BC (two I/O maps, bus 2's and bus 4's;
+PBU_$EXCLUSION_LOCK), DCTES 0xD0 (SMD_DCTE_1, SMD_DCTE_0, RING_DCTE).
+Most routines differ from the SAU5's only in the block's offsets.  The
+arms (`base/config.ins.pas`):
+
+- `mbus_map_reserved`: the Multibus map's initial value holds one range,
+  16#70000 .. 16#80000 (`io.pas`);
+- `mbus_dev_routines` (the SAU5 only): IO_$BUS_EPV's Multibus entry has
+  MBUS_$ENABLE_DEV and MBUS_$DISABLE_DEV; the SAU3's has neither;
+- `pbu_alloc_mbus`: IO_$ALLOC allocates in the Multibus's map below 1 MB
+  whatever the unit's bus (`alloc.pas`);
+- `vme_bus`: IO_$ALLOC_MAP's refusal of a VME unit is compiled only with
+  the VME bus (`alloc_map.pas`);
+- `winchester_config`: no WIN_DCTE (`dctes.pas`, and DEV_DCTES's bound
+  in `io.ins.pas`) and no CHK(0) in IO_$GET_CONFIG without it;
+- `iic_port_config`, `pbu_config_always`: IO_$GET_CONFIG's config2
+  member 2 for an active port of the internet interface controller
+  (ROUTE_$PORT, `route/route.ins.pas`'s `route_$port_type_iic`) and
+  config3 := [1] (`get_config.pas`).
+
 On the SAU9 the block is 0x5B4 bytes: the I/O maps of bus 3 and bus 4
 (`atbus_map` with `atbus_routines`), SCSI_$EXCLUSION_LOCK after IO_'s
 own lock (`scsi_driver`), no region nodes.  IO_$UNMAP_CSR removes each
@@ -162,12 +185,12 @@ ML_$EXCLUSION_INIT), `mmu/mmu.ins.pas` (MMU_$VTOP).
 - `build_dcte_list.pas`: 8 frame bytes (stand-ins `unused_8`,
   `unused_5c`).
 - `init.pas`: 16 frame bytes (stand-ins `unused_18`, `unused_1c`).
-- `get_config.pas`: 4 frame bytes (stand-in `unused_4`).
 
 ### TODO(sau)
 
-- `get_config.pas`: IO_$GET_CONFIG's forms on SAU3 and SAU4.
-- `dctes.pas`: the DCTES blocks of the SAUs other than the SAU2 and SAU5.
+- `get_config.pas`: IO_$GET_CONFIG's form on the SAU4.
+- `dctes.pas`: the DCTES blocks of the SAUs other than the SAU2, SAU3,
+  SAU5 and SAU9.
 - The SAU8's I/O map routines (IO_$ALLOC_MAP, IO_$FREE_MAP and
   IO_$FREE_MAP_REGION without the region list) are not written: the
   `pbu_driver` arms assume `io_regions`.

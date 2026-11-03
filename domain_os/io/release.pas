@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E1A6CE  IO_$RELEASE
+    sau3  0x00E19766  IO_$RELEASE
     sau5  0x00E1AA16  IO_$RELEASE
     sau9  0x3C41D21A  IO_$RELEASE
 

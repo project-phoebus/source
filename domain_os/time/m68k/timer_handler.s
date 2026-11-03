@@ -2,7 +2,7 @@
 | time/m68k/timer_handler.s - TIME_$TIMER_HANDLER, the level-6 timer
 | interrupt (SAU2, SAU5)
 |
-| The SAU2 and SAU5 images have the same code here; the address and
+| The SAU2, SAU3 and SAU5 images have the same code here; the address and
 | byte columns below are the SAU2 image's.
 |
 | Byte gate (tools/asm_compare.py, `make check-asm'): the image's

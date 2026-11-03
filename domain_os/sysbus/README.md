@@ -65,6 +65,14 @@ the image's offsets.
   DISK_INTERRUPT and RING_INTERRUPT (no parameters), whose addresses
   the SAU2's SYSBUS_$INIT passes to IO_$TRAP.
 
+## The SAU3
+
+The SAU3's ATBUS_ segment is RING_INTERRUPT, SYSBUS_$INIT and
+SYSBUS_$DEFINE_INT (0x84 bytes), the block the SAU2's (0x2C bytes).
+Without `winchester_config` there is no DISK_INTERRUPT, and SYSBUS_$INIT
+traps the ring's vector and keeps only the ring's DCTE (`init.pas`);
+SYSBUS_$DEFINE_INT and RING_INTERRUPT are the SAU2's.
+
 ## Open items
 
 - TODO(sau): the SAU3's, SAU4's and SAU6's forms (`atbus_.pas`,

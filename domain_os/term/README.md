@@ -177,6 +177,31 @@ returns a pointer, so no D0 parking.
   misc/crash_system, proc2, smd, suma, kbd, dtty, sio2681, sio6509,
   tone.
 
+## The SAU3
+
+The DSP has no display console (`display_driver` off,
+base/config.ins.pas): its OS_TERM and OS_TERM_INIT are the SAU2's source
+with these arms.
+
+- `get_real_line.pas`: real line 0 (the display's) is refused as not
+  implemented.
+- `../tty/i_get_desc.pas`: no SMD_$UNBLANK.
+- `os_term_init.pas`: no console handler blocks, keyboard descriptor
+  or console drain record; the block is 0x1228 bytes (tty_descs at
+  +0xE0, DTTE at +0x1130); no os_term_init or sio_$init_drain_handler.
+- `../sio/init.pas`: port 1 is set up as a serial line with discipline
+  2.
+- `init.pas`: no console line and no SIO6509_$INIT; the serial lines
+  are DTTE 1 and 2 with the first two descriptors (`first_serial`).
+  The statics are unchanged.
+- `set_real_line_discipline.pas`: discipline 2 stores
+  status_$term_invalid_option instead of giving the line to the
+  keyboard.
+- `enqueue_tpad.pas`: empty.
+
+TERM_$CONTROL, TERM_$INQUIRE and the other routines are the SAU2's
+code at the SAU3's addresses and offsets.
+
 ## Open items
 
 ### Forms the image settles
@@ -204,7 +229,8 @@ returns a pointer, so no D0 parking.
 - `init.pas`: 16 frame bytes no object accounts for (a stand-in).
 - `os_term_init.pas`: the block's bytes no instruction reaches (0x94 at
   +0xC4 and five longwords; with `sio16550_lines` 0xBC, three longwords
-  and a word).
+  and a word; without `display_driver` 0x88 at +0x58 and three
+  longwords).
 - `pchist_enable.pas`: 8 frame bytes of the `sio16550_lines` form no
   object accounts for (a stand-in).
 - `../kbd/reset.pas`: 4 frame bytes of the `sio16550_lines` form no

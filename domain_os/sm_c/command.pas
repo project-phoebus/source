@@ -2,6 +2,7 @@
   its completion.
 
   Image addresses:
+    sau3  0x00E6F030  sm_c_$command (module-local)
     sau5  0x00E74B94  sm_c_$command (module-local)
 
   - The wait is for the unit's eventcount or 20 clock ticks; a time-out

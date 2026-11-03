@@ -1,6 +1,7 @@
 { SM_C_$DINIT - bring an SM_C drive up.
 
   Image addresses:
+    sau3  0x00E6F4C2  SM_C_$DINIT
     sau5  0x00E75026  SM_C_$DINIT
 
   - The driver is wired, and the first time the controller set up; a
@@ -31,7 +32,7 @@ begin
 %if long_iomap %then
     iomap[sm_c_iomap_index] := sm_c_cb_ppn + sm_iomap_bias;
 %else
-    { the SAU3's and SAU4's entry (the TODO(sau) in sm/cinit.pas) }
+    iomap[sm_c_iomap_index].entry := sm_c_cb_ppn + sm_iomap_bias;
 %endif
     cb_pa.all := (integer32(addr(sm_$cb)) & 16#3FF) + sm_c_alloc;
     pbu_sm_c_page.addr0 := 0;

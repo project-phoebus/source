@@ -40,7 +40,8 @@
 --   --wait and --expect; see split_stage)
 -- Needs -debug -debugger none (for bpset actions) and -video none.
 
-local PAGE, LOAD, ENTRY, BOOT_SP = 0x400, 0x101400, 0x101424, 0x17CFE0
+local PAGE, BOOT_SP = 0x400, 0x17CFE0
+local LOAD, ENTRY = 0x101400, 0x101424
 local cpu = manager.machine.devices[":maincpu"]
 -- Physical memory (the image pages, the PTT/PFT/MMU registers, DOS_DUMP).
 -- The DN300 driver's MMU device owns the physical bus as its "physical"
@@ -75,9 +76,18 @@ local function split(s)
   return t
 end
 
-local image = assert(io.open(os.getenv("DOS_IMAGE"), "rb")):read("a")
+-- DOS_PROGRAM: a standalone SAU2 program (the sau2/ diagnostics) instead
+-- of the kernel: its header's first longword is its load address, the
+-- second its entry; it is loaded there whole (the PROM map is one-to-one
+-- from 0x100800) and entered as COLD would be
+local program = os.getenv("DOS_PROGRAM") or ""
+local image = assert(io.open(program ~= "" and program or os.getenv("DOS_IMAGE"), "rb")):read("a")
 local info_split = string.unpack(">I4", image, 0x1C + 1)
 local info_move = string.unpack(">I4", image, 0x20 + 1)
+if program ~= "" then
+  LOAD, ENTRY = string.unpack(">I4I4", image)
+  info_split, info_move = 0xFFFFFFFF, 0
+end
 local flags = tonumber(os.getenv("DOS_FLAGS") or "8")
 local run_frames = tonumber(os.getenv("DOS_FRAMES") or "3000")
 local frame_log = (os.getenv("DOS_FRAME_LOG") or "") ~= ""
@@ -289,7 +299,7 @@ local function load_image()
     for j = 0, 15 do
       local want = image:byte(off + j + 1)
       local got = mem:read_u8((ppn << 10) + j)
-      if want ~= got then log("readback mismatch at file 0x%X: %02X vs %02X", off + j, want, got) end
+      if want and want ~= got then log("readback mismatch at file 0x%X: %02X vs %02X", off + j, want, got) end
     end
   end
   log("loaded %d pages (split PPN 0x%X -> 0x%X) through the %s space", pages, info_split, info_move, mem_name)

@@ -6,6 +6,7 @@
 
   - A fragment of the OS_TERM_INIT module (term/os_term_init.pas, which
     includes it and holds its forward heading).
+  - Compiled only with `display_driver' (base/config.ins.pas).
   - The descriptor and the line's DTTE are linked both ways before
     KBD_$INIT gets the descriptor.
 

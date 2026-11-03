@@ -1,6 +1,7 @@
 { PBU_$ACQUIRE_INT - set up a PBU unit for a kernel driver.
 
   Image addresses:
+    sau3  0x00E588B2  PBU_$ACQUIRE_INT
     sau5  0x00E588B2  PBU_$ACQUIRE_INT
 
   - The kernel drivers' PBU_$SETUP: a DDF for the one unit (the wide I/O
@@ -23,7 +24,7 @@ var
   ddf: pbu_$ddf_t;
   i: integer;
 begin
-  for i := 0 to pbu_$max_unit do
+  for i := 0 to pbu_ddf_last_handler do
     ddf.handlers[i] := univ_ptr(pbu_no_handler);
   ddf.flags.version := pbu_ddf_version;
   ddf.unit := unit;

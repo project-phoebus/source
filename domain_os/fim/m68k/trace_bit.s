@@ -2,7 +2,7 @@
  * fim/m68k/trace_bit.s - FIM_$TRACE_BIT, the first cell of the FIM_WIRED
  * segment (m68k/SAU2, SAU5)
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.
  *
  * 0x00E21890..0x00E218C9 in the SAU2 image (map FIM_$TRACE_BIT, 58 bytes to

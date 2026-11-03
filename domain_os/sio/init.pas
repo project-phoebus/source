@@ -2,12 +2,15 @@
 
   Image addresses:
     sau2  0x00E32BE0  SIO_$INIT
+    sau3  0x00E31380  SIO_$INIT
     sau9  0x3C4395B4  SIO_$INIT
 
   - Port 1, the console, gets its keyboard, TTY and SIO descriptors with
     the console's handlers, its drain record and a DTTE of discipline 2
     (with `sio16550_lines' its channel is recorded for KBD_$RESET);
     another port the serial handlers and a DTTE of discipline 0.
+  - Without `display_driver' port 1 is set up as a serial line, with
+    the serial handlers and a DTTE of discipline 2.
   - Then the ESC crash character (crash), or the driver's set_params
     with every selector; the SIO descriptor is handed back.
   - A fragment of the OS_TERM_INIT module.  With `sio16550_lines' the
@@ -29,6 +32,7 @@ begin
   status.all := status_$ok;
 
   if port = 1 then begin
+%if display_driver %then
     { ---- the console ---- }
     { its keyboard descriptor }
     os_term_init(kbd_descs[port], dtte[term_$max_dtte],
@@ -58,6 +62,20 @@ begin
 %endif
 
     sio_$init_dtte(dtte[term_$max_dtte], 2);
+%else
+    { ---- the console, a serial line ---- }
+    { its TTY descriptor }
+    sio_$init_line(tty_descs[port], dtte[term_$max_dtte],
+                   addr(sio_descs[port]), term_$serial_line_handlers);
+
+    { its SIO descriptor }
+    sio_$init_desc(sio_descs[port], term_$serial_params,
+                   dtte[term_$max_dtte], addr(tty_descs[port]),
+                   addr(tty_descs[port].output), term_$tty_handlers,
+                   context, vtable);
+
+    sio_$init_dtte(dtte[term_$max_dtte], 2);
+%endif
   end
   else begin
     { ---- a serial line ---- }

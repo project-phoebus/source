@@ -40,12 +40,18 @@ const
   sm_max_unit = 3;
 
   { The I/O map entries the driver writes, 4 bytes each from IOMAP: the
-    command block's page and the transfer's buffer page.  The entry is the
-    physical page number plus 16#48000 (the long_iomap part,
-    base/config.ins.pas). }
+    command block's page and the transfer's buffer page.  Where the
+    entries are longwords (the long_iomap part, base/config.ins.pas) the
+    entry is the physical page number plus 16#48000; where they are the
+    first word of the 4 bytes (pbu/pbu.ins.pas), the page number plus
+    16#8000, the entry's bit 15. }
   sm_iomap_cb = 16#1BD;
   sm_iomap_buf = 16#1BE;
+%if long_iomap %then
   sm_iomap_bias = 16#48000;
+%else
+  sm_iomap_bias = 16#8000;
+%endif
 
 type
   { A byte the controller and the driver share (an unsigned 8-bit value). }

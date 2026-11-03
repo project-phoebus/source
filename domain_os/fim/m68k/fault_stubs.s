@@ -2,7 +2,7 @@
  * fim/m68k/fault_stubs.s - the CPU exception vector stubs FIM_$ADDR_ERR ..
  * FIM_$INV_STACK (m68k/SAU2, SAU5)
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.
  *
  * Transcribed from the SAU2 image, 0x00E213F8..0x00E2144B (84 bytes), part

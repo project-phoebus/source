@@ -2,8 +2,10 @@
 
 The magnetic tape driver, configured out of the SR10.2 SAU2 kernel and
 present on the SAU3..SAU6 (the part `mt_driver`,
-`../base/config.ins.pas`). The SAU5 driver is being translated routine
-by routine.
+`../base/config.ins.pas`). Translated from the SAU5 image, with the
+SAU3's I/O map entries (the SAU3's code is the SAU5's otherwise). The
+MT page's hand assembly, MT_ASM, is `m68k/mt_asm.s` under `mt_driver`
+(the same source on the SAU3..SAU6).
 
 ## Layout
 
@@ -84,5 +86,5 @@ MT_$PRESENT's heading is `../io/io.ins.pas`'s until the merge
   PBU2_$UNWIRE, PBU2_$WIRE and PBU_$WAIT, and
   status_$pbu_page_already_wired (`mt.ins.pas`); IOMAP, repeated from
   `../sm/sm.ins.pas` (`mt.ins.pas`).
-- TODO(sau): mt_$set_iomap's word form for the SAU3 and SAU4
+- TODO(sau): the SAU4's I/O map entries in mt_$set_iomap and MT_$SIO
   (`set_iomap.pas`).

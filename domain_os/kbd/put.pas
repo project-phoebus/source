@@ -2,11 +2,14 @@
 
   Image addresses:
     sau2  0x00E1CEAC  KBD_$PUT
+    sau3  0x00E1C04C  KBD_$PUT
 
   - kbd_$put_line, an empty procedure on the SAU2, does the writing.
+  - Without `display_driver' there is no keyboard: the call is refused.
 
   Status stored:
-    kbd_$get_desc's status: always
+    kbd_$get_desc's status: with `display_driver'
+    status_$util_bus_undefined_interrupt: without it
 }
 
 { TODO(pascal) 8 unaddressed frame bytes (stand-ins unused_8, unused_c)
@@ -22,6 +25,7 @@
 procedure kbd_$put(in line: pinteger; in type_arg: integer;
                    in str: univ kbd_$chars_t; in length: integer;
                    out status: status_$t);
+%if display_driver %then
 var
   kbd: kbd_$desc_ptr_t;
   unused_8: integer32;                    { the stand-ins (TODO) }
@@ -32,3 +36,8 @@ begin
     return;
   kbd_$put_line(kbd^, type_arg, str, length);
 end;
+%else
+begin
+  status.all := status_$util_bus_undefined_interrupt;
+end;
+%endif

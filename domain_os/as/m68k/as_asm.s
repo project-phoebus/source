@@ -1,7 +1,7 @@
 /*
  * as/m68k/as_asm.s - the AS_ASM data segment: AS_$INFO and its neighbours
  *
- * The SAU2 and SAU5 images have the same data here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same data here; the address and
  * byte columns below are the SAU2 image's.  The SAU7's and SAU9's
  * address space is another layout (`large_address_space',
  * base/config.ins.pas: the global and private regions near 0x3B400000,

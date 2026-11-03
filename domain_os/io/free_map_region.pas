@@ -1,6 +1,7 @@
 { IO_$FREE_MAP_REGION - free one I/O map region recorded for a unit.
 
   Image addresses:
+    sau3  0x00E19FC4  IO_$FREE_MAP_REGION
     sau5  0x00E1B28E  IO_$FREE_MAP_REGION
 
   - The region of the unit's list that starts at iova is freed

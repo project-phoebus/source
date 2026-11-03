@@ -1,6 +1,7 @@
 { io_$add_region - record an I/O map region in a unit's region list.
 
   Image addresses:
+    sau3  0x00E19DEA  io_$add_region
     sau5  0x00E1B0A2  io_$add_region
 
   - A node off the free list (io_$region_free) gets the region's page,

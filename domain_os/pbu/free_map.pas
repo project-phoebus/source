@@ -1,6 +1,7 @@
 { PBU_$FREE_MAP - free a PBU unit's I/O map space.
 
   Image addresses:
+    sau3  0x00E58F8C  PBU_$FREE_MAP
     sau5  0x00E5915A  PBU_$FREE_MAP
 
   - Undoes PBU2_$ALLOCATE_MAP: IO_$FREE_MAP (a failure crashes the

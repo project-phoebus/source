@@ -2,6 +2,7 @@
   magnetic tape unit.
 
   Image addresses:
+    sau3  0x00E707D2  MT_$CHAIN_WRITE
     sau5  0x00E7633C  MT_$CHAIN_WRITE
 
   - MT_$CHAIN_READ's code but for the operation: header and buffer are

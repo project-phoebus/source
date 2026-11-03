@@ -1,7 +1,7 @@
 /*
  * MMU_$MCR_CHANGE - Toggle one memory-control bit, and the MCR_SHADOW cell
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.
  *
  * Original address: 0x00E242A0, 50 bytes of code (0xE242A0..0xE242D1)

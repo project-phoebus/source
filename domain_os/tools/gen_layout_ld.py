@@ -96,7 +96,9 @@
 #       symbols (each at its map offset from the window's first) and the
 #       overlay sections; and every map symbol at a fixed VA (below
 #       OS_BEGIN + 0x400, or from IODEFS up: the SAU's script's and iodefs.s's
-#       absolute symbols) the ELF defines must have the map's value.
+#       absolute symbols) the ELF defines must have the map's value.  The
+#       first item placed at or past each numbered map section that starts
+#       a page (page_sections) must start a page.
 #       Prints how many map symbols were placed and what fell into the
 #       catch-all.
 #
@@ -122,27 +124,27 @@ import rfc_elf  # noqa: E402
 # address table below is keyed by SAU first, as in tools/asm_compare.py:
 # NAME[2] is the SAU2's (domain_os.10.2.map), NAME[5] the SAU5's
 # (sr10.2-install/.../sau5/domain_os.map), each entry the map address with
-# its map line as the evidence.  The SAU5 is laid out like the SAU2 (the
-# same RFC load address, kernel offset and kernel VA), only the addresses
-# differ.
+# its map line as the evidence.  The SAU3 and SAU5 are laid out like the
+# SAU2 (the same RFC load address, kernel offset and kernel VA), only the
+# addresses differ.
 SAU = 2
-SAUS = (2, 5, 9)
+SAUS = (2, 3, 5, 9)
 
 # OS_BEGIN: the bottom of the kernel's VAs (`D95 E00000 OS_BEGIN' on both)
-RFC_LOAD_ADDR = {2: 0x00E00000, 5: 0x00E00000,
+RFC_LOAD_ADDR = {2: 0x00E00000, 3: 0x00E00000, 5: 0x00E00000,
                  9: 0x3C400000}   # D98 3C400000 OS_BEGIN
 # 24-bit physical/virtual space of the SAU2 and the SAU5
-KERNEL_VA_END = {2: 0x01000000, 5: 0x01000000,
+KERNEL_VA_END = {2: 0x01000000, 3: 0x01000000, 5: 0x01000000,
                  9: 0x40000000}   # the SAU9's 30-bit space (PROM 3FFE0000)
 # Map addresses below FIXED_LOW_END that are not fixed: the SAU9's OS_COLD
 # module (os/cold.pas: its data and code, `D 4002FFC OS_COLD' and `I
 # 4003068 OS_COLD size = 568'), compiled code laid out after COLD_START in
 # kernel.ld's `.cold'.
-FIXED_EXEMPT = {2: [], 5: [], 9: [(0x04002FFC, 0x040035D0)]}
+FIXED_EXEMPT = {2: [], 3: [], 5: [], 9: [(0x04002FFC, 0x040035D0)]}
 # The fixed VAs from OS_BEGIN up (check_elf compares them with the map):
 # the crash record page; on the SAU9 also the trap page (OS_BEGIN +
 # 0x1000, `trap_page_high'), up to DUMP.
-FIXED_LOW_END = {2: 0x00E00400, 5: 0x00E00400,
+FIXED_LOW_END = {2: 0x00E00400, 3: 0x00E00400, 5: 0x00E00400,
                  9: 0x3C401400}   # D24 3C401400 DUMP
 
 # The image's RELOC (map `I20 E88834 RELOC'): the first byte after the last
@@ -167,6 +169,7 @@ FIXED_LOW_END = {2: 0x00E00400, 5: 0x00E00400,
 # checks the NOBITS part with the rest.
 IMAGE_BSS_START = {
     2: 0x00E88834,      # I20 E88834 RELOC
+    3: 0x00E8A434,      # I20 E8A434 RELOC
     5: 0x00E92834,      # I20 E92834 RELOC
     9: 0x3C4A75D8,      # I21 3C4A75D8 RELOC
 }
@@ -177,6 +180,7 @@ IMAGE_BSS_START = {
 # arch/m68k/sau2/iodefs.s (a window must be its own page).
 IMAGE_BSS_END = {
     2: 0x00F4FC00,      # D52 F4FC00 IODEFS_GUARD
+    3: 0x00F4FC00,      # D56 F4FC00 IODEFS_GUARD
     5: 0x00F48000,      # D55 F48000 IODEFS_GUARD
     9: 0x3E52C000,      # D58 3E52C000 IODEFS_GUARD
 }
@@ -184,6 +188,7 @@ IMAGE_BSS_END = {
 # OS_BEGIN + 0x400 (check_elf compares both with the map).
 FIXED_IO_START = {
     2: 0x00FC0000,      # FC0000 IODEFS (= DISP1_MEM)
+    3: 0x00FC0000,      # FC0000 IODEFS (no display memory there)
     5: 0x00F90000,      # F90000 IODEFS (= KOLOR_CTL)
     9: 0x3FF97C00,      # 3FF97C00 IODEFS (= RING_8025_2)
 }
@@ -215,14 +220,16 @@ FIXED_IO_START = {
 # OS_PAGE_END, and its marks are every map symbol from there on.
 VM_WINDOWS_START = {
     2: 0x00EE4C00,      # EE4C00 AREA_$RPMAP_CACHE
+    3: 0x00EE4C00,      # EE4C00 AREA_$RPMAP_CACHE
     5: 0x00EDD000,      # EDD000 AREA_$RPMAP_CACHE
     9: 0x3C650800,      # 3C650800 OS_PAGE_END
 }
 VM_WINDOW_MARKS = {}
-VM_WINDOW_MARKS[2] = VM_WINDOW_MARKS[5] = [
+VM_WINDOW_MARKS[2] = VM_WINDOW_MARKS[3] = VM_WINDOW_MARKS[5] = [
     'AREA_$RPMAP_CACHE', 'AST_PMAPS_END', 'MST', 'PIT_PAGES', 'MSTE_PAGES',
     'VM_TABLES_END']
     # sau2: EE4C00, EE4C00, EE5800, EE6400, EF6400, F4FC00
+    # sau3: the SAU2's
     # sau5: EDD000, EDD000, EDDC00, EDE800, EEE800, F48000
 VM_WINDOW_MARKS[9] = [
     'OS_PAGE_END', 'SMAPS_END', 'RARS', 'RARS_END', 'AST', 'AOT',
@@ -262,6 +269,17 @@ BSS_WINDOWS[2] = [
     # rest is layout_vm.ld.
     (0x00ED5000, 'VM_TABLES', []),
 ]
+# The SAU3's are the SAU2's, at the same addresses (its map's `D68 EB0000
+# PAGE' / `D EB0000 STACK size = 2C00' with INT_STACK_BASE under `D69
+# EB2C00 VTOC_CACHE', `D46 EB4800 OS_PMAPS size = 10000', `D01 EC5400
+# AST_AOT' / `D EC5400 VM_TABLES size = F960', `D99 ED5000 VM_TABLES size
+# = 7AC00').
+BSS_WINDOWS[3] = [
+    (0x00EB0000, 'STACK', ['INT_STACK_BASE']),
+    (0x00EB4800, 'OS_PMAPS', []),
+    (0x00EC5400, 'VM_TABLES', []),
+    (0x00ED5000, 'VM_TABLES', []),
+]
 # The SAU5 has no AST_AOT window in the kernel: its `D00 DA6400 AST_AOT' /
 # `D DA6400 VM_TABLES size = F960' (AST, AOT) is in the low region below
 # OS_BEGIN, fixed VAs like AREA_PAGES (the linker script's).
@@ -291,12 +309,14 @@ BSS_WINDOWS[9] = [
 # SAU's script defines (sau9.ld: the Ethernet's and the 802.5 ring's
 # buffers, `D53 3C06F800 ETHERNET_$BUFFER', `D64 3C070800
 # RING8025_$AUX_DA'); the layout leaves them alone.
-LOW_OVERLAYS = {2: set(), 5: set(),
+# The SAU3's: the internet interface controller's lines' control pages
+# (`D89 D65C00 IIC_$CONTROL_PAG size = 2000', iic/iic.pas), in sau3.ld.
+LOW_OVERLAYS = {2: set(), 3: {'IIC_$CONTROL_PAG'}, 5: set(),
                 9: {'ETHERNET_$BUFFER', 'RING8025_$AUX_DA'}}
 # Overlay sections in the VM tables' windows (layout_vm.ld): the SAU9's
 # AUDIT_LIST (`D91 3D39E800 AUDIT_LIST size = C00') lies past its
 # OS_PAGE_END; the SAU2's and SAU5's overlays are all below theirs.
-VM_OVERLAYS = {2: False, 5: False, 9: True}
+VM_OVERLAYS = {2: False, 3: False, 5: False, 9: True}
 # Map names inside the windows that something else defines.
 BSS_WINDOW_SKIP = {'OS_PAGE', 'OS_PAGE_END'}
 
@@ -459,6 +479,74 @@ TEXT_MARKS[5] = [
                                               # E91F70 PBU_WIRED_PROC)
     (0x00E92728, 'PBU_$DATA_END', None),      # E92728 PBU_$DATA_END
 ]
+# The SAU3's: the SAU2's marks at its map's addresses (each a map symbol
+# there, except OS_PROC_UNWIRED, OS_DATA_WIRED, OS_DATA_UNWIRED and RING_*,
+# as on the SAU2), and the marks of the SAU3's own wired-on-demand ranges
+# its Pascal names (`extern char') for MST_$WIRE_AREA: SM_$PROC_START /
+# SM_$DATA_START / SM_$DATA_END (sm/sm.ins.pas), SM_C_$PROC_START (sm_c),
+# MT_$PROC_START (mt/mt.ins.pas), LPR_$PROC_START / LPR_$DATA_START /
+# LPR_$DATA_END (lpr/lpr.ins.pas), IIC_$PROC_START / IIC_$DATA_END
+# (iic/iic.ins.pas, with the map's IIC_$PROC_END and IIC_$DATA_START
+# between them).  The SAU3 has no PEB wired data: PEB_$WIRED_DATA_START =
+# PEB_$WIRED_DATA_END = LPR_$DATA_START, LPR_'s .DATA block.
+# LPR_$DATA_END is the byte before the block after CBUF's (MARK_DELTAS).
+TEXT_MARKS[3] = [
+    (0x00E1CC00, 'OS_DATA_WIRED', PAGE),      # D24 E1CC00 WIRED_DATA
+    (0x00E2CCF4, 'DCTE_START', None),         # D48 E2CCF4 DCTE_START
+    (0x00E2CCF4, 'DCTE_END', None),           # D47 E2CCF4 DCTE_END
+    (0x00E2DC00, 'OS_INIT_START', PAGE),      # I 5 E2DC00 OS_INIT_PROC
+    (0x00E3377C, 'OS_INIT_END', None),        # E3377C OS_INIT_END
+    (0x00E38000, 'OS_PROC_UNWIRED', 0x8000),  # I 1 E38000 .TEXT
+    (0x00E3DE7A, 'OS_DISK_PROC_END', None),   # I E3DE78 OS_DISK_END
+    (0x00E6DB00, 'SM_$PROC_START', None),     # I E6DB00 SM
+    (0x00E6E622, 'OS_PROC_SHUTWIRED_END', None),  # I E6E620 OS_SHUTWIRED_END
+    (0x00E6E6C0, 'PEB_$WIRED_PROC_START', None),  # I E6E6C0 PEB_WIRED
+    (0x00E6E722, 'PEB_$WIRED_PROC_END', None),    # I E6E720 PEB_WIRED_END
+    (0x00E6E724, 'LPR_$PROC_START', None),        # I E6E724 LPR_
+    (0x00E6EDD0, 'SM_C_$PROC_START', None),       # I E6EDD0 SM_C
+    (0x00E70FD8, 'MT_$PROC_START', None),         # I E70FD8 MT_$SIO
+    (0x00E721D0, 'AUDIT_$PROC_START', None),      # I E721D0 AUDIT
+    (0x00E72FE6, 'AUDIT_$PROC_END', None),        # I E72FE4 AUDIT (size 4)
+    (0x00E72FE8, 'NETLOG_$PROC_START', None),     # I E72FE8 NETLOG
+    (0x00E7344E, 'NETLOG_$PROC_END', None),       # I E7344C NETLOG (size 4)
+    (0x00E76C00, 'RING_PROC_START', PAGE),    # I 8 E76C00 RING_PROC / D62
+                                              # RING_PROC_START
+    (0x00E79724, 'RING_PROC_END', None),      # D61 E79724 RING_PROC_END
+    (0x00E79C00, 'OS_DATA_UNWIRED', PAGE),    # D21 E79C00 .DATA (= OS_DATA)
+    (0x00E79CD0, 'OS_DISK_DATA', None),       # D E79CD0 VTOC_
+    (0x00E7C708, 'OS_DISK_DATA_END', None),   # D E7C708 SVC_CATCHER
+    (0x00E8383C, 'OS_DATA_SHUTWIRED', None),      # D E8383C FILE_
+    (0x00E83CD4, 'SM_$DATA_START', None),         # D E83CD4 SM
+    (0x00E83D30, 'OS_DATA_SHUTWIRED_END', None),  # D E83D30 DTTY_ASM
+    (0x00E83D30, 'SM_$DATA_END', None),           # D E83D30 DTTY_ASM
+    (0x00E8417C, 'PEB_$WIRED_DATA_START', None),  # D E8417C LPR_
+    (0x00E8417C, 'PEB_$WIRED_DATA_END', None),    # D E8417C LPR_
+    (0x00E8417C, 'LPR_$DATA_START', None),        # D E8417C LPR_
+    (0x00E844D8, 'LPR_$DATA_END', None),          # E844D7 (D E844D4 CBUF
+                                                  # size = 4, then D E844D8
+                                                  # IIC): MARK_DELTAS
+    (0x00E84584, 'AUDIT_$DATA_START', None),      # D E84584 AUDIT
+    (0x00E84730, 'AUDIT_$DATA_END', None),        # D E84730 NETLOG
+    (0x00E84730, 'NETLOG_$DATA_START', None),     # D E84730 NETLOG
+    (0x00E847B4, 'NETLOG_$DATA_END', None),       # D E847B4 DXM_WIRED_
+    (0x00E85400, 'IIC_$PROC_START', PAGE),    # I18 E85400 IIC_AQWRD_PROC
+    (0x00E86210, 'IIC_$PROC_END', None),      # D40 E86210 IIC_AQWRD_DATA2
+    (0x00E865C8, 'IIC_$DATA_START', None),    # D39 E865C8 IIC_AQWRD_DATA
+    (0x00E865D0, 'IIC_$DATA_END', None),      # E865D0 IIC_$DATA_END
+    (0x00E86800, 'RING_DATA_START', PAGE),    # D30 E86800 RING_DATA / D60
+                                              # RING_DATA_START
+    (0x00E86DD0, 'RING_DATA_END', None),      # D59 E86DD0 RING_DATA_END
+    (0x00E87400, 'RTWIRED_PROC_START', PAGE),  # I12 E87400 RTWIRED_CODE
+    (0x00E88628, 'RTWIRED_DATA_END', None),   # E88628 RTWIRED_DATA_END
+    (0x00E89BA4, 'PBU_$PAGE_END', None),      # E89BA4 PBU_$PAGE_END (I16
+                                              # E89BA4 PBU_WIRED_PROC)
+    (0x00E8A360, 'PBU_$DATA_END', None),      # E8A360 PBU_$DATA_END
+]
+# Marks the map puts off the item boundary they are emitted at: `NAME = .
+# + delta;'.  The SAU3's LPR_$DATA_END (E844D7) is the last byte of CBUF's
+# 4-byte block (`D E844D4 CBUF'), the byte before IIC's block (the SAU2's,
+# E854D7, the byte before AUDIT's block).
+MARK_DELTAS = {3: {'LPR_$DATA_END': -1}}
 # The SAU9's: the same marks at its map's addresses (most of them map
 # symbols there), the page-aligned starts of the drivers' sections its
 # Pascal names for MST_$WIRE_AREA (ETHER_PROC_START, ETHER_DATA_START,
@@ -530,6 +618,10 @@ BSS_MARKS[2] = [
     (0x00EA9684, 'OS_DATA_END', None),        # D91 EA9684 OS_DATA_END
     (0x00EB0000, 'OS_PAGE', 0x8000),          # D64 EB0000 PAGE / D90 OS_PAGE
 ]
+BSS_MARKS[3] = [
+    (0x00EAB284, 'OS_DATA_END', None),        # D92 EAB284 OS_DATA_END
+    (0x00EB0000, 'OS_PAGE', 0x8000),          # D68 EB0000 PAGE / D91 OS_PAGE
+]
 BSS_MARKS[5] = [
     (0x00EB3684, 'OS_DATA_END', None),        # D91 EB3684 OS_DATA_END
     (0x00EB8000, 'OS_PAGE', 0x8000),          # D67 EB8000 PAGE / D90 OS_PAGE
@@ -545,23 +637,99 @@ BSS_MARKS[9] = [
 UNPLACED_MARK = 'OS_LINK_UNPLACED'
 
 
+# The binder's page alignment of the numbered sections.  A numbered section
+# of the map that starts a page was put there by the binder: on each SAU's
+# map every one of them in the kernel follows either a gap up to the page,
+#   D35  E2E3FC  SMD_$WIRED_DATA    loaded at 12FBFC, size = 13C
+#   D27  E2E800  PAGE_INIT          loaded at 130000, size = 480
+# (SMD_$WIRED_DATA ends at E2E538), or a section that ends on the page
+# (the SAU3's `D38 E88800 MT_PAGE size = C00', then `D35 E89400 PBU_PAGE'),
+# and no numbered section that starts mid-page follows a gap: each starts
+# where the one before it ends.  So a page starts (`. = ALIGN(0x400)') just
+# before the first item placed at or past each such section's map address,
+# past OS_PROC (kernel.ld starts `.text' on a page) and below the VM tables'
+# run-time windows (layout_vm.ld lays them out at their map offsets from
+# OS_PAGE_END, a page).  Where a mark at the same address aligns to a page
+# or more (OS_INIT_START, RING_PROC_START, OS_PAGE, ...) that is the
+# alignment.  The wired-on-demand ranges rely on it: MT_$ACQUIRE and
+# PBU_$WIRE_PBU wire the pages from MT_$PAGE_START and PBU_$PAGE_START,
+# the first bytes of MT_PAGE and PBU_PAGE.
+def page_sections(linkmap):
+    """[(addr, [(`D27', name), ...])] of the map's numbered sections
+    that start a page, past OS_PROC and below the VM tables' run-time
+    windows, in address order."""
+    os_proc = [a for a, _, name, _ in linkmap.numbered if name == 'OS_PROC']
+    if len(os_proc) != 1:
+        fail(['the map has %d numbered OS_PROC section(s), not one'
+              % len(os_proc)])
+    found = {}
+    for addr, _, name, label in linkmap.numbered:
+        if addr % PAGE == 0 and os_proc[0] < addr < VM_WINDOWS_START[SAU]:
+            found.setdefault(addr, []).append((label, name))
+    return sorted(found.items())
+
+
+def section_aligns(linkmap, marks, lo, hi):
+    """`marks' with the page alignments of the page_sections in [lo, hi)
+    merged in as entries (addr, None, PAGE, sections): ahead of the marks
+    at the same address, and none where a mark there aligns to a page or
+    more."""
+    have = {a for a, _, align in marks if align and align >= PAGE}
+    merged = list(marks)
+    for addr, secs in page_sections(linkmap):
+        if lo <= addr < hi and addr not in have:
+            merged.append((addr, None, PAGE, secs))
+    merged.sort(key=lambda m: (m[0], m[1] is not None))
+    return merged
+
+
+def section_names(secs):
+    return ' / '.join('%s %s' % (label, name) for label, name in secs)
+
+
 def emit_marks(out, marks, upto, item_align=1):
     """Emit (and drop from `marks') every mark whose map address is at or
     below `upto' (None: all of them).  `item_align' is the alignment of the
     item that follows: ld aligns it anyway, so aligning first puts a mark
     on the item's first byte, not before the padding (a start mark such as
     PEB_$WIRED_DATA_START names that byte; an end mark only takes the
-    padding in)."""
-    if marks and (upto is None or marks[0][0] <= upto) and item_align > 1:
-        out.append('    . = ALIGN(%d);' % item_align)
+    padding in).  A section_aligns entry is its page alignment, unless an
+    alignment just emitted or the next mark's own gives one (at the end of
+    the stream, with no item to align, it is dropped).  Returns the
+    alignment the emitted statements leave `.' at (1: none)."""
+    cur = 1
     while marks and (upto is None or marks[0][0] <= upto):
-        addr, name, align = marks.pop(0)
+        addr, name, align = marks[0][:3]
+        if name is None:
+            secs = marks.pop(0)[3]
+            if upto is None:
+                continue
+            # the next mark that pops, if it aligns as far itself
+            nxt = next((m for m in marks if m[1] is not None), None)
+            if nxt and nxt[0] <= upto and nxt[2] and nxt[2] >= align:
+                continue
+            if cur < align:
+                stmt = '. = ALIGN(0x%X);' % align
+                out.append('    %s%s/* %06X map %s starts a page */'
+                           % (stmt, pad(stmt, 0), addr, section_names(secs)))
+                cur = align
+            continue
+        marks.pop(0)
+        if cur < item_align:
+            out.append('    . = ALIGN(%d);' % item_align)
+            cur = item_align
         if align:
             out.append('    . = ALIGN(0x%X);' % align)
+            cur = max(cur, align)
         # ld needs a name with `$' quoted
-        stmt = '%s = .;' % ld_name(name)
-        out.append('    %s%s/* %06X map %s */' % (stmt, pad(stmt, 0), addr,
-                                                  name))
+        delta = MARK_DELTAS.get(SAU, {}).get(name, 0)
+        if delta:
+            stmt = '%s = . - %d;' % (ld_name(name), -delta)
+        else:
+            stmt = '%s = .;' % ld_name(name)
+        out.append('    %s%s/* %06X map %s */' % (stmt, pad(stmt, 0),
+                                                  addr + delta, name))
+    return cur
 
 # Sections holding image data whose C names are not the map's.  Keyed by the
 # image address of their first byte.
@@ -594,6 +762,23 @@ ANCHORS[2] = {
     '.text.NULLPROC': 0xE24C60,
     # io/m68k/probe.s: the map's TESTPAGE (`D E29138 TESTPAGE size 60').
     '.text.io_$probe': 0xE29138,
+}
+# The same sections at the SAU3's addresses (tools/asm_compare.py's SAU3
+# LOCAL_SYMBOLS give the first symbol of each).
+ANCHORS[3] = {
+    # SVC_$TRAP0_TABLE, inside `D E7C708 SVC_CATCHER size = E40'
+    '.text.svc_tables': 0xE7C9A2,
+    # fp_$switch_owner, inside FIM_$FLINE's span (FIM_$FLINE 0xE20A1C,
+    # FIM_$FP_ABORT 0xE20AD0)
+    '.text.fp_$switch_owner': 0xE20A60,
+    # TIME_$TIMER_HANDLER, the end of TIME_ASM after TIME_$DI_RTE + 0x10
+    '.text.TIME_$TIMER_HANDLER': 0xE29A8C,
+    # `D E202D8 FIM_UNWIRED size = 4F0'
+    '.text.FIM_UNWIRED': 0xE202D8,
+    # `D E23BAC NULLPROC size = 18' (NULL_LOOP)
+    '.text.NULLPROC': 0xE23BAC,
+    # `D E27AA4 TESTPAGE size = 60'
+    '.text.io_$probe': 0xE27AA4,
 }
 # The same sections at the SAU5's addresses (tools/asm_compare.py's SAU5
 # LOCAL_SYMBOLS give the first symbol of each), and smd/sau5/
@@ -677,6 +862,8 @@ class LinkMap:
         # size, that holds it (`D24 E1DC00 WIRED_DATA ...').  The map
         # truncates names to 16 characters (PROC2_CREATE_DAT).
         self.module_segments = []
+        # the numbered sections, any size: (addr, size, name, `D27' / `I 5')
+        self.numbered = []
         current = {}        # 'D'/'I' -> (addr, size, name) of the section
         with open(path, encoding='latin-1') as f:
             for line_no, line in enumerate(f):
@@ -695,6 +882,8 @@ class LinkMap:
                 addr, size = int(m.group('addr'), 16), int(m.group('size'), 16)
                 kind, numbered = line[0], line[1:3].strip() != ''
                 if numbered:
+                    self.numbered.append((addr, size, m.group('name'),
+                                          line[:3]))
                     if size:
                         current[kind] = (addr, size, m.group('name'))
                 elif size:
@@ -1032,6 +1221,7 @@ class Section:
         self.size = size
         self.kind = kind    # 'code', 'rodata', 'data', 'bss' or 'block'
         self.symbols = []   # symbols defined in it, in value order
+        self.offsets = {}   # symbol -> its offset in the section
         self.map_syms = []  # (key, name) of those the map knows
         self.key = None
         self.nobits = False # a C bss object keyed in the image's bss
@@ -1139,6 +1329,7 @@ def read_object(obj):
             glob.setdefault(name, secs[shndx])
     for value, name, shndx in sorted(named):
         secs[shndx].symbols.append(name)
+        secs[shndx].offsets.setdefault(name, value)
     refs = []
     for rs in elf.sections:
         if rs.type != rfc_elf.SHT_RELA or rs.info not in secs:
@@ -1229,6 +1420,49 @@ SPECIAL_PAIRS[2] = [
     (0x00E87000, 0x00E87D68, 0x00E87D68, 0x00E88228),
     # PBU_WIRED_PROC; PBU_WIRED_DATA (and the SCSI/MONO/COLOR cells)
     (0x00E88400, 0x00E88460, 0x00E88460, 0x00E88834),
+]
+# The SAU3's: the same eight in the same order (SPECIAL_DATA_MARKED
+# indexes them), then the ranges of the SAU3's own drivers that their
+# acquire routines wire (mst_$wire_area by the marks of TEXT_MARKS[3]).
+SPECIAL_PAIRS[3] = [
+    # OS_DISK_PROC 0xE3824C .. OS_DISK_PROC_END (I E3DE78 OS_DISK_END);
+    # OS_DISK_DATA (D E79CD0 VTOC_) .. D E7C708 SVC_CATCHER
+    (0x00E3824C, 0x00E3DE7A, 0x00E79CD0, 0x00E7C708),
+    # OS_PROC_SHUTWIRED 0xE5DFC4 .. I E6E620 OS_SHUTWIRED_END; D E82F28
+    # STOP_WATCH, OS_DATA_SHUTWIRED (D E8383C FILE_) .. D E83D30 DTTY_ASM
+    (0x00E5DFC4, 0x00E6E622, 0x00E82F28, 0x00E83D30),
+    # I E6E6C0 PEB_WIRED .. I E6E720 PEB_WIRED_END; no PEB wired data
+    (0x00E6E6C0, 0x00E6E722, 0x00E8417C, 0x00E8417C),
+    # I E72FE8 NETLOG size = 464 (+ I E7344C NETLOG); D E84730 NETLOG
+    # size = 84
+    (0x00E72FE8, 0x00E7344E, 0x00E84730, 0x00E847B4),
+    # D62 E76C00 RING_PROC_START .. D61 E79724 RING_PROC_END; D60 E86800
+    # RING_DATA_START .. D59 E86DD0 RING_DATA_END
+    (0x00E76C00, 0x00E79724, 0x00E86800, 0x00E86DD0),
+    # D55 E79800 ETHER_PROC_START .. D54 E79814 ETHER_PROC_END (size 4);
+    # D53 E87000 ETHER_DATA_START .. D52 E87004 ETHER_DATA_END (size 4)
+    (0x00E79800, 0x00E79818, 0x00E87000, 0x00E87008),
+    # I12 E87400 RTWIRED_CODE size = D68; D34 E88168 RTWIRED_DATA ..
+    # E88628 RTWIRED_DATA_END
+    (0x00E87400, 0x00E88168, 0x00E88168, 0x00E88628),
+    # PBU_$PAGE_START (D35 E89400 PBU_PAGE) and I16 E89BA4 PBU_WIRED_PROC
+    # size = 4B0; D36 E8A054 PBU_WIRED_DATA (and the SCSI/MONO/COLOR cells)
+    # .. RELOC
+    (0x00E89400, 0x00E8A054, 0x00E8A054, 0x00E8A434),
+    # SM_C_$PROC_START (I E6EDD0 SM_C size = D58) .. SM_C_$PROC_END
+    # 0xE6FB96; SM_C_$DATA_START = SM_C_$DATA_END = 0xE844D8 (no data)
+    (0x00E6EDD0, 0x00E6FB96, 0x00E844D8, 0x00E844D8),
+    # MT_$PROC_START (I E70FD8 MT_$SIO size = 2C0) .. MT_$PROC_END
+    # 0xE7129A; the MT page (D38 E88800 MT_PAGE size = C00)
+    (0x00E70FD8, 0x00E7129A, 0x00E88800, 0x00E89400),
+    # LPR_$PROC_START (I E6E724 LPR_ size = 3C0) .. LPR_$PROC_END
+    # 0xE6EDCD (I E6EDCC LPR_END_ADDR); LPR_$DATA_START (D E8417C LPR_)
+    # .. LPR_$DATA_END 0xE844D7, with LPR_ASM and CBUF's block
+    (0x00E6E724, 0x00E6EDD0, 0x00E8417C, 0x00E844D8),
+    # IIC_$PROC_START (I18 E85400 IIC_AQWRD_PROC size = E10) ..
+    # IIC_$PROC_END (D40 E86210 IIC_AQWRD_DATA2); .. IIC_$DATA_END
+    # 0xE865D0 (D39 E865C8 IIC_AQWRD_DATA size = 8)
+    (0x00E85400, 0x00E86210, 0x00E86210, 0x00E865D0),
 ]
 # The SAU5's: the same eight in the same order (SPECIAL_DATA_MARKED
 # indexes them), then the ranges of the SAU5's own drivers that their
@@ -1321,6 +1555,22 @@ CODE_TO_DATA[2] = [
     (0x00E87000, 0x00E87D68, 0x00E87D68, 0x00E88228),  # RTWIRED
     (0x00E88400, 0x00E88460, 0x00E88460, 0x00E88834),  # PBU_WIRED
 ]
+CODE_TO_DATA[3] = [
+    # I 4 E00800 WIRED_PROC; D24 E1CC00 WIRED_DATA .. I 5 E2DC00
+    (0x00E00800, 0x00E1CC00, 0x00E1CC00, 0x00E2DC00),
+    # I 5 E2DC00 OS_INIT_PROC; D25 E33400 OS_INIT_DATA .. I 1 E38000
+    (0x00E2DC00, 0x00E33400, 0x00E33400, 0x00E38000),
+    # I 1 E38000 .TEXT; D21 E79C00 .DATA .. I20 E8A434 RELOC
+    (0x00E38000, 0x00E79C00, 0x00E79C00, 0x00E8A434),
+    # I18 E85400 IIC_AQWRD_PROC; D40 E86210 IIC_AQWRD_DATA2 .. the end of
+    # D39 E865C8 IIC_AQWRD_DATA
+    (0x00E85400, 0x00E86210, 0x00E86210, 0x00E865D0),
+    # I12 E87400 RTWIRED_CODE; D34 E88168 RTWIRED_DATA
+    (0x00E87400, 0x00E88168, 0x00E88168, 0x00E88628),
+    # D35 E89400 PBU_PAGE (PBU_ASM) and I16 E89BA4 PBU_WIRED_PROC; D36
+    # E8A054 PBU_WIRED_DATA
+    (0x00E89400, 0x00E8A054, 0x00E8A054, 0x00E8A434),
+]
 CODE_TO_DATA[5] = [
     # I 4 E00800 WIRED_PROC; D24 E1E800 WIRED_DATA .. I 5 E30400
     (0x00E00800, 0x00E1E800, 0x00E1E800, 0x00E30400),
@@ -1350,11 +1600,13 @@ CODE_TO_DATA[9] = [
 ]
 WIRED_DATA_REGION = {
     2: (0x00E1DC00, 0x00E2F000),
+    3: (0x00E1CC00, 0x00E2DC00),    # D24 E1CC00 WIRED_DATA .. I 5 E2DC00
     5: (0x00E1E800, 0x00E30400),    # D24 E1E800 WIRED_DATA .. I 5 E30400
     9: (0x3C420800, 0x3C434C00),    # D25 3C420800 WIRED_DATA .. I 6 3C434C00
 }
 UNWIRED_DATA_REGION = {
     2: (0x00E78400, 0x00E88834),
+    3: (0x00E79C00, 0x00E8A434),    # D21 E79C00 .DATA .. I20 E8A434 RELOC
     5: (0x00E7F800, 0x00E92834),    # D21 E7F800 .DATA .. I20 E92834 RELOC
     9: (0x3C489800, 0x3C4A75D8),    # D22 3C489800 .DATA .. I21 3C4A75D8 RELOC
 }
@@ -1366,6 +1618,12 @@ REGION_DATA_END_KEY = {
     2: {
         C_WIRED: (0x00E2E09F, LATE),    # end of WIRED_DATA (D24, 0xE2E0A0)
         C_UNWIRED: (0x00E85707, LATE),  # end of .DATA (D21, 0xE85708)
+    },
+    3: {
+        # D24 E1CC00 WIRED_DATA size = 100F4: its end is 0xE2CCF4
+        C_WIRED: (0x00E2CCF3, LATE),
+        # D21 E79C00 .DATA size = ABB4: its end is 0xE847B4
+        C_UNWIRED: (0x00E847B3, LATE),
     },
     5: {
         # D24 E1E800 WIRED_DATA size = 10CC4: its end is 0xE2F4C4
@@ -1389,6 +1647,7 @@ REGION_DATA_END_KEY = {
 # statement.
 RUNTIME_KEY = {
     2: (0x00E0ADB0, -1),
+    3: (0x00E0AE5C, -1),    # I E0AC80 M$ARITH size = 1DC; I E0AE5C MEM_
     5: (0x00E0AF5C, -1),    # I E0AD80 M$ARITH size = 1DC; I E0AF5C MEM_
     9: (0x3C40CC00, -1),    # I 3C40CA24 M$ARITH size = 1DC; I 3C40CC00 MEM_
 }
@@ -1398,7 +1657,7 @@ RUNTIME_KEY = {
 # data in its modules, whose blocks the map keys (dpc_blocks), so the SAU2
 # and SAU5 have none.  A key
 # in the image's bss (past RELOC) makes a bss object NOBITS there.
-DATA_ANCHORS = {2: {}, 5: {}, 9: {
+DATA_ANCHORS = {2: {}, 3: {}, 5: {}, 9: {
     # mono9/mono9_desc.pas: dpc's initialized overlay section
     # MONO9_$WIRED_DATA, the map's `D42 3C43399C MONO9_$WIRED_DAT size = C8'
     # (the map truncates the name; no symbol of it)
@@ -1412,12 +1671,20 @@ DATA_ANCHORS = {2: {}, 5: {}, 9: {
 # OS_DISK_DATA_END), what OS_$SHUTDOWN wires (OS_DATA_SHUTWIRED ..
 # OS_DATA_SHUTWIRED_END; STOP_$WATCH .. OS_DATA_SHUTWIRED is STOP's own
 # range, not wired at shutdown) and RING_DATA_START .. RING_DATA_END.
-# The SAU5's also CT's data (CT_$DATA_START .. CT_$DATA_END), its entry 10.
+# The SAU3's also LPR_'s and IIC's (entries 10 and 11), the SAU5's CT's
+# data (CT_$DATA_START .. CT_$DATA_END), its entry 10.
 SPECIAL_DATA_MARKED = {
     2: {
         0: (0x00E784D0, 0x00E7B044),
         1: (0x00E82128, 0x00E82740),
         4: (0x00E86400, 0x00E869D0),
+    },
+    3: {
+        0: (0x00E79CD0, 0x00E7C708),    # VTOC_ .. SVC_CATCHER
+        1: (0x00E8383C, 0x00E83D30),    # FILE_ .. DTTY_ASM
+        4: (0x00E86800, 0x00E86DD0),    # RING_DATA_START .. RING_DATA_END
+        10: (0x00E8417C, 0x00E844D8),   # LPR_$DATA_START .. LPR_$DATA_END
+        11: (0x00E86210, 0x00E865D0),   # IIC_$PROC_END .. IIC_$DATA_END
     },
     5: {
         0: (0x00E7F8D0, 0x00E82308),    # VTOC_ .. SVC_CATCHER
@@ -1438,6 +1705,8 @@ SPECIAL_DATA_MARKED = {
 # past which (the stacks, MMAP, ...) everything is wired.
 CLASS_BOUNDS = {
     2: (0x00E2F000, 0x00E38000, 0x00EA9684),
+    # I 5 E2DC00 OS_INIT_PROC, I 1 E38000 .TEXT, D92 EAB284 OS_DATA_END
+    3: (0x00E2DC00, 0x00E38000, 0x00EAB284),
     # I 5 E30400 OS_INIT_PROC, I 1 E38000 .TEXT, D91 EB3684 OS_DATA_END
     5: (0x00E30400, 0x00E38000, 0x00EB3684),
     # I 6 3C434C00 OS_INIT_PROC, I 1 3C440000 .TEXT, D94 3C4C8428 OS_DATA_END
@@ -1955,7 +2224,7 @@ def fragment(layout, map_path):
     out.append(' * ordering keys, not placements.')
     out.append(' */')
     seg = None
-    marks = list(TEXT_MARKS[SAU])
+    marks = section_aligns(lm, TEXT_MARKS[SAU], 0, IMAGE_BSS_START[SAU])
     for key, _, kind, item in layout.ordered():
         addr = key[0]
         cur = lm.segment_of(addr)
@@ -2075,7 +2344,7 @@ def data_fragment(layout, map_path):
 
 # The SAUs whose RFC image carries the fixup table at RELOC (the SAU2's,
 # SAU3's, SAU5's, SAU8's; the SAU9's image ends at RELOC with no table).
-RFC_FIXUP_TABLE = {2: True, 5: True, 9: False}
+RFC_FIXUP_TABLE = {2: True, 3: True, 5: True, 9: False}
 FIXUP_SLACK = 0    # entries beyond the inputs' count (every input is
                    # seen)
 
@@ -2121,11 +2390,12 @@ def bss_fragment(layout, map_path, nfixups):
         out[i:] = ['    /* RELOC: the image has no fixup table (its COLD moves no '
                    'cells), so no', '     * room for one. */',
                    '    RFC_FIXUP_TABLE_END = .;', '']
-    marks = list(BSS_MARKS[SAU])
+    marks = section_aligns(layout.linkmap, BSS_MARKS[SAU],
+                           IMAGE_BSS_START[SAU], VM_WINDOWS_START[SAU])
     for key, _, kind, item in layout.cold_nobits():
         addr = key[0]
-        emit_marks(out, marks, addr)
-        if addr % PAGE == 0:
+        cur = emit_marks(out, marks, addr)
+        if addr % PAGE == 0 and cur < PAGE:
             out.append('    . = ALIGN(0x%X);' % PAGE)
         if kind == 'block':
             if item.mark:
@@ -2310,6 +2580,57 @@ def elf_symbols(nm, elf):
     return syms
 
 
+def item_start(kind, item, syms):
+    """The linked address of an item's first byte, or None: a block's
+    mark, an overlay's or a window's symbol, a section's first symbol that
+    the ELF defines once, less its offset in the section."""
+    if kind == 'block':
+        names = [item.mark]
+    elif kind == 'overlay':
+        names = [item.name]
+    elif kind == 'window':
+        names = [item.base]
+    else:
+        for name in item.symbols:
+            addrs = syms.get(name)
+            if addrs and len(addrs) == 1:
+                return addrs[0] - item.offsets[name]
+        return None
+    addrs = syms.get(names[0])
+    return addrs[0] if addrs else None
+
+
+def page_checks(layout, syms):
+    """Every numbered map section that starts a page (page_sections)
+    starts one here: the first item placed at or past its map address is
+    on a page.  -> (errors, number of sections with an item placed at or
+    past them)"""
+    errors = []
+    items = [t for t in layout.ordered() + layout.nobits()
+             if t[2] != 'runtime' and getattr(t[3], 'name', None)
+             not in SCRIPT_PLACED]
+    keys = [t[0][0] for t in items]
+    checked = 0
+    for addr, secs in page_sections(layout.linkmap):
+        i = bisect.bisect_left(keys, addr)
+        if i == len(items):
+            continue    # nothing placed from here on
+        key, _, kind, item = items[i]
+        checked += 1
+        start = item_start(kind, item, syms)
+        what = getattr(item, 'label', None) or item.name
+        if start is None:
+            errors.append('map %s starts a page at 0x%06X; the first item '
+                          'placed there, %s, has no symbol to find it by'
+                          % (section_names(secs), addr, what))
+        elif start % PAGE:
+            errors.append('map %s starts a page at 0x%06X, but the first '
+                          'item placed there, %s (map 0x%06X), is linked at '
+                          '0x%08X, not on a page'
+                          % (section_names(secs), addr, what, key[0], start))
+    return errors, checked
+
+
 def check_elf(layout, elf, nm):
     lm = layout.linkmap
     syms = elf_symbols(nm, elf)
@@ -2468,6 +2789,10 @@ def check_elf(layout, elf, nm):
           % ', '.join('%s %d section(s) %d bytes' % (c, n, size)
                       for c, (n, size) in sorted(owned.items())))
     print('gen_layout_ld: %d order inversion(s)' % inversions)
+    page_errors, npage = page_checks(layout, syms)
+    print('gen_layout_ld: %d numbered map section(s) that start a page: '
+          '%d start one here too' % (npage, npage - len(page_errors)))
+    errors += page_errors
     if first:
         (ka, na, ea, _), (kb, nb, eb, _) = first
         errors.append('first inversion: %s (map 0x%06X) is linked at 0x%08X '
@@ -2498,7 +2823,8 @@ def table_checks(linkmap):
     # named after map segments: OS_PROC_UNWIRED, RING_PROC_START, ...)
     for addr, name, _ in TEXT_MARKS[SAU] + BSS_MARKS[SAU]:
         if name in linkmap.symbols:
-            at(name, addr, 'TEXT_MARKS/BSS_MARKS')
+            at(name, addr + MARK_DELTAS.get(SAU, {}).get(name, 0),
+               'TEXT_MARKS/BSS_MARKS')
     for marks in (TEXT_MARKS[SAU], BSS_MARKS[SAU]):
         addrs = [a for a, _, _ in marks]
         if addrs != sorted(addrs):

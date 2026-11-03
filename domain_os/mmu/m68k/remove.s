@@ -1,7 +1,7 @@
 /*
  * MMU_$REMOVE - Unlink one physical page from the reverse map
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.
  *
  * Original address: 0x00E23D64, 46 bytes (0xE23D64..0xE23D91).

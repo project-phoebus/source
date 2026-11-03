@@ -1,6 +1,7 @@
 { OS_$CHECK_POWER_OFF - start the shutdown when power-off is requested.
 
   Image addresses:
+    sau3  0x00E1C6FC  OS_$CHECK_POWER_OFF
     sau5  0x00E1DEB8  OS_$CHECK_POWER_OFF
 
   - Compiled only with `power_off_check' (base/config.ins.pas).

@@ -1,6 +1,7 @@
 { IO_$ATTR_CNTL - set an acquired unit's attributes, returning the old.
 
   Image addresses:
+    sau3  0x00E19A72  IO_$ATTR_CNTL
     sau5  0x00E1AD22  IO_$ATTR_CNTL
 
   - The slot's attributes go into old_attrs and are replaced by

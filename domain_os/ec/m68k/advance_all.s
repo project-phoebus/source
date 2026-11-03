@@ -1,7 +1,7 @@
 /*
  * EC_$ADVANCE_ALL - Wake all waiters on eventcount
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.
  *
  * Sets value to 0x7FFFFFFF to wake all waiters.

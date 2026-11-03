@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E2C368  IO_ data (WIRED_DATA, 0x554 bytes)
+    sau3  0x00E2AC4C  IO_ data (WIRED_DATA, 0x9BC bytes)
     sau5  0x00E2D4A4  IO_ data (WIRED_DATA, 0x684 bytes)
     sau9  0x3C430840  IO_ data (WIRED_DATA, 0x5B4 bytes)
 
@@ -10,13 +11,21 @@
   with the PBU the I/O map routines), OS_INIT_PROC
   (io_$build_dcte_list, IO_$INIT) and PROCEDURE$ (IO_$GET_CONFIG), each
   headed with its sections, and its data segment in WIRED_DATA (1364
-  bytes on the SAU2, 1668 on the SAU5).
+  bytes on the SAU2, 1668 on the SAU5, 2492 on the SAU3).
 
   The data, declared below with each object's offset on both SAUs: the
   I/O maps (io_$iomap_area, bus 4's empty on the SAU2; VME's and MBUS's
   too on the SAU5), IO_$BUS_EPV, the unit table IO_$DCTES, the two
   exclusion locks (PBU_$EXCLUSION_LOCK too with the PBU), the region
   nodes (`io_regions'), the DCTE area's bounds and IO_$DCTE_LIST.
+
+  On the SAU3: bus 2's map at +0x18 (its first range taken,
+  `mbus_map_reserved') and bus 4's at +0x60, IO_$BUS_EPV at +0xA8,
+  IO_$DCTES at +0x160, the locks at +0x560, +0x578
+  (PBU_$EXCLUSION_LOCK) and +0x590, 64 region nodes from +0x5A8, the
+  DCTE area's bounds at +0x9A8, IO_$DCTE_LIST at +0x9B0, the free
+  list's head at +0x9B4, io_$config_flag at +0x9B8 and IO_$IN_INIT at
+  +0x9BA.
 
   The gaps are declared as fillers so dpc gives the image's offsets;
   most put an object of 8 bytes or more at a multiple of 8.  No SAU2
@@ -74,6 +83,11 @@ function mmu_$vtop(va: integer32; out status: status_$t): integer32;
 %include 'vme/vme.ins.pas';                   { IO_$BUS_EPV's VME entry }
 %include 'sysbus/sysbus.ins.pas';
 %include 'atbus/atbus.ins.pas';               { IO_$BUS_EPV's AT bus entry }
+%if iic_port_config %then
+%include 'time/time.ins.pas';                 { for route/route.ins.pas }
+%include 'pkt/pkt.ins.pas';                   { for route/route.ins.pas }
+%include 'route/route.ins.pas';               { ROUTE_$PORT: IO_$GET_CONFIG }
+%endif
 %if prom_config_record %then
 %include 'os/os.ins.pas';                     { the PROM's configuration
                                                 record, OS_$BOOT_DEVICE }
@@ -154,7 +168,8 @@ type
   { The block's first bytes: the maps' pointers, one per bus number
     (each bus with a map points at it), and the maps, empty: on the SAU2
     one, bus 4's (0x60 bytes in all); on the SAU5 three, bus 1's, bus
-    2's and bus 4's (0xF0 bytes).  One record, so that its initializer
+    2's and bus 4's (0xF0 bytes); on the SAU3 two, bus 2's and bus 4's
+    (0xA8 bytes), bus 2's holding one range.  One record, so that its initializer
     can take the maps' addresses: the pointers come first, and a
     variable can name only itself or an earlier one (the variable in
     scope in its own initializer).  The fillers give the image's offsets
@@ -196,7 +211,10 @@ var
 %if vme_bus %then
      vme_map := [first := 1],
 %endif
-%if mbus_bus %then
+%if mbus_map_reserved %then
+     mbus_map := [first := 0, last := 0,
+                  ranges := [[start := 16#70000, stop := 16#80000]]],
+%elseif mbus_bus %then
      mbus_map := [first := 1],
 %endif
 %if atbus_routines %then
@@ -218,6 +236,8 @@ define
 %if mbus_bus %then
                                    init := addr(mbus_$init),
                                    define_int := addr(mbus_$define_int),
+%endif
+%if mbus_dev_routines %then
                                    enable_device := addr(mbus_$enable_dev),
                                    disable_device := addr(mbus_$disable_dev),
 %endif

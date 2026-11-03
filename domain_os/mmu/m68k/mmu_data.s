@@ -2,7 +2,7 @@
 | mmu/m68k/mmu_data.s - the data at the head of the hand-written MMU_ASM
 | segment: MMU_$PID_PRIV, M68020 and the three MMU shift/mask cells
 |
-| The SAU2 and SAU5 images have the same code here; the address and
+| The SAU2, SAU3 and SAU5 images have the same code here; the address and
 | byte columns below are the SAU2 image's.
 |
 | Byte gate (tools/asm_compare.py, `make check-asm'): the

@@ -107,6 +107,12 @@
   blink routine table.  OS_INIT_DATA is 0x88 bytes there:
   SMD_$ADD_DEVICE's statics (smd/add_device.pas).
 
+  Without `display_driver' (the SAU3, which has no display) the unit is
+  seven stubs in three code sections, with no data: SMD_$LITES in
+  WIRED_PROC (4 bytes); smd_$validate_unit, SMD_$INQ_DISP_TYPE,
+  SMD_$N_DEVICES, SMD_$INQ_DISP_UID and SMD_$INQ_DISP_INFO in .TEXT
+  (0x88 bytes); SMD_$FREE_ASID in PROC2_DELETE_PRO (4 bytes).
+
   These are module variables, not routine statics: most are used by
   several routines, and the block's order is not the routines'.  The two
   map symbols are defined here, in their places in the block.  Element
@@ -146,6 +152,7 @@ module smd;
   module variables), in the order of the .DATA block, and the global
   routines and the variables this module defines (ref 7.3.4 and 7.2.2,
   Method 2), in map order. }
+%if display_driver %then
 var
   { +0x0000: the length MST_$MAP and MST_$UNMAP are given for each
     display type, reached at displacement 0 with the type scaled by 4
@@ -325,6 +332,8 @@ define
   smd_response_val;
 %endif
 
+%endif
+
 define
   { The routines this module defines, in map order: every SMD map global
     (dpc refuses a `define' of a routine without a body in the unit, ref
@@ -344,19 +353,23 @@ define
   smd_$nop_fifowait;
   smd_$nop_touch;
 %endif
+%if display_driver %then
   smd_$copy_font_to_md_hdm;
   smd_$putc;
   smd_$busy_wait;
+%endif
   smd_$lites;
 %if display_devices %then
   smd_$fifo_wait;
   smd_$touch;
   smd_$add_device;
 %endif
+%if display_driver %then
   smd_$init;
   smd_$init_blink;
   smd_$cold_init;
   smd_$install_disp_mem;
+%endif
 %if display_devices %then
   smd_$nop1;
   smd_$nop_video;
@@ -371,22 +384,25 @@ define
   smd_$nop_sharedev;
   smd_$nop_close;
 %endif
+%if display_driver %then
   smd_$assoc;
   smd_$alloc_hdm;
   smd_$free_hdm;
-%if not display_devices %then
+%endif
+%if display_driver and not display_devices %then
   smd_$load_font;
   smd_$unload_font;
   smd_$invert_s;
 %endif
   smd_$inq_disp_type;
-%if not display_devices %then
+%if display_driver and not display_devices %then
   smd_$ws_init;
   smd_$util_init;
   smd_$draw_box;
   smd_$display_cursor;
   smd_$clear_cursor;
 %endif
+%if display_driver %then
   smd_$inq_kbd_cursor;
   smd_$inq_kbd_type;
   smd_$set_kbd_type;
@@ -407,10 +423,12 @@ define
   smd_$stop_tp_cursor;
   smd_$acq_display;
   smd_$rel_display;
-%if not display_devices %then
+%endif
+%if display_driver and not display_devices %then
   smd_$blt;
   smd_$inq_mm_blt;
 %endif
+%if display_driver %then
   smd_$get_idm_event;
   smd_$get_unit_event;
   smd_$unblank;
@@ -418,11 +436,13 @@ define
   smd_$set_blank_timeout;
   smd_$inq_blank_timeout;
   smd_$signal;
-%if not display_devices %then
+%endif
+%if display_driver and not display_devices %then
   smd_$soft_scroll;
   smd_$eof_wait;
   smd_$wire_mm;
 %endif
+%if display_driver %then
   smd_$send_response;
   smd_$borrow_display;
   smd_$return_display;
@@ -431,38 +451,50 @@ define
   smd_$video_ctl;
   smd_$map_display_u;
   smd_$unmap_display_u;
-%if not display_devices %then
+%endif
+%if display_driver and not display_devices %then
   smd_$cond_input_u;
   smd_$blt_u;
 %endif
+%if display_driver %then
   smd_$op_wait_u;
   smd_$load_crsr_bitmap;
   smd_$read_crsr_bitmap;
   smd_$get_ec;
-%if not display_devices %then
+%endif
+%if display_driver and not display_devices %then
   smd_$set_clip_window;
   smd_$write_string;
 %endif
+%if display_driver %then
   smd_$blink_cursor_callback;
   smd_$clear_screen;
+%endif
   smd_$n_devices;
   smd_$inq_disp_uid;
+%if display_driver %then
   smd_$map_display_memory;
   smd_$unmap_display_memory;
   smd_$shutdown;
+%endif
 %if display_devices %then
   smd_$device_info;
   smd_$share_device;
 %endif
+%if display_driver %then
   smd_$assoc_csrs;
   smd_$dissoc;
+%endif
   smd_$inq_disp_info;
 %if display_devices %then
   smd_$set_color_table;
 %endif
+%if display_driver %then
   smd_$display_logo;
+%endif
   smd_$free_asid;
 
+%if display_driver %then
 var
   { +0x1D9C: -1.  The unit the cursor was last shown on (SHOW_CURSOR). }
   previous_unit: integer := -1;
@@ -493,6 +525,7 @@ var
   blink_func: array[1..smd_unit_count] of smd_blink_func_t :=
     [addr(smd_$blink_cursor_1)];
 %endif
+%endif
 
 { The module-local routines called before their bodies.
 
@@ -502,9 +535,11 @@ var
   its slot as a longword by value: one 4-byte value parameter (by value
   under `internal', ref 5.2), integer32.  The body's attribute is
   `[section(procedure$, wired_data)]' (above). }
+%if display_driver %then
 { body: smd/reschedule_blink_timer.pas }
 procedure smd_$reschedule_blink_timer(interval: integer32);
   forward; internal;
+%endif
 
 %if display_devices %then
 { smd_$validate_unit (.TEXT, no map symbol): with `display_devices'
@@ -515,6 +550,7 @@ function smd_$validate_unit(unit: integer): boolean;
 %endif
 
 { ---- WIRED_PROC ---- }
+%if display_driver %then
 %if display_devices %then
 %include 'smd/nop2.pas';                    { SMD_$NOP2          }
 %include 'smd/nop_copy.pas';                { SMD_$NOP_COPY      }
@@ -529,13 +565,17 @@ function smd_$validate_unit(unit: integer): boolean;
 %include 'smd/copy_font_to_md_hdm.pas';     { SMD_$COPY_FONT_TO_MD_HDM }
 %include 'smd/putc.pas';                    { SMD_$PUTC          }
 %include 'smd/busy_wait.pas';               { SMD_$BUSY_WAIT     }
+%endif
 %include 'smd/lites.pas';                   { SMD_$LITES         }
+%if display_driver %then
 %if display_devices %then
 %include 'smd/fifo_wait.pas';               { SMD_$FIFO_WAIT     }
 %include 'smd/touch.pas';                   { SMD_$TOUCH         }
 %endif
+%endif
 
 { ---- OS_INIT_PROC ---- }
+%if display_driver %then
 %if display_devices %then
 %include 'smd/add_device.pas';              { SMD_$ADD_DEVICE    }
 %endif
@@ -543,9 +583,11 @@ function smd_$validate_unit(unit: integer): boolean;
 %include 'smd/init_blink.pas';              { SMD_$INIT_BLINK    }
 %include 'smd/cold_init.pas';               { SMD_$COLD_INIT     }
 %include 'smd/install_disp_mem.pas';        { SMD_$INSTALL_DISP_MEM }
+%endif
 
 { ---- .TEXT ---- }
 %include 'smd/validate_unit.pas';           { smd_$validate_unit }
+%if display_driver %then
 %if display_devices %then
 %include 'smd/nop1.pas';                    { SMD_$NOP1          }
 %include 'smd/nop_video.pas';               { SMD_$NOP_VIDEO     }
@@ -570,7 +612,9 @@ function smd_$validate_unit(unit: integer): boolean;
 %include 'smd/unload_font.pas';             { SMD_$UNLOAD_FONT   }
 %include 'smd/invert_s.pas';                { SMD_$INVERT_S      }
 %endif
+%endif
 %include 'smd/inq_disp_type.pas';           { SMD_$INQ_DISP_TYPE }
+%if display_driver %then
 %if not display_devices %then
 %include 'smd/ws_init.pas';                 { SMD_$WS_INIT       }
 %include 'smd/util_init.pas';               { SMD_$UTIL_INIT     }
@@ -642,8 +686,10 @@ function smd_$validate_unit(unit: integer): boolean;
 %endif
 %include 'smd/blink_cursor_callback.pas';   { SMD_$BLINK_CURSOR_CALLBACK }
 %include 'smd/clear_screen.pas';            { SMD_$CLEAR_SCREEN  }
+%endif
 %include 'smd/n_devices.pas';               { SMD_$N_DEVICES     }
 %include 'smd/inq_disp_uid.pas';            { SMD_$INQ_DISP_UID  }
+%if display_driver %then
 %include 'smd/map_display_memory.pas';      { SMD_$MAP_DISPLAY_MEMORY }
 %include 'smd/unmap_display_memory.pas';    { SMD_$UNMAP_DISPLAY_MEMORY }
 %include 'smd/shutdown.pas';                { SMD_$SHUTDOWN      }
@@ -653,14 +699,19 @@ function smd_$validate_unit(unit: integer): boolean;
 %endif
 %include 'smd/assoc_csrs.pas';              { SMD_$ASSOC_CSRS    }
 %include 'smd/dissoc.pas';                  { SMD_$DISSOC        }
+%endif
 %include 'smd/inq_disp_info.pas';           { SMD_$INQ_DISP_INFO }
+%if display_driver %then
 %if display_devices %then
 %include 'smd/set_color_table.pas';         { SMD_$SET_COLOR_TABLE }
 %endif
 %include 'smd/display_logo.pas';            { SMD_$DISPLAY_LOGO  }
+%endif
 
 { ---- PROCEDURE$ ---- }
+%if display_driver %then
 %include 'smd/reschedule_blink_timer.pas';  { smd_$reschedule_blink_timer }
+%endif
 
 { ---- PROC2_DELETE_PRO ---- }
 %include 'smd/free_asid.pas';               { SMD_$FREE_ASID     }

@@ -1,6 +1,8 @@
 { io_$alloc_region - allocate a range of bus addresses in a bus's I/O map.
 
   Image addresses:
+    sau3  0x00E19B5A  io_$alloc_region
+    sau3  0x00E19AB8  fits (nested)
     sau5  0x00E1AE0A  io_$alloc_region
     sau5  0x00E1AD68  fits (nested)
 

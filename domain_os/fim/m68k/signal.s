@@ -2,7 +2,7 @@
  * fim/m68k/signal.s - FIM_$SIGNAL_FIRST, FIM_$SIGNAL and the cleanup
  * handler stacks (m68k/SAU2, SAU5)
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.
  *
  * Transcribed from the SAU2 image, one section per map symbol so

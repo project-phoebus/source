@@ -126,7 +126,7 @@ procedure sm_c_$revalidate(in vol: disk_$volume_t); extern;
 { SM_C_$SPIN_DOWN: the jump table's spin_down. }
 function sm_c_$spin_down(in ctlr: pinteger): integer; extern;
 
-{ SM_FIX_ECC (hand-written, the map's SM_X_ASM segment; sm_c/sau5/
+{ SM_FIX_ECC (hand-written, the map's SM_X_ASM segment; sm_c/m68k/
   sm_x_asm.s): reads its three arguments off the stack, addresses: the
   request's block header, the data page, the ECC words; it flips the
   bits the ECC words name in the header (offsets below 32) or the data

@@ -77,6 +77,13 @@ SIO2681_$SET_LINE, whose A5 it uses).  None nested.
 - `ml/ml.ins.pas`, `sio6509/sio6509.ins.pas` (its `sio`, the SIO page):
   used as they are.
 
+## The SAU3
+
+The SAU3's SIO_IO segments (WIRED_PROC 0x69C, OS_INIT_PROC 0x188,
+PROCEDURE$ 0xE0 bytes) and blocks (0xC8 and 8 bytes) are the SAU2's code
+and bytes at the SAU3's addresses; the only source difference is
+SIO6509_$INIT's (`../sio6509/init.pas`).
+
 ## Open items
 
 Form:

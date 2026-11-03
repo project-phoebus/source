@@ -1,6 +1,6 @@
 /*
  * misc/m68k/crash_system.s - CRASH_SYSTEM and the crash console
- * (m68k/SAU2, SAU5)
+ * (m68k/SAU2, SAU3, SAU5)
  *
  * The SAU2 and SAU5 images have the same CRASH_SYSTEM (the map's
  * CRASH_PAUSE) and CRASH_SHOW_STRING except in three places, which test
@@ -20,9 +20,24 @@
  *                     when DISP2_PRESENT is set, else DISP1_MEM.  The
  *                     SAU6's REMAP_DISPLAY is the same size; the SAU4's,
  *                     another form, is not compared.
+ * The SAU3's module (`D E1D700 CRASH_SYSTEM size = 2F8') is the SAU2's
+ * with two more parts:
+ *   crash_prom_restart  CRASH_SYSTEM ends in a restart through the PROM
+ *                     (its cell 0x128, code and address), never in the
+ *                     debugger: a clean restart (status 0x001B0008, then
+ *                     cleared) at DUMP_$AUTO_REBOOT's physical address,
+ *                     a shutdown (status 0) with code 0xFF, a crash with
+ *                     code 0xF1 at DUMP + 4 (the SAU9's restart arms
+ *                     without its crash_reboot_check; no KBD_$RESET,
+ *                     KBD_$CRASH_INIT or `trap #15'); CRASH, which hands
+ *                     the PROM a code at DUMP + 4, follows CRASH_SAVED_SR;
+ *   display_driver    no REMAP_DISPLAY and no call_prom_reload_font: the
+ *                     console is the PROM's serial line.
  * The address columns are the SAU2 image's, except in the `.if' arms,
  * which carry the SAU5 image's (CRASH_SYSTEM 0x00E1F300, CRASH_SHOW_STRING
- * 0x00E1F3B8, crash_puts_string 0x00E1F3C8, CRASH_REPORT 0x00E1F648).
+ * 0x00E1F3B8, crash_puts_string 0x00E1F3C8, CRASH_REPORT 0x00E1F648) or
+ * the SAU3 image's (CRASH_SYSTEM 0x00E1D700, CRASH 0x00E1D7E4,
+ * CRASH_SHOW_STRING 0x00E1D800).
  *
  * Byte gate (tools/asm_compare.py, `make check'): encodings identical
  * to the image (modulo the documented widenings); address operands
@@ -55,13 +70,14 @@
  *   0x00E1E822  call_prom_reload_font
  *   0x00E1E82A  REMAP_DISPLAY
  *
- * Not on the SAUs whose crash may restart the node (`crash_reboot',
+ * Not on the other SAUs whose crash may restart the node (`crash_reboot',
  * base/config.ins.pas): their CRASH_SYSTEM module is another form (the
  * SAU9's misc/sau9/crash_system.s).
  */
 
         .include "base/config.inc"
-        .if     !crash_reboot
+        /* (not `a || b': `|' starts a comment in m68k gas) */
+        .if     !(crash_reboot && !crash_prom_restart)
 
         .extern TIME_$CLOCKH_EC
         .extern DISP1_MEM               /* arch/m68k/sau2/iodefs.s, 0xFC0000 */
@@ -74,6 +90,10 @@
         .set    .Lcr_hdr, 4
         .else
         .set    .Lcr_hdr, 0
+        .endif
+
+        .if crash_prom_restart
+        .equ    DUMP_PHYS, 0x00100C00   /* PPN 0x403: where COLD copies the DUMP page */
         .endif
 
         .set    TIME_$CLOCKH, TIME_$CLOCKH_EC   /* the eventcount value word, map 0xE2B0D4 (time/time.ins.pas) */
@@ -129,6 +149,40 @@ Lcrash_copy_reg:
     dbf     %d0, Lcrash_copy_reg            /* 0xE1E76A */
     movec   %usp, %d0                       /* 0xE1E76E */
     move.l  %d0, (0x6c+.Lcr_hdr,%a5)                  /* 0xE1E772: (0x2ea,A5) */
+    .if crash_prom_restart
+    /* The restart through the PROM: D1 = the code, D0 = the address. */
+    bra.w   Lcrash_restart_which            /* sau3 0xE1D776 */
+Lcrash_auto_reboot:
+    move.l  (crash_auto_reboot:w,%pc), %d0  /* sau3 0xE1D77A: DUMP_$AUTO_REBOOT, */
+    sub.l   (crash_dump:w,%pc), %d0         /* sau3 0xE1D77E:   physical */
+    .short  0xd0bc                          /* sau3 0xE1D782: add.l #DUMP_PHYS,%d0 */
+    .long   DUMP_PHYS                       /*   (the <ea>=#imm form; gas: addi) */
+    move.w  #0xf1, %d1                      /* sau3 0xE1D788 */
+    bra.b   Lcrash_restart
+Lcrash_restart_which:
+    lea     CRASH_REPORT+0x10+.Lcr_hdr, %a0 /* sau3 0xE1D78E: lea (0x1fe,PC),A0 */
+    tst.l   (%a0)                           /* sau3 0xE1D792 */
+    beq.b   Lcrash_restart_shutdown
+    cmpi.l  #0x001b0008, (%a0)              /* sau3 0xE1D796: clean reboot? */
+    bne.b   Lcrash_restart_crash
+    clr.l   (%a0)                           /* sau3 0xE1D79E: it reports nothing */
+    bra.b   Lcrash_auto_reboot
+Lcrash_restart_shutdown:
+    clr.l   %d0                             /* sau3 0xE1D7A2: code 0xFF, address 0 */
+    move.w  #0xff, %d1
+    bra.b   Lcrash_restart
+Lcrash_restart_crash:
+    move.l  #DUMP_PHYS+4, %d0               /* sau3 0xE1D7AA: code 0xF1 at DUMP + 4 */
+    move.w  #0xf1, %d1
+Lcrash_restart:
+    move.l  %d0, -(%sp)                     /* sau3 0xE1D7B4 */
+    move.w  %d1, -(%sp)
+    bsr.b   crash_call_prom_restart         /* sau3 0xE1D7B8 */
+    addq.w  #6, %sp
+    move.w  0x40(%sp), CRASH_SAVED_SR       /* sau3 0xE1D7BC: (0xe2,A5) = entry SR */
+    movem.l (%sp)+, %d0-%d7/%a0-%a7         /* sau3 0xE1D7C2 */
+    addq.w  #2, %sp                         /* sau3 0xE1D7C6: drop the SR word */
+    .else
     jsr     KBD_$RESET                      /* 0xE1E776 */
 
     tst.l   (0x10+.Lcr_hdr,%a5)                       /* 0xE1E77C */
@@ -150,6 +204,7 @@ Lcrash_enter_debugger:
 
     /* Reached only if the trap #15 handler returns. */
     jsr     KBD_$CRASH_INIT                 /* 0xE1E796 */
+    .endif
     movem.l %d0/%a0, -(%sp)                 /* 0xE1E79C */
     lea     CRASH_REPORT+0x28+.Lcr_hdr, %a0          /* 0xE1E7A0: lea (0x204,PC),A0 */
     moveq   #15, %d0                        /* 0xE1E7A4 */
@@ -163,6 +218,29 @@ Lcrash_clear_reg:
     .globl  CRASH_SAVED_SR
 CRASH_SAVED_SR:                             /* 0xE1E7B6: the SR stash, (0xb6,A5); zero */
     .word   0
+
+    .if crash_prom_restart
+/* -------------------------------------------------------------------------
+ * CRASH(code, param) - sau3 0x00E1D7E4: restart the node through the PROM
+ * with restart code `code' (4(SP), a word) at DUMP + 4; the longword
+ * argument (6(SP)) is replaced by that address.
+ * ------------------------------------------------------------------------- */
+    .globl  CRASH
+CRASH:
+    movea.l #DUMP_PHYS+4, %a0               /* sau3 0xE1D7E4 */
+    move.l  %a0, 6(%sp)                     /* sau3 0xE1D7EA */
+
+/* crash_call_prom_restart - sau3 0x00E1D7EE: call the PROM's restart entry
+   (its cell 0x128) with the code word at 4(SP) and the address longword
+   at 6(SP). */
+crash_call_prom_restart:
+    movea.l 0x00000128, %a0                 /* sau3 0xE1D7EE: movea.l (0x128).w,A0 */
+    move.l  6(%sp), -(%sp)                  /* sau3 0xE1D7F2 */
+    move.w  8(%sp), -(%sp)                  /* sau3 0xE1D7F6 */
+    jsr     (%a0)                           /* sau3 0xE1D7FA */
+    addq.l  #6, %sp                         /* sau3 0xE1D7FC */
+    rts                                     /* sau3 0xE1D7FE */
+    .endif
 
 /* -------------------------------------------------------------------------
  * CRASH_SHOW_STRING - 0x00E1E7B8, 16 bytes
@@ -194,8 +272,10 @@ _CRASH_SHOW_STRING:
 crash_puts_string:
 _crash_puts_string:
     move.l  %a0, -(%sp)                     /* 0xE1E7C8 */
+    .if display_driver
     bsr.w   REMAP_DISPLAY                   /* 0xE1E7CA */
     bsr.b   call_prom_reload_font           /* 0xE1E7CE */
+    .endif
     movea.l (%sp)+, %a0                     /* 0xE1E7D0 */
 Lputs_next:
     move.b  (%a0)+, %d1                     /* 0xE1E7D2 */
@@ -251,6 +331,7 @@ call_prom_putc:
  *
  * Tail-jumps to the PROM font reload routine (vector at address 0x114).
  * ------------------------------------------------------------------------- */
+    .if display_driver
     .globl  call_prom_reload_font
 call_prom_reload_font:
     movea.l 0x00000114, %a1                 /* 0xE1E822 */
@@ -381,5 +462,6 @@ Lremap_done:
     move.w  (%sp)+, %sr                     /* 0xE1E860 */
     rts                                     /* 0xE1E862 */
     .endif
+    .endif  /* display_driver */
 
         .endif

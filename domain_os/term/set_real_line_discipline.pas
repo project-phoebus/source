@@ -2,13 +2,16 @@
 
   Image addresses:
     sau2  0x00E1AB62  TERM_$SET_REAL_LINE_DISCIPLINE
+    sau3  0x00E1A1CA  TERM_$SET_REAL_LINE_DISCIPLINE
     sau9  0x3C41D6E4  TERM_$SET_REAL_LINE_DISCIPLINE
 
   - Under the TTY spin lock, disciplines 0 and 3 re-point the line's SIO
     descriptor (to the TTY's handlers, or to SUMA_$RCV); 1 and 2 set the
     keyboard handler (none, or TTY_$I_RCV).
   - Discipline 2 then reloads the display font and sends the keyboard
-    string.  The discipline is recorded in the DTTE, for any value.
+    string; without `display_driver' it is refused, the discipline
+    recorded all the same.  The discipline is recorded in the DTTE, for
+    any value.
 
   Status stored:
     status_$ok: the discipline was set
@@ -16,6 +19,7 @@
       descriptor its discipline needs
     status_$requested_line_or_operation_not_implemented: a line at or
       above TERM_$MAX_DTTE
+    status_$term_invalid_option: discipline 2 without `display_driver'
 }
 
 [section(wired_proc, wired_data)]
@@ -73,10 +77,16 @@ begin
             ml_$spin_unlock(tty_$spin_lock, token);
           end
           else begin
+%if display_driver %then
             kbd_$desc_ptr_t(kbd)^.handler := kbd_$handler_t(term_$kbd_rcv);
             ml_$spin_unlock(tty_$spin_lock, token);
             dtty_$reload_font;
             term_$send_kbd_string(term_$kbd_string, 5);
+%else
+            { no keyboard to give the line to }
+            ml_$spin_unlock(tty_$spin_lock, token);
+            status.all := status_$term_invalid_option;
+%endif
           end;
         end;
     end;

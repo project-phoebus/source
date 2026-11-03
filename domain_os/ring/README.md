@@ -197,6 +197,15 @@ RING_$RCV0 and RING_$RCV1 do not load A5 in the SAU5 image (their worker
 does), where the SAU2's do; the source is the same.
 RING_$IOCTL differs from the SAU2's only in call displacements.
 
+The SAU3's RING is the SAU2's source, with the SAU2's DMA controller
+form and the SAU2's block sizes and bytes (RING_DATA 0x5D0,
+OS_INIT_DATA 4, RING_WIRED 0xAC), less one part:
+
+- `ring_xmit_light` (every SAU but the SAU3): RING_$SENDP toggles the
+  memory control register's transmit light when a send completes
+  (`sendp.pas`).  The SAU3's RING_PROC segment is 0x2B24 bytes, 0x10
+  less than the SAU2's.
+
 The SAU7..SAU9 drive another controller, with packet buffers and a
 command block of its own (`ring8_controller`): the map's RING8_$INT in
 place of RING_$INT, RING_$CCB, RING_ASM (RING_$RB_FROM, RING_$RB_TO,

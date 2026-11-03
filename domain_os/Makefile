@@ -169,6 +169,17 @@ $(PAS_BUILD_DIR)/%.s: %.pas $(PAS_SRCS_ALL) $(DPC) Makefile
 	@echo "[DPC] $<"
 	@$(DPC) $(DPC_FLAGS) -o $@ $<
 
+# The modules whose image shows the Apollo compiler substituting constants
+# for reaching definitions (ref 6.4.24, p. 6-28, -opt 2; dpc
+# --substitute-constants).  Not the default: the SAU2's images keep such
+# stores and reloads in general, so it is given per SAU, per module, where
+# the image shows it (the SAU3's PBU_$SETUP and PBU_$SETDOWN).
+SUBST_CONST_MODULES :=
+ifeq ($(TARGET_SAU),sau3)
+SUBST_CONST_MODULES := pbu/pbu
+endif
+$(patsubst %,$(PAS_BUILD_DIR)/%.s,$(SUBST_CONST_MODULES)): DPC_FLAGS += --substitute-constants
+
 $(PAS_BUILD_DIR)/%.o: $(PAS_BUILD_DIR)/%.s
 	@echo "[AS] $<"
 	@$(AS) $(PAS_ASFLAGS) -o $@ $<

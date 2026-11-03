@@ -1,6 +1,7 @@
 { mt/mt.pas - the MT module, the magnetic tape driver.
 
   Image addresses:
+    sau3  0x00E2CC7C  MT data (WIRED_DATA, 0x54 bytes)
     sau5  0x00E2F44C  MT data (WIRED_DATA, 0x54 bytes)
 
   Configured out on the SAU2 (the SAU3..SAU6 have the driver, the part
@@ -12,7 +13,10 @@
   on the SAU5 the map's MT code segment in .TEXT (0x1448 bytes:
   module-local routines, MT_PURGE_UCB, and the MT_$ globals from
   MT_$ACQUIRE to MT_$WRITE), and its MT data segment in WIRED_DATA (0x54
-  bytes, all zero, no map symbol inside).
+  bytes, all zero, no map symbol inside).  The SAU3's code is the
+  SAU5's but for the I/O map entries: longwords with the long_iomap
+  part, the first word of each entry's 4 bytes without it
+  (pbu/pbu.ins.pas).
 
   The heading names no code section and wired_data as the data section,
   PCHIST's form (pchist/pchist.pas, ref 7.1.1).  It is the same on every
@@ -24,12 +28,13 @@
   - the map's MT_$SIO code segment (MT_$SIO and MT_$GET_IOVA): its own
     module, mt/mt_sio.pas;
   - the map's MT_ASM data segment, the MT_PAGE section (0xC00 bytes on
-    the SAU5, empty on the SAU2): hand assembly, the MT_$ routines of
-    the MT page and the controller's block MT_$SCB;
+    the SAU3..SAU6, empty on the SAU2): hand assembly, the MT_$
+    routines of the MT page and the controller's block MT_$SCB,
+    mt/m68k/mt_asm.s;
   - the map's MT_END_ADDR segment (4 bytes), which holds MT_$PROC_END:
     a marker segment, hand assembly, mt/m68k/end_addr.s;
   - MT_$PROC_START, a layout mark (on the SAU2 at MT_$PROC_END, on the
-    SAU5 at MT_$SIO);
+    SAU3 and SAU5 at MT_$SIO);
   - on the SAU2, MT_$DATA_START and MT_$DATA_END, both at the start of
     the map's AUDIT data segment: markers of an empty data area.
 

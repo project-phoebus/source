@@ -1,7 +1,8 @@
 |
 | misc/m68k/crash_report.s - the crash report block at the end of the
 | hand-written CRASH_SYSTEM segment: the message template CRASH_SYSTEM
-| prints, with the live crash fields embedded in it (m68k/SAU2, SAU5)
+| prints, with the live crash fields embedded in it (m68k/SAU2, SAU3,
+| SAU5)
 |
 | The SAU2 and SAU5 images have the same block except in two places, which
 | test base/config.ins.pas's part `crash_report_blank_lines': the SAU5's
@@ -32,12 +33,19 @@
 |   +0x68  0xE1E9E6  CRASH_SP       a longword
 |   +0x6C  0xE1E9EA  CRASH_USP      the user stack pointer
 |
-| Not on the SAUs whose crash may restart the node (`crash_reboot',
-| base/config.ins.pas): their report holds the restart cells too (the
-| SAU9's misc/sau9/crash_system.s).
+| The SAU3's block (`D E1D700 CRASH_SYSTEM size = 2F8', 0xE1D97E..) is
+| the SAU2's, and in place of the pad word the restart's cells
+| (`crash_prom_restart', misc/m68k/crash_system.s): the byte
+| CRASH_$OK_TO_REBOOT (0xE1D9EE), a byte 0x74 nothing references, and
+| the addresses of DUMP and DUMP_$AUTO_REBOOT (0xE1D9F0, 0xE1D9F4: RELOC
+| cells), to the segment's end (0xE1D9F8).
+|
+| Not on the other SAUs whose crash may restart the node (`crash_reboot',
+| base/config.ins.pas): their report holds the restart cells and
+| SERVER_$FLAG (the SAU9's misc/sau9/crash_system.s).
 |
         .include "base/config.inc"
-        .if     !crash_reboot
+        .if     !(crash_reboot && !crash_prom_restart)
 
         .section ".text.CRASH_REPORT","ax",@progbits
         .balign 2
@@ -74,7 +82,18 @@ CRASH_SP:                               | 0xE1E9E6
         .long   0
 CRASH_USP:                              | 0xE1E9EA
         .long   0
-        .if !crash_report_blank_lines
+        .if crash_prom_restart
+        .globl  CRASH_$OK_TO_REBOOT
+        .globl  crash_dump
+        .globl  crash_auto_reboot
+CRASH_$OK_TO_REBOOT:                    | sau3 0xE1D9EE: a boolean byte
+        .byte   0
+        .byte   0x74                    | sau3 0xE1D9EF: not referenced
+crash_dump:                             | sau3 0xE1D9F0
+        .long   DUMP
+crash_auto_reboot:                      | sau3 0xE1D9F4
+        .long   DUMP_$AUTO_REBOOT
+        .elseif !crash_report_blank_lines
         .word   0                       | 0xE1E9EE: pad to the segment size
         .endif
 

@@ -1,12 +1,15 @@
 { PBU_$SETUP - set up the PBU units a DDF describes.
 
   Image addresses:
+    sau3  0x00E594E0  PBU_$SETUP
     sau5  0x00E596D0  PBU_$SETUP
 
   - Under the exclusion lock.  The DDF's unit must be free; its bus is
-    the VME bus for units 8..15, the Multibus (present) for 0..7.
+    the VME bus for units 8..15 (`vme_bus'), the Multibus (present)
+    otherwise.
   - The CSR pages (none when csr_pa is 16#FFFFFFFF) start on a page, on
     the VME bus in 16#C000..16#D000 unless the DDF allows any address.
+  - Without the VME bus, bus is always the Multibus.
   - Every unit of the bus that is the DDF's or has a handler in it gets
     a free DCTE and its interrupt (IO_$ACQUIRE); its CSR pages are
     installed in the MMU.  A failure sets down what was set up.
@@ -72,12 +75,15 @@ begin
     if status.all <> status_$ok then
       goto unlock;
   end;
+%if vme_bus %then
   if unit >= pbu_first_vme_unit then begin
     bus := io_$bus_vme;
     first := pbu_first_vme_unit;
     last := pbu_$max_unit;
   end
-  else begin
+  else
+%endif
+  begin
     if not pbu_$mcb.present then begin
       status.all := status_$pbu_not_present;
       goto unlock;

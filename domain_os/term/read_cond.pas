@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E6689A  TERM_$READ_COND
+    sau3  0x00E67804  TERM_$READ_COND
 
   - TTY_$K_GET with the conditional option; the result is the count
     read.

@@ -1,6 +1,7 @@
 { MT_$GET_IOVA - the I/O address of an object in the MT page.
 
   Image addresses:
+    sau3  0x00E7126A  MT_$GET_IOVA
     sau5  0x00E76DDA  MT_$GET_IOVA
 
   - The address is the object's page's entry of MT_$SCB.cfg_iova (one

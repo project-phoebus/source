@@ -1,6 +1,7 @@
 { pbu_clear_iomap - clear the I/O map entries of freed map space.
 
   Image addresses:
+    sau3  0x00E58EAE  pbu_clear_iomap (module-local)
     sau5  0x00E5907E  pbu_clear_iomap (module-local)
 
   - Only with the Multibus present: the IOMAP entries of npages pages
@@ -20,6 +21,10 @@ begin
     first := iova div 1024;
     last := npages + first - 1;
     for page := first to last do
+%if long_iomap %then
       iomap[page] := 0;
+%else
+      iomap[page].entry := 0;
+%endif
   end;
 end;

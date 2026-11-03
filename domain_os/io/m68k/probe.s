@@ -2,7 +2,7 @@
  * io_$probe - Hardware probe with bus error recovery (m68k/SAU2, SAU5,
  * SAU9)
  *
- * The SAU2 and SAU5 images have the same code here except the bus-error
+ * The SAU2, SAU3 and SAU5 images have the same code here except the bus-error
  * recovery stub, where the SAU5 (base/config.ins.pas's part `vme_bus')
  * also calls VME_$SAVE_VME and writes 0x60 to VME_CTL + 0x41 before it
  * returns false: TESTPAGE is 0x74 bytes there (`D E2A260 TESTPAGE size

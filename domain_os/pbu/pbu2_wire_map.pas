@@ -2,10 +2,13 @@
   space.
 
   Image addresses:
+    sau3  0x00E59D7E  PBU2_$WIRE_MAP
     sau5  0x00E59FDE  PBU2_$WIRE_MAP
 
   - Under the exclusion lock each page is wired for the unit
-    (PBU_$SAVE_PPN) and its I/O map entry written.
+    (PBU_$SAVE_PPN) and its I/O map entry written: the page number plus
+    the unit's control, a longword (`long_iomap') or the entry's word
+    and the control's high word.
   - A page already wired ends the loop; another failure unwires the
     pages wired so far (a failure there crashes the system).
   - The result is iova plus the buffer's offset in its page, its address
@@ -18,7 +21,7 @@
     pbu_$save_ppn's status: the buffer was wired and mapped, a page was
       wired already, or a page could not be wired
     pbu_check_unit's status: the unit is not the caller's
-    status_$pbu_not_supported: the unit is on the VME bus
+    status_$pbu_not_supported: the unit is on the VME bus (`vme_bus')
     status_$pbu_bad_controller_memory_length: length is not positive
     status_$pbu_iomap_not_allocated: the unit has no map space
     status_$pbu_invalid_iova: iova is not a page inside the space with
@@ -48,10 +51,12 @@ begin
   dcte := pbu_check_unit(unit, status);
   if status.all <> status_$ok then
     return;
+%if vme_bus %then
   if dcte^.unit_info.bus = io_$bus_vme then begin
     status.all := status_$pbu_not_supported;
     return;
   end;
+%endif
   if length <= 0 then begin
     status.all := status_$pbu_bad_controller_memory_length;
     return;
@@ -87,7 +92,11 @@ begin
   ml_$exclusion_start(pbu_$exclusion_lock);
   last := first + npages;
   for slot := first to last do begin
+%if long_iomap %then
     iomap[slot] := pbu_$save_ppn(unit, va, status) + ctl.all;
+%else
+    iomap[slot].entry := pbu_$save_ppn(unit, va, status) + ctl.entry;
+%endif
     if status.all <> status_$ok then begin
       if status.all <> status_$pbu_page_already_wired then
         for j := first to slot - 1 do begin

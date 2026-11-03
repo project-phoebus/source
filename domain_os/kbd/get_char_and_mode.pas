@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E724C4  KBD_$GET_CHAR_AND_MODE
+    sau3  0x00E73B60  KBD_$GET_CHAR_AND_MODE
     sau9  0x3C479EC0  KBD_$GET_CHAR_AND_MODE
 
   - The mode is mapped through kbd_$mode_table; the result is true when
@@ -9,15 +10,19 @@
   - With `kbd_commands' the first call after KBD_$INIT or
     KBD_$CRASH_INIT sends the keyboard an 18-byte command (16#FF 16#12
     16#21 and zeros) before the fetch.
+  - Without `display_driver' there is no keyboard: the call is refused
+    and the result is false.
 
   Status stored:
-    kbd_$get_desc's status: always
+    kbd_$get_desc's status: with `display_driver'
+    status_$util_bus_undefined_interrupt: without `display_driver'
 }
 
 [section(procedure$, data$)]
 function kbd_$get_char_and_mode(in line: pinteger; out char_out: char;
                                 out mode_out: char; out status: status_$t):
   boolean;
+%if display_driver %then
 var
 %if kbd_commands %then
   cmd: static array[1..18] of char := [
@@ -39,3 +44,9 @@ begin
   kbd_$get_char_and_mode := kbd_$fetch_key(kbd^, char_out, mode);
   mode_out := kbd_$mode_table[mode];
 end;
+%else
+begin
+  status.all := status_$util_bus_undefined_interrupt;
+  kbd_$get_char_and_mode := false;
+end;
+%endif

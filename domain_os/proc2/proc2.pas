@@ -84,6 +84,9 @@ module proc2;
 %include 'os/os.ins.pas';
 %include 'peb/peb.ins.pas';
 %include 'xpd/xpd.ins.pas';
+%if lpr_driver %then
+%include 'cbuf/cbuf.ins.pas';
+%endif
 %include 'lpr/lpr.ins.pas';
 %include 'pbu/pbu.ins.pas';
 %include 'mt/mt.ins.pas';

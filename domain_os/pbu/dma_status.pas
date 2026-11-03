@@ -1,6 +1,7 @@
 { PBU_$DMA_STATUS - a PBU unit's DMA transfer's status.
 
   Image addresses:
+    sau3  0x00E89C6A  PBU_$DMA_STATUS
     sau5  0x00E9202E  PBU_$DMA_STATUS
 
   - Not supported on the SAU5; nothing else is read.

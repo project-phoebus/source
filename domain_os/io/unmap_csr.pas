@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E1A910  IO_$UNMAP_CSR
+    sau3  0x00E199C0  IO_$UNMAP_CSR
     sau5  0x00E1AC70  IO_$UNMAP_CSR
     sau9  0x3C41D464  IO_$UNMAP_CSR
 

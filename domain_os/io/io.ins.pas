@@ -169,13 +169,18 @@ const
   { The last index of DEV_DCTES, the static DCTEs' list (io/dctes.pas):
     its static DCTEs, then the nil that ends it.  The SAU2's list has
     three (WIN_DCTE, FLP_DCTE, RING_DCTE), the SAU5's five (WIN_DCTE,
-    RING_DCTE, SMD_DCTE_0, SMD_DCTE_1, CTAPE_DCTE), the SAU9's 28 (its
-    kind-2 DCTEs, `named_dctes').  Only these three lists are written
+    RING_DCTE, SMD_DCTE_0, SMD_DCTE_1, CTAPE_DCTE), the SAU3's three
+    (RING_DCTE, SMD_DCTE_0, SMD_DCTE_1: no Winchester), the SAU9's 28
+    (its kind-2 DCTEs, `named_dctes').  Only these four lists are written
     (TODO(sau) in io/dctes.pas). }
 %if named_dctes %then
   io_$dev_dctes_last = 28;
 %elseif smd_disk %then
+%if winchester_config %then
   io_$dev_dctes_last = 5;
+%else
+  io_$dev_dctes_last = 3;
+%endif
 %else
   io_$dev_dctes_last = 3;
 %endif

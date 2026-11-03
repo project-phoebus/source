@@ -1,6 +1,7 @@
 { sm_c_$fix_ecc - correct a data error with the controller's ECC.
 
   Image addresses:
+    sau3  0x00E6EE44  sm_c_$fix_ecc (module-local)
     sau5  0x00E749A8  sm_c_$fix_ecc (module-local)
 
   - The request's page is mapped at SM_ECC_BUF for SM_FIX_ECC, then

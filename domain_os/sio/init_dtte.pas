@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E32B76  sio_$init_dtte (module-local)
+    sau3  0x00E3133E  sio_$init_dtte (module-local)
     sau9  0x3C43954A  sio_$init_dtte (module-local)
 
   - The entry's three eventcounts are initialized, its flag cleared and

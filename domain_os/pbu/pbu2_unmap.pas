@@ -1,11 +1,12 @@
 { PBU2_$UNMAP - unmap a buffer from a PBU unit's I/O map space.
 
   Image addresses:
+    sau3  0x00E89DE0  PBU2_$UNMAP
     sau5  0x00E921AA  PBU2_$UNMAP
 
   - At interrupt level (PBU_$TRAP6); no lock.  The buffer's entries
     lose their valid bit (bit 15) when the first page's entry holds the
-    buffer's first page.
+    buffer's first page (14 bits, 12 of a word entry).
   - Only the first page's entry is compared.
 
   Status stored:
@@ -49,12 +50,20 @@ begin
   end;
   npages := (va + length - 1) div 1024 - va div 1024 + 1;
   first := linteger(offset) div 1024 + dcte^.map_page;
+%if long_iomap %then
   entry_ppn := iomap[first] & 16#3FFF;
+%else
+  entry_ppn := iomap[first].entry & 16#FFF;
+%endif
   not_mapped := pbu_map_owned_ppn(unit, va) <> entry_ppn;
   if not_mapped then begin
     status.all := status_$pbu_buffer_not_mapped;
     return;
   end;
   for k := first to first + npages - 1 do
+%if long_iomap %then
     iomap[k] := iomap[k] & (-16#8001);
+%else
+    iomap[k].entry := iomap[k].entry & 16#7FFF;
+%endif
 end;

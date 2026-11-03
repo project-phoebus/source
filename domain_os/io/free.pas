@@ -1,6 +1,7 @@
 { IO_$FREE - free I/O map space allocated for a unit.
 
   Image addresses:
+    sau3  0x00E19DA6  IO_$FREE
     sau5  0x00E1B05E  IO_$FREE
 
   - The range of the bus's map starting at iova is freed

@@ -97,10 +97,22 @@ const
   status_$pbu_unit_is_public = 16#001E003B;
                                         { "unit is publicly owned" }
 
-  { The PBU units, 0..15: the index of PBU_$DCTES; the units 0..7 are
-    the Multibus's, 8..15 the VME bus's (PBU_$SETUP, PBU_$SETDOWN). }
+  { The PBU units, 0..15 (0..7 with `pbu_8_units'): the index of
+    PBU_$DCTES.  With the VME bus (`vme_bus') the units 0..7 are the
+    Multibus's, 8..15 the VME bus's (PBU_$SETUP, PBU_$SETDOWN). }
+%if pbu_8_units %then
+  pbu_$max_unit = 7;
+%else
   pbu_$max_unit = 15;
+%endif
   pbu_first_vme_unit = 8;
+
+  { A free DCTE's unit (PBU_$SETDOWN's mark): one past the last unit. }
+  pbu_free_unit = pbu_$max_unit + 1;
+
+  { The last of a DDF's handlers: a DDF has 16 on every SAU, whatever
+    its number of units (PBU_$ACQUIRE_INT fills them all). }
+  pbu_ddf_last_handler = 15;
 
   { The DDF version PBU_$SETUP accepts (a DDF's +0x0E, "ddf has wrong
     version"), and the value of its first argument, the library's
@@ -131,17 +143,18 @@ const
   pbu_max_wired_pages = 21;
 
   { The last element of PBU_$PPN_OWNERS: the map's PBU_TABLES segment is
-    0x1C00 bytes on the SAU5, a word per physical page from 16#200.
-    TODO(sau) the other SAUs' PBU_TABLES sizes differ (SAU3 0xE00, SAU4
-    0x3E00, SAU7 0x18000); a part's constant when they are
-    translated. }
+    0x1C00 bytes on the SAU5, a word per physical page from 16#200, and
+    0xE00 bytes on the SAU3, a byte per page (`pbu_8_units').
+    TODO(sau) the SAU4's and SAU7's PBU_TABLES sizes differ (0x3E00,
+    0x18000); a part's constant when they are translated. }
   pbu_ppn_owners_last = 16#FFF;
 
 type
   pbu_$byte_t = [byte] 0..255;
 
-  { A set of PBU units, a word: PBU_$PPN_OWNERS' entries and
-    PBU_$FAULTED_UNITS' answer. }
+  { A set of PBU units, a word (a byte as an element of
+    PBU_$PPN_OWNERS' packed array with `pbu_8_units'): PBU_$PPN_OWNERS'
+    entries and PBU_$FAULTED_UNITS' answer. }
   pbu_$unit_set_t = set of 0..pbu_$max_unit;
 
   { A DDF (device descriptor file) as PBU_$SETUP is given it, 0x80 bytes
@@ -152,8 +165,9 @@ type
     kernel_driver for a handler called in the kernel (no user stack, no
     cleanup handler), any_address lifts the CSR and controller address
     checks, global makes the unit usable by every process.  csr_pa is
-    16#FFFFFFFF for a unit with no CSR pages.  handlers: one per unit,
-    16#FFFFFFFF for a unit the DDF does not set up (pbu_no_handler). }
+    16#FFFFFFFF for a unit with no CSR pages.  handlers: one per unit
+    number, 16#FFFFFFFF for a unit the DDF does not set up
+    (pbu_no_handler), 16 on every SAU. }
 
   pbu_$ddf_flags_t = packed record
     version: 0..255;                      { bits 15..8: 0x0E }
@@ -175,7 +189,7 @@ type
     csr_pa: integer32;                    { 0x1C }
     unused_20: array[1..7] of integer32;  { 0x20 }
     stack: univ_ptr;                      { 0x3C }
-    handlers: array[0..pbu_$max_unit] of univ_ptr;  { 0x40 }
+    handlers: array[0..pbu_ddf_last_handler] of univ_ptr;  { 0x40 }
   end;
   pbu_$ddf_ptr_t = ^pbu_$ddf_t;
 
@@ -211,12 +225,18 @@ type
     cleared_0: boolean;                   { bit 0 }
   end;
 
-  { A unit's transfer control longword (+0x4C), PBU_$CONTROL's: wide
-    (PBU_$CONTROL's answer [0] while it is clear, [1] while it is set);
-    mode, 0..2 (the answer's member 2, 3 or 4); the module's initial
-    value (16#48000) has wide and bit_15 set.  PBU2_$WIRE_MAP adds the
-    whole longword to each page number it writes to the I/O map: all,
-    as status_$t's. }
+  { A unit's transfer control longword (+0x4C), PBU_$CONTROL's.  With
+    longword I/O map entries (`long_iomap'): wide (PBU_$CONTROL's answer
+    [0] while it is clear, [1] while it is set); mode, 0..2 (the answer's
+    member 2, 3 or 4); the module's initial value (16#48000) has wide
+    and bit_15 set; PBU2_$WIRE_MAP adds the whole longword to each page
+    number it writes to the I/O map: all, as status_$t's.  Without them
+    the control is the high word, entry, which PBU2_$WIRE_MAP adds to
+    the page number of a word entry: bit_15 (the entry's bit 15, set in
+    the module's initial value, 16#80000000), narrow (the answer [0]
+    while it is set, [1] while it is clear) and mode, the entry's bits
+    14 and 13..12. }
+%if long_iomap %then
   pbu_$ctl_t = packed record
     case integer of
       1: (unused_31_19: 0..8191;          { bits 31..19 }
@@ -226,12 +246,34 @@ type
           unused_14_0: 0..32767);         { bits 14..0 }
       2: (all: integer32);
   end;
+%else
+  pbu_$ctl_t = packed record
+    case integer of
+      1: (bit_15: boolean;                { bit 31 }
+          narrow: boolean;                { bit 30 }
+          mode: 0..3;                     { bits 29..28 }
+          unused_27_16: 0..4095;          { bits 27..16 }
+          unused_15_0: 0..65535);         { bits 15..0 }
+      2: (all: integer32);
+      3: (entry: integer;                 { bits 31..16 }
+          unused_low: integer);           { bits 15..0 }
+  end;
+
+  { An IOMAP entry where the entries are words (no `long_iomap'): entry,
+    the page number plus a transfer control's high word; the second
+    word, which nothing writes. }
+  pbu_$iomap_entry_t = record
+    entry: integer;                       { 0x00 }
+    unused_02: integer;                   { 0x02 }
+  end;
+%endif
 
   { A PBU unit's DCTE, 0x54 bytes: one of the 8 of PBU_$DCTE_TABLE, in
     PBU_$DCTES while the unit is set up.  device_routine, the routine
     PBU_$INT_COM calls with the DCTE in A1 (PBU_$ADVANCE_ONLY,
     PBU_$USER_SPACE_DRIVER or a kernel driver's); vector, the interrupt
-    id's vector word; unit, the DDF's unit (16#10 when free); owner, the
+    id's vector word; unit, the DDF's unit (pbu_free_unit when free);
+    owner, the
     owning process (0 when free); asid, the owner's address space;
     user_handler and user_stack, the user-space handler and its stack
     (PBU_$USER_SPACE_DRIVER's); ec_ptr, the eventcount PBU_$INT_COM
@@ -318,8 +360,10 @@ var
   { PBU_$PPN_OWNERS (map symbol, the one of the map's PBU_TABLES data
     segment, a fixed address in the low region): for each physical page
     from 16#200, the set of units that have it wired.  PBU_$INIT maps the
-    pages that cover MMAP_$LPPN..MMAP_$HPPN. }
-  pbu_$ppn_owners: extern array[16#200..pbu_ppn_owners_last] of
+    pages that cover MMAP_$LPPN..MMAP_$HPPN.  Packed: a byte per page
+    with `pbu_8_units' (the SAU3's PBU_TABLES, 0xE00 bytes for the
+    0xE00 pages), a word per page otherwise. }
+  pbu_$ppn_owners: extern packed array[16#200..pbu_ppn_owners_last] of
     pbu_$unit_set_t;
 
   { PBU_$PAGE_START (map symbol, PBU_ASM's first byte): with
@@ -327,10 +371,17 @@ var
   pbu_$page_start: extern char;
 
   { IOMAP (map symbol of the I/O definitions, no `$'): the PBU's I/O
-    map, a longword a page on the SAU5 (the next symbol is 4 KB on), the
-    page number plus the unit's transfer control; PBU2_$WIRE_MAP and the
-    storage module drivers write it, pbu_clear_iomap clears it. }
+    map, 4 bytes a page (the next symbol is 4 KB on), the page number
+    plus the unit's transfer control; PBU2_$WIRE_MAP and the storage
+    module drivers write it, pbu_clear_iomap clears it.  A longword with
+    `long_iomap' (the SAU5, SAU6); otherwise the entry is the first word
+    of the 4 bytes (pbu_$iomap_entry_t), bit 15 its valid bit and the
+    page number below the control bits, the second word not written. }
+%if long_iomap %then
   iomap: extern array[0..1023] of integer32;
+%else
+  iomap: extern array[0..1023] of pbu_$iomap_entry_t;
+%endif
 
 { ---- The hand-written routines of PBU_ASM (pbu/sau5/pbu_asm.s) that
   PBU's Pascal names; only their addresses are used. ---- }

@@ -145,7 +145,14 @@ class SauMap:
         j = bisect.bisect_right(self.addrs, va) - 1
         if j >= 0 and self.addrs[j] >= seg[0]:
             base = self.addrs[j]
-            return '%s+%X' % (sorted(self.by_addr[base])[0], va - base)
+            # of several names at one address (the SAU2's RING segment
+            # starts with IIC's empty-module labels, IIC_$DATA_END ..., and
+            # RING_$CTL), one of the segment's own module, so that an image
+            # whose map lists only that one names it alike
+            names = sorted(self.by_addr[base])
+            mod = seg[2].rstrip('_')
+            own = [n for n in names if n == mod or n.startswith(mod + '_')]
+            return '%s+%X' % ((own or names)[0], va - base)
         if seg[3] == 'I':
             # unnamed code (a module-local routine): its offset in the
             # segment moves whenever the code before it changes size, so

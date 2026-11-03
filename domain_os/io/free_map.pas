@@ -1,6 +1,7 @@
 { IO_$FREE_MAP - free all the I/O map space recorded for a unit.
 
   Image addresses:
+    sau3  0x00E19F46  IO_$FREE_MAP
     sau5  0x00E1B210  IO_$FREE_MAP
 
   - Each region of the unit's list, the head first, is freed (IO_$FREE;

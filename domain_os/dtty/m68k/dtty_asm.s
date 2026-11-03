@@ -2,7 +2,7 @@
  * dtty/m68k/dtty_asm.s - the DTTY_ASM segment: DTTY_$ESCAPE,
  * DTTY_$STD_FONT_P and the built-in font DTTY_$FONT1..3
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.
  *
  * Byte gate (tools/asm_compare.py, `make check-asm'): the bytes are the

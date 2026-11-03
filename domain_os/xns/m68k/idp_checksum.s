@@ -1,7 +1,7 @@
 /*
  * XNS_IDP_$CHECKSUM / XNS_IDP_$HOP_AND_SUM - the XNS IDP checksum engine
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.
  *
  * SAU2 map domain_os.10.2.map:

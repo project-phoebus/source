@@ -2,6 +2,7 @@
   unit.
 
   Image addresses:
+    sau3  0x00E70D78  MT_$UNWIRE
     sau5  0x00E768E2  MT_$UNWIRE
 
   - Each page is touched as it is unwired.

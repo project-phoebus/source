@@ -2,9 +2,11 @@
 
   Image addresses:
     sau2  0x00E3350C  SIO6509_$INIT
+    sau3  0x00E31A5C  SIO6509_$INIT
 
   - The channel record goes into SIO6509_$PTRS for its interrupt vector
-    and SIO6509_$INT1_RTE into the exception vector.
+    and, with `display_driver' (the keyboard's line), SIO6509_$INT1_RTE
+    into the exception vector.
   - The record gets the chip's register block and the SIO descriptor;
     the two configuration bytes go to the control register in turn.
   - A fragment of the SIO_IO module (sio6509/README.md).
@@ -30,7 +32,9 @@ var
 begin
   sio6509_$ptrs[vec] := addr(chan);
 
+%if display_driver %then
   keybd_vec[vec] := addr(sio6509_$int1_rte);
+%endif
 
   chan.regs := addr(sio[chip]);
 

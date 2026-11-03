@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E1CEEC  SIO2681_$INT
+    sau3  0x00E1C060  SIO2681_$INT
 
   - Entered from the hand-written stubs with the chip's SIO2681_$PTRS
     entry.  Each pass handles the pending conditions in the order B

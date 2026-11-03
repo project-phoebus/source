@@ -59,6 +59,17 @@ No routine is nested.
   SMD_$CLEAR_WINDOW, SMD_$COPY_FONT_TO_MD_HDM.
 - `vfmt/vfmt.ins.pas`, `proc1/proc1.ins.pas`: used as they are.
 
+## The SAU3
+
+Without `display_driver` (the DSP has no display) the map's DTTY unit is
+DTTY_$INIT alone (OS_INIT_PROC, 0x1C bytes: the control word and
+DTTY_$USE_DTTY := true) and a 4-byte block (DTTY_$CTRL +0x00,
+DTTY_$USE_DTTY +0x02); there is no WIRED_PROC code.  `dtty.pas` puts
+the WIRED_PROC routines and dtty_$disp_type, dtty_flag_04, dtty_flag_06
+under the part; `init.pas` has the short arm (its frame TODO(pascal)
+says how its 0x2C bytes are filled).  DTTY_WIRED and DTTY_ASM (hand
+assembly) are the SAU2's.
+
 ## Open items
 
 ### Source forms

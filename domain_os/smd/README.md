@@ -415,6 +415,19 @@ tell:
 - SMD_$BLINK_CURSOR_CALLBACK compares the time-out plus the blanking
   time with TIME_$CLOCKH signed.
 
+## The SAU3
+
+The SAU3's map has SMD only as three small code segments: WIRED_PROC
+(4 bytes, SMD_$LITES), .TEXT (0x88 bytes: smd_$validate_unit,
+SMD_$INQ_DISP_TYPE, SMD_$N_DEVICES, SMD_$INQ_DISP_UID,
+SMD_$INQ_DISP_INFO) and PROC2_DELETE_PRO (4 bytes, SMD_$FREE_ASID); no
+SMD data segment, no SMD_WIRED, no OS_INIT_PROC code.  Those seven
+fragments have `display_driver` arms (no unit valid, none present; the
+two procedures empty); SMD_$INQ_DISP_UID is the SAU2's source.  The
+module's other routines, their `define`s and the data blocks are under
+`display_driver` in `smd.pas`; the SMD_WIRED hand assembly is not part
+of the SAU3's kernel.
+
 ## Open items
 
 ### TODO(pascal)

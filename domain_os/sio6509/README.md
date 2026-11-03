@@ -72,6 +72,13 @@ Changes to shared insert files:
 No conformance unit of `../domain-pascal/tests/conformance/` covers these
 routines (`sio_init_dtte.pas` is SIO's module-local sio_init_dtte).
 
+## The SAU3
+
+The SIO_IO routines are the SAU2's code at the SAU3's addresses but
+SIO6509_$INIT, which without `display_driver` does not install
+SIO6509_$INT1_RTE in the keyboard's exception vector (`init.pas`;
+nothing in the SAU3 image calls SIO6509_$INIT).
+
 ## Open items
 
 ### TODO(pascal)

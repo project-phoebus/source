@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E76F9E  RING_$SVC_WRITE
+    sau3  0x00E7878E  RING_$SVC_WRITE
     sau5  0x00E7E21E  RING_$SVC_WRITE
 
   - Under a cleanup handler.  The ring header is built in a fresh

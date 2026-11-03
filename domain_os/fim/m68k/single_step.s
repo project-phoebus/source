@@ -2,7 +2,7 @@
  * fim/m68k/single_step.s - FIM_$SINGLE_STEP, resume a process for one
  * traced instruction (m68k/SAU2, SAU5)
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.
  *
  * Transcribed from the SAU2 image, 0x00E217D4..0x00E21823 (map

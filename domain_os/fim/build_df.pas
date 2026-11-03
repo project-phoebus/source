@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0A458  FIM_$BUILD_DF
+    sau3  0x00E0A458  FIM_$BUILD_DF
     sau5  0x00E0A32C  FIM_$BUILD_DF
     sau9  0x3C40BE38  FIM_$BUILD_DF
 

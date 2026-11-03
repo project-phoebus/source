@@ -1,6 +1,7 @@
 { SM_C_$GET_STATS - return an SM_C drive's counters.
 
   Image addresses:
+    sau3  0x00E6F7E4  SM_C_$GET_STATS
     sau5  0x00E7534C  SM_C_$GET_STATS
 
   - cnum is not read.

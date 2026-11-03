@@ -1,7 +1,7 @@
 /*
  * sio2681/m68k/int_rte.s - SIO2681_$INT1_RTE / SIO2681_$INT2_RTE
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.
  *
  * Byte gate (tools/asm_compare.py, `make check'): encodings

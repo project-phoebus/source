@@ -2,6 +2,7 @@
   disk driver.
 
   Image addresses:
+    sau3  0x00E2CBE4  SM_C data (WIRED_DATA, 0x98 bytes)
     sau5  0x00E2F3B4  SM_C data (WIRED_DATA, 0x98 bytes)
 
   One compilation unit, one code segment and one data segment: on the
@@ -15,11 +16,12 @@
   part smd_disk (base/config.ins.pas): the SR10.2 maps of the SAU3..SAU6
   have the SM_C segments, the others' none.  Elsewhere the module is
   empty: its whole body is conditional.  The SAU3's code is the SAU5's
-  but for the I/O map entries (the long_iomap part); the SAU4's and
-  SAU6's are their own.
+  but for the I/O map entries: longwords with the long_iomap part, the
+  first word of each entry's 4 bytes without it (pbu/pbu.ins.pas).  The
+  SAU4's and SAU6's are their own.
 
   Not part of the module: the map's SM_X_ASM segment (SM_FIX_ECC, hand
-  assembly, sm_c/sau5/sm_x_asm.s) and SM_C_END_ADDR
+  assembly, sm_c/m68k/sm_x_asm.s) and SM_C_END_ADDR
   (sm_c/m68k/end_addr.s); SM_$CB and SM_BLK_HDR, the PBU page's data
   (sm/sm.ins.pas).
 
@@ -102,7 +104,11 @@ var
   sm_c_vol: ^disk_$volume_t;                    { +0x6C }
   sm_c_hdr: sm_$hdr_ptr_t;                      { +0x70 }
   sm_c_alloc: integer32;                        { +0x74 }
+%if long_iomap %then
   sm_c_iomap_entry: ^integer32;                 { +0x78 }
+%else
+  sm_c_iomap_entry: ^pbu_$iomap_entry_t;        { +0x78 }
+%endif
   unused_7c: integer32;                         { +0x7C: stand-in }
   unused_80: integer := 1;                      { +0x80: stand-in }
   sm_c_unit_count: pinteger := 16#3C00;         { +0x82 }

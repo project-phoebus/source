@@ -75,6 +75,17 @@ handler is the alignment pad, not a result slot: kbd_$set_type is a
 procedure (no caller reads D0), and the handler a procedure type
 (KBD_$RCV reads nothing after the call).
 
+## The SAU3
+
+The DSP has no keyboard (`display_driver` off, base/config.ins.pas): the
+map's KBD module is KBD_$PUT (WIRED_PROC, 0x14 bytes) and
+KBD_$GET_CHAR_AND_MODE, KBD_$SET_KBD_MODE, KBD_$SET_KBD_TYPE and
+KBD_$INQ_KBD_TYPE (PROCEDURE$, 0x4C bytes), each storing
+`status_$util_bus_undefined_interrupt` (16#00330001; the first function
+also returns false), and its block is TERM_$TPAD_BUFFER alone (0x64
+bytes).  `kbd.pas` puts the tables, the other routines and KBD_$INIT
+under `display_driver`; the five fragments have the stub arms.
+
 ## Open items
 
 `TODO(pascal)` comments in the fragments:

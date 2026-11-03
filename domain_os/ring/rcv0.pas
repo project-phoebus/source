@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E76642  RING_$RCV0
+    sau3  0x00E77E32  RING_$RCV0
     sau5  0x00E7D8DA  RING_$RCV0
 
   - It runs RING_$RCV_FROM_UNIT_PRIV for unit 0, which never returns.

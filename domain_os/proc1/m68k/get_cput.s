@@ -2,7 +2,7 @@
 | proc1/m68k/get_cput.s - PROC1_$GET_CPUT, PROC1_$GET_CPUT8,
 | PROC1_$GET_CPU_USAGE and their helper proc1_$get_current_cpu_time
 |
-| The SAU2 and SAU5 images have the same code here; the address and
+| The SAU2, SAU3 and SAU5 images have the same code here; the address and
 | byte columns below are the SAU2 image's.
 |
 | Byte gate (tools/asm_compare.py, `make check-asm'): the

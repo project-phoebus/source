@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E76B2C  RING_$IOCTL
+    sau3  0x00E7831C  RING_$IOCTL
     sau5  0x00E7DDAC  RING_$IOCTL
 
   Status stored:

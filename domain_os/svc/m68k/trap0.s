@@ -1,7 +1,7 @@
 |
 | SVC_$TRAP0 - Domain/OS TRAP #0 System Call Dispatcher
 |
-| The SAU2, SAU5 and SAU9 images have the same code here; the address
+| The SAU2, SAU3, SAU5 and SAU9 images have the same code here; the address
 | and byte columns below are the SAU2 image's.
 |
 | Byte gate (tools/asm_compare.py, `make check'): encodings identical to

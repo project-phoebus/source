@@ -1,10 +1,12 @@
 { PBU2_$MAP - map a wired buffer in a PBU unit's I/O map space.
 
   Image addresses:
+    sau3  0x00E89CA4  PBU2_$MAP
     sau5  0x00E92068  PBU2_$MAP
 
-  - At interrupt level, from a user handler (PBU_$TRAP6); no lock.  Each
-    page's I/O map entry is the page number plus the unit's control.
+  - At interrupt level, from a user handler (PBU_$TRAP6); no lock.
+  - Each page's I/O map entry is the page number plus the unit's
+    control: a longword (`long_iomap'), else a word and the high word.
   - The result is iova plus the buffer's offset in its page, unset when
     a check fails.
   - The fit test compares an offset with the space's end address; the
@@ -63,10 +65,17 @@ begin
   ctl := dcte^.ctl;
   last := first + npages;
   for slot := first to last do begin
+%if long_iomap %then
     iomap[slot] := pbu_map_owned_ppn(unit, va) + ctl.all;
     if (iomap[slot] & 16#3FFF) = 0 then begin
       for k := first to slot - 1 do
         iomap[k] := iomap[k] & (-16#8001);
+%else
+    iomap[slot].entry := pbu_map_owned_ppn(unit, va) + ctl.entry;
+    if (iomap[slot].entry & 16#FFF) = 0 then begin
+      for k := first to slot - 1 do
+        iomap[k].entry := iomap[k].entry & 16#7FFF;
+%endif
       status.all := status_$pbu_buffer_page_not_wired;
       return;
     end;

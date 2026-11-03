@@ -1,6 +1,7 @@
 { PBU_$ALLOC - allocate I/O map space for a kernel driver's unit.
 
   Image addresses:
+    sau3  0x00E5895E  PBU_$ALLOC
     sau5  0x00E5895E  PBU_$ALLOC
 
   - IO_$ALLOC for the unit's I/O unit, npages pages, at iova when fixed;

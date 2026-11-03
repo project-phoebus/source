@@ -1,7 +1,7 @@
 /*
  * IO_$USE_INT_STACK - Switch from OS stack to interrupt stack
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.
  *
  * Byte gate (tools/asm_compare.py, `make check'): encodings identical

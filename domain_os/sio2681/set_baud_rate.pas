@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E1D1DA  sio2681_set_baud_rate (module-local)
+    sau3  0x00E1C34E  sio2681_set_baud_rate (module-local)
 
   Assume we're called with the driver's spin lock held.
 

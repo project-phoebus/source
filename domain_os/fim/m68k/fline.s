@@ -2,7 +2,7 @@
  * fim/m68k/fline.s - FIM_$FLINE, the line-F (coprocessor) trap handler
  * (m68k/SAU2, SAU5)
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.
  *
  * Transcribed from the SAU2 image, 0x00E21ACC..0x00E21B0F (68 bytes), in its

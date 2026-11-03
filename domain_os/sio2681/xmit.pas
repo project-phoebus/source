@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E1D4FC  SIO2681_$XMIT
+    sau3  0x00E1C670  SIO2681_$XMIT
 
   - The character goes to the transmit holding register; the channel's
     transmit interrupt is added to the chip's mask shadow (and the mask

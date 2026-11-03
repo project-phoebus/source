@@ -1,7 +1,7 @@
 /*
  * chksum/m68k/get_chksum.s - CHKSUM_$GET_CHKSUM (m68k / SAU2, SAU5)
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.
  *
  * Transcribed instruction for instruction from the image at 0x00E0A314

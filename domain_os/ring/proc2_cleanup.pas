@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E76A42  RING_$PROC2_CLEANUP
+    sau3  0x00E78232  RING_$PROC2_CLEANUP
 
   - On a started unit, under the channel lock, each channel the address
     space opened is closed (RING_$SVC_CLOSE's steps); then, under the

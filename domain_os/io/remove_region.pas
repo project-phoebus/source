@@ -1,6 +1,7 @@
 { io_$remove_region - take a region out of a unit's region list.
 
   Image addresses:
+    sau3  0x00E19E3C  io_$remove_region
     sau5  0x00E1B0F4  io_$remove_region
 
   - The node is unlinked from the slot's list and goes to the head of

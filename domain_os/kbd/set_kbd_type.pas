@@ -2,9 +2,13 @@
 
   Image addresses:
     sau2  0x00E72524  KBD_$SET_KBD_TYPE
+    sau3  0x00E73B86  KBD_$SET_KBD_TYPE
+
+  - Without `display_driver' there is no keyboard: the call is refused.
 
   Status stored:
-    kbd_$get_desc's status: always; the type is set only on success
+    kbd_$get_desc's status: with `display_driver'; the type is set only on success
+    status_$util_bus_undefined_interrupt: without `display_driver'
 }
 
 { TODO(pascal) 4 unaddressed frame bytes (stand-in unused_8)
@@ -18,6 +22,7 @@
 procedure kbd_$set_kbd_type(in line: pinteger;
                             in type_str: univ kbd_$type_str_t;
                             in type_len: pinteger; out status: status_$t);
+%if display_driver %then
 var
   kbd: kbd_$desc_ptr_t;
   unused_8: integer32;                    { the stand-in (TODO) }
@@ -27,3 +32,8 @@ begin
     return;
   kbd_$set_type(kbd^, type_str, type_len);
 end;
+%else
+begin
+  status.all := status_$util_bus_undefined_interrupt;
+end;
+%endif

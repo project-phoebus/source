@@ -2,11 +2,16 @@
 
   Image addresses:
     sau2  0x00E32EBA  TERM_$INIT
+    sau3  0x00E315A4  TERM_$INIT
     sau9  0x3C43986C  TERM_$INIT
 
   - The console line (the SIO6509 path) and the two SIO2681 serial
     lines are built from OS_TERM_INIT's records, the SIO6509 channel and
     the SIO2681 chip initialized.
+  - Without `display_driver' there is no console line: the serial
+    lines are DTTE 1 and 2 with the first two TTY and SIO descriptors,
+    and the SIO6509 channel is not initialized (its vtable and
+    configuration stay among the statics).
   - In mode 1 the caller's line gets all-ones baud rates and the ESC
     crash function.  TERM_$MAX_DTTE becomes 3 and the tablet is started
     (SUMA_$INIT).
@@ -29,6 +34,14 @@
 [section(os_init_proc, os_init_data)]
 procedure term_$init(in mode: integer; in line: integer);
 %if not sio16550_lines %then
+const
+  { the TTY and SIO descriptors of DTTE 1, the first serial line: after
+    the console's, when there is one }
+%if display_driver %then
+  first_serial = 2;
+%else
+  first_serial = 1;
+%endif
 var
   console_vtable: static term_$vtable_t :=
     [nil, nil, nil, nil, nil, addr(sio6509_$xmit), addr(sio6509_$set_line),
@@ -64,6 +77,7 @@ begin
     dtte[i].ptr_30 := nil;
   end;
 
+%if display_driver %then
   { ---- the console line ---- }
 
   { its keyboard descriptor }
@@ -90,28 +104,31 @@ begin
 
   sio_$init_dtte(dtte_p^, 2);
   sio6509_$init(1, 2, term_$console_chan, sio_p, sio6509_config);
+%endif
 
   { ---- the first serial line ---- }
 
   dtte_p := addr(dtte[1]);
-  sio_p := addr(sio_descs[2]);
-  sio_$init_line(tty_descs[2], dtte_p^, sio_p, term_$serial_line_handlers);
+  sio_p := addr(sio_descs[first_serial]);
+  sio_$init_line(tty_descs[first_serial], dtte_p^, sio_p,
+                 term_$serial_line_handlers);
 
-  tty_p := addr(tty_descs[2]);
+  tty_p := addr(tty_descs[first_serial]);
   sio_$init_desc(sio_p^, term_$serial_params, dtte_p^, tty_p,
-                 addr(tty_descs[2].output), term_$tty_handlers,
+                 addr(tty_descs[first_serial].output), term_$tty_handlers,
                  addr(tone_$channel), serial_vtable);
   sio_$init_dtte(dtte_p^, 0);
 
   { ---- the second serial line ---- }
 
   dtte_p := addr(dtte[2]);
-  sio_p := addr(sio_descs[3]);
-  sio_$init_line(tty_descs[3], dtte_p^, sio_p, term_$serial_line_handlers);
+  sio_p := addr(sio_descs[first_serial + 1]);
+  sio_$init_line(tty_descs[first_serial + 1], dtte_p^, sio_p,
+                 term_$serial_line_handlers);
 
-  tty_p := addr(tty_descs[3]);
+  tty_p := addr(tty_descs[first_serial + 1]);
   sio_$init_desc(sio_p^, term_$serial_params, dtte_p^, tty_p,
-                 addr(tty_descs[3].output), term_$tty_handlers,
+                 addr(tty_descs[first_serial + 1].output), term_$tty_handlers,
                  addr(term_$serial_chan_b), serial_vtable);
   sio_$init_dtte(dtte_p^, 0);
 
@@ -120,10 +137,11 @@ begin
     sio_descs[line + 1].params.baud_rate := sio_$rates_t(minus_one);
 
   { the serial chip and its two channels }
-  sio3_p := addr(sio_descs[3]);
-  sio2_p := addr(sio_descs[2]);
-  sio2681_$init(1, 1, tone_$channel, sio2_p, sio_descs[2].params,
-                term_$serial_chan_b, sio3_p, sio_descs[3].params,
+  sio3_p := addr(sio_descs[first_serial + 1]);
+  sio2_p := addr(sio_descs[first_serial]);
+  sio2681_$init(1, 1, tone_$channel, sio2_p, sio_descs[first_serial].params,
+                term_$serial_chan_b, sio3_p,
+                sio_descs[first_serial + 1].params,
                 term_$sio2681_chip, sio2681_config);
 
   { the crash key on the caller's line }

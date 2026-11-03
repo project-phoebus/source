@@ -1,6 +1,7 @@
 { MBUS_$DEFINE_INT - define the handler of a Multibus interrupt level.
 
   Image addresses:
+    sau3  0x00E0AB38  MBUS_$DEFINE_INT
     sau5  0x00E0AA24  MBUS_$DEFINE_INT
 
   - A level above 15 crashes the system.

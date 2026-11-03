@@ -1,6 +1,7 @@
 { sm_c_$format - format a track of an SM_C drive.
 
   Image addresses:
+    sau3  0x00E6F67C  sm_c_$format (module-local)
     sau5  0x00E751E2  sm_c_$format (module-local)
 
   Assume we're called with the controller's ML lock held.

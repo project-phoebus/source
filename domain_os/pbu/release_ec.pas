@@ -1,6 +1,7 @@
 { PBU_$RELEASE_EC - release a PBU unit's eventcount.
 
   Image addresses:
+    sau3  0x00E591DC  PBU_$RELEASE_EC
     sau5  0x00E593AC  PBU_$RELEASE_EC
 
   - Undoes PBU_$ALLOCATE_EC under the exclusion lock: the eventcount's

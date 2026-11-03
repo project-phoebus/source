@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E668D8  TERM_$WRITE
+    sau3  0x00E67842  TERM_$WRITE
 
   - TTY_$K_PUT with no options.
 

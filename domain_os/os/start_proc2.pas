@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6D254  os_$start_proc2 (module-local)
+    sau3  0x00E6D800  os_$start_proc2 (module-local)
     sau5  0x00E6E930  os_$start_proc2 (module-local)
 
   - The pages from OS_INIT_START to OS_INIT_END, rounded up to a 32 KB

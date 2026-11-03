@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0ABBC  SYSBUS_$DEFINE_INT
+    sau3  0x00E0AC6A  SYSBUS_$DEFINE_INT
     sau9  0x3C40C504  SYSBUS_$DEFINE_INT
 
   - With `sysbus_int_vec': the id's vector, 16#A0..16#AF, names the
@@ -16,9 +17,9 @@
   Status stored: none.
 }
 
-{ TODO(sau) SYSBUS_$DEFINE_INT on the SAU3, SAU4 and SAU6
+{ TODO(sau) SYSBUS_$DEFINE_INT on the SAU4 and SAU6
 
-  The SAU3's is the SAU2's.  The SAU4's and SAU6's take their
+  The SAU4's and SAU6's take their
   SYSBUS_$INT's two ranges of vectors (sysbus/int.pas), the SAU6's
   with a duplicate vector it fills when the level is already defined.
   The `sysbus_int_vec' arm below is the SAU9's.  To be written as

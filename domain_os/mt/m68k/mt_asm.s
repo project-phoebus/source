@@ -1,5 +1,5 @@
 |
-| mt/sau5/mt_asm.s - MT_ASM: the MT page's hand-written routines and the
+| mt/m68k/mt_asm.s - MT_ASM: the MT page's hand-written routines and the
 | magnetic tape controller's block (MT_$SCB)
 |
 | SAU5 map: "D39 E90C00 MT_PAGE loaded at 192400, size = C00" and in it
@@ -48,13 +48,19 @@
 |   the low 12 bits of the high word and the high 4 bits of the low
 |   word.
 |
-| The SAU5's: the SAU3, SAU4 and SAU6 maps have their own MT_ASM; the
-| SAU2 and SAU7..SAU9 none.  The Makefile assembles */$(TARGET_SAU)/*.s,
-| so only a SAU5 build takes this file.  Every byte was checked against
-| the image by assembling and linking the file at the segment's address
-| with the map's addresses for the other symbols
-| (../tmp/sau5/verify_sau5_asm.py).
+| The same source on the SAU3..SAU6 (each map's MT_ASM, 0xC00 bytes,
+| links to its image's bytes at its own address: SAU3 "D E88800 MT_ASM
+| size = C00", SAU4 F896800, SAU5 E90C00, SAU6 780A6000); the SAU2 and
+| SAU7..SAU9 have none.  So the file is shared and assembled under the
+| magnetic tape driver's part, `mt_driver' (base/config.ins.pas); the
+| address column below is the SAU5 image's.  Every byte was checked
+| against each image by assembling the file with `m68k-elf-as -m68000'
+| and linking it at the segment's address with the map's MT_$SIO.
 |
+        .include "base/config.inc"
+
+        .if mt_driver
+
         .section ".text.MT_$PAGE_START","ax",@progbits
         .even
 
@@ -173,3 +179,5 @@ MT_$SCB:                                | 0xE90C8E
         .space  0xAD9                   | +0x98
 MT_$PAGE_END:                           | 0xE917FF
         .byte   0
+
+        .endif

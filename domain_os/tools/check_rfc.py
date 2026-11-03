@@ -27,6 +27,13 @@
 # segment of the kernel read through COLD's map equals the file's bytes at
 # the map's `loaded at').
 #
+# The SAU3 (make TARGET_SAU=sau3 check-rfc) is laid out the same way, with
+# its own COLD (cold/sau3/cold_start.s: three additions and a 19-entry map
+# table, so everything after 0x101590 is further on), the SAU2's 68020
+# fixup windows and VM tables, and its oracle json
+# tools/rfc_segments_sau3.json (rfc_decode.py --sau 3), checked against
+# the map as the SAU5's is.
+#
 # The items below are written for the SAU2, with its addresses.
 #
 # Our image (every item fails the check):
@@ -91,14 +98,15 @@ import rfc_elf  # noqa: E402
 
 # The SAU whose image this checks (--sau; 2 by default).  The tables below
 # that differ by SAU are keyed by it: NAME[2] the SAU2's COLD
-# (cold/sau2/cold_start.s), NAME[5] the SAU5's (cold/sau5/cold_start.s,
+# (cold/sau2/cold_start.s), NAME[3] the SAU3's (cold/sau3/cold_start.s),
+# NAME[5] the SAU5's (cold/sau5/cold_start.s,
 # the instruction addresses in its comments, checked against the SAU5
 # image's bytes).  The scalar ones are the same in both.
 SAU = 2
-SAUS = (2, 5, 9)
+SAUS = (2, 3, 5, 9)
 
 # The RFC header's machine word: the SAU's number.
-MACHINE = {2: 2, 5: 5}
+MACHINE = {2: 2, 3: 3, 5: 5}
 
 LOAD = 0x101400
 PAGE = 0x400
@@ -106,9 +114,11 @@ INFO = 0x10140C
 MOVE_TO_PPN = 0x101420
 # COLD's MMU map table and its two cells COLD fills in (the kernel's low
 # piece count; the high piece's count and PPN)
-MAP_TABLE = {2: 0x101850, 5: 0x1018DC}         # sau5 cold_map_table
-MAP_LO_COUNT = {2: 0x1018E6, 5: 0x1019C2}      # cold_map_kernel_lo_count
-MAP_HI_COUNT_PPN = {2: 0x1018F0, 5: 0x1019CC}  # cold_map_kernel_hi_count_ppn
+MAP_TABLE = {2: 0x101850, 3: 0x101890, 5: 0x1018DC}  # cold_map_table
+MAP_LO_COUNT = {2: 0x1018E6, 3: 0x10193A,
+                5: 0x1019C2}                    # cold_map_kernel_lo_count
+MAP_HI_COUNT_PPN = {2: 0x1018F0, 3: 0x101944,
+                    5: 0x1019CC}                # cold_map_kernel_hi_count_ppn
 DUMP_LOW = 0x101C00
 DUMP_PPN = 0x403
 KERNEL_FILE = 0xC00
@@ -118,25 +128,30 @@ KERNEL_FILE = 0xC00
 # moved (the SAU5's instruction addresses: move.l #OS_PAGE_END 0x1015C4,
 # sub.l #OS_PROC 0x1015D4, cmp.l #0x55C00 0x1015DA, add.l #MMAP 0x101618,
 # movea.l #P1_STACK_BASE 0x10176E, movea.l #OS_$INIT 0x10177C, adda.l
-# #MMU_$PTTX 0x1017F4)
+# #MMU_$PTTX 0x1017F4; the SAU3's 0x10159E, 0x1015AE, 0x1015B4, 0x1015F2,
+# 0x101728, 0x101736, 0x1017A8)
 OP_RELOC_VA = 0x101496
 OP_KERNEL_VA = 0x10149C
 OP_KERNEL_LOW = 0x1014A2
 OP_SPLIT_LOW = 0x1014A8
 OP_OS_BEGIN = 0x1014E8
-OP_PAGE_END = {2: 0x101592, 5: 0x1015C6}
-OP_KERNEL_VA2 = {2: 0x1015A2, 5: 0x1015D6}
-OP_LO_BYTES = {2: 0x1015A8, 5: 0x1015DC}
-OP_MMAP_VA = {2: 0x1015E6, 5: 0x10161A}
-OP_STACK = {2: 0x1016FA, 5: 0x101770}
-OP_ENTRY = {2: 0x101708, 5: 0x10177E}
-OP_PTTX_VA = {2: 0x10176A, 5: 0x1017F6}
+OP_PAGE_END = {2: 0x101592, 3: 0x1015A0, 5: 0x1015C6}
+OP_KERNEL_VA2 = {2: 0x1015A2, 3: 0x1015B0, 5: 0x1015D6}
+OP_LO_BYTES = {2: 0x1015A8, 3: 0x1015B6, 5: 0x1015DC}
+OP_MMAP_VA = {2: 0x1015E6, 3: 0x1015F4, 5: 0x10161A}
+OP_STACK = {2: 0x1016FA, 3: 0x10172A, 5: 0x101770}
+OP_ENTRY = {2: 0x101708, 3: 0x101738, 5: 0x10177E}
+OP_PTTX_VA = {2: 0x10176A, 3: 0x1017AA, 5: 0x1017F6}
 
 # The VM tables' run-time windows: map names and the
 # image's addresses (domain_os.10.2.map, VM_TABLES `D98 ED5000 size 7AC00';
-# the SAU5 map's `D98 ECD400 VM_TABLES size = 7AC00').
+# the SAU5 map's `D98 ECD400 VM_TABLES size = 7AC00'; the SAU3 map's `D99
+# ED5000 VM_TABLES size = 7AC00', the SAU2's addresses).
 VM_WINDOWS = {
     2: [('AREA_$RPMAP_CACHE', 0xEE4C00), ('MST', 0xEE5800),
+        ('PIT_PAGES', 0xEE6400), ('MSTE_PAGES', 0xEF6400),
+        ('VM_TABLES_END', 0xF4FC00)],
+    3: [('AREA_$RPMAP_CACHE', 0xEE4C00), ('MST', 0xEE5800),
         ('PIT_PAGES', 0xEE6400), ('MSTE_PAGES', 0xEF6400),
         ('VM_TABLES_END', 0xF4FC00)],
     5: [('AREA_$RPMAP_CACHE', 0xEDD000), ('MST', 0xEDDC00),
@@ -147,19 +162,23 @@ VM_WINDOWS = {
 # SAU5's DISP1 (0xFF9800, PPN 0x3C, then `the same VA, the next PPN' 0x3D,
 # cold/sau5/cold_start.s 0x101954 and 0x10195E).  The loader allows them
 # (the first PPN is the one it reads through).
-DOUBLE_MAPPED = {2: set(), 5: {0xFF9800}}
+DOUBLE_MAPPED = {2: set(), 3: set(), 5: {0xFF9800}}
 
 MST_MSTE_PAGES_MAX = 0x166      # mst/mst.h, MST_$INIT 0x00E30CF8
 # cold_start.s IO_WINDOW: from here the 68020 fixups treat a cell as I/O
-IO_FIXUP_WINDOW = {2: 0xFA0000, 5: 0xF90000}
+IO_FIXUP_WINDOW = {2: 0xFA0000, 3: 0xFA0000, 5: 0xF90000}
 # IODEFS, arch/m68k/<sau>/iodefs.s: DISP1_MEM on the SAU2, KOLOR_CTL on the
-# SAU5
-IODEFS = {2: 0xFC0000, 5: 0xF90000}
+# SAU5, the start of the I/O space on the SAU3
+IODEFS = {2: 0xFC0000, 3: 0xFC0000, 5: 0xF90000}
 
 # The 68020 fixups' windows on the value (COLD 0x1014C4..; the SAU5's from
 # its IO_WINDOW and *_WINDOW_020 constants)
 WINDOWS = {
     2: [(0xE00000, 0xFA0000, 'E00000..FA0000 +2F00000'),
+        (0xFA0000, 0x4000000, 'FA0000..4000000 +3000000'),
+        (0xCC0000, 0xE00000, 'CC0000..E00000 +2E00000'),
+        (0x700000, 0x800000, '700000..800000 -300000')],
+    3: [(0xE00000, 0xFA0000, 'E00000..FA0000 +2F00000'),
         (0xFA0000, 0x4000000, 'FA0000..4000000 +3000000'),
         (0xCC0000, 0xE00000, 'CC0000..E00000 +2E00000'),
         (0x700000, 0x800000, '700000..800000 -300000')],
@@ -909,8 +928,9 @@ def check_ours9(a):
             r.check(not diff, '%s differs from the original outside our '
                     'relocation cells at %d byte(s), first 0x%X'
                     % (what, len(diff), diff[0] if diff else 0))
-    # the boot map table as OS_$COLD_START reads it
-    at = sym('__dpc_block_OS_COLD_COLD_4002FFC') or \
+    # the boot map table as OS_$COLD_START reads it: OS_COLD's data block,
+    # which starts at cold_start.s's cold_stack_top (`D 4002FFC OS_COLD')
+    at = sym('cold_stack_top') or \
         (sym('RFC_LOAD') + map_segment(a.map, 'OS_COLD')[0] - LOAD9
          if a.map else None)
     entries = boot_map(img, at)

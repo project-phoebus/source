@@ -3,6 +3,9 @@
   Image addresses:
     sau2  0x00E351F4  OS data (OS_INIT_DATA, 0x188 bytes)
     sau2  0x00E82728  OS data (.DATA, 0x18 bytes)
+    sau3  0x00E335F4  OS data (OS_INIT_DATA, 0x188 bytes)
+    sau3  0x00E83CBC  OS data (.DATA, 0x18 bytes)
+    sau3  0x00E2CB78  OS data (WIRED_DATA, 0x20 bytes)
     sau5  0x00E379F4  OS data (OS_INIT_DATA, 0x194 bytes)
     sau5  0x00E89A44  OS data (.DATA, 0x18 bytes)
     sau5  0x00E2F300  OS data (WIRED_DATA, 0x20 bytes)
@@ -36,6 +39,9 @@
   vector table 43 cells); with `power_off_check' the unit has a third
   code section and data block (os/init_power_off_check.pas and
   os/check_power_off.pas).
+
+  Without `display_driver' (the SAU3) .TEXT has no
+  OS_$INSTALL_DISPLAY_ASTE.
 
   On the SAU9 OS_INIT_DATA is 0x10B0 bytes (MMAP_$INIT's table of 1024
   longwords, the vector table's 42 cells from +0x1000).  With
@@ -192,6 +198,13 @@ procedure mmu_$page_write_bit(va: univ_ptr; prot: integer);
 %include 'netlog/netlog.ins.pas';             { netlog_$kinds_t, for asknode_info's
                                                records }
 %include 'asknode/asknode_info.ins.pas';  { ASKNODE_$INTERNET_INFO }
+%if iic_driver %then
+%include 'iic/iic.ins.pas';                 { IIC_$INIT }
+%endif
+%if lpr_driver %then
+%include 'cbuf/cbuf.ins.pas';
+%include 'lpr/lpr.ins.pas';                 { LPR_$INIT }
+%endif
 %if vme_bus %then
 %include 'mbus/mbus.ins.pas';
 %include 'vme/vme.ins.pas';                 { VME_$INT, VME_$ERR_INT,
@@ -229,7 +242,9 @@ define
 
 define
   vtop_or_crash;
+%if display_driver %then
   os_$install_display_aste;
+%endif
   dummy_interrupt_handler;
   os_$shutdown;
   os_$chksum;
@@ -245,8 +260,10 @@ define
   declares it for SMD; declared here too because os.pas does not
   include SMD's internal insert.  OS_$INIT passes its address to
   OS_$INSTALL_DISPLAY_ASTE. }
+%if display_driver %then
 var
   display1_$uid: extern uid_$t;
+%endif
 
 { DISPLAY2_$UID and DISPLAY3_$UID (map symbols, UID_LIST, after
   DISPLAY1_$UID): OS_$INIT installs the second display's ASTE with the
@@ -317,7 +334,9 @@ procedure os_$start_proc2(in ctx: fim_$startup_context_t);
 %include 'os/free_ppn.pas';                 { os_$free_ppn }
 %include 'os/free_va_page.pas';             { os_$free_va_page }
 %include 'os/start_proc2.pas';              { os_$start_proc2 }
+%if display_driver %then
 %include 'os/install_display_aste.pas';     { OS_$INSTALL_DISPLAY_ASTE }
+%endif
 %include 'os/dummy_interrupt_handler.pas';  { DUMMY_INTERRUPT_HANDLER }
 %include 'os/shutdown.pas';                 { OS_$SHUTDOWN }
 %include 'os/chksum.pas';                   { OS_$CHKSUM }

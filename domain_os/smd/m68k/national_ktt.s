@@ -24,9 +24,13 @@
  * image.
  *
  * Byte gate (tools/asm_compare.py, `make check-asm'): the image's bytes.
+ *
+ * Not on the SAUs without the display driver (`display_driver',
+ * base/config.ins.pas): the SAU3 map has no national keyboard tables.
  */
 
         .include "base/config.inc"
+        .if     display_driver
 
         .section ".text.SMD_$GERMAN_KTT","ax",@progbits
         .even
@@ -131,3 +135,5 @@ SMD_$SWISS_KTT:  /* e84d7e */
         .if !display_devices
         .word   0  /* e84e7e: to the segment's end (PEB_WIRED, 0xE84E80) */
         .endif
+
+        .endif  /* display_driver */

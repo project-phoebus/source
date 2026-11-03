@@ -1,6 +1,7 @@
 { MT_$WIRE - wire a user buffer for transfers on a tape unit.
 
   Image addresses:
+    sau3  0x00E70F1C  MT_$WIRE
     sau5  0x00E76A8C  MT_$WIRE
 
   Status stored:

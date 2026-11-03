@@ -1,6 +1,7 @@
 { IO_$ALLOC_MAP - allocate I/O map space for a unit and record it.
 
   Image addresses:
+    sau3  0x00E19E76  IO_$ALLOC_MAP
     sau5  0x00E1B12E  IO_$ALLOC_MAP
 
   - The pages a buffer of length bytes can span, in its bus's map below
@@ -11,7 +12,7 @@
   Status stored:
     io_$alloc_region's status: the unit and length are good
     io_$check_unit's status: the unit is not good
-    status_$pbu_not_supported: a unit on the VME bus
+    status_$pbu_not_supported: a unit on the VME bus (`vme_bus')
     status_$pbu_bad_parameter: a length of 0 or less
 }
 
@@ -27,9 +28,12 @@ var
 begin
   if io_$check_unit(unit, status) then
     with io_$dctes[unit] do
+%if vme_bus %then
       if bus = io_$bus_vme then
         status.all := status_$pbu_not_supported
-      else if length <= 0 then
+      else
+%endif
+      if length <= 0 then
         status.all := status_$pbu_bad_parameter
       else begin
         pages := (length + 16#3FE) div 1024 + 1;

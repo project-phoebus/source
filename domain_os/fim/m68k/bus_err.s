@@ -1,6 +1,6 @@
 /*
  * fim/m68k/bus_err.s - FIM_$BUS_ERR, the Domain/OS bus-error handler
- * (m68k/SAU2, SAU5)
+ * (m68k/SAU2, SAU3, SAU5)
  *
  * The SAU2 and SAU5 images have the same code here except where the SAU5
  * fields a fault taken while the processor runs a PBU's user interrupt
@@ -19,6 +19,13 @@
  *     delivered through FIM_$COM; none of them -> the timeout path.
  * The address and byte columns are the SAU2 image's, except on the lines
  * of the `.if pbu_driver' arms, which carry the SAU5 image's addresses.
+ *
+ * The SAU3 has the SAU5's PBU arms (`pbu_driver': CPU_B_PBU_SWITCH at
+ * 0xE20802, the pad at 0xE20822, FIM_$BUS_ERR at 0xE20824) and no
+ * display: a supervisor fault on a page not resident in the I/O window
+ * 0xFC0000..0xFE0000, the display memory, is not mapped on the spot but
+ * goes to MST_$TOUCH like any other (`display_driver'; the SAU3's
+ * `beq.w' at 0xE20894 reaches the protection test 0x3E bytes nearer).
  *
  * Byte gate (tools/asm_compare.py, `make check'): identical to the
  * image modulo relocations; address operands resolve to our objects.
@@ -355,6 +362,7 @@ FIM_$BUS_ERR:
         btst    #6,%d1                  /* Page not resident? */
         beq.w   .bus_err_check_prot
 
+        .if display_driver
         btst    #13,(0x1c,%sp)          /* Saved SR bit 13: supervisor mode? */
         beq.b   .bus_err_touch          /* User fault - always go through MST */
 
@@ -378,6 +386,7 @@ FIM_$BUS_ERR:
         jsr     (MMU_$INSTALL).l
         lea     (12,%sp),%sp            /* Pop the four arguments */
         bra.b   .bus_err_return
+        .endif
 
 /* --------------------------------------------------------------------
  * Ask MST to make the page resident.  Interrupts are re-enabled (IPL 0)

@@ -1,6 +1,7 @@
 { MT_$WAIT - wait for a tape unit's started requests and report them.
 
   Image addresses:
+    sau3  0x00E70DE8  MT_$WAIT
     sau5  0x00E76952  MT_$WAIT
 
   - Waits on the unit's PBU eventcount for timeout seconds, an hour for

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E70024  SMD_$N_DEVICES
+    sau3  0x00E6E648  SMD_$N_DEVICES
     sau5  0x00E72550  SMD_$N_DEVICES
     sau9  0x3C476492  SMD_$N_DEVICES
 
@@ -9,6 +10,7 @@
     base/config.ins.pas); the result is 0 when no unit has a display.
   - With `display_devices' the result is the number of devices added.
 
+  - Without `display_driver' (no display: the SAU3) there are none.
   Status stored: none.
 }
 
@@ -18,7 +20,9 @@ var
   u: integer;
   present: boolean;
 begin
-%if display_devices %then
+%if not display_driver %then
+  smd_$n_devices := 0;
+%elseif display_devices %then
   smd_$n_devices := smd_$wired_data.unit_count;
 %else
   n := 0;

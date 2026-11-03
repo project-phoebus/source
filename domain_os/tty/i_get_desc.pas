@@ -2,10 +2,11 @@
 
   Image addresses:
     sau2  0x00E66738  TTY_$I_GET_DESC
+    sau3  0x00E676AC  TTY_$I_GET_DESC
 
   - For real line 0, the console, the discipline is set to
     term_$disc_enable_alt when the display TTY is not in use, and the
-    display unblanked.
+    display unblanked (with `display_driver').
   - A fragment of the OS_TERM module (term/os_term.pas), not of TTY.
   - On the two error exits the result is not assigned.
 
@@ -38,7 +39,9 @@ begin
     then
       term_$set_discipline(line, term_$disc_enable_alt,
                            local_status);
+%if display_driver %then
     smd_$unblank;
+%endif
   end;
 
   tty_$i_get_desc := integer32(dtte[real_line].handler_ptr);

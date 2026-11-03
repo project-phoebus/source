@@ -1,7 +1,7 @@
 /*
  * ML_$SPIN_UNLOCK - Release a spin lock (SAU2 implementation)
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.
  *
  * On SAU2 (single-processor Apollo systems), spin locks are implemented

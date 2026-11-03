@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E72668  SIO6509_$INQ_LINE
+    sau3  0x00E73C64  SIO6509_$INQ_LINE
 
   - When the mask asks about the modem inputs (bits 7 and 8, 16#180),
     both are reported asserted (bits 1 and 2 of flags1): the console

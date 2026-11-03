@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E34BD0  DTTY_$INIT
+    sau3  0x00E32F18  DTTY_$INIT
     sau5  0x00E36D18  DTTY_$INIT
     sau9  0x3C43B26C  DTTY_$INIT
 
@@ -16,6 +17,8 @@
   - With `smd_display_memory' unit 1 is taken whatever its type, its
     window from SMD_$INQ_DISP_INFO's sizes, and the display TTY is used
     when mode is 0 or 1.
+  - Without `display_driver' there is no display: the routine only
+    stores the control word and sets DTTY_$USE_DTTY.
 
   Status stored: none.
 }
@@ -32,7 +35,11 @@
   every SAU's frame), the window, the status and the unit word;
   disp_status is held in a register.  The SAU7..SAU9 frames are 4
   bytes smaller (no unused_44).  Nothing explains the 16 bytes above
-  the window or the 16 below disp_status.  Not settled. }
+  the window or the 16 below disp_status.  Not settled.  Without
+  `display_driver' (the SAU3) the frame is 0x2C bytes and the code
+  addresses none of it; the declarations kept there (info, unused_20,
+  the window and the status) are one choice of locals that gives that
+  size. }
 
 [section(os_init_proc, os_init_data)]
 procedure dtty_$init(in mode: integer; in ctrl: integer);
@@ -41,15 +48,20 @@ var
   unused_20: array[1..16] of char;        { the stand-in: TODO above }
   window: smd_$window_limits_t;
   status: status_$t;
+%if display_driver %then
   assoc_unit: integer;
   disp_status: pinteger;
   unused_40: array[1..16] of char;        { the stand-in: TODO above }
 %if not smd_display_memory %then
   unused_44: integer32;
 %endif
+%endif
 begin
   dtty_$ctrl := ctrl;
   dtty_$use_dtty := true;
+%if not display_driver %then
+end;
+%else
 %if smd_display_memory %then
   assoc_unit := 1;
   smd_$inq_disp_info(assoc_unit, info, status);
@@ -141,3 +153,4 @@ begin
   if status.all <> status_$ok then
     dtty_$report_error(status, 'smd_$copy_font_to_md_hdm%$', '$');
 end;
+%endif

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E32B26  sio_$init_line (module-local)
+    sau3  0x00E312EE  sio_$init_line (module-local)
     sau9  0x3C4394FA  sio_$init_line (module-local)
 
   - The line id (the SIO descriptor's or the console drain record's

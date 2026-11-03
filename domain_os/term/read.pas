@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6681C  TERM_$READ
+    sau3  0x00E67786  TERM_$READ
 
   - TTY_$K_GET on the real line, conditionally when its DTTE flag is
     set; the result is the count read.

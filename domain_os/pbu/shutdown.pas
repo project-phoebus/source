@@ -1,6 +1,7 @@
 { PBU_$SHUTDOWN - set down the PBU's user units at shutdown.
 
   Image addresses:
+    sau3  0x00E59932  PBU_$SHUTDOWN
     sau5  0x00E59B9E  PBU_$SHUTDOWN
 
   - Every set-up unit with an owner and no kernel driver is set down,

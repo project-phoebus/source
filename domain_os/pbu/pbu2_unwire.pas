@@ -1,6 +1,7 @@
 { PBU2_$UNWIRE - unwire a buffer a PBU unit wired.
 
   Image addresses:
+    sau3  0x00E59996  PBU2_$UNWIRE
     sau5  0x00E59C06  PBU2_$UNWIRE
 
   - With touch each page is first referenced (its first word read and

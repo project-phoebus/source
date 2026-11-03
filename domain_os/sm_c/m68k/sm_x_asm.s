@@ -1,5 +1,5 @@
 |
-| sm_c/sau5/sm_x_asm.s - SM_X_ASM, SM_FIX_ECC: flip the bits a storage
+| sm_c/m68k/sm_x_asm.s - SM_X_ASM, SM_FIX_ECC: flip the bits a storage
 | module controller's ECC names
 |
 | SAU5 map: "I E75690 SM_X_ASM size = 6C" (.TEXT, between SM_C and
@@ -22,10 +22,17 @@
 | (sm_c/sm_c.ins.pas's heading).
 |
 | The same bytes on the SAU3, SAU4 and SAU6 (the catalog: SM_FIX_ECC
-| identical); no SM_X_ASM on the SAU2 or SAU7..SAU9.  The Makefile
-| assembles */$(TARGET_SAU)/*.s, so only a SAU5 build takes this file;
-| the bytes below were checked by assembling it by hand.
+| identical; SAU3 map: "I E6FB28 SM_X_ASM size = 6C"); no SM_X_ASM on
+| the SAU2 or SAU7..SAU9.  So the file is shared and assembled under the
+| storage module drivers' part, `smd_disk' (base/config.ins.pas); the
+| address and byte columns below are the SAU5 image's.  The bytes were
+| checked by assembling the file by hand against the SAU5 and SAU3
+| images.
 |
+        .include "base/config.inc"
+
+        .if smd_disk
+
         .section ".text.SM_FIX_ECC","ax",@progbits
         .even
 
@@ -69,3 +76,5 @@ SM_FIX_ECC:                             | 0xE75690
 5:      movem.l (%sp)+,%d2/%d6          | e756f4  4cdf 0044
         rts                             | e756f8  4e75
         .word   0                       | e756fa  0000
+
+        .endif

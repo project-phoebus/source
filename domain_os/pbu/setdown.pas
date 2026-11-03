@@ -1,11 +1,13 @@
 { PBU_$SETDOWN - set down the PBU units PBU_$SETUP set up.
 
   Image addresses:
+    sau3  0x00E592E4  PBU_$SETDOWN
     sau5  0x00E594B4  PBU_$SETDOWN
 
   - Under the exclusion lock, every set-up unit of the unit's bus that
     the same DDF unit set up is taken down: its device, user pages, map
-    space, controller memory and DCTE.
+    space, controller memory and DCTE.  Without the VME bus
+    (`vme_bus') every unit is the Multibus's.
   - Its I/O unit is released (IO_$RELEASE), on the Multibus not while
     the unit sharing its vector (3 with 7) is still owned.
   - When the count of set-up units reaches 0, PBU_$WIRE_PBU's pages are
@@ -41,11 +43,14 @@ begin
     status.all := status_$pbu_global_device;
     return;
   end;
+%if vme_bus %then
   if dcte^.unit_info.bus = io_$bus_vme then begin
     first := pbu_first_vme_unit;
     last := pbu_$max_unit;
   end
-  else if not pbu_$mcb.present then begin
+  else
+%endif
+  if not pbu_$mcb.present then begin
     status.all := status_$pbu_not_present;
     return;
   end
@@ -82,7 +87,7 @@ begin
     pbu_$dissoc(sub_unit, sub_status);
     sub_dcte^.owner := 0;
     pbu_$dctes[sub] := nil;
-    sub_dcte^.unit := 16#10;
+    sub_dcte^.unit := pbu_free_unit;
     if sub_dcte^.unit_info.bus <> io_$bus_vme then begin
       case sub of
         3: other := pbu_$dctes[7];

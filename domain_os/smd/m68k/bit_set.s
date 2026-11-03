@@ -26,9 +26,13 @@
  * Not on the SAUs whose driver drives its displays through device
  * descriptors (`display_devices', base/config.ins.pas): the SAU7..SAU9
  * maps have no SMD_$BIT_SET.
+ *
+ * Not on the SAUs without the display driver (`display_driver',
+ * base/config.ins.pas): the SAU3 map has no SMD_$BIT_SET.
  */
 
         .include "base/config.inc"
+        .if     display_driver
         .if     !display_devices
 
         .section ".text.SMD_$BIT_SET","ax",@progbits
@@ -41,3 +45,5 @@ SMD_$BIT_SET:
         rts                             /* 00e15d1c                     */
 
         .endif
+
+        .endif  /* display_driver */

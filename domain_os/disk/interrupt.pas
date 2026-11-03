@@ -8,7 +8,8 @@
   - The status word at +6 hands the interrupt to FLP_$INT for bit 10,
     else to WIN_$INT for bits 11 or 12; one neither claims crashes.
   - The first routine of the ATBUS_ module (sysbus/atbus_.pas); the map
-    symbol has no `$'.
+    symbol has no `$'.  Compiled only with `winchester_config'
+    (base/config.ins.pas): the SAU3 has no system bus disk controller.
 
   Status stored: none.
 }

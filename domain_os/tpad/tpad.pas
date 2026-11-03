@@ -42,6 +42,10 @@
   their unit routines forward, as declared by the extern headings of
   tpad.ins.pas.
 
+  Only the SAUs with the display driver have the module (the part
+  `display_driver', base/config.ins.pas); the SAU3's map has no TPAD
+  segment, so there the whole body is configured out.
+
   Build: dpc -I domain_os domain_os/tpad/tpad.pas.  Check:
   tools/pascal_check.sh.
 }
@@ -49,6 +53,7 @@ module tpad;
 
 %include 'base/base.ins.pas';
 %include 'ec/ec.ins.pas';
+%if display_driver %then
 %include 'time/time.ins.pas';
 %include 'smd/smd.ins.pas';
 %include 'tpad/tpad.ins.pas';
@@ -142,3 +147,4 @@ var
 %include 'tpad/inq_dtype.pas';              { TPAD_$INQ_DTYPE }
 %include 'tpad/set_punch_impact.pas';       { TPAD_$SET_PUNCH_IMPACT }
 %include 'tpad/inq_punch_impact.pas';       { TPAD_$INQ_PUNCH_IMPACT }
+%endif

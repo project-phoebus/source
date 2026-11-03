@@ -2,7 +2,7 @@
  * io/m68k/trap.s - IO_$TRAP, the first-level interrupt dispatcher and
  * IO_$FLIH_TAB (SAU2, SAU5, SAU9)
  *
- * The SAU2, SAU5 and SAU9 images have the same code here except two
+ * The SAU2, SAU3, SAU5 and SAU9 images have the same code here except two
  * places: with `trap_page_high' (the SAU9) IO_$TRAP's vector table is
  * TRAP_PAGE, not 0, and with `interrupt_pc_histogram' (the SAU9) the
  * dispatcher stores the interrupted PC in HISTOGRAM_ADDRESS (below)

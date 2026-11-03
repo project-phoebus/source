@@ -1,7 +1,7 @@
 /*
  * MMU_$SYSTEM_REV cell and MMU_$SET_SYSREV
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.
  *
  * Original addresses: MMU_$SYSTEM_REV 0x00E2426E (4 bytes, zero in the

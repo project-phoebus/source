@@ -2,6 +2,7 @@
   its completion.
 
   Image addresses:
+    sau3  0x00E6DE20  sm_$command (module-local)
     sau5  0x00E6F178  sm_$command (module-local)
 
   - The other command words (cylinder, head, buffer) are its callers'.

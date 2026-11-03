@@ -3,7 +3,8 @@
 The second storage module controller's disk driver, on the SAUs whose
 kernel has the storage module drivers (the part `smd_disk`,
 `../base/config.ins.pas`: the SR10.2 SAU3..SAU6). Translated from the
-SAU5 image; the SAU2 build compiles the module to an empty object.
+SAU5 image, with the SAU3's I/O map entries; the SAU2 build compiles
+the module to an empty object.
 
 ## Layout
 
@@ -16,7 +17,8 @@ name), its whole body under `%if smd_disk`:
 | WIRED_DATA | SM_C data, 0x98 bytes | the jump table and the driver's variables | module variables |
 
 The map's SM_X_ASM segment (SM_FIX_ECC) is hand assembly,
-`sau5/sm_x_asm.s`, assembled only by a SAU5 build; SM_C_END_ADDR is
+`m68k/sm_x_asm.s`, assembled under `smd_disk` (the same bytes on the
+SAU3..SAU6); SM_C_END_ADDR is
 `m68k/end_addr.s` (the same on every SAU).  The driver uses SM_$CB,
 SM_BLK_HDR and the PBU headings of `../sm/sm.ins.pas` (SM_$CB's second
 variant is this controller's layout).
@@ -40,13 +42,13 @@ variant is this controller's layout).
 | SM_C_$DO_IO | `do_io.pas` |
 | SM_C_$REVALIDATE | `revalidate.pas` |
 | SM_C_$SPIN_DOWN | `spin_down.pas` |
-| SM_FIX_ECC | none: hand assembly, `sau5/sm_x_asm.s` |
+| SM_FIX_ECC | none: hand assembly, `m68k/sm_x_asm.s` |
 | SM_C_$PROC_END | none: hand assembly, `m68k/end_addr.s` |
 
 ## Open items
 
-- TODO(sau): the SAU3's and SAU4's I/O map entries (`../sm/cinit.pas`); the
-  SAU4's and SAU6's own SM_C code.
+- TODO(sau): the SAU4's I/O map entries (`../sm/cinit.pas`); the SAU4's
+  and SAU6's own SM_C code.
 - TODO(pascal): the data block's open words (`sm_c.pas`).
 - The status codes the controller returns have no known names; the case
   labels are their numbers (`check_status.pas`).

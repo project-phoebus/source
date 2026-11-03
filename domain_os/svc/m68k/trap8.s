@@ -2,7 +2,7 @@
 | SVC_$TRAP8 - Domain/OS TRAP #8 Variable-Argument System Call Dispatcher
 | plus the SVC_CATCHER fault tail shared by every TRAP dispatcher.
 |
-| The SAU2, SAU5 and SAU9 images have the same code here (the SAU9's
+| The SAU2, SAU3, SAU5 and SAU9 images have the same code here (the SAU9's
 | PROT aside, svc/m68k/svc_macros.inc); the address and byte columns
 | below are the SAU2 image's.
 |

@@ -2,7 +2,7 @@
 | mst/m68k/set.s - MST_$SET and MST_$SET_CLEAR, set and clear a bit of a
 | bit map
 |
-| The SAU2, SAU5 and SAU9 images have the same code here; the address
+| The SAU2, SAU3, SAU5 and SAU9 images have the same code here; the address
 | and byte columns below are the SAU2 image's (the SAU9's MST_ASM is at
 | 0x3C41CCA4).
 |

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6D700  smd_$validate_unit (module-local)
+    sau3  0x00E6E624  smd_$validate_unit (module-local)
     sau5  0x00E6F97C  smd_$validate_unit (module-local)
     sau9  0x3C47434C  smd_$validate_unit (module-local)
 
@@ -10,12 +11,15 @@
     not smd_$none.  With `display_devices' any unit from 1 to the
     count of devices added is valid, whatever its type.
 
+  - Without `display_driver' (no display: the SAU3) no unit is valid.
   Status stored: none.
 }
 
 function smd_$validate_unit(unit: integer): boolean; internal;
 begin
-%if display_devices %then
+%if not display_driver %then
+  smd_$validate_unit := false;
+%elseif display_devices %then
   smd_$validate_unit := (unit >= 1) and (unit <= smd_$wired_data.unit_count);
 %else
 %if two_display_units %then

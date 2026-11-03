@@ -46,8 +46,10 @@ def main():
     repo = os.path.dirname(here)
     ap.add_argument('--image', default=os.path.join(here, 'dist/sau2/domain_os'))
     ap.add_argument('--elf', default=os.path.join(here, 'build/sau2/domain_os.elf'))
-    ap.add_argument('--window', action='store_true', help='an interactive window (keyboard and mouse, real speed, '
+    ap.add_argument('--window', action='store_true', help='an interactive window (keyboard, mouse and sound, real speed, '
                     'integer scaling) instead of the headless run; set --frames and --stuck-frames high')
+    ap.add_argument('--program', help='start this standalone SAU2 program (e.g. a sau2/ diagnostic: header longwords '
+                    'load address, entry) instead of the kernel image')
     ap.add_argument('--debugger', action=argparse.BooleanOptionalAction, default=None,
                     help="MAME's debugger, for the breakpoints (stops, progress, --bp, --wp, --type-inject); "
                     'default on, off with --window: MAME captures and hides the host mouse only without it')
@@ -166,6 +168,7 @@ def main():
     lua = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mame_boot_direct.lua')
     env = dict(os.environ, DYLD_FRAMEWORK_PATH='/Library/Frameworks',
                DOS_IMAGE=os.path.abspath(args.image), DOS_SYMS=syms_path,
+               DOS_PROGRAM=os.path.abspath(args.program) if args.program else '',
                DOS_STOPS=addrs(STOP_SYMBOLS + args.extra_stop),
                DOS_PROGRESS=addrs(PROGRESS_SYMBOLS + args.extra_progress),
                DOS_FLAGS=str(args.flags), DOS_FRAMES=str(args.frames),
@@ -190,13 +193,13 @@ def main():
         '-rompath', os.path.join(args.mame_dir, 'roms'),
         '-cfg_directory', os.path.join(args.work_dir, 'cfg'),
         '-nvram_directory', os.path.join(args.work_dir, 'nvram'),
-        '-sound', 'none', '-log', '-skip_gameinfo', '-autoboot_script', lua]
+        '-log', '-skip_gameinfo', '-autoboot_script', lua]
     if args.debugger if args.debugger is not None else not args.window:
         cmd += ['-debug', '-debugger', 'none']
     if args.window:
         cmd += ['-window', '-nomaximize', '-mouse', '-nounevenstretch', '-nofilter', '-keepaspect']
     else:
-        cmd += ['-video', 'none', '-nothrottle', '-seconds_to_run', str(args.frames // 60 + 30)]
+        cmd += ['-video', 'none', '-sound', 'none', '-nothrottle', '-seconds_to_run', str(args.frames // 60 + 30)]
     elog = os.path.join(args.work_dir, 'error.log')
     if os.path.exists(elog):
         os.remove(elog)

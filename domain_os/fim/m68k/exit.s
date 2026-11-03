@@ -2,7 +2,7 @@
  * fim/m68k/exit.s - FIM_$EXIT, the kernel's shared exception return, and
  * its trace arm (m68k/SAU2, SAU5)
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.
  *
  * Transcribed from the SAU2 image, 0x00E228BC..0x00E22903 (map FIM_$EXIT to

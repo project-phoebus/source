@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E75250  SMD_$FREE_ASID
+    sau3  0x00E767F0  SMD_$FREE_ASID
     sau5  0x00E7C3F0  SMD_$FREE_ASID
     sau9  0x3C47CDCC  SMD_$FREE_ASID
 
@@ -17,6 +18,7 @@
   - In PROC2_DELETE_PRO, its data section DATA$: the routine has no
     static data.
 
+  - Without `display_driver' (no display: the SAU3) an empty procedure.
   Status stored: none.
 }
 { TODO(pascal) SMD_$FREE_ASID's frame: 8 bytes with no object
@@ -30,6 +32,7 @@
 [section(proc2_delete_pro, data$)]
 procedure smd_$free_asid(asid: integer);
   options(val_param);
+%if display_driver %then
 var
   status: status_$t;
   u: integer;
@@ -67,3 +70,7 @@ begin
     end;
   asid_to_unit[asid] := 0;
 end;
+%else
+begin
+end;
+%endif

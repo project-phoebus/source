@@ -71,7 +71,7 @@ label.
 | os_$free_ppn | `free_ppn.pas` (internal; only with `pft_mmu`) |
 | os_$free_va_page | `free_va_page.pas` (internal; its forward heading in os.pas) |
 | os_$start_proc2 | `start_proc2.pas` (internal; forward heading in os.pas) |
-| OS_$INSTALL_DISPLAY_ASTE | `install_display_aste.pas` |
+| OS_$INSTALL_DISPLAY_ASTE | `install_display_aste.pas` (`display_driver` only: every SAU but the SAU3) |
 | DUMMY_INTERRUPT_HANDLER | `dummy_interrupt_handler.pas` |
 | OS_$SHUTDOWN | `shutdown.pas` |
 | OS_$CHKSUM | `chksum.pas` |
@@ -127,6 +127,28 @@ its blocks: OS_INIT_DATA 0x194 bytes (the vector table's 43 cells),
 - OS_$BOOT_ERRCHK, VTOP_OR_CRASH and the module-local routines: the
   SAU2's code (offsets and layout values only).
 
+The SAU3's OS is the SAU2's source with parts; its blocks:
+OS_INIT_DATA 0x188 bytes (the vector table's 40 cells, trap 6
+PBU_$TRAP6's), .DATA 0x18 (the restart code at +0xC,
+OS_$SHUTTING_DOWN_FLAG at +0xE), WIRED_DATA 0x20; its code:
+OS_INIT_PROC 0x1464, .TEXT 0x388, WIRED_PROC 0x38.
+
+- OS_$INIT (`init.pas`): without `display_driver` (the new part, every
+  SAU but the SAU3) no SMD_$INIT, TPAD_$INIT, display probe or
+  SMD_$INIT_BLINK, the terminal's mode 1 whatever the boot flags, and
+  MST_$DISKLESS_INIT's color flag `false`; `lpr_driver` (new, SAU3 and
+  SAU4: LPR_$INIT after RING_$GET_ID), `iic_driver` (IIC_$INIT after
+  NETWORK_$INIT); `pbu_driver`, `crash_reboot` (the node check's
+  restart through MMU_$NORMAL_MODE alone), `power_off_check`,
+  `ring_node_id`; no `boot_time_lock`.
+- OS_$INSTALL_DISPLAY_ASTE (`install_display_aste.pas`): only with
+  `display_driver`; the SAU3's .TEXT has none.
+- OS_$SHUTDOWN (`shutdown.pas`): `pbu_driver` and `crash_reboot`
+  (existing arms; no source change).
+- OS_$INIT_POWER_OFF_CHECK, OS_$CHECK_POWER_OFF, OS_$BOOT_ERRCHK,
+  VTOP_OR_CRASH and the module-local routines: the SAU2's (or the
+  SAU5's) code, addresses only.
+
 The SAU9's OS is the same source with its parts; its blocks:
 OS_INIT_DATA 0x10B0 bytes (MMAP_$INIT's table of 1024 longwords, the
 vector table's 42 cells), .DATA 0x18 (the PROM's restart code at +0xC,
@@ -167,8 +189,10 @@ its part with a TODO(merge) naming its home; the SAU9's are in their
 homes, under their parts: `misc/crash_system.ins.pas` (CRASH,
 CRASH_$OK_TO_REBOOT, SERVER_$FLAG), `fim/fim.ins.pas` (FIM_$NMI),
 `io/io.ins.pas` (IO_$LOG_SELF_TESTS); the PROM's record is
-`os.ins.pas`'s.  `os.pas` includes
-`mbus.ins.pas` and `vme.ins.pas` under `vme_bus`.
+`os.ins.pas`'s.  The SAU3's LPR_$INIT heading is in `os.ins.pas` under
+`lpr_driver`, with a TODO(merge) naming `lpr/lpr.ins.pas`.  `os.pas`
+includes `mbus.ins.pas` and `vme.ins.pas` under `vme_bus`, and
+`iic/iic.ins.pas` under `iic_driver`.
 
 ## Open items
 

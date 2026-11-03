@@ -1,7 +1,7 @@
 /*
  * MMU_$INSTALL_LIST - Install a run of pages at consecutive virtual addresses
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.
  *
  * Original address: 0x00E23FDE, 106 bytes (0xE23FDE..0xE24047).

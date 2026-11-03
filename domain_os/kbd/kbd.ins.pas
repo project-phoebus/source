@@ -27,6 +27,12 @@
 }
 
 const
+  { 16#00330001, "undefined interrupt" (the SR10.2 status-code database,
+    OS / utility bus manager): the status the PROCEDURE$ routines and
+    KBD_$PUT store without `display_driver', where there is no keyboard.
+    It is the database's only text for the code. }
+  status_$util_bus_undefined_interrupt = 16#00330001;
+
   { Apollo's key codes (kbd.ins.pas, as declared there: `KBD_$BS  =
     chr(16#95);' ...), the ones kbd_$translate_key tests, in its order of
     test. }

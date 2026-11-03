@@ -1,6 +1,7 @@
 { io_$free_region - free a range of bus addresses in a bus's I/O map.
 
   Image addresses:
+    sau3  0x00E19C92  io_$free_region
     sau5  0x00E1AF42  io_$free_region
 
   - Under io_$exclusion the range starting at iova is removed and the

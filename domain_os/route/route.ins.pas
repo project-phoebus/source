@@ -376,3 +376,9 @@ const
   what they are, so they stay numbers. }
 const
   route_$port_type_ring = 0;
+
+{ Port type 3 is the internet interface controller's: IIC_$INIT creates
+  a port of it for each unit (net_io_$create_port(3, ...)), and the
+  SAU3's IO_$GET_CONFIG reports an active port of it. }
+const
+  route_$port_type_iic = 3;

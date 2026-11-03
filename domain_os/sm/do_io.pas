@@ -1,6 +1,7 @@
 { SM_$DO_IO - perform a disk request on a storage module drive.
 
   Image addresses:
+    sau3  0x00E6E2BA  SM_$DO_IO
     sau5  0x00E6F612  SM_$DO_IO
 
   - Under the controller's lock.  A format request (operation 3) goes
@@ -64,7 +65,7 @@ begin
 %if long_iomap %then
     iomap[sm_iomap_buf] := req.ppn + sm_iomap_bias;
 %else
-    { the SAU3's and SAU4's entry (the TODO(sau) in cinit.pas) }
+    iomap[sm_iomap_buf].entry := req.ppn + sm_iomap_bias;
 %endif
 
     for try := 1 to 2 do begin

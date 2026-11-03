@@ -2,7 +2,7 @@
 | mt/m68k/end_addr.s - MT_END_ADDR, the end of the MT code range
 | (m68k/SAU2, SAU5)
 |
-| The SAU2 and SAU5 images have the same code here; the address and
+| The SAU2, SAU3 and SAU5 images have the same code here; the address and
 | byte columns below are the SAU2 image's.  (SAU5 map: "I E76E08
 | MT_END_ADDR size = 4", MT_$PROC_END at 0xE76E0A, after the MT_$SIO
 | code segment.)

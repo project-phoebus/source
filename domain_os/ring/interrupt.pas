@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0AB0C  RING_INTERRUPT
+    sau3  0x00E0ABFC  RING_INTERRUPT
 
   - Calls the do_io routine SYSBUS_$INIT installed for the type-2 (ring)
     controller, with its DCTE (RING_$INT).

@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E751F0  TERM_$P2_CLEANUP
+    sau3  0x00E76790  TERM_$P2_CLEANUP
     sau9  0x3C47CD74  TERM_$P2_CLEANUP
 
   - Each line's TTY descriptor (three, four with `sio16550_lines') whose

@@ -1,7 +1,7 @@
 /*
  * cal/m68k/os_cal_asm.s - the OS_CAL_ASM segment: CAL_$WRITE_CALENDAR,
  * CAL_$SEC_TO_CLOCK, CAL_$DAYS_PER_MONTH and CAL_$CLOCK_TO_SEC
- * (m68k/SAU2, SAU5)
+ * (m68k/SAU2, SAU3, SAU5)
  *
  * The SAU2 and SAU5 images have the same code here except where
  * CAL_$WRITE_CALENDAR reaches the MSM5832 calendar, which the SAU5 does
@@ -18,6 +18,15 @@
  * shorter: CAL_$SEC_TO_CLOCK and the rest are at the SAU2's offsets less
  * 4.  The address and byte columns are the SAU2 image's, except on the
  * lines of the `.if calendar_word_port' arm, which carry the SAU5 image's.
+ *
+ * The SAU3's CAL_$WRITE_CALENDAR writes the calendar whether or not the
+ * node is diskless (`calendar_write_unconditional': no test of
+ * NETWORK_$REALLY_DISKLESS, 10 bytes), and reaches the chip at the start
+ * of its own page (`calendar_own_page', as in time/m68k/time_asm.s:
+ * control CALENDAR + 0, data + 2; the map's CALENDAR 0xFFA400).  Its
+ * segment (`D E82D9C OS_CAL_ASM size = 164') ends with CAL_$CLOCK_TO_SEC:
+ * the zero word after it, which ends the SAU2's and SAU5's segments on a
+ * longword, is not there (0xE82F00 is one).
  *
  * Byte gate (tools/asm_compare.py, `make check-asm'): encodings
  * identical to the image; address operands resolve to our objects.
@@ -70,6 +79,9 @@
         /* the calendar's control register, as an offset in its page */
         .if calendar_word_port
         .set    CAL_CTL, 0x200                  /* sau5: the word port */
+        .elseif calendar_own_page
+        .set    CAL_CTL, 0                      /* sau3: the page's start */
+        .set    CAL_WDATA, 2
         .else
         .set    CAL_CTL, 0x20
         .set    CAL_WDATA, 0x22
@@ -82,8 +94,10 @@
         .globl  CAL_$WRITE_CALENDAR
 CAL_$WRITE_CALENDAR:
         movem.l %d2-%d7,-(%sp)                  /* e8167c  48e7 3f00 */
+        .if !calendar_write_unconditional
         tst.b   (NETWORK_$REALLY_DISKLESS).l    /* e81680  4a39 00e2 4c4a */
         bne.w   .Lexit                          /* e81686  6600 00c4 */
+        .endif
         move.w  #0xc1,%d0                       /* e8168a  303c 00c1 */
         move.b  #1,(CALENDAR+CAL_CTL).l         /* e8168e  13fc 0001 00ff a820 */
         move.w  #0xc8,%d5                       /* e81696  3a3c 00c8 */
@@ -274,4 +288,6 @@ CAL_$CLOCK_TO_SEC:
         swap    %d0                             /* e817e4  4840 */
         move.l  (%sp)+,%d2                      /* e817e6  241f */
         rts                                     /* e817e8  4e75 */
+        .if !calendar_write_unconditional
         .word   0                               /* e817ea: to the segment's end */
+        .endif

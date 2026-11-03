@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E77C24  RING_$CLOSE_OS
+    sau3  0x00E79414  RING_$CLOSE_OS
 
   - RING_$SVC_CLOSE on a copy of the channel word.
 

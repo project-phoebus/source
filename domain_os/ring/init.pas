@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E2FAE0  RING_$INIT
+    sau3  0x00E2E768  RING_$INIT
     sau5  0x00E31012  RING_$INIT
     sau9  0x3C43594C  RING_$INIT
 

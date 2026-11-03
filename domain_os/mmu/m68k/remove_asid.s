@@ -1,7 +1,7 @@
 /*
  * MMU_$REMOVE_ASID - Unlink every pageable page owned by an address space
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.
  *
  * Original address: 0x00E23F0C, 118 bytes (0xE23F0C..0xE23F81).

@@ -1,6 +1,7 @@
 { SM_C_$INT - the SM_C controller's interrupt routine.
 
   Image addresses:
+    sau3  0x00E6F0CA  SM_C_$INT
     sau5  0x00E74C2E  SM_C_$INT
 
   - The result is 3 when the chain ends (no request, its last, the
@@ -50,7 +51,7 @@ begin
 %if long_iomap %then
       sm_c_iomap_entry^ := sm_c_req^.ppn + sm_iomap_bias;
 %else
-      { the SAU3's and SAU4's entry (the TODO(sau) in sm/cinit.pas) }
+      sm_c_iomap_entry^.entry := sm_c_req^.ppn + sm_iomap_bias;
 %endif
       sm_$cb.c_b11 := 0;
       sm_$cb.c_status.all := 0;

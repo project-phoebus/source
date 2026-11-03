@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E75916  RING_$SENDP
+    sau3  0x00E77116  RING_$SENDP
     sau5  0x00E7CBFA  RING_$SENDP
     sau9  0x3C47DB12  RING_$SENDP
 
@@ -14,6 +15,8 @@
     out, unless the header or flags forbid them; xmit_status gets the
     send's outcome members.
   - At the end biphase_flag is stored twice.
+  - With `ring_xmit_light' a completed send toggles the transmit light
+    of the memory control register before the status is read.
   - With the controller with buffers of its own (`ring8_controller')
     the packet is copied into the controller (ring_$setup_tx) under the
     unit's buffer lock, held to the end of the send on the 16 KB
@@ -216,7 +219,9 @@ transmit_retry:
 process_status:
   if unit_data^.ctlr_type = ring8_ctlr_16k then
     ml_$exclusion_stop(unit_data^.buf_lock);
+%if ring_xmit_light %then
   mmu_$mcr_change(8);
+%endif
   hw_status := hw^.command * [8..15];
   if hw_status = [12, 14] then begin
     xmit_status := xmit_status + [ring_sendp_res_ok];
@@ -466,7 +471,9 @@ transmit_retry:
   goto transmit_retry;
 
 process_status:
+%if ring_xmit_light %then
   mmu_$mcr_change(4);
+%endif
   hw_status := hw^.xmit_csr;
 %if not ring_controller_dma %then
   ring_$clear_dma_channel(2, socket);

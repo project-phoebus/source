@@ -1,7 +1,7 @@
 /*
  * sio6509/m68k/int1_rte.s - SIO6509_$PTRS and SIO6509_$INT1_RTE (SAU2, SAU5)
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.
  *
  * Byte gate (tools/asm_compare.py, `make check'): encodings identical to

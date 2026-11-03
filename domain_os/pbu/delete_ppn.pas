@@ -1,6 +1,7 @@
 { PBU_$DELETE_PPN - take a unit out of a wired page's owners.
 
   Image addresses:
+    sau3  0x00E59A8A  PBU_$DELETE_PPN
     sau5  0x00E59D00  PBU_$DELETE_PPN
 
   - The page is unwired (WP_$UNWIRE) when no owner is left.

@@ -57,9 +57,13 @@
  * Not on the SAUs whose driver drives its displays through device
  * descriptors (`display_devices', base/config.ins.pas): the SAU7..SAU9
  * maps have no SMD_$LOCK_DISPLAY.
+ *
+ * Not on the SAUs without the display driver (`display_driver',
+ * base/config.ins.pas): the SAU3 map has no SMD_$LOCK_DISPLAY.
  */
 
         .include "base/config.inc"
+        .if     display_driver
         .if     !display_devices
 
         .section ".text.SMD_$LOCK_DISPLAY","ax",@progbits
@@ -96,3 +100,5 @@ Lsucceed:
         rts                             /* 00e15d10                     */
 
         .endif
+
+        .endif  /* display_driver */

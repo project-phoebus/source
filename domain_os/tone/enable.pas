@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E1ACE8  TONE_$ENABLE
+    sau3  0x00E1A33A  TONE_$ENABLE
     sau9  0x3C41D862  TONE_$ENABLE
 
   - A fragment of the OS_TERM_INIT module, not of TONE: the map has it

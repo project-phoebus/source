@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E32834  io_$build_dcte_list
+    sau3  0x00E31004  io_$build_dcte_list
     sau5  0x00E347E4  io_$build_dcte_list
 
   - The dynamic DCTE area's records (each rounded up to 8 bytes) are

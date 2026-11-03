@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E1AA26  KBD_$GET_DESC
+    sau3  0x00E1A08E  KBD_$GET_DESC
 
   - Line 0, the console, has its discipline set to 1 when it is
     another.

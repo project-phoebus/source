@@ -1,6 +1,7 @@
 { PBU_$DMA_STOP - stop a PBU unit's DMA transfer.
 
   Image addresses:
+    sau3  0x00E89C56  PBU_$DMA_STOP
     sau5  0x00E9201A  PBU_$DMA_STOP
 
   - Not supported on the SAU5: the result is 0.

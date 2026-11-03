@@ -127,7 +127,7 @@ import image_file  # noqa: E402  (Image: the image file by address)
 # Every address table below is keyed by SAU first: {2: {...}, 5: {...}};
 # an entry's address is that SAU's image address, with its evidence.
 SAU = 2
-SAUS = (2, 5, 9)
+SAUS = (2, 3, 5, 9)
 
 # Module data block names that the hand-written assembly references and
 # that are not map symbols, with their image addresses.  The Pascal tree
@@ -137,6 +137,10 @@ SAUS = (2, 5, 9)
 C_BLOCK_ADDRS = {
     2: {
         'PEB_$INFO': 0xE24C78,
+    },
+    3: {
+        # the SAU3 map's PEB_$INFO
+        'PEB_$INFO': 0xE23BC4,
     },
     5: {
         # the SAU5 map's PEB_$INFO
@@ -236,6 +240,85 @@ LOCAL_SYMBOLS = {
         # misc/m68k/crash_report.s: the report block, the start of its section
         # (the map names only its fields)
         'CRASH_REPORT': 0x00E1E97E,
+    },
+    3: {
+        # The SAU3's addresses of the SAU2's labels, each at the SAU2's
+        # distance from the same map symbol (`SYMBOL + off'), the bytes
+        # there the same.
+        # io/m68k/trap.s: IO_$COND_SWITCH_BACK + 0x16, in `D E2D400
+        # IO_$TBLS'
+        'io_$flih_dispatch': 0x00E2D45C,
+        # fim/m68k/com.s, soft_fault.s, fp_exceptions.s: `D E202D8
+        # FIM_UNWIRED size = 4F0', the SAU2's laid out the same
+        'FIM_COMMON_FAULT': 0x00E202D8,         # segment start
+        'FIM_COM': 0x00E202DC,                  # alias of FIM_$COM
+        'FIM_SOFT_FAULT_TAIL': 0x00E20390,      # FIM_$SOFT_FAULT+0xC
+        'FIM_SOFT_FAULT_PUSH': 0x00E2039A,      # FIM_$SOFT_FAULT+0x16
+        'fim_fp_frame_pc': 0x00E20456,          # FIM_$FP_SIG_NAN+0xE
+        # fim/m68k/bus_err.s: `jmp (BUS_ERROR_SWITCH).l' after the
+        # SAU3's CPU_B_PBU_SWITCH word (0xE20802), its operand the cell
+        # BUS_ERROR_SWITCH (0xE20806), as on the SAU5
+        'JMP_TO_BUS_ERR': 0x00E20804,
+        # fim/m68k/bus_err.s: the two zero bytes after FP_$OWNER + 0x12
+        # that align FIM_$BUS_ERR (0xE20824), as on the SAU5
+        'fim_bus_err_align': 0x00E20822,
+        # mmu/m68k/installi.s, internal.s: MMU_$INSTALL + 0x54,
+        # MMU_$REMOVE_LIST + 0x3A in `D E22D00 MMU_ASM size = 5B8'
+        'mmu_$installi': 0x00E23070,
+        'mmu_$remove_internal': 0x00E22DA0,
+        # PROC1_ASM (`D E1DA00 PROC1_ASM size = 24A4', the SAU2's size):
+        # each label at the SAU2's distance from the map symbol before it
+        'proc1_$pcb_pool': 0x00E1DB0A,          # PROC1_$READY_COUNT + 2
+        'atomic_op_error': 0x00E1F926,          # PROC1_$BEGIN_ATOMIC_OP + 8
+        'set_lock_crash': 0x00E1FA8E,           # ML_$LOCK + 0x44
+        'clr_lock_crash': 0x00E1FA8E,
+        'Illegal_lock_err': 0x00E1FD1C,         # LOCK_$EVENT_LISTS + 0x200
+        'proc1_$ec_waitn': 0x00E1F592,          # EC_$WAITN + 0x1C
+        'proc1_$get_current_cpu_time': 0x00E1F808,  # PROC1_$GET_CPU_USAGE + 0x26
+        'proc1_$set_lock_body': 0x00E1FA20,     # PROC1_$SET_LOCK + 4
+        'proc1_$clr_lock_body': 0x00E1FAD6,     # PROC1_$CLR_LOCK + 0xC
+        'proc1_$release_tail': 0x00E1FDEE,      # PROC1_$INHIBIT_END + 0x14
+        # svc/m68k/svc_tables.s: the dispatch tables after the trap
+        # dispatchers in `D E7C708 SVC_CATCHER size = E40' (the SAU2's
+        # distances from SVC_$TRAP8)
+        'SVC_$TRAP0_TABLE': 0x00E7C9A2,
+        'SVC_$TRAP1_TABLE': 0x00E7CA22,
+        'SVC_$TRAP2_TABLE': 0x00E7CB2A,
+        'SVC_$TRAP3_TABLE': 0x00E7CD3E,
+        'SVC_$TRAP4_TABLE': 0x00E7CFAA,
+        'SVC_$TRAP5_TABLE': 0x00E7D1B6,
+        'SVC_$TRAP7_TABLE': 0x00E7D342,
+        'SVC_$TRAP8_TABLE': 0x00E7D42E,
+        'SVC_$TRAP8_ARGCOUNT': 0x00E7D50E,
+        # time/m68k/time_asm.s, timer_handler.s: `D E29768 TIME_ASM size
+        # = 474' (the calendar read 0xE bytes shorter, `calendar_own_page')
+        'time_$read_cal_body': 0x00E29768,
+        'time_$read_cal_delay_20': 0x00E298B2,  # TIME_$READ_CAL - 0xA
+        'time_$read_cal_delay': 0x00E298B6,
+        'TIME_$TIMER_HANDLER': 0x00E29A8C,      # TIME_$DI_RTE + 0x10
+        # io/m68k/probe.s: `D E27AA4 TESTPAGE size = 60'
+        'io_$probe': 0x00E27AA4,
+        # `D E2AAE8 PCHIST size = 128' (PCHIST_$ADDR at +0x20)
+        'PCHIST_$CONTROL': 0x00E2AAE8,
+        # misc/m68k/crash_report.s: the report block after FIM_$CRASH's
+        # template in the SAU3's CRASH_SYSTEM (FIM_$CRASH + 0x11A, as on
+        # the SAU2)
+        'CRASH_REPORT': 0x00E1D97E,
+        # fp/m68k/fp_context.s: the SAU2's distances from FIM_$FLINE
+        # (0xE20A1C) and FP_$GET_FP (0xE20C98)
+        'fp_$switch_owner': 0x00E20A60,
+        'fp_$restore_state': 0x00E20A80,
+        'fp_$save_state': 0x00E20AAC,
+        'fp_$check_owner': 0x00E20CC0,
+        # stop/m68k/watch.s: the SAU2's distances from STOP_$WATCH and
+        # STOP_$WATCH_TRACE
+        'STOP_$MEASURE_LOOP': 0x00E8302A,
+        'STOP_$NULL_PROC': 0x00E83052,
+        'STOP_$UNHOOK': 0x00E830F6,
+        'STOP_$HOOK': 0x00E8311E,
+        'STOP_$READ_CPUT': 0x00E83268,
+        'STOP_$READ_CLOCK': 0x00E83270,
+        'stop_$watch_trace_exit': 0x00E83286,
     },
     5: {
         # io/m68k/trap.s: the dispatcher after IO_$COND_SWITCH_BACK in
@@ -426,6 +509,8 @@ LOCAL_SYMBOLS = {
 KNOWN_DEVIATIONS = {
     2: {
     },
+    3: {
+    },
     5: {
     },
     9: {
@@ -457,6 +542,21 @@ REGISTER_BASES = {
         '.text.FIM_$CLEAR_TRACE_FAULT': {1: 0x00E21890},
         '.text.FIM_$EXIT': {5: 0x00E21890},
     },
+    3: {
+        # stop/m68k/watch.s: A2 = A5 = STOP_$WATCH (0xE82F28), as on the
+        # SAU2
+        '.text.STOP_$WATCH_UII': {2: 0x00E82F28, 5: 0x00E82F28},
+        # fim/m68k/crash.s: A5 = CRASH_SYSTEM (`D E1D700 CRASH_SYSTEM size
+        # = 2F8'), as on the SAU2
+        '.text.FIM_$CRASH': {5: 0x00E1D700},
+        # fim/m68k/deliver_trace_fault.s, clear_trace_fault.s, exit.s: the
+        # FIM_WIRED base FIM_$TRACE_BIT (0xE207C8) in A1 / A5, as on the SAU2
+        '.text.FIM_$DELIVER_TRACE_FAULT': {1: 0x00E207C8},
+        '.text.FIM_$CLEAR_TRACE_FAULT': {1: 0x00E207C8},
+        '.text.FIM_$EXIT': {5: 0x00E207C8},
+        # mmu/m68k/init.s: A5 = M68020 (0xE22D02), as on the SAU2
+        '.text.MMU_$INIT': {5: 0x00E22D02},
+    },
     5: {
         # fim/m68k/crash.s: A5 = CRASH_SYSTEM (`D E1F300 CRASH_SYSTEM size =
         # 3BC'), as on the SAU2
@@ -485,6 +585,8 @@ ADDITIONS = {
     2: {
         # C-callable register-marshalling shims for stop/watch.c
         'stop_$measure_loop': 'stop/m68k/watch.s C-callable wrappers',
+    },
+    3: {
     },
     5: {
     },
@@ -526,6 +628,29 @@ IMAGE_ALIASES = {
         # TIME_$SET_VECTOR)
         'TIME_$CURRENT_USEC': 0x00E2B0F4,
         'time_$mcr_countdown': 0x00E2B100,
+    },
+    3: {
+        # misc's report block and SR stash in the SAU3's CRASH_SYSTEM (the
+        # SAU2's distances from CRASH_SYSTEM, 0x1000 lower)
+        'CRASH_REPORT': 0x00E1D97E,
+        'CRASH_SAVED_SR': 0x00E1D7B6,
+        # PROC1_ASM cells the map does not name, at the SAU2's distances
+        'PROC1_$ATOMIC_OP_DEPTH': 0x00E1F546,   # PROC1_$PID_TN + 2
+        'DAT_00e20606': 0x00E1F53E,             # DI_$Q_HEAD + 4
+        'Bad_atomic_operation_err': 0x00E1FD20,  # LOCK_$EVENT_LISTS + 0x204
+        # the SVC dispatch tables (as LOCAL_SYMBOLS above)
+        'SVC_$TRAP0_TABLE': 0x00E7C9A2,
+        'SVC_$TRAP1_TABLE': 0x00E7CA22,
+        'SVC_$TRAP2_TABLE': 0x00E7CB2A,
+        'SVC_$TRAP3_TABLE': 0x00E7CD3E,
+        'SVC_$TRAP4_TABLE': 0x00E7CFAA,
+        'SVC_$TRAP5_TABLE': 0x00E7D1B6,
+        'SVC_$TRAP7_TABLE': 0x00E7D342,
+        'SVC_$TRAP8_TABLE': 0x00E7D42E,
+        'SVC_$TRAP8_ARGCOUNT': 0x00E7D50E,
+        # TIME_ASM cells the map does not name
+        'TIME_$CURRENT_USEC': 0x00E29A52,       # TIME_$CURRENT_TIME + 4
+        'time_$mcr_countdown': 0x00E29A5E,      # TIME_$CURRENT_DELTA + 4
     },
     5: {
         # misc's report block, after FIM_$CRASH's template in the SAU5's
@@ -580,6 +705,11 @@ IMAGE_ALIASES = {
 REBASES = {
     2: {
         '.text.CRASH_SYSTEM': (5, 0x00E1E700, 'CRASH_REPORT'),
+    },
+    3: {
+        # misc/m68k/crash_system.s: as on the SAU2, A5 = CRASH_REPORT
+        # (0xE1D97E) for the image's CRASH_SYSTEM base (0xE1D700)
+        '.text.CRASH_SYSTEM': (5, 0x00E1D700, 'CRASH_REPORT'),
     },
     5: {
         # misc/m68k/crash_system.s: as on the SAU2, A5 = CRASH_REPORT

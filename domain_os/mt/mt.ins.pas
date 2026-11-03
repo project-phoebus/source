@@ -27,9 +27,15 @@ const
     its mode with 2 (public). }
   mt_release_mode = 3;
 
-  { What mt_$set_iomap adds to a physical page number for its I/O map
-    entry (the long_iomap part; sm/sm.ins.pas's sm_iomap_bias). }
+  { What mt_$set_iomap and MT_$SIO add to a physical page number for its
+    I/O map entry: 16#48000 where the entries are longwords (the
+    long_iomap part), 16#8000, the entry's bit 15, where they are the
+    first word of the entry's 4 bytes (sm/sm.ins.pas's sm_iomap_bias). }
+%if long_iomap %then
   mt_iomap_bias = 16#48000;
+%else
+  mt_iomap_bias = 16#8000;
+%endif
 
   { The value mt_$shutdown writes to the controller's control register. }
   mt_ctl_shutdown = 16#30;

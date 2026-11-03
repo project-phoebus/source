@@ -1,7 +1,7 @@
 /*
  * vfmt/m68k/formatn.s - VFMT_$FORMATN, the "format" procedure-variable thunk
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.
  *
  * Byte gate (tools/asm_compare.py, `make check-asm'): encodings

@@ -1,6 +1,7 @@
 { sm/sm.pas - the SM module, the storage module disk driver.
 
   Image addresses:
+    sau3  0x00E83CD4  SM data (.DATA, 0x5C bytes)
     sau5  0x00E89A5C  SM data (.DATA, 0x5C bytes)
 
   One compilation unit, one code segment and one data segment: on the
@@ -13,8 +14,9 @@
   part smd_disk (base/config.ins.pas): the SR10.2 maps of the SAU3..SAU6
   have the SM segments, the others' none.  Elsewhere the module is
   empty: its whole body is conditional.  The SAU3's code is the SAU5's
-  but for the I/O map entries (the TODO(sau) in cinit.pas); the SAU4's
-  and SAU6's are their own.
+  but for the I/O map entries: longwords with the long_iomap part, the
+  first word of each entry's 4 bytes without it (pbu/pbu.ins.pas).  The
+  SAU4's and SAU6's are their own (the TODO(sau) in cinit.pas).
 
   Not part of the module: SM_$CB, SM_$CNT and SM_BLK_HDR, the PBU page's
   hand-written data (sm/sm.ins.pas); the map's SM_END_ADDR segment

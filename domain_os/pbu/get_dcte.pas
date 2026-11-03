@@ -1,6 +1,7 @@
 { PBU_$GET_DCTE - copy a PBU unit's DCTE.
 
   Image addresses:
+    sau3  0x00E5902A  PBU_$GET_DCTE
     sau5  0x00E591F8  PBU_$GET_DCTE
 
   - The DCTE's first max bytes, at most its 0x54, go to buf, and len is

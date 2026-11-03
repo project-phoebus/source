@@ -1,6 +1,7 @@
 { PBU_$UNWIRE_USER_PAGES - unwire every page a unit has wired.
 
   Image addresses:
+    sau3  0x00E59B10  PBU_$UNWIRE_USER_PAGES
     sau5  0x00E59D7E  PBU_$UNWIRE_USER_PAGES
 
   - Only while the page owner table is in use (the Multibus present, or

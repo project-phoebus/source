@@ -1,7 +1,7 @@
 /*
  * mmu_$remove_internal / mmu_$remove_pmape / mmu_$unlink_from_hash
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.
  *
  * One 108-byte run, 0x00E23DCC..0x00E23E37, with three fall-through entry

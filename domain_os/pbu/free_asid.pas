@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E590F8  PBU_$FREE_ASID
+    sau3  0x00E5A25C  PBU_$FREE_ASID
     sau5  0x00E5A73E  PBU_$FREE_ASID
 
   - With the driver (`pbu_driver'), every unit is set down

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E1A7E8  IO_$DISABLE_DEVICE
+    sau3  0x00E19896  IO_$DISABLE_DEVICE
     sau5  0x00E1AB46  IO_$DISABLE_DEVICE
 
   - The bus's disable_device routine with the unit's interrupt id, when

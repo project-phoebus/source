@@ -1,6 +1,7 @@
 { SM_C_$DO_IO - perform a chain of disk requests on an SM_C drive.
 
   Image addresses:
+    sau3  0x00E6F81E  SM_C_$DO_IO
     sau5  0x00E75386  SM_C_$DO_IO
 
   - Runs under the controller's ML lock (its DCTE's disk_error_que_hi);
@@ -55,7 +56,7 @@ again:
 %if long_iomap %then
     sm_c_iomap_entry^ := sm_c_req^.ppn + sm_iomap_bias;
 %else
-    { the SAU3's and SAU4's entry (the TODO(sau) in sm/cinit.pas) }
+    sm_c_iomap_entry^.entry := sm_c_req^.ppn + sm_iomap_bias;
 %endif
     sm_$cb.c_daddr.cyl_lo := sm_c_req^.daddr.cyl & 16#FF;
     sm_$cb.c_daddr.cyl_hi := rshft(sm_c_req^.daddr.cyl, 8);

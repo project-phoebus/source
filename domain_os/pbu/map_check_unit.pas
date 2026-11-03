@@ -1,6 +1,7 @@
 { pbu_map_check_unit - find a PBU unit's DCTE at interrupt level.
 
   Image addresses:
+    sau3  0x00E89BA4  pbu_map_check_unit (module-local)
     sau5  0x00E91F70  pbu_map_check_unit (module-local; the map's
                       PBU_$PAGE_END marks its address)
 

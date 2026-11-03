@@ -1,7 +1,7 @@
 /*
  * MMU_$SET_CSR - Set the ASID byte of MMU_$PID_PRIV and write the CSR
  *
- * The SAU2 and SAU5 images have the same code here; the address and
+ * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.
  *
  * Original address: 0x00E241F4, 16 bytes (0xE241F4..0xE24203).

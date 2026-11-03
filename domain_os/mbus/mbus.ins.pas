@@ -25,6 +25,13 @@ const
     MBUS_$INT_VEC's (0x80 bytes, sixteen 8-byte entries). }
   mbus_$max_level = 15;
 
+  { With the polled adapter (`mbus_polled_adapter'): the processor's
+    vector MBUS_$INIT gives MBUS_$INT (IO_$TRAP), the level-4
+    autovector, and the distance from a level's bit in the adapter's
+    register at +2 to its pending bit (levels 0..7). }
+  mbus_$int_vector = 16#1C;
+  mbus_$pending_bits = 8;
+
 type
   { A Multibus interrupt handler: called with the argument
     MBUS_$DEFINE_INT stored beside it, by value; its boolean says
@@ -45,8 +52,9 @@ type
     as the value its probe read with bits 16#213 set; int_enable, one
     bit per interrupt level (MBUS_$ENABLE_DEV adds a level,
     MBUS_$DISABLE_DEV removes it, VME_$INT removes the interrupting
-    level and adds it again when its handler has handled it), cleared
-    by MBUS_$INIT; word_04 set by MBUS_$INIT.  `[device]': MBUS_$INIT
+    level and adds it again when its handler has handled it; on the
+    SAU3 the bits 8..15 are levels 0..7 pending, which MBUS_$INT
+    polls), cleared by MBUS_$INIT; word_04 set by MBUS_$INIT.  `[device]': MBUS_$INIT
     clears int_enable with a store of the constant 0, not a clear (the
     two never-merged word stores too).  The record's size past 6 is not
     seen. }
@@ -82,6 +90,10 @@ function mbus_$undef_int(handler_arg: univ_ptr): boolean;
   is the type of its io_$bus_epv_t field.  The id's vector word is the
   interrupt level. }
 procedure mbus_$init; extern;
+
+{ MBUS_$INT (mbus/int.pas, `mbus_polled_adapter'): the routine IO_$TRAP
+  installs for the Multibus's vector; no arguments. }
+procedure mbus_$int; extern;
 procedure mbus_$define_int(id: io_$int_id_t; handler: univ_ptr;
                            handler_arg: univ_ptr);
   options(extern, val_param);

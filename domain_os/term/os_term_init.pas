@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E2C9F0  OS_TERM_INIT data (WIRED_DATA, 0x1398 bytes)
     sau2  0x00E35154  OS_TERM_INIT data (OS_INIT_DATA, 0x5C bytes)
+    sau3  0x00E2B73C  OS_TERM_INIT data (WIRED_DATA, 0x1228 bytes)
+    sau3  0x00E33554  OS_TERM_INIT data (OS_INIT_DATA, 0x5C bytes)
     sau9  0x3C43178C  OS_TERM_INIT data (WIRED_DATA, 0x1A8C bytes)
 
   One compilation unit, `module os_term_init, wired_proc, wired_data;':
@@ -22,6 +24,15 @@
   descriptors set up by SIO_$INIT as the serial driver starts its port,
   and the console's channel is the 16550's; the SIO6509 and SIO2681
   records are absent.
+
+  Without `display_driver' (4648 bytes) there is no display console:
+  no keyboard descriptor, console drain record or console handler
+  blocks, and no os_term_init or sio_$init_drain_handler; TERM_$INIT
+  sets up the two serial lines only, as DTTE 1 and 2 with the first two
+  TTY and SIO descriptors.  The objects from tty_descs on lie 0x78
+  bytes lower (tty_descs +0xE0, sio_descs +0xF78), those from
+  term_$console_chan on 0x170 lower (DTTE +0x1130, TERM_$MAX_DTTE
+  +0x1218).
 
   The routines live in one fragment file each, included below in image
   order with the other subsystems' routines of the segments
@@ -98,6 +109,7 @@ var
   term_$serial_line_handlers: term_$line_handlers_t :=
     [nil, nil, addr(sio_$i_tstart), addr(sio_$i_inhibit_xmit),
      addr(sio_$i_inhibit_rcv), addr(sio_$i_err)];         { +0x0040 }
+%if display_driver %then
   term_$console_params: sio_$params_t :=
     [flags1 := [0, 3], flags2 := [], break_mask := [],
      baud_rate := [tx := 7, rx := 7], char_size := 3, stop_bits := 1,
@@ -110,6 +122,7 @@ var
   term_$kbd_handlers: term_$kbd_handlers_t :=
     [nil, addr(sio_$i_tstart), nil, nil];                 { +0x00B0 }
   term_$kbd_rcv: univ_ptr := addr(tty_$i_rcv);            { +0x00C0 }
+%endif
 %if sio16550_lines %then
   unused_0c4: array[1..188] of char;                      { +0x00C4, zero }
   tty_descs: array[1..term_$n_lines] of tty_$desc_t;      { +0x0180, zero }
@@ -119,14 +132,20 @@ var
   kbd_descs: array[1..1] of kbd_$desc_t;                  { +0x16E0, zero }
   unused_1984: integer32;                                 { +0x1984, zero }
 %else
+%if display_driver %then
   unused_0c4: array[1..148] of char;                      { +0x00C4, zero }
+%else
+  unused_058: array[1..136] of char;                      { +0x0058, zero }
+%endif
   tty_descs: array[1..term_$n_lines] of tty_$desc_t;      { +0x0158, zero }
   unused_fec: integer32;                                  { +0x0FEC, zero }
   sio_descs: array[1..term_$n_lines] of sio_$desc_t;      { +0x0FF0, zero }
+%if display_driver %then
   term_$console_drain: array[1..1] of dtty_tstart_t;      { +0x1158, zero }
   unused_1164: integer32;                                 { +0x1164, zero }
   kbd_descs: array[1..1] of kbd_$desc_t;                  { +0x1168, zero }
   unused_124c: integer32;                                 { +0x124C, zero }
+%endif
   term_$console_chan: sio6509_$chan_t;                    { +0x1250, zero }
   term_$sio2681_chip: sio2681_$chip_t;                    { +0x1258, zero }
   unused_1264: integer32;                                 { +0x1264, zero }
@@ -190,7 +209,12 @@ var
   +0x1268; +0x16E0, +0x1988) fit an 8-byte alignment; but
   term_$serial_chan_b at +0x1284 is not 8-aligned after them, and
   +0x1380, before a 4-byte object, is not explained by it.  The first
-  block may be a record not yet identified. }
+  block may be a record not yet identified.  Without `display_driver'
+  (the SAU3) the handler blocks end at +0x58 and tty_descs starts at
+  +0xE0: the unreached run there is 0x88 bytes, 0xC fewer than the
+  SAU2's 0x94, so it is not one object of a fixed size before
+  tty_descs; the longwords before sio_descs, term_$console_chan's
+  successors and DTTE's successor are unreached as on the SAU2. }
 
 define
   kbd_$reset;
@@ -223,12 +247,14 @@ define
   is `univ term_$kbd_handlers_view_t' (the first entry, then a 12-byte
   field); its callers' arguments, term_$kbd_handlers itself, pass
   unchanged. }
+%if display_driver %then
 { body: os/term_init.pas }
 procedure os_term_init(var kbd: kbd_$desc_t; var dtte: dtte_t;
                        in tty: univ univ_ptr; in rcv: univ univ_ptr;
                        in sio: univ univ_ptr;
                        in handlers: univ term_$kbd_handlers_view_t);
   forward; internal;
+%endif
 
 { sio_$init_desc: writes the SIO descriptor, its parameter block copied
   from the second argument, its four handlers from the sixth, its four
@@ -261,11 +287,13 @@ procedure sio_$init_dtte(var dtte: dtte_t; discipline: integer);
 { sio_$init_drain_handler: writes the drain record (the buffer,
   TTY_$I_OUTPUT_BUFFER_DRAINED, the owner); its second argument is not
   read. }
+%if display_driver %then
 { body: sio/init_drain_handler.pas }
 procedure sio_$init_drain_handler(var drain: dtty_tstart_t; var dtte: dtte_t;
                                   in buffer: univ univ_ptr;
                                   in owner: univ univ_ptr);
   forward; internal;
+%endif
 
 { The module-local SIO and OS routines' pointer formals (settled by SIO's
   translation, which wrote the four SIO bodies; it was an open item of
@@ -292,11 +320,15 @@ procedure sio_$init_drain_handler(var drain: dtty_tstart_t; var dtte: dtte_t;
 %include 'tone/enable.pas';                 { TONE_$ENABLE }
 
 { ---- OS_INIT_PROC ---- }
+%if display_driver %then
 %include 'os/term_init.pas';                { os_term_init }
+%endif
 %include 'sio/init_desc.pas';               { sio_$init_desc }
 %include 'sio/init_line.pas';               { sio_$init_line }
 %include 'sio/init_dtte.pas';               { sio_$init_dtte }
+%if display_driver %then
 %include 'sio/init_drain_handler.pas';      { sio_$init_drain_handler }
+%endif
 %include 'sio/init.pas';                    { SIO_$INIT }
 %include 'term/init.pas';                   { TERM_$INIT }
 
