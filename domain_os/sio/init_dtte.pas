@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E32B76  sio_$init_dtte (module-local)
     sau3  0x00E3133E  sio_$init_dtte (module-local)
+    sau4  0x0F835D22  sio_$init_dtte (module-local)
     sau8  0x03C36542  sio_$init_dtte
     sau9  0x3C43954A  sio_$init_dtte (module-local)
 

@@ -219,6 +219,41 @@ Its AST_ segments are 0x68C4 bytes (WIRED_PROC) and 0x370
 (OS_INIT_PROC), the data blocks the SAU2's sizes.  Every other routine
 is the SAU9's code with these constants; none is hand assembly.
 
+## The SAU4
+
+The SAU4 (DN460, DN660, DSP160) builds the large layout with
+`large_vm`, `vm_2432_astes`, `pmap_threads` and `region_mmu`, without
+`pmmu_page_maps` or `memory_parity`.  Its AST_ segments are 0x6678
+bytes (WIRED_PROC) and 0x408 (OS_INIT_PROC), the WIRED_DATA block
+0x490 bytes (no ast_$clobbered_uid), the OS_INIT_DATA block 4.
+
+- The tables hold 2432 ASTEs and 1280 AOTEs (`vm_2432_astes`); the
+  map's AST (0x10A00 bytes, 28 each) and AST_PMAPS (0x4C000 bytes, 128
+  each) agree.
+- A page-map entry has the SAU2's shape (the flags word, then the page
+  number word; the disk address in bits 21..0), but its flags are the
+  region registers' MMU's: resident 15, used 14, modified 13, in
+  transition 10, installed 9 (`ast_$pmap_*`), and the bits the SAU2's
+  PFT holds (used, modified) are the entry's own.  So the fragments
+  take the page descriptors' arms for what the PFT did
+  (`pmmu_page_maps or region_mmu`: the flags set in the entry, a
+  resident page made not resident and MMU_$PURGE instead of
+  MMU_$REMOVE and MMU_$REMOVE_LIST, MMU_$INSTALL_LIST not called) and
+  the SAU2's arms for the entry's shape (`%if pmmu_page_maps` alone).
+- AST_$ACTIVATE_ASTE_CANNED and ast_$lookup_or_create_aste clear the
+  flags 15..11 one by one; AST_$TOUCH_AREA reads up to 4 pages in a
+  run (`region_mmu`).
+- The MMAP entries' disk addresses are 22 bits, the SAU2's
+  (`mmap/mmap.ins.pas`, under `pmmu_page_maps`).
+- AST_$ASSOC_IOPPN and AST_$REMOVE_IOPPN are in the map (also the
+  SAU6's), in the SAU2's entry shape; AST_$SET_TROUBLE,
+  AST_$SAVE_CLOBBERED_UID and AST_$REMOVE_CORRUPTED_PAGE are not (the
+  SAU4 has no parity memory, `memory_parity`).  The map's define list
+  is 46 symbols.
+- Under `-cpu 460` AST_$GET_SEG_MAP's two divisions are the machine's
+  unsigned divide; its `mod` still calls the run-time.  None of AST_'s
+  SAU4 routines is hand assembly.
+
 ## Insert files
 
 - `ast.ins.pas`: the common attribute record and its views, the AOTE
@@ -283,6 +318,8 @@ is the SAU9's code with these constants; none is hand assembly.
 - `ast.pas`: the 4-byte OS_INIT_DATA block; the stand-ins of the
   WIRED_DATA block (unused_422, unused_48a); AST_'s frames against their
   locals.
+- `touch_area.pas`: page's type, which the SAU4's run limit shows to
+  be an unsigned word.
 - In the fragments: RESERVE's and invalidate_with_wait's signed and
   unsigned page compares; invalidate_with_wait's and RELEASE_PAGES'
   stand-ins; GET_SEG_MAP's frame; LOCATE_ASTE's hint compare with

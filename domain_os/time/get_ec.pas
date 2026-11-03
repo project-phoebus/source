@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E1670A  TIME_$GET_EC
+    sau4  0x0F8170EA  TIME_$GET_EC
 
   - The first call registers TIME_$CLOCKH_EC and TIME_$FAST_CLOCK_EC
     with EC2 and keeps their handles; key 0 gives the clock's handle, 1

@@ -37,11 +37,34 @@ const
   { The longest line LPR_$WRITE takes. }
   lpr_max_line = 284;
 
+%if lpr_pbu_unit %then
+  { The PNA's statuses (stcode.db.10.2): "pna board not installed in
+    system", which LPR_$ACQUIRE stores for PBU_$ACQUIRE_INT's "pbu not
+    present"; 16#001F000A, in neither status database, LPR_$STATE's
+    refusal of a mode (named after that use). }
+  status_$lpr_no_pna = 16#001F0001;
+  status_$lpr_mode_refused = 16#001F000A;
+
+  { The printer's PBU unit (the PNA's level 6, the handbook's INT6 line
+    printer vector), its CSR pages and sharing for PBU_$ACQUIRE_INT, and
+    the mode LPR_$RELEASE gives PBU_$RELEASE_INT (mt/mt.ins.pas's
+    mt_release_mode). }
+  lpr_pbu_unit_number = 6;
+  lpr_csr_pages = 1;
+  lpr_sharing = 3;
+  lpr_release_mode = 3;
+
+  { lpr_state's flag member 7: the port ready (member 5 of PBU_CTL's
+    word at +4). }
+  lpr_flag_ready = 7;
+  lpr_ready_bit = 5;
+%else
   { lpr_state's flag members, from the port's status register: 7, no bit
     of 1..7 set; 6 and 5, its bits 1 and 2. }
   lpr_flag_status_clear = 7;
   lpr_flag_status_1 = 6;
   lpr_flag_status_2 = 5;
+%endif
   lpr_mode_set = 7;
 
 type
@@ -49,6 +72,7 @@ type
   lpr_$bits_t = set of 0..7;
   lpr_$word_bits_t = set of 0..15;
 
+%if not lpr_pbu_unit %then
   { The printer port's registers (map symbol LPR, the port's I/O page):
     bytes at even offsets, written as values and tested by their bits:
     a variant record (ref 3.10.3).  LPR_ASM's interrupt routine sends
@@ -93,6 +117,7 @@ type
     ctl_second: lpr_$byte_t;              { 0x03 }
     mask: lpr_$byte_t;                    { 0x04 }
   end;
+%endif
 
   { LPR_$STATE's word: the port's flags (above) and the mode, whose
     member 7 asks for the mode in its low two bits to be set: the mode
@@ -118,11 +143,13 @@ var
   lpr_$bcb: extern cbuf_$cb_t;
   lpr_$present: extern boolean;
 
-  { LPR_ASM's data (map symbols, lpr/sau3/lpr_asm.s): the data mask the
-    interrupt routine applies (a word), whether an interrupt is expected
-    (a byte), the count of interrupt starts, and the buffer (512
-    bytes). }
+  { LPR_ASM's data (map symbols, lpr/sau3/lpr_asm.s, lpr/sau4/lpr_asm.s):
+    the data mask the interrupt routine applies (a word; not with
+    `lpr_pbu_unit'), whether an interrupt is expected (a byte), the count
+    of interrupt starts, and the buffer (512 bytes). }
+%if not lpr_pbu_unit %then
   lpr_$data_mask: extern integer;
+%endif
   lpr_$int_expected: extern boolean;
   lpr_$ir_start_count: extern integer;
   lpr_$buffer: extern array[1..512] of char;
@@ -130,8 +157,10 @@ var
   { LPR (map symbol, the port's I/O page) and LPR_VEC (map symbol, the
     trap page's cell 0x74, the level 5 autovector): LPR_$INIT stores
     LPR_$INT's address there. }
+%if not lpr_pbu_unit %then
   lpr: extern lpr_$regs_t;
   lpr_vec: extern univ_ptr;
+%endif
 
   { The markers of the driver's wired range (map symbols):
     LPR_$PROC_START (the first byte of LPR_'s .TEXT code, the
@@ -151,14 +180,16 @@ var
 procedure lpr_$move_data(in src: univ lpr_$line_t; in dst: univ_ptr;
                          in len: integer); extern;
 
-{ LPR_$INT - the port's interrupt routine (LPR_VEC); only its address is
-  used. }
+{ LPR_$INT - the port's interrupt routine (LPR_VEC; with `lpr_pbu_unit'
+  the PBU unit's device routine); only its address is used. }
 procedure lpr_$int; extern;
 
+%if not lpr_pbu_unit %then
 { LPR_$ENABLE_INT and LPR_$DISABLE_INT - enable and disable the port's
   interrupt. }
 procedure lpr_$enable_int; extern;
 procedure lpr_$disable_int; extern;
+%endif
 %endif
 
 { ---- The module's global routines (lpr/lpr.pas), in map order. ---- }

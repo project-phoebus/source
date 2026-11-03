@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0901A  AREA_$COPY
+    sau4  0x0F80952E  AREA_$COPY
     sau9  0x3C40A80C  AREA_$COPY
 
   - A new area of the same sizes is made for new_asid; the result is its
@@ -179,11 +180,16 @@ begin
           { the source's map entry, onto its ASTE's page map }
           ml_$lock(ml_$pmap_lock);
           smap := addr(smaps[smap_asid_base[src^.owner_asid] + seg_page]);
+%if region_mmu %then
+          smap^.e.pmap_pa := src_aste^.pmap_pa;
+          smap^.bits := smap^.bits + [31];
+%else
           smap^.table := (smap^.table & 15) + src_aste^.pmap_pa;
           smap^.lim.limit := 31;
           smap^.ctl.dt := mst_smap_valid;
           smap^.flags := smap^.flags - [9];
           smap^.flags := smap^.flags + [10..15];
+%endif
           ml_$unlock(ml_$pmap_lock);
 
 %endif

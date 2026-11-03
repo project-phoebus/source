@@ -3,6 +3,7 @@
 
   Image addresses:
     sau3  0x00E6DB12  sm_$wait_ready (module-local)
+    sau4  0x0F87728E  sm_$wait_ready (module-local)
     sau5  0x00E6EE6A  sm_$wait_ready (module-local)
 
   - Waits while the command block's busy byte is set, until the clock's

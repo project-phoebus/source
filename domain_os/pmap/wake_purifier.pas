@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E13A18  PMAP_$WAKE_PURIFIER
+    sau4  0x0F8142FA  PMAP_$WAKE_PURIFIER
     sau9  0x3C415D50  PMAP_$WAKE_PURIFIER
 
   Assume we're called with the PMAP lock held.

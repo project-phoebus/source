@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E6E84C  smd_$poll_keyboard (module-local)
+    sau4  0x0F878FDE  smd_$poll_keyboard (module-local)
     sau5  0x00E70CCA  smd_$poll_keyboard (module-local)
     sau9  0x3C475240  smd_$poll_keyboard (module-local)
 

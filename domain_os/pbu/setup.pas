@@ -2,6 +2,7 @@
 
   Image addresses:
     sau3  0x00E594E0  PBU_$SETUP
+    sau4  0x0F8620E8  PBU_$SETUP
     sau5  0x00E596D0  PBU_$SETUP
     sau8  0x03C61CB8  PBU_$SETUP
 
@@ -21,6 +22,10 @@
     a free DCTE and its interrupt (IO_$ACQUIRE); its CSR pages are
     installed in the MMU.  A failure sets down what was set up.
   - The request's attributes are cleared only for the DDF's own unit.
+    The DDF's wide I/O map flag gives every unit the wide map, but with
+    the 64 KB Multibus map (`mbus_map_64k'), which has none.
+  - A Multibus unit's CSR pages are the bus's from page 16#1C0, or with
+    its window at 16#10000 (`mbus_low_window') from page 16#60.
 
   Status stored:
     status_$ok: the units were set up
@@ -130,7 +135,11 @@ begin
         status.all := status_$pbu_invalid_csr_page_address;
         goto unlock;
       end;
+%if mbus_low_window %then
+      csr_ppn := d^.csr_pa div 1024 + 16#60;
+%else
       csr_ppn := d^.csr_pa div 1024 + 16#1C0;
+%endif
     end;
 %if pbu_atbus_units %then
     if bus = io_$bus_atbus then begin
@@ -202,8 +211,10 @@ begin
     end
     else
       req.csr.has_csr := false;
+%if not mbus_map_64k %then
     if d^.flags.wide_iomap then
       req.attrs := [io_$attr_wide_iomap];
+%endif
     io_$acquire(req, handler, handler_arg, io_unit, status);
     if status.all <> status_$ok then begin
       status.fail := true;

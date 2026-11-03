@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6FA14  SMD_$COND_INPUT_U
+    sau4  0x0F87A2D4  SMD_$COND_INPUT_U
     sau5  0x00E71ECA  SMD_$COND_INPUT_U
 
   - Input events are taken until there are none or a call fails; a

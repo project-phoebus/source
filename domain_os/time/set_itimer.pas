@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E58E58  TIME_$SET_ITIMER
+    sau4  0x0F8612CC  TIME_$SET_ITIMER
 
   - The timers' cleanup handler is registered (PROC2_$SET_CLEANUP, bit
     6).  The real timer (which 0) is set as given, the virtual one

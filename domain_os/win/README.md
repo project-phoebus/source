@@ -146,6 +146,56 @@ Its block, zero but where noted:
 | +0x37A | `win_count` | the sectors of the run, then those done before an error |
 | +0x37C | `win_params_reported` | boolean: the controller reports the drive |
 
+The SAU4's driver (`win_ring_disk_ctlr`, the disk controller of the
+ring/disk board: up to four drives on a PRIAM or an SMD interface, two
+DMA channels of the board's DMA controller through IOMAP's entries 64
+and 65) is the fourth arm of `win.pas`, with its block (the map's WIN_
+data segment, 0x80 bytes in WIRED_DATA) and the map's WIN_ code
+segments in WIRED_PROC (0xFB0 bytes) and OS_INIT_PROC (0x188 bytes,
+WIN_$CINIT), in its image order:
+
+| routine | fragment |
+|---------|----------|
+| seek (module-local; SEEK on the SAU2) | `seek.pas` (the arm: another heading) |
+| read_or_write_disk_record | `read_or_write_disk_record.pas` (the arm: another heading) |
+| win_$format_track | `format_track.pas` (the arm) |
+| WIN_$DO_IO | `do_io.pas` (the arm) |
+| DISK_INIT | `disk_init.pas` (the arm: another heading) |
+| WIN_$SPIN_DOWN | `spin_down.pas` (the arm) |
+| WIN_$INT | `int.pas` (the arm) |
+| WIN_$DINIT, WIN_$ERROR_QUE, WIN_$GET_STATS | the SAU2's code |
+| WIN_$CINIT | `cinit.pas` (the arm) |
+
+Its block, zero but where noted:
+
+| offset | variable | type |
+|--------|----------|------|
+| +0x00 | `win_cyls` | array[0..3] of pinteger, each drive's cylinder |
+| +0x08 | `win_units` | array[0..0] of win_$unit_t, with the smd_interface bit |
+| +0x14 | `unused_14`, a stand-in (win.pas's TODO) | integer32 |
+| +0x18 | `win_jump_table` | WIN_$SPIN_DOWN, nil, WIN_$DINIT, nil, WIN_$DO_IO, WIN_$ERROR_QUE, WIN_$GET_STATS |
+| +0x34 | `unused_34`, a stand-in | integer32 |
+| +0x38 | `win_unit_ec` | array[0..0] of ec_$eventcount_t |
+| +0x44 | `unused_44`, a stand-in | integer32 |
+| +0x48 | WIN_$CNT (`define`d, map symbol) | win_$cnt_t |
+| +0x60 | `win_status` | integer32 |
+| +0x64 | `win_dev_info` | win_$vol_ptr_t |
+| +0x68 | `win_cur_req` | disk_$io_req_ptr_t |
+| +0x6C | `win_hdr_iomap`, `win_data_iomap` | IOMAP's entries 64 and 65 (WIN_$CINIT) |
+| +0x74 | `win_total_blocks` | integer32 := 1 |
+| +0x78 | `win_cur_drive` | pinteger, the drive last selected |
+| +0x7A | `win_flag` | boolean, a seek under way |
+| +0x7C | WIN_$STS (`define`d, map symbol) | integer32, addressed by nothing |
+
+Its types (`win.ins.pas`, under the part): the board's disk registers
+(`[device]`, the names of the Domain Engineering Handbook's chapter 8,
+"RING/DISK"), the PRIAM commands and status bits, the controller status
+bits and the disk control values as named constants, the unit word's
+smd_interface, the SMD drive's information record; WIN_$CNT and
+WIN_$STS; DISK_INIT's heading.  `pbu/pbu.ins.pas` gives IOMAP,
+`sysbus/sysbus.ins.pas` SYSBUS_$DEFINE_INT, `ring/ring.ins.pas`
+RING_$SEND_NULL.  There is no PARITY_ or DMA_ call.
+
 Its types (`win.ins.pas`, under the part): the ports (`[device]`), the
 command block, the sense bytes and the drive parameters as packed
 records with their bit fields, the label information, a buffer
@@ -160,8 +210,7 @@ statuses and commands, its map variables and its SEEK, RESTORE,
 RETRY_DATA_CHECK and WIN_$DINIT headings under the part.  Open: dpc
 refuses the window's record assignments (RESTORE, SEEK,
 win_$ecc_correct; their TODO(pascal)), so `win.pas` does not compile
-for the SAU5 yet; the SAU4's, SAU6's and SAU7's WIN_ drivers
-(TODO(sau)).
+for the SAU5 yet; the SAU6's and SAU7's WIN_ drivers (TODO(sau)).
 
 Headings (`win.ins.pas`): WIN_$DO_IO, WIN_$SPIN_DOWN, WIN_$INT and
 WIN_$CINIT the default convention (every argument by address, as FLP's

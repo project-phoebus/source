@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6FB96  SMD_$OP_WAIT_U
+    sau4  0x0F87A456  SMD_$OP_WAIT_U
     sau5  0x00E7204C  SMD_$OP_WAIT_U
     sau9  0x3C476070  SMD_$OP_WAIT_U
 

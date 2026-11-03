@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E1416C  PMAP_$PURIFIER_R
     sau3  0x00E141C4  PMAP_$PURIFIER_R
+    sau4  0x0F814A1A  PMAP_$PURIFIER_R
     sau8  0x03C15368  PMAP_$PURIFIER_R
     sau9  0x3C41647C  PMAP_$PURIFIER_R
 
@@ -75,7 +76,7 @@ begin
         with mmap[vpn] do begin
           ast_pmaps[segment][seg_offset].flags :=
             ast_pmaps[segment][seg_offset].flags + [ast_$pmap_in_trans];
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
           ast_pmaps[segment][seg_offset].flags :=
             ast_pmaps[segment][seg_offset].flags - [ast_$pmap_modified];
 %else

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E1E118  AREA_ data (WIRED_DATA, 0x5E8 bytes)
+    sau4  0x0F81F510  AREA_ data (WIRED_DATA, 0x5E8 bytes)
     sau8  0x03C1F918  AREA_ data (WIRED_DATA, 0x5E8 bytes)
     sau9  0x3C420D18  AREA_ data (WIRED_DATA, 0x5E8 bytes)
 

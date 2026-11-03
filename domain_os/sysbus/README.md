@@ -15,7 +15,9 @@ Two forms (`../base/config.ins.pas`):
 - with `sysbus_int_vec` (the SAU9's; SAU4, SAU6 and SAU9 have the
   part): SYSBUS_$INT .. SYSBUS_$INIT (0x320 bytes on the SAU9), the
   four device routines with `util_pic` (SAU9), and the block, the
-  map's SYSBUS_$INT_VEC (0x80 bytes, zero);
+  map's SYSBUS_$INT_VEC (0x80 bytes, zero); with `sysbus_vectors_90`
+  (SAU4) the levels are 32, on the vectors 16#90..16#9F and
+  16#F0..16#FF (0x160 bytes of code, a block of 0x100 bytes);
 - without it (the SAU2's): DISK_INTERRUPT, RING_INTERRUPT,
   SYSBUS_$INIT, SYSBUS_$DEFINE_INT (0x118 bytes) and a block of 0x2C
   bytes, no map symbol inside.
@@ -75,8 +77,8 @@ SYSBUS_$DEFINE_INT and RING_INTERRUPT are the SAU2's.
 
 ## Open items
 
-- TODO(sau): the SAU3's, SAU4's and SAU6's forms (`atbus_.pas`,
-  `int.pas`, `define_int.pas`, `init.pas`).
+- TODO(sau): the SAU3's and SAU6's forms (`atbus_.pas`, `int.pas`,
+  `define_int.pas`, `init.pas`).
 - TODO(pascal): the SAU2 block's two longwords nothing addresses
   (`atbus_.pas`).
 - The SAU9's routines take the id's vector into an `integer` local and

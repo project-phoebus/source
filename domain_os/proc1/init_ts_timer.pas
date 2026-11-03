@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E14B12  proc1_$init_ts_timer (module-local)
+    sau4  0x0F815386  proc1_$init_ts_timer (module-local)
 
   - The element expires 65535 ticks of the process's CPU time from its
     current CPU clock, with PROC1_$TS_END_CALLBACK and the pid as its

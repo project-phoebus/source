@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E72690  smd_$reschedule_blink_timer (module-local)
+    sau4  0x0F87FC34  smd_$reschedule_blink_timer (module-local)
     sau5  0x00E79830  smd_$reschedule_blink_timer (module-local)
     sau9  0x3C47A094  smd_$reschedule_blink_timer (module-local)
 

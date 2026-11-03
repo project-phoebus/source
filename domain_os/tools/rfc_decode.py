@@ -6,7 +6,9 @@
 # SAU5's (--sau 5, tools/rfc_segments_sau5.json), the SAU3's and the SAU8's
 # likewise, with the addresses of its COLD and the image's layout (the
 # SAU8's load address 0x101C00, COLD 0xC00, DUMP 0x800) from
-# tools/check_rfc.py's tables keyed by SAU
+# tools/check_rfc.py's tables keyed by SAU; and the SAU4's (--sau 4), whose
+# image has no fixup table: the kernel ends at the end of the file, and
+# the operands of COLD's fixup pass are not there
 #
 # IODEFS_GUARD follows the bss 'loaded at' rule, not VA.
 #
@@ -68,7 +70,7 @@ def select_sau(sau):
     global OP_PAGE_END, OP_LO_BYTES, OP_MMAP_VA, OP_PTTX_VA, OP_STACK
     global OP_ENTRY, MAP_TABLE, MAP_LO_COUNT, MAP_HI_COUNT_PPN, WINDOWS
     global LOAD, MOVE_TO_PPN, OP_RELOC_VA, OP_KERNEL_VA, OP_KERNEL_LOW
-    global OP_SPLIT_LOW
+    global OP_SPLIT_LOW, OP_KERNEL_VA2, HAS_FIXUPS, OP_EXTRA
     c = check_rfc
     c.select_sau(sau)
     LOAD, MOVE_TO_PPN = c.LOAD, c.MOVE_TO_PPN
@@ -80,6 +82,9 @@ def select_sau(sau):
     MAP_TABLE, MAP_LO_COUNT = c.MAP_TABLE[sau], c.MAP_LO_COUNT[sau]
     MAP_HI_COUNT_PPN = c.MAP_HI_COUNT_PPN[sau]
     WINDOWS = c.WINDOWS[sau]
+    OP_KERNEL_VA2 = c.OP_KERNEL_VA2[sau]
+    HAS_FIXUPS = c.HAS_FIXUPS.get(sau, True)
+    OP_EXTRA = c.OP_EXTRA.get(sau, {})
 
 
 def parse_map(path):
@@ -117,12 +122,19 @@ def main():
                 split_ppn=be32(d, LOAD + 0x1C), move_to_ppn=be32(d, MOVE_TO_PPN))
     assert hdr['load'] == LOAD and (info['magic'] >> 16) == 0xFEED
 
-    reloc_va = be32(d, OP_RELOC_VA)
-    kva = be32(d, OP_KERNEL_VA)
-    klow = be32(d, OP_KERNEL_LOW)
-    split = be32(d, OP_SPLIT_LOW)
     page_end = be32(d, OP_PAGE_END)
     lo_bytes = be32(d, OP_LO_BYTES)
+    if HAS_FIXUPS:
+        reloc_va = be32(d, OP_RELOC_VA)
+        kva = be32(d, OP_KERNEL_VA)
+        klow = be32(d, OP_KERNEL_LOW)
+        split = be32(d, OP_SPLIT_LOW)
+    else:
+        # no fixup pass: the info block's values, the file's end
+        kva = be32(d, OP_KERNEL_VA2)
+        klow = LOAD + info['kernel_offset']
+        split = info['split_ppn'] << 10
+        reloc_va = end_low + kva - klow
     assert split == info['split_ppn'] << 10 and klow == LOAD + info['kernel_offset']
     assert kva == info['kernel_va'] and lo_bytes == split - klow
     move = info['move_to_ppn'] << 10
@@ -155,7 +167,7 @@ def main():
 
     # RELOC table
     t = reloc_va - delta
-    n = be16(d, t)
+    n = be16(d, t) if HAS_FIXUPS else 0
     cells = [be32(d, t + 2 + 4 * i) for i in range(n)]
     counts = {}
     for c in cells:
@@ -177,12 +189,15 @@ def main():
              % (check_rfc.COLD_SIZE - 4)),
         dict(name='DUMP', low=hex(LOAD + check_rfc.COLD_SIZE),
              va=hex(check_rfc.DUMP_VA), size=hex(check_rfc.DUMP_SIZE),
-             phys_runtime='0x100C00 (copied by COLD)'),
+             phys_runtime='%s (copied by COLD)'
+             % hex(check_rfc.DUMP_PPN << 10)),
         dict(name='kernel', low=hex(klow), end=hex(reloc_va - delta),
              va=hex(kva), va_end=hex(reloc_va), va_minus_low=hex(delta)),
         dict(name='RELOC', low=hex(t), end=hex(end_low), entries=n,
              table_end=hex(t + 2 + 4 * n),
-             zero_pad=hex(end_low - (t + 2 + 4 * n))),
+             zero_pad=hex(end_low - (t + 2 + 4 * n))) if HAS_FIXUPS else
+        dict(name='RELOC', low=hex(t), end=hex(end_low), entries=0,
+             note='no fixup table: the file ends at RELOC'),
     ]
 
     segs = []
@@ -226,8 +241,13 @@ def main():
 
     out = dict(image=a.image, size=len(d), header={k: hex(v) for k, v in hdr.items()},
                info={k: hex(v) for k, v in info.items()},
-               cold_constants=dict(reloc_va=hex(reloc_va), kernel_va=hex(kva),
-                                   kernel_low=hex(klow), split_low=hex(split),
+               cold_constants=dict(**(dict(reloc_va=hex(reloc_va),
+                                          kernel_va=hex(kva),
+                                          kernel_low=hex(klow),
+                                          split_low=hex(split))
+                                     if HAS_FIXUPS else {}),
+                                   **{k: hex(be32(d, op))
+                                      for k, (op, _) in OP_EXTRA.items()},
                                    move_to_phys=hex(move), os_page_end=hex(page_end),
                                    mmap_va=hex(be32(d, OP_MMAP_VA)),
                                    **({} if OP_PTTX_VA is None else

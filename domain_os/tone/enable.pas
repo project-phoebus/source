@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E1ACE8  TONE_$ENABLE
     sau3  0x00E1A33A  TONE_$ENABLE
+    sau4  0x0F81BEFC  TONE_$ENABLE
     sau8  0x03C1C2CA  TONE_$ENABLE
     sau9  0x3C41D862  TONE_$ENABLE
 

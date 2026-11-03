@@ -2,11 +2,16 @@
 
   Image addresses:
     sau2  0x00E3E002  FLP_$CINIT
+    sau4  0x0F845FBC  FLP_$CINIT
     sau8  0x03C460CA  FLP_$CINIT
 
   - The driver is registered with DISK only after SPECIFY succeeded.
   - The AT bus form maps the controller's ports first and resets the
     controller through the digital output, with no probe and no drain.
+  - The page DMA form (`floppy_page_dma') acquires the interrupt for
+    FLP_$INT first (IO_$ACQUIRE on the kind-3 DCTE's request: its failure
+    is "not in system") and resets the page's DMA controller before
+    draining the controller.
 
   Returns:
     status_$ok: the controller is initialized
@@ -56,6 +61,58 @@ begin
                                addr(flp_jump_table)));
     end;
   end;
+  flp_$cinit := status.all;
+end;
+%elseif floppy_page_dma %then
+function flp_$cinit(var dcte: flp_$dcte_t): integer32;
+var
+  status: status_$t;
+  sense: pinteger;
+  tries: pinteger;
+  ctlr: pinteger;
+begin
+  io_$acquire(dcte.req, addr(flp_$int), addr(dcte), flp_io_unit, status);
+  if status.all <> status_$ok then begin
+    flp_$cinit := status_$io_controller_not_in_system;
+    return;
+  end;
+
+  ctlr := dcte.cnum;
+  flp_hw_addr := flp_$regs_ptr_t(dcte.req.csr.va);
+  flp_ctlr_table[ctlr].dcte := addr(dcte);
+  flp_ctlr_table[ctlr].hw_addr := flp_hw_addr;
+
+  ec_$init(flp_$ec);
+
+  { the DMA controller's reset; drain the controller }
+  with flp_hw_addr^ do begin
+    status.all := status_$ok;
+    dma_master_clear := 0;
+    dma_command := 16#20;
+    tries := 0;
+    while (main_status & 16#1F) <> 0 do begin
+      if 6 in main_status_bits then
+        discard(shake(flp_$sregs, 3, 0))
+      else begin
+        sense := 8;
+        discard(shake(sense, 1, 1));
+      end;
+      tries := tries + 1;
+      if tries > 200 then begin
+        status.all := status_$disk_controller_error;
+        exit;
+      end;
+    end;
+  end;
+
+  { SPECIFY, then the registration }
+  if status.all = status_$ok then begin
+    status.all := shake(flp_specify_cmd, 3, 1);
+    if status.all = status_$ok then
+      discard(disk_$register(1, ctlr, flp_unit_count, dcte.lock,
+                             addr(flp_jump_table)));
+  end;
+
   flp_$cinit := status.all;
 end;
 %else

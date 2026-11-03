@@ -2,6 +2,10 @@
 
 Memory parity error handling.
 
+The module's body is under `memory_parity` (`../base/config.ins.pas`):
+the SAU4 has none of it (its memory corrects errors, `../mem/`), and
+its module file compiles to an empty object.
+
 ## Layout
 
 One module, `parity.pas`, `module parity, wired_proc, wired_data;` (the

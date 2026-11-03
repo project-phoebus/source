@@ -73,8 +73,8 @@ type
     bit 22 on the word, as member 6 of the high word's set (a word set's
     member test).  Probed with `dpc -o': hi_set +0x00, lo_word +0x02, the
     record 4 bytes; the first view is the whole word. }
-%if large_vm %then
-  { With the large VM layout the disk address is the low 21 bits, and
+%if pmmu_page_maps %then
+  { With the page descriptors the disk address is the low 21 bits, and
     the ASTE-dirty bit bit 21 (AST_$GET_SEG_MAP tests it as member 5 of
     the high word's set). }
   mmap_$daddr_t = packed record
@@ -188,6 +188,12 @@ const
   mmap_$first_ppn = 16#400;
   mmap_$last_ppn = 16#23FF;
   mmap_$table_pages = 128;
+  mmap_$boot_ws_max = 16384;
+  mmap_$lppn_seed = 16#3FFF;
+%elseif mmap_ppns_200_3fff %then
+  mmap_$first_ppn = 16#200;
+  mmap_$last_ppn = 16#3FFF;
+  mmap_$table_pages = 248;
   mmap_$boot_ws_max = 16384;
   mmap_$lppn_seed = 16#3FFF;
 %else

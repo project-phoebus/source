@@ -56,22 +56,29 @@ module win_, wired_proc, wired_data;
 %include 'misc/crash_system.ins.pas';
 %include 'io/io.ins.pas';
 %include 'disk/disk.ins.pas';
+%if win_ring_disk_ctlr %then
+%include 'sysbus/sysbus.ins.pas';
+%include 'pbu/pbu.ins.pas';
+%include 'ring/ring.ins.pas';
+%endif
 %include 'win/win.ins.pas';
 
 { TODO(sau) the WIN_ drivers of the SAUs not translated
 
-  The SAU2's ANSI-command driver, the SAU5's descriptor-list driver and
-  the SAU8's AT bus driver are written.  The SAU4's and SAU6's WIN_ code
-  differs from all three (the catalog's families of WIN_$DO_IO, WIN_$INT
-  and WIN_$DINIT; WIN_ code segments of 0xFB0 and 0x1C78 bytes); the
-  SAU7's holds the WIN7_ driver beside the AT bus one (0x2DD4 bytes).
-  Those SAUs build the SAU2's arm until each has its part. }
+  The SAU2's ANSI-command driver, the SAU4's ring/disk board driver, the
+  SAU5's descriptor-list driver and the SAU8's AT bus driver are
+  written.  The SAU6's WIN_ code differs from all four (the catalog's
+  families of WIN_$DO_IO, WIN_$INT and WIN_$DINIT; a WIN_ code segment
+  of 0x1C78 bytes); the SAU7's holds the WIN7_ driver beside the AT bus
+  one (0x2DD4 bytes).  Those SAUs build the SAU2's arm until each has its
+  part. }
 
 { TODO(pascal) the block's three open longwords
 
   +0x0C, +0x2C and +0x3C are addressed by no routine and are what 8-byte
   alignment of the 8-byte-or-larger objects from the block's start would
-  leave (the rule fits this block at all three places).
+  leave (the rule fits this block at all three places, and the
+  ring/disk form's block at +0x14, +0x34 and +0x44).
   The Pascal declares stand-ins (unused_0c, unused_2c, unused_3c) so
   that dpc, which aligns data to at most 4, lays the block out as the
   image does.  If the alignment rule is confirmed, the stand-ins go. }
@@ -204,6 +211,66 @@ define
 %include 'win/win8_int.pas';                { WIN8_$INT                  }
 %include 'win/win8_error_que.pas';          { WIN8_$ERROR_QUE            }
 %include 'win/win8_get_stats.pas';          { WIN8_$GET_STATS            }
+
+{ ---- OS_INIT_PROC ---- }
+%include 'win/cinit.pas';                   { WIN_$CINIT                 }
+%elseif win_ring_disk_ctlr %then
+{ The ring/disk controller's block (`win_ring_disk_ctlr'; the SAU4's
+  WIN_ data segment, 0x80 bytes), zero but for the jump table and the
+  longword 1 at +0x74: each drive's current cylinder, the unit record,
+  the jump table DISK_$REGISTER is given, the unit's eventcount,
+  WIN_$CNT, the current status, volume and request, the pointers to the
+  two I/O map entries, the block count DISK_INIT is given when it is
+  called from the driver, the drive last selected, the seek flag, and
+  WIN_$STS.  The three open longwords at +0x14, +0x34 and +0x44 are the
+  other forms' (the TODO above). }
+var
+  win_cyls: array[0..3] of pinteger;             { +0x00, zero }
+  win_units: array[0..0] of win_$unit_t;         { +0x08, zero }
+  unused_14: integer32;                          { +0x14, zero: above }
+  win_jump_table: array[0..6] of univ_ptr :=     { +0x18 }
+    [addr(win_$spin_down), nil, addr(win_$dinit), nil, addr(win_$do_io),
+     addr(win_$error_que), addr(win_$get_stats)];
+  unused_34: integer32;                          { +0x34, zero }
+  win_unit_ec: array[0..0] of ec_$eventcount_t;  { +0x38, zero }
+  unused_44: integer32;                          { +0x44, zero }
+
+define
+  win_$cnt;                                      { +0x48, zero }
+
+var
+  win_status: integer32;                         { +0x60, zero }
+  win_dev_info: win_$vol_ptr_t;                  { +0x64, zero }
+  win_cur_req: disk_$io_req_ptr_t;               { +0x68, zero }
+  win_hdr_iomap: ^pinteger;                      { +0x6C, zero }
+  win_data_iomap: ^pinteger;                     { +0x70, zero }
+  win_total_blocks: integer32 := 1;              { +0x74: 1 }
+  win_cur_drive: pinteger;                       { +0x78, zero }
+  win_flag: boolean;                             { +0x7A, zero }
+
+define
+  win_$sts;                                      { +0x7C, zero }
+  win_$do_io;
+  disk_init;
+  win_$spin_down;
+  win_$int;
+  win_$dinit;
+  win_$error_que;
+  win_$get_stats;
+  win_$cinit;
+
+{ ---- WIRED_PROC ---- }
+%include 'win/seek.pas';                    { seek                       }
+%include 'win/read_or_write_disk_record.pas';
+                                            { read_or_write_disk_record  }
+%include 'win/format_track.pas';            { win_$format_track          }
+%include 'win/do_io.pas';                   { WIN_$DO_IO                 }
+%include 'win/disk_init.pas';               { DISK_INIT                  }
+%include 'win/spin_down.pas';               { WIN_$SPIN_DOWN             }
+%include 'win/int.pas';                     { WIN_$INT                   }
+%include 'win/dinit.pas';                   { WIN_$DINIT                 }
+%include 'win/error_que.pas';               { WIN_$ERROR_QUE             }
+%include 'win/get_stats.pas';               { WIN_$GET_STATS             }
 
 { ---- OS_INIT_PROC ---- }
 %include 'win/cinit.pas';                   { WIN_$CINIT                 }

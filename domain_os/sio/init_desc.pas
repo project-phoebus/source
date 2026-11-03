@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E32AB2  sio_$init_desc (module-local)
     sau3  0x00E3127C  sio_$init_desc (module-local)
+    sau4  0x0F835C5E  sio_$init_desc (module-local)
     sau8  0x03C3647E  sio_$init_desc
     sau9  0x3C439486  sio_$init_desc (module-local)
 

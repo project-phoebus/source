@@ -2,6 +2,7 @@
 
   Image addresses:
     sau3  0x00E6E46C  SM_$REVALIDATE
+    sau4  0x0F877B94  SM_$REVALIDATE
     sau5  0x00E6F7C4  SM_$REVALIDATE
 
   Status stored: none.

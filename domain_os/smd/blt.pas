@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6EC6E  SMD_$BLT
+    sau4  0x0F879424  SMD_$BLT
     sau5  0x00E710F8  SMD_$BLT
 
   - The display is acquired (lock word 0 for an interrupt-driven BLT,
@@ -11,10 +12,15 @@
     hand-written SMD_$START_BLT starts the BLT.
   - With `blt_request_start' (base/config.ins.pas) SMD_$START_BLT takes
     the request itself and only the main-memory modes are refused.
+  - With `blt_main_memory' the main-memory modes are done: the buffer's
+    pages are wired (SMD_$WIRE_MM) and put in the I/O map from the
+    unit's first entry, and unwired again after a synchronous BLT.
 
   Status stored:
     status_$ok: the BLT was started
     smd_$illegal_caller: the process has no display unit
+    SMD_$WIRE_MM's status: with `blt_main_memory', the buffer could not
+      be wired
     smd_$not_implemented: a transfer to or from main memory, or between
       non-conforming areas
     smd_$not_on_color: with `color_displays', a color display (types
@@ -30,13 +36,17 @@
   frame (`blt_request_start') is 0x10 bytes: mode at -2, and 0xE bytes
   no instruction addresses. }
 
-procedure smd_$blt(in blt_regs: smd_$blt_regs_t; in param2: integer32;
-                   in param3: integer; out status: status_$t);
+procedure smd_$blt(in blt_regs: smd_$blt_regs_t; in mm_va: integer32;
+                   in mm_pages: pinteger; out status: status_$t);
 %if blt_request_start %then
 var
   mode: smd_$display_modereg_t;
   unit: pinteger;
   disp: smd_display_hw_ptr_t;
+%if blt_main_memory %then
+  i: pinteger;
+  mm_wired: boolean;
+%endif
 %else
 type
   cs_bytes_t = array[1..4] of char;
@@ -68,11 +78,26 @@ begin
     else
       discard(smd_$acq_display(1));
 %if blt_request_start %then
+%if blt_main_memory %then
+    if mode.from_mm or else mode.to_mm then begin
+      smd_$wire_mm(mm_va, mm_pages, unit, status);
+      if status.all <> status_$ok then begin
+        smd_$rel_display;
+        return;
+      end;
+      for i := 1 to mm_pages do
+        iomap[i + iomap_base - 1] := disp^.mm_pages[i];
+      mm_wired := true;
+    end
+    else
+      mm_wired := false;
+%else
     if mode.from_mm or else mode.to_mm then begin
       status.all := smd_$not_implemented;
       smd_$rel_display;
       return;
     end;
+%endif
     smd_$start_blt(blt_regs, disp, ctrl_regs);
 %else
     if mode.from_mm or else mode.to_mm or else mode.nonconform
@@ -104,8 +129,16 @@ begin
     hw_params.x_start := blt_regs.sdx;
     smd_$start_blt(hw_params, disp, ctrl_regs);
 %endif
+%if blt_main_memory %then
+    if not mode.idone then begin
+      if mm_wired then
+        smd_$unwire_mm(disp^, ctrl_regs);
+      smd_$rel_display;
+    end
+%else
     if not mode.idone then
       smd_$rel_display
+%endif
     else
       field_08 := proc1_$as_id;
   end;

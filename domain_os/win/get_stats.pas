@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E19D62  WIN_$GET_STATS
+    sau4  0x0F81A9D0  WIN_$GET_STATS
     sau5  0x00E1A156  WIN_$GET_STATS
 
   - Controller 0, unit 0 gets the 22-byte WIN_$CNT; any other pair 22

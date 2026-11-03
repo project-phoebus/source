@@ -2,6 +2,7 @@
 
   Image addresses:
     sau3  0x00E6E0B4  SM_$DINIT
+    sau4  0x0F877804  SM_$DINIT
     sau5  0x00E6F40C  SM_$DINIT
 
   - The driver is wired and the command block mapped first; an
@@ -41,6 +42,8 @@ begin
     crash_system(vtop_status);
 %if long_iomap %then
   iomap[sm_iomap_cb] := sm_cb_ppn + sm_iomap_bias;
+%elseif word_iomap %then
+  iomap[sm_iomap_cb] := sm_cb_ppn;
 %else
   iomap[sm_iomap_cb].entry := sm_cb_ppn + sm_iomap_bias;
 %endif

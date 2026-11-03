@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E76048  RING_$RCV_FROM_UNIT_PRIV (module-local)
     sau2  0x00E75DE4  ring_$validate_receive (nested)
+    sau4  0x0F883928  RING_$RCV_FROM_UNIT_PRIV (module-local)
+    sau4  0x0F88366C  ring_$validate_receive (nested)
     sau5  0x00E7D30C  RING_$RCV_FROM_UNIT_PRIV (module-local)
     sau5  0x00E7D0A8  ring_$validate_receive (nested)
     sau8  0x03C8281E  RING_$RCV_FROM_UNIT_PRIV (module-local)
@@ -30,6 +32,10 @@
     controller's error word; a header checksum error crashes the
     system; ring_$rearm_rx crashes it with status_$network_buffer_error
     for a buffer still full.
+  - With the board's own DMA (`ring_board_dma') the receiver is armed
+    and reset with command bytes and its status word, the lengths are
+    the receive channels' counts, and the status bits are the
+    controller's own; the congestion flag is left alone.
 
   Status stored: none.
 }
@@ -367,6 +373,19 @@ var
   begin
     valid := false;
     with ring_$data[unit] do begin
+%if ring_board_dma %then
+      rcv_status := hw_regs^.rx_status - [14];
+      if rcv_status = [6, 7] then begin
+        { the lengths: the receive channels' counts, read low byte
+          first }
+        hw_regs^.rx_dma.clear_ff := 0;
+        rcv_hdr_len := hw_regs^.rx_dma.chan[0].count;
+        rcv_hdr_len := (512 - (hw_regs^.rx_dma.chan[0].count * 256
+                               + rcv_hdr_len + 1)) * 2;
+        rcv_data_len := hw_regs^.rx_dma.chan[1].count;
+        rcv_data_len := (512 - (hw_regs^.rx_dma.chan[1].count * 256
+                                + rcv_data_len + 1)) * 2;
+%else
       rcv_status := hw_regs^.rcv_csr;
       if rcv_status - [1, 2, 4] = [] then begin
         { the lengths }
@@ -376,6 +395,7 @@ var
 %else
         rcv_hdr_len := 1024 - dma[0].mtc * 2;
         rcv_data_len := 1024 - dma[1].mtc * 2;
+%endif
 %endif
         hdr_pkt_class := ring_$hdr_ptr_t(hdr)^.pkt_class;
         hdr_cksum := ring_$hdr_ptr_t(hdr)^.chksum;
@@ -415,6 +435,58 @@ var
         { the receive errors }
         is_swdiag := (1 in ring_$hdr_ptr_t(hdr)^.flags.info_bits)
                      and then (4 in ring_$hdr_ptr_t(hdr)^.flags.info_bits);
+%if ring_board_dma %then
+        if (1 in rcv_status) or else (0 in rcv_status) then begin
+          if 1 in rcv_status then
+            ring_$rcv_esb := ring_$rcv_esb + 1;
+          if 0 in rcv_status then
+            ring_$rcv_biphase := ring_$rcv_biphase + 1;
+          rcvpkt := rcvpkt + 1;
+          if is_swdiag then
+            ring_$swdiag_data.rcvpkt := ring_$swdiag_data.rcvpkt + 1;
+        end
+        else if 12 in rcv_status then begin
+          rcvtim := rcvtim + 1;
+          if is_swdiag then
+            ring_$swdiag_data.rcvtim := ring_$swdiag_data.rcvtim + 1;
+        end
+        else if 9 in rcv_status then begin
+          crash_system(status_$network_receive_bus_error);
+          rcvbus := rcvbus + 1;
+        end
+        else if not (7 in rcv_status) then begin
+          rcvovr := rcvovr + 1;
+          if is_swdiag then
+            ring_$swdiag_data.rcvovr := ring_$swdiag_data.rcvovr + 1;
+        end
+        else if 10 in rcv_status then begin
+          rcveor := rcveor + 1;
+          if is_swdiag then
+            ring_$swdiag_data.rcveor := ring_$swdiag_data.rcveor + 1;
+        end
+        else if 8 in rcv_status then begin
+          rcvapar := rcvapar + 1;
+          if is_swdiag then
+            ring_$swdiag_data.rcvapar := ring_$swdiag_data.rcvapar + 1;
+        end
+        else begin
+          if 13 in rcv_status then begin
+            rcvcrc := rcvcrc + 1;
+            if is_swdiag then
+              ring_$swdiag_data.rcvcrc := ring_$swdiag_data.rcvcrc + 1;
+          end;
+          if not (6 in rcv_status) then begin
+            rcvxerr := rcvxerr + 1;
+            if is_swdiag then
+              ring_$swdiag_data.rcvxerr := ring_$swdiag_data.rcvxerr + 1;
+          end
+          else if 5 in rcv_status then begin
+            rcvmodem := rcvmodem + 1;
+            if is_swdiag then
+              ring_$swdiag_data.rcvmodem := ring_$swdiag_data.rcvmodem + 1;
+          end;
+        end;
+%else
         if (10 in rcv_status) or else (11 in rcv_status) then begin
           if 10 in rcv_status then
             ring_$rcv_esb := ring_$rcv_esb + 1;
@@ -460,6 +532,7 @@ var
               ring_$swdiag_data.rcvmodem := ring_$swdiag_data.rcvmodem + 1;
           end;
         end;
+%endif
       end;
     end;
 
@@ -486,6 +559,9 @@ begin
 %if ring_controller_dma %then
     ring_$setup_rx_dma(hw_regs^, unit_data^.rx_hdr_pa,
                        unit_data^.rx_data_pa);
+%elseif ring_board_dma %then
+    ring_$setup_rx_dma(hw_regs^.rx_dma, unit_data^.dma_page,
+                       unit_data^.rx_hdr_pa, unit_data^.rx_data_pa);
 %else
     ring_$setup_rx_dma(unit_data^.rx_hdr_pa, unit_data^.rx_data_pa);
 %endif
@@ -493,6 +569,12 @@ begin
     { the receiver }
     hw_regs^.tmask := unit_data^.tmask;
     unit_data^.state_flags := unit_data^.state_flags - [ring_unit_busy];
+%if ring_board_dma %then
+    if unit_data^.tmask <> 0 then
+      hw_regs^.rx_cmd := 16#A1
+    else
+      hw_regs^.rx_cmd := 16#10;
+%else
     if unit_data^.tmask <> 0 then begin
       hw_regs^.rcv_csr := [13, 14];
       hw_regs^.mode := [10, 13];
@@ -500,6 +582,7 @@ begin
     end
     else
       hw_regs^.mode := [12];
+%endif
 
     if first_time then begin
       ec_$advance(unit_data^.ready_ec);
@@ -511,6 +594,26 @@ begin
     ring_$wakeup_cnt := ring_$wakeup_cnt + 1;
     hdr := unit_data^.rx_hdr;
 
+%if ring_board_dma %then
+    if ring_unit_busy in unit_data^.state_flags then begin
+      if 15 in hw_regs^.rx_status then begin
+        { reset a stuck receiver }
+        hw_regs^.rx_cmd := 16#40;
+        if 15 in hw_regs^.rx_status then begin
+          delay.high := 0;
+          delay.low := 2750;
+          time_$wait(time_$relative, delay, status);
+          if status.all <> 0 then
+            crash_system(status)
+          else if 15 in hw_regs^.rx_status then
+            crash_system(status_$network_receive_process_failed_to_start);
+        end;
+        next;
+      end;
+    end
+    else if 15 in hw_regs^.rx_status then
+      ring_$busy_on_rcv_int := ring_$busy_on_rcv_int + 1;
+%else
     if ring_unit_busy in unit_data^.state_flags then begin
       if 13 in hw_regs^.rcv_csr then begin
         { reset a stuck receiver }
@@ -533,9 +636,10 @@ begin
     end
     else if 13 in hw_regs^.rcv_csr then
       ring_$busy_on_rcv_int := ring_$busy_on_rcv_int + 1;
+%endif
 
     { the packet }
-%if not ring_controller_dma %then
+%if not ring_controller_dma and not ring_board_dma %then
     ring_$clear_dma_channel(0, unit);
     ring_$clear_dma_channel(1, unit);
 %endif

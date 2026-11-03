@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E69B2E  TPAD_$INQ_PUNCH_IMPACT
+    sau4  0x0F8735F4  TPAD_$INQ_PUNCH_IMPACT
 
   Status stored:
     status_$ok: the threshold was returned

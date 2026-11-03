@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E14BDA  PROC1_$LOADAV_CALLBACK
+    sau4  0x0F81544E  PROC1_$LOADAV_CALLBACK
     sau9  0x3C416EA0  PROC1_$LOADAV_CALLBACK
 
   - Each of the three load averages (8.24 fixed point) decays by its

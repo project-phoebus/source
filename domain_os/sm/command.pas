@@ -3,6 +3,7 @@
 
   Image addresses:
     sau3  0x00E6DE20  sm_$command (module-local)
+    sau4  0x0F87759C  sm_$command (module-local)
     sau5  0x00E6F178  sm_$command (module-local)
 
   - The other command words (cylinder, head, buffer) are its callers'.
@@ -24,7 +25,9 @@ var
 begin
   sm_$cb.cmd_word.unit := unit;
   sm_$cb.cmd_word.cmd := cmd;
+%if memory_parity %then
   sm_$cb.drive[unit].parity_err := false;
+%endif
   status := sm_$wait_ready;
   if status <> 0 then begin
     sm_$command := status;

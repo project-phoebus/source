@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E583A0  AS_$GET_INFO
+    sau4  0x0F86084C  AS_$GET_INFO
     sau8  0x03C60618  AS_$GET_INFO
 
   - Copies the smaller of req_size and AS_$INFO_SIZE bytes of AS_$INFO,

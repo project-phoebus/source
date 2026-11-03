@@ -36,6 +36,8 @@ No routine is nested.
 | routine | fragment |
 |---------|----------|
 | dtty_$get_disp_type | `get_disp_type.pas` (internal function; with `smd_display_memory` an empty procedure) |
+| dtty_$color_command | `color_command.pas` (internal; `dtty_color_board`) |
+| dtty_$color_clear_window | `color_clear_window.pas` (internal; `dtty_color_board`) |
 | dtty_$clear_window | `clear_window.pas` (internal) |
 | dtty_$report_error | `report_error.pas` (internal; its constant cells follow it) |
 | dtty_$load_font | `load_font.pas` (internal function; loads A5, called from OS_INIT_PROC) |
@@ -58,6 +60,18 @@ No routine is nested.
   (`disp1_mem`), SMD_$INQ_DISP_TYPE (Apollo's heading), SMD_$ASSOC,
   SMD_$CLEAR_WINDOW, SMD_$COPY_FONT_TO_MD_HDM.
 - `vfmt/vfmt.ins.pas`, `proc1/proc1.ins.pas`: used as they are.
+
+## The SAU4
+
+With `dtty_color_board` the display TTY drives the COLOR_ board's
+display itself: dtty_$get_disp_type is a procedure that waits, on a
+color display, until the board is idle; the module-local
+dtty_$color_command (the board's mode word back, then a command's
+words) and dtty_$color_clear_window (the board's clear command)
+follow it, dtty_$clear_window clears a color display's window through
+them, and dtty_$load_font sends the board its mode word first.
+DTTY_$INIT is the `second_display_unit` form.  The WIRED_PROC segment
+is 0x2E4 bytes, the data block the SAU2's 0xC.
 
 ## The SAU3
 

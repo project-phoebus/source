@@ -126,6 +126,14 @@ var
     (OS_$COLD_START stores it). }
   mmu_$os_pmaps_phaddr: extern integer32;
 %endif
+%if region_mmu %then
+{ MMU_$INSTALL_REGION (hand assembly, the MMU_ASM block of the region
+  registers' MMU): load region register `region' (its low five bits) of
+  the current address space with `rar'.  Both by value off the stack;
+  mst_$free_region passes a RARS entry's longword. }
+procedure mmu_$install_region(region: integer; rar: integer32);
+  options(extern, val_param);
+%endif
 %if run_time_layout %then
   { MMU_$HAVE_PMMU (map symbol in the hand-written MMU_ASM's data): a
     boolean, its first byte's sign, true when the node has the MC68851

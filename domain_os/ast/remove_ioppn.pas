@@ -1,6 +1,7 @@
 { AST_$REMOVE_IOPPN - unmap a segment's I/O page.
 
   Image addresses:
+    sau4  0x0F8075E4  AST_$REMOVE_IOPPN
     sau9  0x3C4085CA  AST_$REMOVE_IOPPN
 
   - Under the PMAP lock, after the entry's transition: the descriptor

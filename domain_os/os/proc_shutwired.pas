@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E5D050  OS_PROC_SHUTWIRED
+    sau4  0x0F866B44  OS_PROC_SHUTWIRED
 
   - A fragment of the FILE_ module (file/file.pas includes it); its map
     symbol also starts the run OS_$SHUTDOWN wires.

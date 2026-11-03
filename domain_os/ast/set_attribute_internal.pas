@@ -3,8 +3,10 @@
 
   Image addresses:
     sau2  0x00E05214  ast_$set_attribute_internal (module-local)
+    sau4  0x0F8055C0  ast_$set_attribute_internal (module-local)
     sau9  0x3C4064C0  ast_$set_attribute_internal (module-local)
     sau2  0x00E04B00  ast_$set_attr_dispatch (nested)
+    sau4  0x0F804EAC  ast_$set_attr_dispatch (nested)
     sau9  0x3C405DD4  ast_$set_attr_dispatch (nested)
 
   - A nil UID is validated instead.  Under the AST lock the object's

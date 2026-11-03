@@ -4,6 +4,7 @@
   Image addresses:
     sau2  0x00E2C8BC  DCTES data (WIRED_DATA, 0xD0 bytes)
     sau3  0x00E2B608  DCTES data (WIRED_DATA, 0xD0 bytes)
+    sau4  0x0F82F3E0  DCTES data (WIRED_DATA, 0x168 bytes)
     sau5  0x00E2DB28  DCTES data (WIRED_DATA, 0x158 bytes)
     sau8  0x03C2ED18  DCTES data (WIRED_DATA, 0x2A4 bytes)
     sau9  0x3C430FB4  DCTES data (WIRED_DATA, 0x774 bytes)
@@ -16,8 +17,11 @@
   The SAU2's are RING_DCTE, FLP_DCTE and WIN_DCTE; the SAU5's CTAPE_DCTE
   (`ct_qic02'), SMD_DCTE_1 and SMD_DCTE_0 (`smd_disk'), RING_DCTE and
   WIN_DCTE; the SAU3's SMD_DCTE_1, SMD_DCTE_0 and RING_DCTE (no
-  WIN_DCTE without `winchester_config').  Each is kind 1, 64 bytes, controller 0, with its init and
-  interrupt routines and register block.
+  WIN_DCTE without `winchester_config'); the SAU4's SMD_DCTE_1,
+  SMD_DCTE_0, RING_DCTE, FLP_DCTE and WIN_DCTE.  Each is kind 1, 64
+  bytes, controller 0, with its init and interrupt routines and register
+  block, but for the SAU4's FLP_DCTE (`floppy_dcte_request'), of kind 3
+  as the SAU8's (below), on the system bus.
 
   The SAU9's (`named_dctes') are kind 2, 28 of them: two 802.5 rings,
   two Ethernets, two rings, eight SCSI tapes and eight SCSI disks (one
@@ -41,7 +45,8 @@
   segments hold (`color4_driver', `color5_driver', `mono_driver').
 
   RING_DCTE's vector is 16#1B on the SAU2 and SAU3 (SYSBUS_$INIT
-  installs it), 0 on the SAU5.  The DCTEs are static_dcte_t, dcte_t with a univ_ptr init
+  installs it), 0 on the SAU5, 16#90 on the SAU4 (`sysbus_vectors_90',
+  WIN_DCTE's too).  The DCTEs are static_dcte_t, dcte_t with a univ_ptr init
   routine: dpc refuses the routines' `addr' as dcte_t's routine pointer.
 
   Check: tools/pascal_check.sh.
@@ -49,10 +54,9 @@
 
 { TODO(sau) the DCTES blocks of the SAUs not translated
 
-  Only the SAU2's, SAU3's, SAU5's, SAU8's and SAU9's blocks are written.
-  The others differ beyond the parts used here: the SAU4's and SAU6's
-  RING_DCTE vectors (16#90, 16#88), the SAU4's FLP_DCTE (0x50 bytes)
-  and its WIN_DCTE's register page, the SAU6's Ethernet and second
+  Only the SAU2's, SAU3's, SAU4's, SAU5's, SAU8's and SAU9's blocks are
+  written.  The others differ beyond the parts used here: the SAU6's
+  RING_DCTE vector (16#88), the SAU6's Ethernet and second
   Winchester and tape DCTEs, the SAU7's kind-2 and kind-3 DCTEs (0x3A4
   bytes: the SAU8's forms, with WIN7_DCTE_1, WIN7_DCTE_0 and SCSI7_DCTE
   more).  io_$dev_dctes_last (io/io.ins.pas) is chosen for the written
@@ -118,7 +122,7 @@ type
     disk_error_que: integer32;            { 0x3C }
   end;
 
-%if named_dctes %then
+%if named_dctes or floppy_dcte_request %then
   { A kind-3 static DCTE, 0x4C bytes: static_dcte_t's first 0x28 bytes,
     then the unit's request (io/io.ins.pas's io_$acquire_rec_t, its CSR
     page's address a univ_ptr for the initializer's `addr'), then the
@@ -528,7 +532,9 @@ var
     CALENDAR); TAPE, the cartridge tape's (the same page on the SAU5).
     Only their addresses are used. }
   ring2: extern char;
-%if floppy_disk %then
+%if floppy_dcte_request %then
+  flop: extern char;
+%elseif floppy_disk %then
   disk: extern char;
 %endif
 %if winchester_config %then
@@ -567,15 +573,31 @@ var
      nextp := nil, csrsytr := addr(ring_$init),
 %if ring8_controller %then
      disk_dinit := addr(ring2), disk_do_io := nil,
+%elseif ring_board_dma %then
+     disk_dinit := addr(ring2), disk_do_io := addr(ring_$xmit_int),
 %else
      disk_dinit := addr(ring2), disk_do_io := addr(ring_$int),
 %endif
-%if sysbus_routines %then
+%if sysbus_vectors_90 %then
+     disk_error_que := 16#00180090];
+%elseif sysbus_routines %then
      disk_error_que := 16#0018001B];
 %else
      disk_error_que := 16#00180000];
 %endif
-%if floppy_disk %then
+%if floppy_dcte_request %then
+  flp_dcte: define static_dcte3_t :=      { +0xC0 on the SAU4 }
+    [kind := 3, length := 76, ctype := io_ctype_flp, cnum := 0,
+     nextp := nil, csrsytr := addr(flp_$cinit),
+     int := [id := [vector := 16#F3], has_int := true],
+     csr_va := addr(flop), csr_pa := 0, csr_pages := 1,
+     has_csr := true, tag := 2, bus := io_$bus_sysbus,
+     disk_error_que := 16#00160000];
+  pad_flp: integer32;                     { +0x10C on the SAU4: zero,
+                                            addressed by nothing; the
+                                            next DCTE at a multiple of
+                                            8 from the block }
+%elseif floppy_disk %then
   flp_dcte: define static_dcte_t :=       { +0x40 }
     [kind := 1, length := 64, ctype := io_ctype_flp, cnum := 0,
      nextp := nil, csrsytr := addr(flp_$cinit),
@@ -587,7 +609,11 @@ var
     [kind := 1, length := 64, ctype := io_ctype_win, cnum := 0,
      nextp := nil, csrsytr := addr(win_$cinit),
      disk_dinit := addr(win), disk_do_io := addr(win_$int),
+%if sysbus_vectors_90 %then
+     disk_error_que := 16#00170090];
+%else
      disk_error_que := 16#00170000];
+%endif
 %endif
 
 { The list, the block's DCTEs from the last to the first. }

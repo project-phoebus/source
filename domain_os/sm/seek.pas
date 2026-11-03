@@ -2,6 +2,7 @@
 
   Image addresses:
     sau3  0x00E6E492  sm_$seek (module-local)
+    sau4  0x0F877BBA  sm_$seek (module-local)
     sau5  0x00E6F7EA  sm_$seek (module-local)
 
   - At most two tries.  A seek completes at the drive's second

@@ -25,6 +25,12 @@
 | there: the SAU3's TIME_ASM (`D E29768 TIME_ASM size = 474') is 0x10
 | bytes shorter, the handler at TIME_$DI_RTE + 0x10 (0xE29A8C).
 |
+| The SAU4's calendar registers are bytes of the timer's page (CALENDAR
+| = TIMR 0xFFFAC00, `calendar_timer_page'): control at +0x81, write data
+| at +0x83, read data at +0x85, inverted; the operands keep the SAU2's
+| length, and its TIME_ASM (`D F82D4B0 TIME_ASM size = 484') is the
+| SAU2's laid out the same.
+|
 | TIME_$WRT_VT_TIMER is here too, with its timer block a TIMR relocation
 | (a fixup-table cell, 0xE2AF8E), not a literal.
 |
@@ -112,6 +118,10 @@
         .set    CAL_CTL, 0                      | sau3: control, (A0)
         .set    CAL_WDATA, 2                    | sau3: write data
         .set    CAL_RDATA, 4                    | sau3: read data, inverted
+        .elseif calendar_timer_page
+        .set    CAL_CTL, 0x81                   | sau4: control, in the timer's page
+        .set    CAL_WDATA, 0x83                 | sau4: write data
+        .set    CAL_RDATA, 0x85                 | sau4: read data, inverted
         .else
         .set    CAL_CTL, 0x20                   | control
         .set    CAL_WDATA, 0x22                 | write data

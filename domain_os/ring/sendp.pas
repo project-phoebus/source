@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E75916  RING_$SENDP
     sau3  0x00E77116  RING_$SENDP
+    sau4  0x0F8831B2  RING_$SENDP
     sau5  0x00E7CBFA  RING_$SENDP
     sau8  0x03C81F20  RING_$SENDP
     sau9  0x3C47DB12  RING_$SENDP
@@ -18,6 +19,12 @@
   - At the end biphase_flag is stored twice.
   - With `ring_xmit_light' a completed send toggles the transmit light
     of the memory control register before the status is read.
+  - With the board's own DMA (`ring_board_dma') the packet goes to the
+    transmit's DMA controller, the start, forced start, abort and
+    congestion mode are command bytes, and the outcome is the
+    controller's transmit status with its own bits; a transmit bus
+    error crashes the system with status_$network_transmit_bus_error
+    (no parity check), and the light is bit 8.
   - With the controller with buffers of its own (`ring8_controller')
     the packet is copied into the controller (ring_$setup_tx) under the
     unit's buffer lock, held to the end of the send on the 16 KB
@@ -343,7 +350,11 @@ var
   force_start: boolean;
   activity: boolean;
   no_retry: boolean;
+%if ring_board_dma %then
+  cmd: integer;
+%else
   parity_err: boolean;
+%endif
 begin
   unit_data := addr(ring_$ctl[socket]);
   stats := addr(ring_$data[socket]);
@@ -361,7 +372,11 @@ begin
   end;
   status_ret.all := status_$network_transmit_failed;
   hw := unit_data^.hw_regs;
+%if ring_board_dma %then
+  if not (14 in hw^.rx_status) then begin
+%else
   if not (13 in hw^.mode) then begin
+%endif
     xmit_status := xmit_status + [ring_sendp_res_not_ready];
     return;
   end;
@@ -394,12 +409,22 @@ transmit_retry:
   tx_ec_target := unit_data^.tx_ec.value + 1;
 %if ring_controller_dma %then
   ring_$setup_tx_dma(hw^, hdr_pa, hdr_len, data_buf[1], dma_data_len);
+%elseif ring_board_dma %then
+  ring_$setup_tx_dma(hw^.tx_dma, ring_$ctl[socket].dma_page, hdr_pa,
+                     hdr_len, data_buf[1], dma_data_len);
 %else
   ring_$setup_tx_dma(hdr_pa, hdr_len, data_buf[1], dma_data_len);
 %endif
   if not stats^.retry_pending then begin
     { start, and poll until the poll time-out }
+%if ring_board_dma %then
+    cmd := 16#81;
+    if dma_data_len = 0 then
+      cmd := 16#91;
+    hw^.tx_cmd := cmd;
+%else
     hw^.xmit_csr := [13, 14];
+%endif
     time_$abs_clock(attempt_start);
     deadline := attempt_start;
     add48(deadline, ring_$poll_timeout);
@@ -428,7 +453,14 @@ transmit_retry:
     { a forced start }
     time_$abs_clock(ring_$force_start);
     discard(sub48(ring_$force_start, attempt_start));
+%if ring_board_dma %then
+    cmd := 16#A1;
+    if dma_data_len = 0 then
+      cmd := 16#B1;
+    hw^.tx_cmd := cmd;
+%else
     hw^.xmit_csr := [12, 13, 14];
+%endif
     force_start := true;
     ec_target_cell := tx_ec_target;
     if time_$wait2(time_$relative, ring_$xmit_timeout1, unit_data^.tx_ec,
@@ -437,6 +469,16 @@ transmit_retry:
   end;
 
   { abort the transmitter }
+%if ring_board_dma %then
+  hw^.tx_cmd := 16#41;
+  if 15 in hw^.tx_status then begin
+    ec_target_cell := tx_ec_target;
+    discard(time_$wait2(time_$relative, ring_$xmit_timeout2,
+                        unit_data^.tx_ec, ec_target_cell, wait_status));
+    if 15 in hw^.tx_status then
+      goto hw_error;
+  end;
+%else
   hw^.xmit_csr := [14];
   if 13 in hw^.xmit_csr then begin
     ec_target_cell := tx_ec_target;
@@ -445,9 +487,10 @@ transmit_retry:
     if 13 in hw^.xmit_csr then
       goto hw_error;
   end;
+%endif
   if tx_ec_target <= unit_data^.tx_ec.value then
     goto process_status;
-%if not ring_controller_dma %then
+%if not ring_controller_dma and not ring_board_dma %then
   ring_$clear_dma_channel(2, socket);
 %endif
   if stats^.retry_pending then begin
@@ -463,15 +506,104 @@ transmit_retry:
   if (not stats^.congestion_flag) and stats^.biphase_flag then begin
     stats^.congestion_flag := true;
     xmit_status := xmit_status + [ring_sendp_res_congested];
+%if ring_board_dma %then
+    hw^.tx_cmd := 4;
+%else
     if 14 in hw^.mode then
       hw^.mode := [11, 13, 14]
     else
       hw^.mode := [11, 13];
+%endif
   end;
   stats^.retry_pending := true;
   goto transmit_retry;
 
 process_status:
+%if ring_board_dma %then
+%if ring_xmit_light %then
+  mmu_$mcr_change(8);
+%endif
+  hw_status := hw^.tx_status;
+  if hw_status = [3, 6, 7] then begin
+    xmit_status := xmit_status + [ring_sendp_res_ok];
+    stats^.xmitcnt := stats^.xmitcnt + 1;
+    activity := true;
+    network_$activity_flag := activity;
+    goto ok_status;
+  end;
+
+  poll_now.high := 0;
+  poll_now.low := 500;
+  if hw_status * [0, 1] <> [] then begin
+    if 0 in hw_status then begin
+      xmit_status := xmit_status + [ring_sendp_res_biphase];
+      ring_$xmit_biphase := ring_$xmit_biphase + 1;
+    end;
+    if 1 in hw_status then begin
+      xmit_status := xmit_status + [ring_sendp_res_esb];
+      ring_$xmit_esb := ring_$xmit_esb + 1;
+    end;
+    stats^.xmit_modem := stats^.xmit_modem + 1;
+  end;
+
+  if 9 in hw_status then begin
+    crash_system(status_$network_transmit_bus_error);
+    xmit_status := xmit_status + [ring_sendp_res_bus_err];
+    stats^.xmit_bus := stats^.xmit_bus + 1;
+    goto retry_gate;
+  end;
+
+  if 8 in hw_status then begin
+    xmit_status := xmit_status + [ring_sendp_res_overrun];
+    stats^.xmit_orun := stats^.xmit_orun + 1;
+    goto retry_gate;
+  end;
+  if hw_status * [7, 12] <> [7] then begin
+    xmit_status := xmit_status + [ring_sendp_res_delayed];
+    stats^.xmit_nortn := stats^.xmit_nortn + 1;
+    goto gate;
+  end;
+  if not (6 in hw_status) then begin
+    xmit_status := xmit_status + [ring_sendp_res_no_return];
+    stats^.xmit_apar := stats^.xmit_apar + 1;
+    goto gate;
+  end;
+
+  activity := true;
+  network_$activity_flag := activity;
+  if hw_status * [4, 5] = [5] then begin
+    xmit_status := xmit_status + [ring_sendp_res_no_return];
+    stats^.xmit_error := stats^.xmit_error + 1;
+    goto gate;
+  end;
+  if 3 in hw_status then begin
+    xmit_status := xmit_status + [ring_sendp_res_ok];
+    goto ok_count;
+  end;
+  if 2 in hw_status then begin
+    xmit_status := xmit_status + [ring_sendp_res_wack];
+    stats^.xmit_wack := stats^.xmit_wack + 1;
+    poll_now.low32 := 500;
+    goto retry_gate;
+  end;
+  if 4 in hw_status then begin
+    xmit_status := xmit_status + [ring_sendp_res_nack];
+    if (hdr^.dest_node <> 0) and then (hdr^.dest_node <= 4) then begin
+    ok_count:
+      stats^.xmitcnt := stats^.xmitcnt + 1;
+    ok_status:
+      status_ret.all := status_$ok;
+      goto transmit_done;
+    end;
+    stats^.xmit_nack := stats^.xmit_nack + 1;
+    poll_now.low32 := 250;
+    goto retry_gate;
+  end;
+
+  if not (5 in hw_status) then
+    ring_$unexpected_xmit_stat := pinteger(hw_status);
+  xmit_status := xmit_status + [ring_sendp_res_no_return];
+%else
 %if ring_xmit_light %then
   mmu_$mcr_change(4);
 %endif
@@ -563,6 +695,8 @@ process_status:
   if not (3 in hw_status) then
     ring_$unexpected_xmit_stat := pinteger(hw_status);
   xmit_status := xmit_status + [ring_sendp_res_no_return];
+
+%endif
 
 gate:
   if no_retry then

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E1471C  PROC1_$TRY_TO_SUSPEND
+    sau4  0x0F814F90  PROC1_$TRY_TO_SUSPEND
 
   Assume we're called with interrupts off.
 

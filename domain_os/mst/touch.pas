@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0DD40  MST_$TOUCH
+    sau4  0x0F80E384  MST_$TOUCH
     sau8  0x03C0ED44  MST_$TOUCH
     sau9  0x3C40FE10  MST_$TOUCH
 
@@ -164,6 +165,21 @@ begin
     { the segment map entry: made to point at the page map if it does
       not, the entry threaded on the page map }
     smap := addr(smaps[seg_index + smap_asid_base[asid]]);
+%if region_mmu %then
+    if not smap^.e.valid then begin
+      smap^.e.pmap_pa := aste^.pmap_pa;
+      smap^.bits := smap^.bits + [31];
+      bst[seg_index + bst_asid_base[asid]] :=
+        mst_$pmap_link_t(aste^.pmap_link);
+      aste^.pmap_link.asid := asid;
+      aste^.pmap_link.seg := seg_index;
+    end;
+    { the protection: the entry's copy-on-write and writable bits }
+    if (15 in flags.bits) and then smap^.b.copy_on_write then
+      ast_flags := ast_flags ! mst_touch_ast_cow;
+    if not smap^.b.writable then
+      ast_flags := ast_flags ! mst_touch_ast_read_only;
+%else
     if smap^.ctl.dt = mst_smap_invalid then begin
       smap^.table := (smap^.table & 15) + aste^.pmap_pa;
       smap^.lim.limit := 31;
@@ -184,6 +200,7 @@ begin
       ast_flags := ast_flags ! mst_touch_ast_cow;
     if not (0 in smap^.table_bits) then
       ast_flags := ast_flags ! mst_touch_ast_read_only;
+%endif
 %else
     if (15 in flags.bits) and then flags.copy_on_write then
       ast_flags := ast_flags ! mst_touch_ast_cow;

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau3  0x00E19A72  IO_$ATTR_CNTL
+    sau4  0x0F81B62A  IO_$ATTR_CNTL
     sau5  0x00E1AD22  IO_$ATTR_CNTL
     sau8  0x03C1BB48  IO_$ATTR_CNTL
 

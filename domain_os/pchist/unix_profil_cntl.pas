@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E5CA58  PCHIST_$UNIX_PROFIL_CNTL
+    sau4  0x0F866568  PCHIST_$UNIX_PROFIL_CNTL
 
   - Command 0 sets the process's profil() parameters and touches the
     buffer's first and last words under a cleanup handler (a fault

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6F326  SMD_$SOFT_SCROLL
+    sau4  0x0F879A6E  SMD_$SOFT_SCROLL
     sau5  0x00E716DA  SMD_$SOFT_SCROLL
 
   - The hand-written SMD_$START_SCROLL starts the scroll; the routine

@@ -25,8 +25,13 @@
  * Byte gate (tools/asm_compare.py): identical to the image modulo
  * relocations, except the two widened operands marked below ((d16,A5) ->
  * (xxx).l, A5 = 0x00E21890 in REGISTER_BASES).
+ *
+ * Without a CACR (`cache_clear_stub', base/config.ins.pas: the
+ * SAU4) there is no CACHE_$CLEAR call after FIM_$EXIT's first
+ * word is patched.
  */
 
+        .include "base/config.inc"
         .section ".text.FIM_$EXIT","ax",@progbits
         .even
 
@@ -59,7 +64,9 @@ FIM_$EXIT:
         bne.b   .Lexit_done                     /* e228f0 */
         /* widened: image (0x102c,A5) = 0x00E228BC, this routine's first word */
         move.w  #0x4e73,(FIM_$EXIT).l           /* e228f2  3b7c 4e73 102c: rte */
+        .if !cache_clear_stub
         jsr     (CACHE_$CLEAR).l                /* e228f8 */
+        .endif
 .Lexit_done:
         movem.l (%sp)+,%d0/%a0/%a5              /* e228fe */
         rte                                     /* e22902 */

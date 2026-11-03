@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0C514  mmap_$add_to_wsl (module-local)
+    sau4  0x0F80CB74  mmap_$add_to_wsl (module-local)
     sau8  0x03C0D474  mmap_$add_to_wsl (module-local)
     sau9  0x3C40E42C  mmap_$add_to_wsl (module-local)
 

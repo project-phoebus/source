@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E030C0  AST_$TOUCH
+    sau4  0x0F8034EE  AST_$TOUCH
     sau8  0x03C03408  AST_$TOUCH
     sau9  0x3C404414  AST_$TOUCH
 
@@ -98,7 +99,7 @@ begin
       if odd(ent^.low) then
         exit;
 %else
-      if 13 in ent^.flags then
+      if ast_$pmap_resident in ent^.flags then
         exit;
 %endif
       if ast_$pmap_in_trans in ent^.flags then
@@ -270,7 +271,7 @@ begin
 %endif
         end;
         ent^.vpn := ppn;
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
         { the descriptor used and not modified }
         ent^.flags := ent^.flags + [ast_$pmap_used];
         ent^.flags := ent^.flags - [ast_$pmap_modified];

@@ -1,6 +1,7 @@
 { MEM_$INIT - count the memory boards.
 
   Image addresses:
+    sau4  0x0F80B608  MEM_$INIT
     sau8  0x03C0BBC8  MEM_$INIT
     sau9  0x3C40CC00  MEM_$INIT
 
@@ -9,12 +10,43 @@
     rounded up.
   - With `mem_board_jumpers' the board count, 1 to 4, is the memory
     configuration's from the SIO's input port.
+  - With `ecc_memory' the boards are the controllers that answer a probe,
+    one per board in the first of its slots that does; each gets the
+    control word that turns its reporting on.
 
   Status stored: none.
 }
 
 procedure mem_$init;
-%if mem_board_jumpers %then
+%if ecc_memory %then
+var
+  data: integer32;
+  board: integer;
+  slot: integer;
+  n_boards: integer;
+  location: univ_ptr;
+begin
+  { each board's controller: the first slot that answers }
+  n_boards := 0;
+  for board := 1 to mem_ecc_boards do begin
+    mem_board_slot[board] := 0;
+    for slot := 1 to mem_ecc_slots do begin
+      location := addr(mem[board, slot].csr);
+      if testpage(0, location, data) then begin
+        n_boards := n_boards + 1;
+        mem_board_slot[board] := slot;
+        exit;
+      end;
+    end;
+  end;
+  mem_$mem_rec.n_boards := n_boards;
+
+  { reporting on }
+  for board := 1 to mem_ecc_boards do
+    if mem_board_slot[board] <> 0 then
+      mem[board, mem_board_slot[board]].csr.ctl := mem_ecc_ctl_report;
+end;
+%elseif mem_board_jumpers %then
 var
   config: integer;
 begin

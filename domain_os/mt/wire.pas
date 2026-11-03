@@ -2,6 +2,7 @@
 
   Image addresses:
     sau3  0x00E70F1C  MT_$WIRE
+    sau4  0x0F87DC8C  MT_$WIRE
     sau5  0x00E76A8C  MT_$WIRE
 
   Status stored:

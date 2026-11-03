@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E17828  LOG_$READ2
+    sau4  0x0F8181E0  LOG_$READ2
 
   - The by-value entry point of log_$read_internal.
 

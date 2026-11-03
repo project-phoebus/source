@@ -2,6 +2,7 @@
 
   Image addresses:
     sau3  0x00E83CD4  SM data (.DATA, 0x5C bytes)
+    sau4  0x0F890EB4  SM data (.DATA, 0x5C bytes)
     sau5  0x00E89A5C  SM data (.DATA, 0x5C bytes)
 
   One compilation unit, one code segment and one data segment: on the
@@ -16,7 +17,9 @@
   empty: its whole body is conditional.  The SAU3's code is the SAU5's
   but for the I/O map entries: longwords with the long_iomap part, the
   first word of each entry's 4 bytes without it (pbu/pbu.ins.pas).  The
-  SAU4's and SAU6's are their own (the TODO(sau) in cinit.pas).
+  SAU4's is the SAU3's with the 64 KB Multibus map's entries and command
+  block address (`mbus_map_64k'), word entries (`word_iomap') and no
+  parity checks (`memory_parity'); the SAU6's is its own.
 
   Not part of the module: SM_$CB, SM_$CNT and SM_BLK_HDR, the PBU page's
   hand-written data (sm/sm.ins.pas); the map's SM_END_ADDR segment

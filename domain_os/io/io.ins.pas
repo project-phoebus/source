@@ -169,10 +169,11 @@ const
   { The last index of DEV_DCTES, the static DCTEs' list (io/dctes.pas):
     its static DCTEs, then the nil that ends it.  The SAU2's list has
     three (WIN_DCTE, FLP_DCTE, RING_DCTE), the SAU5's five (WIN_DCTE,
-    RING_DCTE, SMD_DCTE_0, SMD_DCTE_1, CTAPE_DCTE), the SAU3's three
-    (RING_DCTE, SMD_DCTE_0, SMD_DCTE_1: no Winchester), the SAU9's 28
-    (its kind-2 DCTEs, `named_dctes'), the SAU8's 17 (its nine, with the
-    floppy's, and the display drivers' eight).  Only these five lists
+    RING_DCTE, SMD_DCTE_0, SMD_DCTE_1, CTAPE_DCTE), the SAU4's five
+    (WIN_DCTE, FLP_DCTE, RING_DCTE, SMD_DCTE_0, SMD_DCTE_1), the SAU3's
+    three (RING_DCTE, SMD_DCTE_0, SMD_DCTE_1: no Winchester), the SAU9's
+    28 (its kind-2 DCTEs, `named_dctes'), the SAU8's 17 (its nine, with
+    the floppy's, and the display drivers' eight).  Only these six lists
     are written (TODO(sau) in io/dctes.pas). }
 %if named_dctes %then
 %if floppy_disk %then

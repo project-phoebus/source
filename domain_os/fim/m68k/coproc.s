@@ -18,7 +18,14 @@
  *
  * Byte gate (tools/asm_compare.py): identical to the image modulo
  * relocations (R_68K_PC16 against FIM_COMMON_FAULT).
+ *
+ * Not on the SAUs whose vector table installs no coprocessor protocol
+ * violation (`fp_five_exceptions', base/config.ins.pas): the SAU4's
+ * FIM_UNWIRED has no FIM_$COPROC.
  */
+
+        .include "base/config.inc"
+        .if !fp_five_exceptions
 
         .extern FIM_COMMON_FAULT        /* fim/m68k/com.s, image 0xE213A0 */
 
@@ -31,3 +38,4 @@ FIM_$COPROC:
         .long   0x0012002D                      /* e214a0  status "coprocessor protocol violation" */
         .short  0x0013                          /* e214a4  signal 0x13 */
         .short  0xA000                          /* e214a6  class */
+        .endif

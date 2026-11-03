@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E699DC  TPAD_$SET_UNIT
+    sau4  0x0F8734A2  TPAD_$SET_UNIT
 
   - A unitnum outside 1 .. SMD_$N_DEVICES is ignored.
 

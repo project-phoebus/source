@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E07176  WP_$UNWIRE
+    sau4  0x0F8074E0  WP_$UNWIRE
     sau9  0x3C4083B0  WP_$UNWIRE
 
   - MMAP_$UNWIRE under ml_$pmap_lock.  A routine of the AST_ module.

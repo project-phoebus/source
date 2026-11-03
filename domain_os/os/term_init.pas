@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E32A60  os_term_init (module-local)
+    sau4  0x0F835C0C  os_term_init (module-local)
     sau8  0x03C3642C  os_term_init
     sau9  0x3C439434  os_term_init (module-local)
 

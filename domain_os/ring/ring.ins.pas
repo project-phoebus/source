@@ -6,6 +6,10 @@
 { RING_INTERRUPT - the ring's first-level interrupt routine. }
 procedure ring_interrupt; extern;
 
+{ RING_$SEND_NULL - an empty procedure.  Its one caller, the SAU4's
+  WIN_$DO_IO, passes a unit word by address. }
+procedure ring_$send_null(in unit: integer); extern;
+
 var
   { RING_$OVERFLOW_OVERFLOW and RING_$FILE_OVERFLOW (map symbols inside
     NET_IO's block, WIRED_DATA): counters APP_$DEMUX increments. }

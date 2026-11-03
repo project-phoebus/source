@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E3E49E  SHAKE
+    sau4  0x0F846456  SHAKE
     sau8  0x03C4665C  SHAKE
 
   - dir 0 reads count bytes into the words, widened with zeros; dir 1

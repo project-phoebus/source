@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E13A9C  PMAP_$PURIFIER_L
     sau3  0x00E13B10  PMAP_$PURIFIER_L
+    sau4  0x0F81437E  PMAP_$PURIFIER_L
     sau8  0x03C14CC0  PMAP_$PURIFIER_L
     sau9  0x3C415DD4  PMAP_$PURIFIER_L
 
@@ -126,7 +127,7 @@ begin
                 end;
                 flags := flags + [ast_$pmap_in_trans];
               end;
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
               if ast_$pmap_modified in
                  ast_pmaps[segment][seg_offset].flags then begin
                 ast_pmaps[segment][seg_offset].flags :=

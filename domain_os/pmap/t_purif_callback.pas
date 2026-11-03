@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E143CC  PMAP_$T_PURIF_CALLBACK
+    sau4  0x0F814C40  PMAP_$T_PURIF_CALLBACK
     sau9  0x3C4166B2  PMAP_$T_PURIF_CALLBACK
 
   - Each call takes the next working set list, 5..16#45 in turn.

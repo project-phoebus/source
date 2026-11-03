@@ -76,6 +76,31 @@ and the data register, which the shared bodies use), the kind-3 DCTE's
 view, the controller slot, the overrun record, the map variables and
 the four headings under the part.
 
+The SAU4's form (`floppy_page_dma`, with `floppy_dcte_request`) is a
+third arm: the SAU2's routines and sections, with a block of 0x138
+bytes (the SAU2's objects but the format buffer's physical address and
+the transfer's page, with the interrupt unit at +0x12C, the format
+buffer's DMA address bytes at +0x130 and +0x132, and a map-space flag at
++0x136 that nothing sets), in its image order:
+
+| routine | fragment |
+|---------|----------|
+| FLP_$INT | `int.pas` (the SAU2's body; the registers' new view) |
+| FLP_$REVALIDATE | `revalidate.pas` (the SAU2's body) |
+| flp_format_track | `format_track.pas` (the arm: the page's DMA channel first) |
+| FLP_DO_IO | `flp_do_io.pas` (the arm: IOMAP's entry 1, the page's DMA channel) |
+| FLP_$DO_IO | `do_io.pas` |
+| FLP_$CINIT | `cinit.pas` (the arm: IO_$ACQUIRE, the DMA controller's reset) |
+| FLP_$DINIT | `dinit.pas` (the format buffer's IOMAP entry 0 and DMA address) |
+| FLP_$SHUTDOWN | `shutdown.pas` (the arm: IO_$FREE_MAP behind the flag) |
+| EXCS | `excs.pas` (the DMA count check on the success path) |
+| SHAKE | `shake.pas` (the SAU2's body) |
+
+`flp.ins.pas` has the form's registers (the main status and the data
+register at the FLOP page's start, the page's 8237 from +0x80) under
+the part; the kind-3 DCTE's view and the controller slot are shared with
+the AT bus form (`floppy_atbus or floppy_dcte_request`).
+
 ## Insert files
 
 - `flp.ins.pas` (new): the driver's status values (flp_$retry, and the

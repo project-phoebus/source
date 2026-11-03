@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6E614  SMD_$DEL_TRK_RECT
+    sau4  0x0F878DAA  SMD_$DEL_TRK_RECT
     sau5  0x00E70A96  SMD_$DEL_TRK_RECT
     sau9  0x3C47501C  SMD_$DEL_TRK_RECT
 

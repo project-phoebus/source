@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E43FD8  MST_$GET_UID
+    sau4  0x0F84C282  MST_$GET_UID
     sau8  0x03C4C40E  MST_$GET_UID
     sau9  0x3C44B5A4  MST_$GET_UID
 

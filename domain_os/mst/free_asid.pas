@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E74B3C  MST_$FREE_ASID
+    sau4  0x0F8822C8  MST_$FREE_ASID
     sau8  0x03C7F550  MST_$FREE_ASID
     sau9  0x3C47C616  MST_$FREE_ASID
 
@@ -13,6 +14,9 @@
     instead (mst_$free_region), and the ASID's RARS page given back.
   - With the layout chosen at boot the active regions but the global
     ones are freed; the root entries' page stays.
+  - With the region registers the private regions are freed as with the
+    large address space; the region registers' page, shared with other
+    ASIDs, stays.
   - A failed unmap crashes the system.
 
   Status stored:
@@ -46,7 +50,7 @@ begin
   if status.all = status_$ok then begin
     area_$free_asid(asid);
     ml_$lock(ml_$mst_asid_lock);
-%if large_address_space %then
+%if large_address_space or vm_8192_segs %then
     private := mst_$regions_active[asid] * mst_private_regions;
     if private <> [] then begin
       group := 0;
@@ -62,8 +66,10 @@ begin
         group := group + 1;
       end;
     end;
+%if not region_mmu %then
     mst_$unwire_page(addr(rars[rars_asid_base[asid]]));
     mmu_$rars_phaddr[asid] := 0;
+%endif
 %elseif run_time_layout %then
     private := mst_$regions_active[asid] -
       [region_$global_b .. region_$global_b + region_$global_b_size - 1,

@@ -30,7 +30,7 @@ linker script's, when there is one.
 `<sub>/<sub>.pas`, every other `.pas` of a subsystem with a line
 starting `module `.  `sau5/pbu_asm.s` is assembled by the Makefile's
 `*/$(TARGET_SAU)/*.s` for a SAU5 build only, `sau3/pbu_asm.s` for a
-SAU3 build; the bytes of each were checked against its image by linking
+SAU3 build, `sau4/pbu_asm.s` for a SAU4 build; the bytes of each were checked against its image by linking
 it alone at its address.
 
 The SAU3's PBU is the SAU5's source with the parts of
@@ -58,6 +58,18 @@ PBU2_$ALLOCATE_MAP, PBU_$FREE_MAP, PBU2_$WIRE_MAP, PBU2_$MAP and
 PBU2_$UNMAP stubs), no storage module (`smd_disk`), the PBU page wired
 by OS_$INIT (`pbu_wire_at_boot`), PBU_$PPN_OWNERS from page 16#400
 (`mmap_ppns_400`).
+
+The SAU4's PBU (0x1938 bytes of code, 0x58 of data; PBU_MAP 0x434;
+PBU_ASM 0x744) is the SAU3's source with its parts: the large virtual
+memory's I/O page mapping (`large_vm`), word I/O map entries with no
+transfer control (`word_iomap`; `pbu_transfer_control` is off, so
+PBU_$CONTROL is the stub), the 64 KB Multibus map (`mbus_map_64k`:
+PBU2_$ALLOCATE_MAP's and pbu_clear_iomap's pages from 192, no wide
+map in PBU_$SETUP, PBU_$GET_INFO's 1), the Multibus window at 16#10000
+(`mbus_low_window`: PBU2_$ASSOC's memory pages from 16#40, PBU_$SETUP's
+CSR pages from 16#60), and PBU_$PPN_OWNERS for the pages
+16#200..16#3FFF (`mmap_ppns_200_3fff`).  `sau4/pbu_asm.s` is the
+SAU3's PBU_ASM for the DNx60's MMU and PBU control register.
 
 ## Routines and their fragments
 
@@ -160,6 +172,6 @@ EC2_PBU has no conformance unit.
 
 ### TODO(sau)
 
-- The SAU4 and SAU6..SAU8 PBU and PBU_MAP code, each SAU's own
+- The SAU6 and SAU7 PBU and PBU_MAP code, each SAU's own
   (`pbu.pas`, `pbu_map.pas`);
-  PBU_TABLES' size on the SAU4 and SAU7 (`pbu.ins.pas`).
+  PBU_TABLES' size on the SAU7 (`pbu.ins.pas`).

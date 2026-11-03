@@ -35,9 +35,13 @@
  * FIM_$BUS_ERR (fim/sau8/bus_err.s) and clears the CPU status register
  * (MMU) and the process's fault status word; those lines carry the SAU8
  * image's addresses.
+ *
+ * Not on the SAUs whose floating-point registers are the CPU's own
+ * (`fp_state_in_cpu'): the SAU4's map has no FIM_$FLINE.
  */
 
         .include "base/config.inc"
+        .if !fp_state_in_cpu
 
         .section ".text.FIM_$FLINE","ax",@progbits
         .even
@@ -99,3 +103,4 @@ fim_fline_switch:
 .Lfline_uii:
         movem.l (%sp)+,%d0-%d3/%a0-%a1          /* e21b06 */
         jmp     (FIM_$UII).l                    /* e21b0a  4ef9 00e2 146c */
+        .endif

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E43F40  mst_$alloc_table_page (module-local)
+    sau4  0x0F84C0D4  mst_$alloc_table_page (module-local)
     sau8  0x03C4C22C  mst_$alloc_table_page (module-local)
     sau9  0x3C44B3F6  mst_$alloc_table_page (module-local)
 
@@ -17,6 +18,9 @@
   - With the layout chosen at boot two regions share a page of segment
     map entries: a region whose partner is active takes the partner's
     page, the odd one of the pair the page's second half.
+  - With the region registers a region made active gets a page of
+    segment map entries of its own, and its register is loaded into the
+    MMU when the address space is the current one.
 
   Returns:
     status_$ok: a page was installed, or none was needed
@@ -31,7 +35,12 @@ var
   bit_pos: 0..31;
   unused_10: integer32;                   { stand-in }
   unused_14: integer32;
-%if large_address_space %then
+%if region_mmu %then
+  group: pinteger;
+  region: mst_region_t;
+  ppn: linteger;
+  page: 0..31;
+%elseif large_address_space %then
   group: pinteger;
   region: mst_region_t;
   page: 0..127;
@@ -72,7 +81,38 @@ begin
 %if vm_regions %then
     end;
 %endif
-%if large_address_space %then
+%if region_mmu %then
+    group := seg div mst_region_segs;
+    if group >= mst_private_a_regions then
+      region := group + mst_global_a_regions
+    else
+      region := group;
+    if not (region in mst_$regions_active[asid]) then begin
+      mst_$set(mst_$regions_active[asid], mst_region_members, region);
+      { the region register: valid, not global, at the region's new page
+        of segment map entries; loaded when the address space is the
+        current one }
+      ppn := mst_$init_table_page(linteger(addr(
+        smaps[group * mst_region_segs + smap_asid_base[asid]])));
+      rars[rars_asid_base[asid] + region].all := 0;
+      rars[rars_asid_base[asid] + region].rar.smap_pa := ppn * 1024;
+      rars[rars_asid_base[asid] + region].bits :=
+        rars[rars_asid_base[asid] + region].bits - [30];
+      rars[rars_asid_base[asid] + region].bits :=
+        rars[rars_asid_base[asid] + region].bits + [31];
+      if asid = proc1_$as_id then
+        mmu_$install_region(region, rars[rars_asid_base[asid] + region].all);
+      if netlog_$ok_to_log then
+        netlog_$log_it(mst_region_netlog_kind, uid_$nil, 0, 0, 1, region,
+                       0, 0);
+    end;
+    page := seg div 256;
+    if not (page in mst_$bst_pages[asid]) then begin
+      discard(mst_$init_table_page(linteger(
+        addr(bst[lshft(page, 8) + bst_asid_base[asid]]))));
+      mst_$bst_pages[asid] := mst_$bst_pages[asid] + [page];
+    end;
+%elseif large_address_space %then
     group := seg div mst_region_segs;
     if group >= mst_private_a_regions then
       region := group + mst_global_a_regions

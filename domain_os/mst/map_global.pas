@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E4392C  MST_$MAP_GLOBAL
+    sau4  0x0F84BA02  MST_$MAP_GLOBAL
     sau8  0x03C4BB32  MST_$MAP_GLOBAL
     sau9  0x3C44ACF4  MST_$MAP_GLOBAL
 

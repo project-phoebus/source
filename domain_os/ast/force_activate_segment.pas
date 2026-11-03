@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E020FA  ast_$force_activate_segment (module-local)
+    sau4  0x0F802512  ast_$force_activate_segment (module-local)
     sau9  0x3C4034A4  ast_$force_activate_segment (module-local)
 
   Assume we're called with the AST lock held.

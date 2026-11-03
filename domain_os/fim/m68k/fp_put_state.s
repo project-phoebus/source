@@ -28,9 +28,14 @@
  * the SAU2's FIM_WIRED; the SAU9's (`fpu_enable_ccr': its FP routines
  * are 2 bytes longer, so FIM_$SPURIOUS_INT is aligned at 0x3C424B8C) has
  * none.
+ *
+ * Not on the SAUs whose floating-point registers are the CPU's own
+ * (`fp_state_in_cpu', base/config.ins.pas): the SAU4's routine is
+ * in fim/sau4/fp.s.
  */
 
         .include "base/config.inc"
+        .if !fp_state_in_cpu
 
         .section ".text.FIM_$FP_PUT_STATE","ax",@progbits
         .even
@@ -98,4 +103,5 @@ FIM_$FP_PUT_STATE:
         rts                                     /* e21f1c */
         .if !fpu_enable_ccr
         .short  0x0000                          /* e21f1e  pad; FIM_$SPURIOUS_INT is at 0xE21F20 */
+        .endif
         .endif

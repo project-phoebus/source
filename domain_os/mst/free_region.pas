@@ -2,6 +2,7 @@
   private segments.
 
   Image addresses:
+    sau4  0x0F882188  mst_$free_region (module-local)
     sau8  0x03C7F3EA  mst_$free_region (module-local)
     sau9  0x3C47C4AA  mst_$free_region (module-local)
 
@@ -21,6 +22,10 @@
     shared by the pair of regions and given back when the other is not
     active; the BST page, shared by four groups, when none of the four
     has a segment mapped; and the group has one MST word.
+  - With the region registers the region's register is made invalid
+    when its RARS page is installed, and loaded into the MMU when the
+    address space is the current one; the group's BST page and its
+    four MST words are given back with the region.
 
   Status stored: none.
 }
@@ -61,6 +66,34 @@ begin
     end;
     word := lshft(group, 6) div 64 + mst_asid_base[asid];
     mst_$unwire_asid_pages(word, word);
+    if netlog_$ok_to_log then
+      netlog_$log_it(mst_region_netlog_kind, uid_$nil, 0, 0, -1, group,
+                     0, 0);
+  end;
+end;
+%elseif region_mmu %then
+var
+  seg: pinteger;
+  page: 0..31;
+  word: integer;
+begin
+  if region in mst_$regions_active[asid] then begin
+    mst_$set_clear(mst_$regions_active[asid], mst_region_members, region);
+    { the region register, in its page of RARS (8 ASIDs' to a page) }
+    if rshft(asid, 3) in mst_$rar_pages then begin
+      rars[rars_asid_base[asid] + region].rar.valid := false;
+      if asid = proc1_$as_id then
+        mmu_$install_region(region, rars[rars_asid_base[asid] + region].all);
+    end;
+    seg := group * mst_region_segs;
+    mst_$unwire_page(addr(smaps[seg + smap_asid_base[asid]]));
+    page := seg div 256;
+    if page in mst_$bst_pages[asid] then begin
+      mst_$bst_pages[asid] := mst_$bst_pages[asid] - [page];
+      mst_$unwire_page(addr(bst[seg + bst_asid_base[asid]]));
+    end;
+    word := seg div 64 + mst_asid_base[asid];
+    mst_$unwire_asid_pages(word, word + mst_region_segs div 64 - 1);
     if netlog_$ok_to_log then
       netlog_$log_it(mst_region_netlog_kind, uid_$nil, 0, 0, -1, group,
                      0, 0);

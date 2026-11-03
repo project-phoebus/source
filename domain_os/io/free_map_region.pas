@@ -2,6 +2,7 @@
 
   Image addresses:
     sau3  0x00E19FC4  IO_$FREE_MAP_REGION
+    sau4  0x0F81BB72  IO_$FREE_MAP_REGION
     sau5  0x00E1B28E  IO_$FREE_MAP_REGION
     sau8  0x03C1BF66  IO_$FREE_MAP_REGION
 

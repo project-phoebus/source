@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6E4D4  smd_$add_trk_rects_internal (module-local)
+    sau4  0x0F878C6A  smd_$add_trk_rects_internal (module-local)
     sau5  0x00E70956  smd_$add_trk_rects_internal (module-local)
     sau9  0x3C474EDC  smd_$add_trk_rects_internal (module-local)
 

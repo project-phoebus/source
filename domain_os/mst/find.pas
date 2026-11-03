@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E0E11E  MST_$FIND
+    sau4  0x0F80EAA6  MST_$FIND
     sau8  0x03C0F55C  MST_$FIND
     sau9  0x3C410648  MST_$FIND
 
@@ -21,7 +22,7 @@ var
 begin
   if (flags & 5) <> 0 then
     crash_system(status_$reference_to_out_of_bounds_address);
-%if pmap_threads %then
+%if find_touches %then
   { the page is always faulted in }
   if (flags & 2) <> 0 then
     mst_$find := mst_$touch(virt_addr, status, 1)

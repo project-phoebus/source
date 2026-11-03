@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E448B0  MST_$UNMAP_PRIVI
+    sau4  0x0F84CCB4  MST_$UNMAP_PRIVI
     sau8  0x03C4CE48  MST_$UNMAP_PRIVI
     sau9  0x3C44BFC6  MST_$UNMAP_PRIVI
 
@@ -10,7 +11,7 @@
     MSTE is unmapped through AREA_$REMOVE_SEG or MST_$REMOVE_SEG.
   - The entry loses its ASTE index and is freed, or, with
     mst_unmap_keep_entry, kept and marked unmapped.
-  - With the large address space a freed entry counts its segment group
+  - With the regions a freed entry counts its segment group
     down in MST_$SEGS_MAPPED (a count already zero crashes the system);
     a private group that reaches zero has its region freed.
   - A missing page-table page skips a whole 64-segment block; the range
@@ -54,7 +55,7 @@ var
 %endif
 begin
   va := linteger(start) & 16#FFFF8000;
-%if large_address_space %then
+%if large_address_space or vm_8192_segs %then
   if ((mode & mst_unmap_any_seg) = 0) and then
      (rshft(va, 15) >= mst_unmap_privi_first_refused) then
     goto illegal;

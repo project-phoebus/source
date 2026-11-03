@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E32834  io_$build_dcte_list
     sau3  0x00E31004  io_$build_dcte_list
+    sau4  0x0F83599C  io_$build_dcte_list
     sau5  0x00E347E4  io_$build_dcte_list
     sau8  0x03C361F0  io_$build_dcte_list
 

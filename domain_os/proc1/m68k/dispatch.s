@@ -11,6 +11,8 @@
  * word (MMU) into the outgoing process's fault status word, and clears
  * the register where the SAU2 clears the MMU status; those lines carry
  * the SAU8 image's addresses.
+ * The SAU4's MMU status is the word at MMU + 2 (`mmu_status_word'),
+ * cleared with a word store; that line carries the SAU4 image's address.
  *
  * Byte gate (tools/asm_compare.py, `make check'): encodings
  * identical to the image (modulo the documented widenings); address
@@ -191,6 +193,8 @@ _PROC1_$DISPATCH_INT3:
         bclr    #4, (MMU_CCR).l         /* sau9 3c42369c  memory error    */
         .elseif cpu_status_register
         move.w  #0, (MMU).l             /* sau8 3c222ce  33fc 0000 03ff b400 */
+        .elseif mmu_status_word
+        move.w  #0, (MMU+2).l           /* sau4 f82209c  33fc 0000 0fff b402 */
         .else
         move.b  #0, MMU_STATUS_REG      /* 0x00FFB403 */
         .endif

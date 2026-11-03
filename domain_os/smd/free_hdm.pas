@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6DA3A  SMD_$FREE_HDM
+    sau4  0x0F878126  SMD_$FREE_HDM
     sau5  0x00E6FDCA  SMD_$FREE_HDM
     sau9  0x3C474754  SMD_$FREE_HDM
 

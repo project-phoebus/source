@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E4487C  MST_$SET_GUARD
+    sau4  0x0F84CC80  MST_$SET_GUARD
     sau8  0x03C4CE14  MST_$SET_GUARD
     sau9  0x3C44BF92  MST_$SET_GUARD
 

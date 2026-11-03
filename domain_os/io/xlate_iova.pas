@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E1A970  IO_$XLATE_IOVA
     sau3  0x00E19A20  IO_$XLATE_IOVA
+    sau4  0x0F81B5D8  IO_$XLATE_IOVA
     sau5  0x00E1ACD0  IO_$XLATE_IOVA
     sau8  0x03C1BAF4  IO_$XLATE_IOVA
 

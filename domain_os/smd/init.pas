@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E34D2C  SMD_$INIT
+    sau4  0x0F838038  SMD_$INIT
     sau5  0x00E36F04  SMD_$INIT
     sau9  0x3C43B478  SMD_$INIT
 
@@ -13,6 +14,8 @@
   - With `gpu_driver' the graphics board's id chooses unit 1's display
     (the DN580's or the DN570's) and no unit is probed; with
     `color_board' a silent unit 2 is probed as the color board.
+  - With `blt_main_memory' unit 1's main-memory BLT pages start at the
+    I/O map's entry 128, unit 2's at 96.
   - With `display_devices' each of the eight units takes the device
     SMD_$ADD_DEVICE gave it, or none; the device's areas are wired
     and its type and size give the display's.
@@ -70,7 +73,7 @@ begin
         video_flags := 1;
         field_24 := 0;
         field_3e := chr(0);
-        field_5e := 0;
+        mm_page_count := 0;
         ec_$init(cursor_ec);
         field_4c := [];
 
@@ -145,6 +148,9 @@ begin
       smd_$wired_data.unit[1].hw := addr(smd_$display_com[1]);
       smd_$wired_data.unit[1].hw^.display_type := smd_$none;
       smd_$wired_data.unit[1].display_uid := display1_$uid;
+%if blt_main_memory %then
+      smd_$wired_data.unit[1].iomap_base := smd_unit1_iomap_base;
+%endif
     end;
 %if gpu_driver %then
     2: begin
@@ -178,6 +184,9 @@ begin
   smd_$wired_data.unit[2].hw := addr(smd_$display_com[2]);
   smd_$wired_data.unit[2].hw^.display_type := smd_$none;
   smd_$wired_data.unit[2].display_uid := display2_$uid;
+%if blt_main_memory %then
+  smd_$wired_data.unit[2].iomap_base := smd_unit2_iomap_base;
+%endif
 %else
   { unit 1's record }
   case init_case of
@@ -277,7 +286,7 @@ begin
       video_flags := 1;
       field_24 := 0;
       field_3e := chr(0);
-      field_5e := 0;
+      mm_page_count := 0;
       ec_$init(cursor_ec);
       field_4c := [];
 

@@ -27,6 +27,10 @@ const
   mst_$seg_mem_top = 32768;
   { An address space's private segments, private A and private B. }
   mst_$seg_tn = 30464;
+%elseif vm_8192_segs %then
+  mst_private_b_count = 256;
+  mst_$seg_mem_top = 8192;
+  mst_$seg_tn = 7680;
 %elseif run_time_layout %then
   mst_private_b_count = 64;
 %else
@@ -41,17 +45,20 @@ type
   { A region of an address space, and a set of them
     (MST_$REGIONS_ACTIVE): 256 regions, or with the layout chosen at
     boot 128 (the PMMU layout's).  The image tests a region's member
-    unguarded, so the region's type is the set's base type. }
+    unguarded, so the region's type is the set's base type.  With the
+    region registers, 32 regions. }
 %if run_time_layout %then
   mst_region_t = 0..127;
+%elseif region_mmu %then
+  mst_region_t = 0..31;
 %else
   mst_region_t = 0..255;
 %endif
   mst_region_set_t = set of mst_region_t;
 
   { An ASID's BST pages (MST_$BST_PAGES, 16 bytes, or with the layout
-    chosen at boot a longword). }
-%if run_time_layout %then
+    chosen at boot or the 8192 segments a longword). }
+%if run_time_layout or vm_8192_segs %then
   mst_bst_page_set_t = set of 0..31;
 %else
   mst_bst_page_set_t = set of 0..127;
@@ -62,11 +69,16 @@ const
   { The segments of a region, the members of MST_$REGIONS_ACTIVE's sets
     (MST_$SET's and MST_$SET_CLEAR's size), and the groups of an ASID's
     MST segments MST_$SEGS_MAPPED counts: 238 words per ASID, or with
-    the layout chosen at boot 116, the PMMU layout's 7424 segments. }
+    the layout chosen at boot 116, the PMMU layout's 7424 segments;
+    with the region registers a region is a 32nd of the segments. }
 %if run_time_layout %then
   mst_region_segs = 64;
   mst_region_members = 128;
   mst_seg_groups = 116;
+%elseif region_mmu %then
+  mst_region_segs = mst_$seg_mem_top div 32;
+  mst_region_members = 32;
+  mst_seg_groups = mst_$seg_tn div mst_region_segs;
 %else
   mst_region_segs = 128;
   mst_region_members = 256;
@@ -74,8 +86,13 @@ const
 %endif
 
   { The special segments (MST_$MAP_SPECIAL): the top 16 of private B,
-    segments mst_$seg_global_b - 16 .. mst_$seg_global_b - 1. }
+    segments mst_$seg_global_b - 16 .. mst_$seg_global_b - 1; with the
+    8192 segments the top 9. }
+%if vm_8192_segs %then
+  mst_special_segs = 9;
+%else
   mst_special_segs = 16;
+%endif
 
   { mst_$alloc_segs's window for a private B-space mapping: the top 8
     segments of private B, MST segments mst_$seg_tn - 8 .. mst_$seg_tn
@@ -94,7 +111,7 @@ const
   status_$mst_invalid_segment_count = 16#00040010;
 %endif
 
-%if large_address_space %then
+%if large_address_space or vm_8192_segs %then
 const
 
   { The regions every address space has active: global A (237, 238)
@@ -140,13 +157,13 @@ var
   mst_$asid_lock: extern ml_$exclusion_t;
   mst_asid_base: extern mst_asid_base_t;
   mst_$touch_count: extern pinteger;
-%if not large_address_space %then
+%if not (large_address_space or vm_8192_segs) %then
   mst_$seg_mem_top: extern pinteger;
 %endif
-%if not large_address_space %then
+%if not (large_address_space or vm_8192_segs) %then
   mst_$seg_tn: extern pinteger;
 %endif
-%if not large_address_space %then
+%if not (large_address_space or vm_8192_segs) %then
   mst_$seg_high: extern pinteger;
   mst_$seg_global_b_offset: extern pinteger;
   mst_$seg_private_b_offset: extern pinteger;
@@ -191,9 +208,72 @@ const
   mst_$seg_private_b_end = 30719;
   mst_$seg_private_a_end = 30335;
   mst_$seg_global_a_end = 30591;
+%elseif vm_8192_segs %then
+const
+  { The rest of the 8192 segments' layout, constants: global B's offset
+    in the MST words 7680, the canned mappings' top 8176 (496 above that
+    offset), private B's offset 256, the last segments of private A 7423,
+    of global A 7679 and of private B 7935. }
+  mst_$seg_global_b_offset = 7680;
+  mst_$seg_high = 8176;
+  mst_$seg_private_b_offset = 256;
+  mst_$seg_private_b_end = 7935;
+  mst_$seg_private_a_end = 7423;
+  mst_$seg_global_a_end = 7679;
 %endif
 
 %if large_vm %then
+%if region_mmu %then
+type
+  { The forward tables with the region registers.  An address space's
+    segment map entry (SMAPS, a longword, per ASID from SMAP_ASID_BASE):
+    the valid bit, the MST entry's five protection bits (bit k of the
+    protection at bit 26 + k) and the page map's physical address.  The
+    views:
+    - e, the protection as a field;
+    - b, its bits as booleans (copy_on_write and writable name
+      protection bits 2 and 0, as mst_flags_t's do);
+    - bits, the longword as a set (member 31 the valid bit);
+    - all, the longword. }
+  mst_smap_prot_t = packed record
+    valid: boolean;                       { bit 31 }
+    prot: 0..31;                          { bits 30..26 }
+    pmap_pa: 0..16#3FFFFFF;               { bits 25..0 }
+  end;
+  mst_smap_bits_t = packed record
+    valid: boolean;                       { bit 31 }
+    prot_bit_4: boolean;                  { bit 30 }
+    prot_bit_3: boolean;                  { bit 29 }
+    copy_on_write: boolean;               { bit 28 }
+    prot_bit_1: boolean;                  { bit 27 }
+    writable: boolean;                    { bit 26 }
+    pmap_pa: 0..16#3FFFFFF;               { bits 25..0 }
+  end;
+  mst_smap_t = record
+    case integer of
+      1: (e: mst_smap_prot_t);
+      2: (b: mst_smap_bits_t);
+      3: (bits: set of 0..31);
+      4: (all: integer32);
+  end;
+
+  { A region register in RARS, a longword: the valid and global bits
+    and the physical address of the region's page of segment map
+    entries, as a segment map entry holds its page map's (MST_$INIT
+    stores the address as a 26-bit field). }
+  mst_rar_t = packed record
+    valid: boolean;                       { bit 31 }
+    global: boolean;                      { bit 30 }
+    unused_29_26: 0..15;                  { bits 29..26 }
+    smap_pa: 0..16#3FFFFFF;               { bits 25..0 }
+  end;
+  mst_rars_t = record
+    case integer of
+      1: (all: integer32);                { 0x00 }
+      2: (rar: mst_rar_t);                { 0x00 }
+      3: (bits: set of 0..31);            { 0x00 }
+  end;
+%else
 type
   { The forward tables of the large VM layout.  An address space's
     segment map entry (SMAPS, 8 bytes, per ASID from SMAP_ASID_BASE), an
@@ -238,6 +318,7 @@ const
   mst_smap_invalid = 0;
   mst_smap_valid = 2;
   mst_rars_valid = 3;
+%endif
 
 var
   { SMAPS and BST (map symbols without `$', OS_PMAPS and VM_TABLES):
@@ -249,6 +330,9 @@ var
 %if run_time_layout %then
   smaps: extern array[0..96511] of mst_smap_t;
   bst: extern array[0..103935] of mst_$pmap_link_t;
+%elseif vm_8192_segs %then
+  smaps: extern array[0..445439] of mst_smap_t;
+  bst: extern array[0..445439] of mst_$pmap_link_t;
 %else
   smaps: extern array[0..1767935] of mst_smap_t;
   bst: extern array[0..1767935] of mst_$pmap_link_t;
@@ -288,8 +372,11 @@ var
 %if run_time_layout %then
   { MST_$RAR_PAGES (map symbol of MST_UNWIRED's .DATA block): the pages
     of RARS installed, member k the page k pages from RARS's start
-    (MST_$INIT sets page 0 alone, MST_$ALLOC_ASID adds a new ASID's). }
+    (MST_$INIT sets page 0 alone, MST_$ALLOC_ASID adds a new ASID's).
+    With the region registers RARS is 8 pages: a word. }
   mst_$rar_pages: extern set of 0..31;
+%elseif region_mmu %then
+  mst_$rar_pages: extern set of 0..7;
 %endif
 
   { MST_$MST_PAGES_WIRED (map symbol in MST_UNWIRED's .DATA block, +0x34;
@@ -421,7 +508,9 @@ var
     forms the page's address and reaches the entry's fields 0x400 below
     it, the 1-based element's bias.  358 pages, to the end of
     VM_TABLES. }
-%if large_vm %then
+%if vm_8192_segs %then
+  mste_pages: extern array[1..819] of mst_page_t;
+%elseif large_vm %then
   mste_pages: extern array[1..9600] of mst_page_t;
 %else
   mste_pages: extern array[1..358] of mst_page_t;

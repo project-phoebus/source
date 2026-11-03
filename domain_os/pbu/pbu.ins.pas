@@ -182,6 +182,8 @@ const
   { PBU_$GET_INFO's second and third words. }
 %if pbu_atbus_units %then
   pbu_info_2 = 8;
+%elseif mbus_map_64k %then
+  pbu_info_2 = 1;
 %else
   pbu_info_2 = 2;
 %endif
@@ -205,12 +207,16 @@ const
     segment is 0x1C00 bytes on the SAU5, a word per physical page from
     16#200, and 0xE00 bytes on the SAU3, a byte per page
     (`pbu_8_units'); 0x4000 bytes on the SAU8, a word per page from
-    16#400 (`mmap_ppns_400').
-    TODO(sau) the SAU4's and SAU7's PBU_TABLES sizes differ (0x3E00,
-    0x18000); a part's constant when they are translated. }
+    16#400 (`mmap_ppns_400'); 0x3E00 bytes on the SAU4, a byte per
+    page from 16#200 to 16#3FFF (`mmap_ppns_200_3fff').
+    TODO(sau) the SAU7's PBU_TABLES size differs (0x18000); a part's
+    constant when it is translated. }
 %if mmap_ppns_400 %then
   pbu_ppn_owners_first = 16#400;
   pbu_ppn_owners_last = 16#23FF;
+%elseif mmap_ppns_200_3fff %then
+  pbu_ppn_owners_first = 16#200;
+  pbu_ppn_owners_last = 16#3FFF;
 %else
   pbu_ppn_owners_first = 16#200;
   pbu_ppn_owners_last = 16#FFF;
@@ -467,6 +473,11 @@ var
                                        pbu_ppn_owners_last] of
     pbu_$unit_set_t;
 
+  { PBU_IO (map symbol of the I/O definitions, no `$'): the PBU's I/O
+    pages' base; a unit's CSR address on the bus is its page's distance
+    from it (LPR_$ACQUIRE). }
+  pbu_io: extern char;
+
   { PBU_$PAGE_START (map symbol, PBU_ASM's first byte): with
     PBU_$DATA_END the range PBU_$WIRE_PBU wires.  A marker. }
   pbu_$page_start: extern char;
@@ -477,9 +488,13 @@ var
     module drivers write it, pbu_clear_iomap clears it.  A longword with
     `long_iomap' (the SAU5, SAU6); otherwise the entry is the first word
     of the 4 bytes (pbu_$iomap_entry_t), bit 15 its valid bit and the
-    page number below the control bits, the second word not written. }
+    page number below the control bits, the second word not written.
+    With `word_iomap' the entries are words, 2 bytes a page (the map's
+    0x800 bytes to the end of the address space), the page number alone. }
 %if long_iomap %then
   iomap: extern array[0..1023] of integer32;
+%elseif word_iomap %then
+  iomap: extern array[0..1023] of pinteger;
 %else
   iomap: extern array[0..1023] of pbu_$iomap_entry_t;
 %endif

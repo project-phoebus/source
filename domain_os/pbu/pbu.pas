@@ -2,6 +2,7 @@
 
   Image addresses:
     sau3  0x00E82448  PBU data (.DATA, 0x5C bytes)
+    sau4  0x0F88F4B0  PBU data (.DATA, 0x58 bytes)
     sau5  0x00E88048  PBU data (.DATA, 0x5C bytes)
     sau8  0x03C9986C  PBU data (.DATA, 0x58 bytes)
 
@@ -23,6 +24,12 @@
   VME bus's, `vme_bus'), 8 units (`pbu_8_units'), word I/O map entries
   (no `long_iomap') and PBU_$WIRE_SPECIAL without its body (no
   `pbu_wire_special').
+
+  On the SAU4 0x1938 bytes of code: the SAU3's routines with the large
+  virtual memory's I/O page mapping (`large_vm'), word I/O map entries
+  with no transfer control (`word_iomap', `pbu_transfer_control'), the
+  64 KB Multibus map (`mbus_map_64k') and the Multibus window at
+  16#10000 (`mbus_low_window').
 
   On the SAU8 0x18F0 bytes of code: three module-local routines and a
   nested one (PBU_$WIRE_SPECIAL's release_pages), 16 units on the AT bus
@@ -51,7 +58,8 @@
     +0x58  pbu_wired_count  the count of pbu_wired_pages
     (the block's last two bytes are the compiler's padding)
 
-  Without `pbu_transfer_control' (the SAU8) the block is 0x58 bytes:
+  Without `pbu_transfer_control' (the SAU4, SAU8) the block is 0x58
+  bytes:
 
     +0x00  pbu_wired_pages     the PBU page's wired pages, 21
     +0x54  pbu_wired_count     the count of pbu_wired_pages
@@ -90,9 +98,10 @@ module pbu;
 %endif
 
 %if pbu_driver %then
-{ TODO(sau) the SAU4, SAU6 and SAU7 PBU code
+{ TODO(sau) the SAU6 and SAU7 PBU code
 
-  The module's code below is the SAU5's, the SAU3's and the SAU8's.  27
+  The module's code below is the SAU5's, the SAU3's, the SAU4's and the
+  SAU8's.  27
   of the 32 PBU routines differ between the SAUs with the driver
   (tools/sau_catalog.py), and the code segments differ in size (0x1ADC
   on the SAU3, 0x1938 on the SAU4, 0x1FC0 on the SAU5, 0x1F7C on the

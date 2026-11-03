@@ -4,6 +4,7 @@
 
   Image addresses:
     sau2  0x00E43E10  mst_$set_mstes (module-local)
+    sau4  0x0F84BEE6  mst_$set_mstes (module-local)
     sau8  0x03C4C00C  mst_$set_mstes (module-local)
     sau9  0x3C44B1CA  mst_$set_mstes (module-local)
 
@@ -14,7 +15,10 @@
     entries instead (made invalid for MST_$TOUCH to fill); with the
     large address space each segment counts in MST_$SEGS_MAPPED.
   - The paging file's and the wired kernel's entries keep theirs.
-  - The cache is cleared at the end.
+  - With the region registers the segment map entry is made invalid
+    and given the protection.
+  - The cache is cleared at the end (not with
+    `set_mstes_no_cache_clear').
 
   Status stored: none.
 }
@@ -81,6 +85,10 @@ begin
   keep_smaps := (uid = network_$paging_file_uid) or (uid = os_wired_$uid);
   smap := addr(smaps[smap_asid_base[asid] + start_seg]);
   if not keep_smaps then begin
+%if region_mmu %then
+    smap^.bits := smap^.bits - [31];
+    smap^.e.prot := prot;
+%else
     { the protection's bits 0 and 3 in the table address's low bits, bit
       4 as supervisor only, bit 2 clear as write protect }
     smap^.ctl.dt := mst_smap_invalid;
@@ -101,6 +109,7 @@ begin
       smap^.flags := smap^.flags - [2]
     else
       smap^.flags := smap^.flags + [2];
+%endif
   end;
   for i := start_seg + 1 to end_seg do begin
 %if vm_regions %then
@@ -111,7 +120,9 @@ begin
       smaps[i + smap_asid_base[asid]] := smap^;
   end;
 %endif
+%if not set_mstes_no_cache_clear %then
   cache_$clear;
+%endif
 end;
 
 { TODO(pascal) mst_$set_mstes's frame: the image's frame is all

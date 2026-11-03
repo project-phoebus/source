@@ -4,6 +4,7 @@
   Image addresses:
     sau2  0x00E7CF0C  MST_UNWIRED data (.DATA, 0x48 bytes)
     sau2  0x00E85710  MST_UNWIRED data (DATA$, 4 bytes)
+    sau4  0x0F88A708  MST_UNWIRED data (.DATA, 0xF78 bytes)
     sau8  0x03C923CC  MST_UNWIRED data (.DATA, 0x3670 bytes)
     sau8  0x03C9E3B8  MST_UNWIRED data (DATA$, 4 bytes)
     sau9  0x3C48E1D0  MST_UNWIRED data (.DATA, 0x74D8 bytes)
@@ -54,6 +55,19 @@
     +0x365C  mst_$mst_pages_wired   2       zero
     +0x365E  unused_365e            2       zero (read by nothing)
     +0x3660  prot_rights            0x10    mst_$lookup_object's static
+
+  With the 8192 segments (`vm_8192_segs'), 0xF78 bytes:
+
+    +0x000  page_avail_bitmap      0x68    all ones
+    +0x068  mst_$segs_mapped       0xD98   zero, 30 words per ASID
+    +0xE00  mst_$bst_pages         0xE8    zero, a longword per ASID
+    +0xEE8  rars_asid_base         0x74    zero (MST_$PRE_INIT)
+    +0xF5C  page_alloc_hint        2       zero
+    +0xF5E  mst_$mst_pages_limit   2       zero
+    +0xF60  mst_$mst_pages_wired   2       zero
+    +0xF62  mst_$rar_pages         2       zero
+    +0xF64  unused_f64             4       zero (read by nothing)
+    +0xF68  prot_rights            0x10    mst_$lookup_object's static
 
   Build: dpc -I domain_os domain_os/mst/mst_unwired.pas.  Check:
   tools/pascal_check.sh.
@@ -130,8 +144,14 @@ const
 %else
   mst_pages_percent = 10;
 %endif
+%if vm_8192_segs %then
+  { With the 8192 segments the bound is 819, a tenth of 8192 pages
+    (MSTE_PAGES's size), not of the 15872 pageable ones. }
+  mst_pages_max = 8192 * mst_pages_percent div 100;
+%else
   mst_pages_max = (mmap_$last_ppn - mmap_$first_ppn + 1) *
                   mst_pages_percent div 100;
+%endif
   mst_bitmap_last = (mst_pages_max + 1) div 32;
 
 %if run_time_layout %then
@@ -155,6 +175,27 @@ define
 var
   unused_365e: integer;                   { +0x365E: 0000, stand-in }
   { +0x3660: prot_rights, mst_$lookup_object's static. }
+%elseif vm_8192_segs %then
+var
+  page_avail_bitmap: array[0..mst_bitmap_last] of mst_page_set_t :=
+    [* of [0..31]];                       { +0x000: ffff x 52 }
+
+define
+  mst_$segs_mapped;                       { +0x068 }
+  mst_$bst_pages;                         { +0xE00 }
+  rars_asid_base;                         { +0xEE8 }
+
+var
+  page_alloc_hint: pinteger;              { +0xF5C }
+
+define
+  mst_$mst_pages_limit;                   { +0xF5E }
+  mst_$mst_pages_wired;                   { +0xF60 }
+  mst_$rar_pages;                         { +0xF62 }
+
+var
+  unused_f64: integer32;                  { +0xF64: zero, stand-in }
+  { +0xF68: prot_rights, mst_$lookup_object's static. }
 %elseif large_address_space %then
 var
   page_avail_bitmap: array[0..mst_bitmap_last] of mst_page_set_t :=

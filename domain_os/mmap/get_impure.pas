@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0D5EA  MMAP_$GET_IMPURE
+    sau4  0x0F80DC3A  MMAP_$GET_IMPURE
     sau8  0x03C0E4AC  MMAP_$GET_IMPURE
     sau9  0x3C40F554  MMAP_$GET_IMPURE
 

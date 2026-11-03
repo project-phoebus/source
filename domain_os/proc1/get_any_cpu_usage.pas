@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E1543E  PROC1_$GET_ANY_CPU_USAGE
+    sau4  0x0F815CB2  PROC1_$GET_ANY_CPU_USAGE
 
   - An invalid pid crashes the system.  The counters are the PCB's two
     last longwords.

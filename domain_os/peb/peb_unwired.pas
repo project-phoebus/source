@@ -11,6 +11,8 @@
   .DATA (4 bytes: M68881_EXISTS, a boolean at +0, zero).  Without
   `peb_board' (base/config.ins.pas) only the OS_INIT_PROC segment, 0x1D8
   bytes on the SAU9: PEB_$INIT and PEB_$LOAD_WCS for the MC68881.
+  Without `peb_setup' (the SAU4, whose map has no PEB_UNWIRED segment)
+  the module compiles to nothing.
 
   The heading: `module peb_unwired;' (the defaults).  The OS_INIT_PROC
   routines are headed `[section(os_init_proc, os_init_data)]' and reach
@@ -41,6 +43,7 @@ module peb_unwired;
 %include 'fim/fim.ins.pas';
 %include 'peb/peb.ins.pas';
 
+%if peb_setup %then
 { The module's one variable, the map symbol M68881_EXISTS (+0x0, zero). }
 define
   m68881_exists;
@@ -78,4 +81,5 @@ define
 %include 'peb/unload_regs.pas';             { PEB_$UNLOAD_REGS }
 %include 'peb/get_fp.pas';                  { PEB_$GET_FP }
 %include 'peb/put_fp.pas';                  { PEB_$PUT_FP }
+%endif
 %endif

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E16D64  TIME_$Q_ENTER_ELEM
+    sau4  0x0F81771C  TIME_$Q_ENTER_ELEM
 
   - Under the queue's spin lock the element is inserted in expiry
     order; a new head sets up the queue's timer again, unless that

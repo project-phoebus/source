@@ -2,6 +2,7 @@
 
   Image addresses:
     sau3  0x00E58DD0  PBU_$DISSOC
+    sau4  0x0F861A18  PBU_$DISSOC
     sau5  0x00E58F94  PBU_$DISSOC
     sau8  0x03C6173E  PBU_$DISSOC
 

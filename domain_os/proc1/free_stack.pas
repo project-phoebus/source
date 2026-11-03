@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E1511A  PROC1_$FREE_STACK
+    sau4  0x0F81598E  PROC1_$FREE_STACK
 
   - Only a stack above the high-water mark (a 4 KB stack of the high
     region), compared unsigned, is linked in, through the longword below

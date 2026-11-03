@@ -26,8 +26,14 @@
  * Byte gate (tools/asm_compare.py): identical to the image modulo
  * relocations.  The absolute jmp to FIM_$COM (fim/m68k/com.s) is
  * relocated.
+ *
+ * Not on the SAUs whose floating-point registers are the CPU's own
+ * (`fp_state_in_cpu', base/config.ins.pas): the SAU4's routine is
+ * in fim/sau4/fp.s.
  */
 
+        .include "base/config.inc"
+        .if !fp_state_in_cpu
         .section ".text.FIM_$FRESTORE","ax",@progbits
         .even
 
@@ -81,3 +87,4 @@ FIM_$FRESTORE:
 .Lfr_done:
         movem.l (%sp)+,%d0-%d3/%a0-%a3          /* e21d42 */
         rts                                     /* e21d46 */
+        .endif

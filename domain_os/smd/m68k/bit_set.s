@@ -1,8 +1,8 @@
 /*
  * smd/m68k/bit_set.s - SMD_$BIT_SET (hand-written assembly)
  *
- * The SAU2 and SAU5 images have the same code here; the address and
- * byte columns below are the SAU2 image's.
+ * The SAU2, SAU4 and SAU5 images have the same code here; the address
+ * and byte columns below are the SAU2 image's.
  *
  * Original address: 0x00E15D12, 12 bytes.
  *

@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E5CA00  pchist_$enable_terminal (module-local)
+    sau4  0x0F866510  pchist_$enable_terminal (module-local)
 
   - The number of active profilers (per-process and system) goes to
     TERM_$PCHIST_ENABLE; the first one turned on writes one '.' to

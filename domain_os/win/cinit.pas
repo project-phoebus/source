@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E30340  WIN_$CINIT
+    sau4  0x0F8338BC  WIN_$CINIT
     sau5  0x00E31870  WIN_$CINIT
     sau8  0x03C332B0  WIN_$CINIT
 
@@ -13,6 +14,11 @@
     the select port, acquires its interrupt for WIN8_$INT and enables
     it, and sends it a command block of its own before the
     registration.
+  - The ring/disk form fills the unit record before the probe; an
+    answering controller gets WIN_$INT on twelve of the board's sixteen
+    vectors from the DCTE's first (+0x3E), its DMA controller cleared,
+    the SMD interface probed (smd_interface), the I/O map entries'
+    pointers set, and the registration.
 
   Returns:
     status_$ok: the controller answered
@@ -118,6 +124,62 @@ begin
   end;
 
   win_$cinit := result;
+end;
+%elseif win_ring_disk_ctlr %then
+[section(os_init_proc, os_init_data)]
+function win_$cinit(var dcte: dcte_t): integer32;
+var
+  status: integer32;
+  probe_data: array[1..6] of char;
+  regs: win_$regs_ptr_t;
+  id: io_$int_id_t;
+  i: integer;
+begin
+  status := status_$ok;
+
+  { the unit record }
+  win_units[dcte.cnum].dcte := addr(dcte);
+  win_units[dcte.cnum].regs := dcte.disk_dinit;
+  win_units[dcte.cnum].lock := dcte.disk_error_que_hi;
+
+  { the probe }
+  if not testpage(0, win_units[dcte.cnum].regs, probe_data) then
+    status := status_$io_controller_not_in_system
+  else begin
+    { the board's disk vectors: the first 9, the 11th, the 13th, the
+      15th }
+    for i := 0 to 8 do begin
+      id.vector := dcte.disk_error_que_lo + i;
+      sysbus_$define_int(id, addr(win_$int), addr(dcte));
+    end;
+    id.vector := dcte.disk_error_que_lo + 10;
+    sysbus_$define_int(id, addr(win_$int), addr(dcte));
+    id.vector := dcte.disk_error_que_lo + 12;
+    sysbus_$define_int(id, addr(win_$int), addr(dcte));
+    id.vector := dcte.disk_error_que_lo + 14;
+    sysbus_$define_int(id, addr(win_$int), addr(dcte));
+    ec_$init(win_unit_ec[dcte.cnum]);
+
+    { the DMA controller's reset, and the SMD interface's probe }
+    regs := win_units[dcte.cnum].regs;
+    regs^.dma_master_clear := 0;
+    regs^.dma_command := 16#60;
+    regs^.select := 16#FE;
+    regs^.cmd := 16#10;
+    win_units[dcte.cnum].flags.smd_interface := regs^.cmd <> 255;
+
+    { the I/O map entries of the two pages }
+    win_hdr_iomap := addr(iomap[win_iomap_first]);
+    win_data_iomap := addr(iomap[win_iomap_first + 1]);
+
+    { the registration }
+    win_units[dcte.cnum].unit_bits := win_units[dcte.cnum].unit_bits + [13];
+    win_units[dcte.cnum].unit_bits := win_units[dcte.cnum].unit_bits + [11];
+    discard(disk_$register(0, dcte.cnum, win_units[dcte.cnum].units,
+                           win_units[dcte.cnum].lock, addr(win_jump_table)));
+  end;
+
+  win_$cinit := status;
 end;
 %else
 

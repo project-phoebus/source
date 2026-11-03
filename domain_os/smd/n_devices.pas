@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E70024  SMD_$N_DEVICES
     sau3  0x00E6E648  SMD_$N_DEVICES
+    sau4  0x0F87A930  SMD_$N_DEVICES
     sau5  0x00E72550  SMD_$N_DEVICES
     sau9  0x3C476492  SMD_$N_DEVICES
 

@@ -3,7 +3,8 @@
   for the Domain Pascal tree.
 
   The COLOR_ module (color/color.pas) and its hand-written COLOR_ASM
-  data (color/sau5/color_asm.s), with `color_board' (base/config.ins.pas).
+  data (color/sau4/color_asm.s, color/sau5/color_asm.s), with
+  `color_board' (base/config.ins.pas).
   No customer insert file declares these.  Include base/base.ins.pas and
   ec/ec.ins.pas before it.
 
@@ -33,6 +34,32 @@ const
     size of the module's page list). }
   color_max_pages = 33;
 
+  { The board's command words that turn its display on and off, and its
+    interrupt vector (COLOR_$INT_INIT).  With `color_board_iomap' the
+    I/O map's entries for the wired pages: COLOR_$MAP's page n goes in
+    entry color_iomap_first + n, and COLOR_$UNMAP empties an entry with
+    color_iomap_empty. }
+%if color_board_iomap %then
+  color_cmd_display_on = 16#000E;
+  color_cmd_display_off = 16#0006;
+  color_int_vector = 16#CE;
+  color_iomap_first = 95;
+  color_iomap_empty = 16#0FFF;
+%else
+  color_cmd_display_on = 16#280E;
+  color_cmd_display_off = 16#2806;
+  color_int_vector = 16#A8;
+%endif
+
+  { Where COLOR_$ASSOC puts the board's user page in the caller's address
+    space: with `vm_regions' special segment 0's address (MST_$MAP_SPECIAL
+    maps the segment there), otherwise the private page at 16#6000. }
+%if vm_regions %then
+  color_user_va = 16#0F7B8000;
+%else
+  color_user_va = 16#6000;
+%endif
+
 type
   { A cursor's bitmap as COLOR_$LOAD_CRSR reads it: words from the
     first, as many as the cursor's size needs, so a one-element `univ'
@@ -44,17 +71,20 @@ var
     board's "instruction queue done" interrupt advances. }
   color_$iq_done_ec: extern ec_$eventcount_t;
 
-{ ---- COLOR_ASM's routines (hand assembly, color/sau5/color_asm.s). ---- }
+{ ---- COLOR_ASM's routines (hand assembly, color/sau4/color_asm.s,
+  color/sau5/color_asm.s). ---- }
 
 { COLOR_$VECTOR_INIT: defines the board's interrupt; nothing pushed. }
 procedure color_$vector_init; extern;
 
+%if not color_board_iomap %then
 { COLOR_$LOAD_MAP: a color map entry's address and its two words, off
   the stack by value (COLOR_$MAP pushes two words and an address,
   COLOR_$UNMAP one longword constant for the two): `val_param'. }
 procedure color_$load_map(entry: univ_ptr; word_1: integer;
                           word_2: integer);
   options(extern, val_param);
+%endif
 
 { ---- The module's routines (color/color.pas), in map order. ---- }
 

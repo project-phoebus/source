@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E08CEA  AREA_$GROW_TO
+    sau4  0x0F8091FE  AREA_$GROW_TO
     sau9  0x3C40A4DC  AREA_$GROW_TO
 
   - AREA_$GROW with the area's index for a handle and no active or

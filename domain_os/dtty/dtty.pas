@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E2E00C  DTTY data (WIRED_DATA, 0xC bytes)
     sau3  0x00E2CB98  DTTY data (WIRED_DATA, 4 bytes)
+    sau4  0x0F831144  DTTY data (WIRED_DATA, 0xC bytes)
 
   One compilation unit, in two code sections and one data section: the
   map's DTTY code segments in WIRED_PROC (0x1C8 bytes: four module-local
@@ -87,9 +88,69 @@ const
     cell of DTTY_$INIT's. }
   dtty_second_display_unit = 2;
 
+%if dtty_color_board %then
+const
+  { The color board's clear command (dtty_$color_clear_window). }
+  dtty_color_op_clear = 16#F100;
+
+type
+  { The color graphics board's registers at COLOR_SUP (the map's I/O
+    definitions) as the display TTY reaches them: the status word, its
+    members 13 and 15 set while the board is busy; the mode word, read;
+    the command word, written. `[device]': hardware registers. }
+  dtty_color_regs_t = [device] record
+    unused_00: pinteger;                  { 0x00 }
+    status: set of 0..15;                 { 0x02 }
+    unused_04: array[2..76] of pinteger;  { 0x04 }
+    mode: pinteger;                       { 0x9A }
+    unused_9c: pinteger;                  { 0x9C }
+    data: pinteger;                       { 0x9E }
+  end;
+
+  { The mode word as the board takes it back: whole, and its low byte
+    set all ones. }
+  dtty_color_mode_t = record
+    case integer of
+      1: (all: pinteger);                 { 0x00 }
+      2: (high: char;                     { 0x00 }
+          low: boolean);                  { 0x01 }
+  end;
+
+  { A command's words, as many as its count (dtty_$color_command's
+    formal is `univ'). }
+  dtty_color_words_t = array[1..1] of pinteger;
+
+  { The clear command, five words: the operation, the window's left and
+    bottom limits, then its right and top limits as they lie in the
+    window, one longword. }
+  dtty_color_clear_t = record
+    op: pinteger;                         { 0x00 }
+    xs: integer;                          { 0x02 }
+    ye: integer;                          { 0x04 }
+    xe_ys: integer32;                     { 0x06 }
+  end;
+
+  { A window seen as dtty_$color_clear_window reads it (the layout of
+    smd_$window_limits_t). }
+  dtty_color_window_view_t = record
+    xs: integer;                          { 0x00 }
+    xe_ys: integer32;                     { 0x02 }
+    ye: integer;                          { 0x06 }
+  end;
+
+var
+  { COLOR_SUP (map symbol of the I/O definitions): the color board's
+    register page. }
+  color_sup: extern dtty_color_regs_t;
+
+%endif
 { ---- WIRED_PROC ---- }
 %if display_driver %then
 %include 'dtty/get_disp_type.pas';          { dtty_$get_disp_type }
+%if dtty_color_board %then
+%include 'dtty/color_command.pas';          { dtty_$color_command }
+%include 'dtty/color_clear_window.pas';     { dtty_$color_clear_window }
+%endif
 %include 'dtty/clear_window.pas';           { dtty_$clear_window }
 %include 'dtty/report_error.pas';           { dtty_$report_error }
 %include 'dtty/load_font.pas';              { dtty_$load_font }

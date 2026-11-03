@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E09EF4  AREA_$DEACTIVATE_ASTE
+    sau4  0x0F80A728  AREA_$DEACTIVATE_ASTE
     sau9  0x3C40B9B4  AREA_$DEACTIVATE_ASTE
 
   - Under the AST lock the segment's slot cell is found (in the entry,
@@ -183,8 +184,12 @@ begin
       link.seg := seg;
       ml_$lock(ml_$pmap_lock);
       while link.asid <> -1 do begin
+%if region_mmu %then
+        smaps[smap_asid_base[link.asid] + link.seg].e.valid := false;
+%else
         smaps[smap_asid_base[link.asid] + link.seg].ctl.dt :=
           mst_smap_invalid;
+%endif
         link := bst[bst_asid_base[link.asid] + link.seg];
       end;
       ml_$unlock(ml_$pmap_lock);

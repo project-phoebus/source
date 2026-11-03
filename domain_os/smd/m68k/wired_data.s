@@ -1,9 +1,9 @@
 /*
  * smd/m68k/wired_data.s - the data of the hand-written SMD_WIRED segment
- * (SAU2, SAU5, SAU9)
+ * (SAU2, SAU4, SAU5, SAU9)
  *
- * The SAU2, SAU5 and SAU9 images have the same data here except in three
- * places, which test base/config.ins.pas's parts:
+ * The SAU2, SAU4, SAU5 and SAU9 images have the same data here except in
+ * three places, which test base/config.ins.pas's parts:
  *   gpu_driver         after MATROX_$BOARD_INSTALLED, the SAU5's map
  *                      symbols COLOR3_$CR_CONTENTS and
  *                      SMD_$GRAPHIC_DEVICE_ID and the SAU5 cursor body's
@@ -12,13 +12,17 @@
  *                      The maps: SMD_$GRAPHIC_DEVICE_ID and
  *                      COLOR3_$CR_CONTENTS are SAU5 and SAU6 symbols
  *                      only (SMD_$INIT reads the first: config.ins.pas's
- *                      gpu_driver); the SAU6's run is 0x62 bytes and the
- *                      SAU4's (no such symbols) 0x32, other forms, for
- *                      their own arms when those SAUs are built.
+ *                      gpu_driver); the SAU6's run is 0x62 bytes, another
+ *                      form, for its own arm when that SAU is built.
+ *                      With `color_board' alone (the SAU4) the run is
+ *                      0x32 bytes: two zero words, then the SAU5's
+ *                      command blocks from +0x31E.
+ *   blt_main_memory    the SAU4's SMD_$DISPLAY_COM is two 0xE0-byte
+ *                      records (0x1C0 bytes), and the US table ends the
+ *                      segment, with no zero word after it.
  *   two_display_units  SMD_$DISPLAY_COM is two 0x60-byte display
- *                      records on the SAU5 (0xC0 bytes, as the SAU6's;
- *                      the SAU4's is 0x1C0, another form), one on the
- *                      SAU2.
+ *                      records on the SAU5 (0xC0 bytes, as the SAU6's),
+ *                      one on the SAU2.
  *   display_devices    the SAU9's segment (`D 3C42A720 SMD_WIRED size =
  *                      4D8') is the data run from SMD_$CURSOR_TABLE
  *                      alone: no code, so no MATROX_$BOARD_INSTALLED;
@@ -27,8 +31,8 @@
  *                      ends the segment, with no zero word after it.
  *                      The other bytes are the SAU2's.
  * The address and byte columns are the SAU2 image's, except on the lines
- * of the `.if' arms taken by the SAU5 alone, which carry the SAU5 image's
- * addresses.  Every other byte is the same on both; the pointer cells
+ * of the `.if' arms taken by the SAU5 or SAU4 alone, which carry that
+ * image's addresses.  Every other byte is the same on both; the pointer cells
  * are relocations, so their values (the SAU2's in the comments) follow
  * each SAU's layout.
  *
@@ -127,8 +131,16 @@ SMD_$GRAPHIC_DEVICE_ID:                         /* sau5 e2804e */
 
 /* +0x31A: not referenced by the code. */
         .word   0, 0                            /* sau5 e28092 */
+        .elseif color_board
 
-/* +0x31E: the DN6xx/DN550 controllers' cursor command block.  The erase
+/* The SAU4's (its cursor body's base is SMD_$DISP2_INT, MATROX_$BOARD_
+   INSTALLED at +0x2E2): +0x2E4, two words the code does not reference. */
+        .word   0, 0                            /* sau4 f8296a0 */
+        .endif
+
+        .if gpu_driver + color_board
+/* +0x31E (the SAU4's +0x2E8): the controllers' cursor command block,
+   which the SAU4's cursor body sends to the color board.  The erase
    form is its first 9 words, the draw form all 19; +0x320's high byte
    is the controller's byte at +0x9A, put in before each send.  The
    cursor body fills the zero words; the DN570's cursor commands use the
@@ -184,7 +196,9 @@ SMD_$CURSOR_PTABLE:                             /* e27366 */
 /* SMD_$DISPLAY_COM: the one 0x60-byte display record (the SAU5's: two,
    unit 1's and unit 2's; smd/smd_internal.ins.pas), zero in the image. */
 SMD_$DISPLAY_COM:                               /* e27376 */
-        .if two_display_units
+        .if blt_main_memory
+        .space  0x1c0                           /* sau4 f829894 */
+        .elseif two_display_units
         .space  0xc0                            /* sau5 e28356 */
         .elseif display_devices
         .space  0x300                           /* sau9 3c42a7d0 */
@@ -229,7 +243,7 @@ SMD_$KTT:                                       /* e273fe */
         .byte   0xD0,0xD1,0xD2,0xD3,0xD4,0xD5,0xD6,0xD7,0x5C,0x7C,0x98,0x96,0x3F,0x94,0x95,0xFF  /* e274ce */
         .byte   0xE0,0xE1,0xE2,0xE3,0xE4,0xE5,0xE6,0xE7,0xFF,0xB5,0xB6,0xB7,0xB8,0xB1,0xB2,0xB3  /* e274de */
         .byte   0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0x1C,0x7F,0x99,0x96,0x1F,0xB4,0x9E,0x9F  /* e274ee */
-        .if !display_devices
+        .if !display_devices && !blt_main_memory
         .word   0                               /* e274fe: to the segment's end */
         .endif
 

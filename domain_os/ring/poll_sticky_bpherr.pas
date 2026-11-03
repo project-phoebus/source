@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E76290  RING_$POLL_STICKY_BPHERR
+    sau4  0x0F883B1C  RING_$POLL_STICKY_BPHERR
     sau8  0x03C82B20  RING_$POLL_STICKY_BPHERR
     sau9  0x3C47E712  RING_$POLL_STICKY_BPHERR
 
@@ -13,6 +14,8 @@
     counted in the unit's xmit_modem, bits 8 and 9 each in
     RING_$XMIT_ESB, and bit 8 makes the result true; the errors are then
     cleared.
+  - With `ring_board_dma': transmit status bit 10 while receive status
+    bit 14 is set; nothing is cleared.
 
   Status stored: none.
 }
@@ -52,11 +55,18 @@ begin
       return;
     end;
     regs := disk_dinit;
+%if ring_board_dma %then
+    if 14 in regs^.rx_status then
+      ring_$poll_sticky_bpherr := 10 in regs^.tx_status
+    else
+      ring_$poll_sticky_bpherr := false;
+%else
     if 13 in regs^.mode then
       ring_$poll_sticky_bpherr := 12 in regs^.mode
     else
       ring_$poll_sticky_bpherr := false;
     regs^.mode := [];
+%endif
   end;
 %endif
 end;

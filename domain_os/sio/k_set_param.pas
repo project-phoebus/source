@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E680AC  SIO_$K_SET_PARAM
+    sau4  0x0F871BA0  SIO_$K_SET_PARAM
 
   - Each selector's value is checked and compared with a copy of the
     block: an unchanged one drops its selector, a changed one goes into

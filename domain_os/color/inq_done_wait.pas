@@ -1,6 +1,7 @@
 { COLOR_$INQ_DONE_WAIT - wait for the color board's instruction queue.
 
   Image addresses:
+    sau4  0x0F87B4AE  COLOR_$INQ_DONE_WAIT
     sau5  0x00E73092  COLOR_$INQ_DONE_WAIT
 
   - Only when the board is ready (status member 12): the queue's
@@ -30,7 +31,7 @@ begin
       if timed_out or else (13 in color_sup.status) then begin
         color_sup.command := 9;
         color_sup.command := 8;
-        color_sup.command := 16#280E;
+        color_sup.command := color_cmd_display_on;
         repeat
         until not (13 in color_sup.status);
         status.all := status_$color_iq_done_wait_timed_out;

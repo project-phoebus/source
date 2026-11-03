@@ -311,6 +311,14 @@ const
   ast_$pmap_used = 3;
   ast_$pmap_modified = 4;
   ast_$pmap_cache_inhibit = 6;
+%elseif region_mmu %then
+  { With the region registers the first word's bits: resident 15, used
+    14, modified 13, in transition 10, installed 9. }
+  ast_$pmap_in_trans = 10;
+  ast_$pmap_installed = 9;
+  ast_$pmap_resident = 15;
+  ast_$pmap_used = 14;
+  ast_$pmap_modified = 13;
 %else
   ast_$pmap_in_trans = 15;
   ast_$pmap_installed = 14;
@@ -324,6 +332,9 @@ const
 %elseif vm_1536_astes %then
   ast_$max_astes = 1536;
   ast_$max_aotes = 640;
+%elseif vm_2432_astes %then
+  ast_$max_astes = 2432;
+  ast_$max_aotes = 1280;
 %else
   ast_$max_astes = 504;
   ast_$max_aotes = 280;
@@ -510,7 +521,7 @@ type
 
 { AST_$TOUCH_AREA - make a page of an area's segment resident. }
 procedure ast_$touch_area(area_id: pinteger; seg_index: pinteger;
-                          page: integer; area_page: linteger;
+                          page: pinteger; area_page: linteger;
                           var ppn_array: univ ast_$ppn_list_t;
                           out status: status_$t);
   options(extern, val_param);
@@ -774,11 +785,17 @@ procedure ast_$alloc_contig(n: integer; out ppns: univ ast_$ppn_list_t;
                             out status: status_$t);
   options(extern, val_param);
 procedure ast_$remove_page(ppn: integer32); options(extern, val_param);
+%endif
+%if pmmu_page_maps or pmap_threads %then
+{ AST_$ASSOC_IOPPN and AST_$REMOVE_IOPPN are also map symbols of the
+  SAU4 and SAU6 AST_ code, with the page maps' thread. }
 procedure ast_$assoc_ioppn(var aste: ast_$aste_t; page: integer;
                            ppn: integer32);
   options(extern, val_param);
 procedure ast_$remove_ioppn(var aste: ast_$aste_t; page: integer);
   options(extern, val_param);
+%endif
+%if pmmu_page_maps %then
 function ast_$ptov(ppn: integer32; out asid: integer; out va: integer32):
   boolean; options(extern, val_param);
 %endif

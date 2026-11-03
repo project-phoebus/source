@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E7AEF4  FLP_ data (.DATA, 0x13C bytes)
+    sau4  0x0F8886F4  FLP_ data (.DATA, 0x138 bytes)
     sau8  0x03C902F4  FLP_ data (.DATA, 0x1FC bytes)
 
   One compilation unit, in two code sections and one data section: the
@@ -84,6 +85,13 @@
   FLP_$MOTOR_ON besides FLP_$EC and FLP_$SREGS.  Each module variable
   starts on a word, so its last booleans take two bytes each.
 
+  The SAU4's form (`floppy_page_dma') is a third arm: the SAU2's
+  routines with the controller's registers at the FLOP page's start, the
+  page's own DMA controller (at its +0x80) with IOMAP's entries 0 and 1
+  for the format buffer and the transfer's page, the interrupt through
+  IO_$ACQUIRE on its kind-3 DCTE (`floppy_dcte_request'), no parity or
+  DMA_$CHECK, and a block of 0x138 bytes.
+
   Only the SAUs with the floppy have the module (the part `floppy_disk',
   base/config.ins.pas: the SAU2, SAU4, SAU7 and SAU8); the SAU5's map
   has no FLP_ segment, so there the whole body is configured out, as
@@ -106,6 +114,9 @@ module flp_;
 %include 'misc/crash_system.ins.pas';
 %include 'io/io.ins.pas';
 %include 'disk/disk.ins.pas';
+%if floppy_page_dma %then
+%include 'pbu/pbu.ins.pas';
+%endif
 %include 'flp/flp.ins.pas';
 
 %if floppy_atbus %then
@@ -223,6 +234,89 @@ define
 %include 'flp/set_flp_timer.pas';           { SET_FLP_TIMER }
 %include 'flp/turn_motor_on.pas';           { FLP_$TURN_MOTOR_ON }
 %include 'flp/motor_callback.pas';          { FLP_$MOTOR_CALLBACK }
+%include 'flp/format_track.pas';            { flp_format_track }
+%include 'flp/flp_do_io.pas';               { FLP_DO_IO }
+%include 'flp/do_io.pas';                   { FLP_$DO_IO }
+%include 'flp/cinit.pas';                   { FLP_$CINIT }
+%include 'flp/dinit.pas';                   { FLP_$DINIT }
+%include 'flp/shutdown.pas';                { FLP_$SHUTDOWN }
+%include 'flp/excs.pas';                    { EXCS }
+%include 'flp/shake.pas';                   { SHAKE }
+%elseif floppy_page_dma %then
+{ The page DMA form (`floppy_page_dma'; the SAU4's FLP_ data segment,
+  0x138 bytes): the routines in map order, then the block's objects in
+  its order, the map symbols defined where they lie.  The SAU2's block
+  but for the format buffer's physical address and the transfer's page
+  (the I/O map's entries hold them), with the unit IO_$ACQUIRE gives, the
+  format buffer's DMA address bytes and a flag for its map space. }
+define
+  flp_$int;
+  flp_$revalidate;
+  flp_do_io;
+  flp_$do_io;
+  flp_$cinit;
+  flp_$dinit;
+  flp_$shutdown;
+  excs;
+  shake;
+
+var
+  flp_jump_table: array[0..6] of univ_ptr :=     { +0x000 }
+    [nil, addr(flp_$shutdown), addr(flp_$dinit), addr(flp_$revalidate),
+     addr(flp_$do_io), nil, nil];
+  flp_sregs_array: array[0..7] of pinteger :=    { +0x01C }
+    [0, 0, 16#0D, 0, 0, 16#1A, 16#1B, 16#4E];
+  flp_fmt_cmd: array[0..5] of pinteger :=        { +0x02C }
+    [16#4D, 0, 3, 8, 16#74, 16#4E];
+  flp_w_038: array[0..8] of pinteger :=          { +0x038 }
+    [0, 0, 0, 0, 0, 0, 16#1A, 7, 16#80];
+  flp_rw_cmd: array[0..8] of pinteger :=         { +0x04A }
+    [0, 0, 0, 0, 0, 3, 8, 16#35, 16#FF];
+  flp_w_05c: array[0..1] of pinteger;            { +0x05C }
+
+define
+  flp_$ec;                                       { +0x060 }
+
+var
+  flp_w_06c: array[0..1] of pinteger;            { +0x06C }
+
+define
+  flp_$sregs;                                    { +0x070 }
+
+var
+  flp_unit_cyl: array[0..3] of pinteger;         { +0x078 }
+  flp_io_buffer: array[1..26] of flp_$id_entry_t;  { +0x080 }
+  flp_ctlr_table: array[0..1] of flp_$ctlr_entry_t;  { +0x0E8 }
+  flp_l_0f8: integer32;                          { +0x0F8 }
+  flp_w_0fc: pinteger;                           { +0x0FC }
+  flp_fmt_n: pinteger := 3;                      { +0x0FE }
+  flp_w_100: pinteger;                           { +0x100 }
+  flp_base_cmd: pinteger := 16#40;               { +0x102 }
+  flp_specify_cmd: array[0..3] of pinteger :=    { +0x104 }
+    [3, 16#DF, 16#3C, 0];
+  flp_sense_cmd: array[0..1] of pinteger :=      { +0x10C }
+    [4, 0];
+  flp_recal_cmd: array[0..1] of pinteger :=      { +0x110 }
+    [7, 0];
+  flp_seek_cmd: array[0..3] of pinteger :=       { +0x114 }
+    [16#0F, 0, 0, 0];
+  flp_unit_active: array[0..3] of boolean;       { +0x11C }
+  flp_disk_change: array[0..3] of boolean;       { +0x120 }
+  flp_hw_addr: flp_$regs_ptr_t;                  { +0x124 }
+  flp_dma_retry: integer;                        { +0x128 }
+  flp_cmd_retry: integer;                        { +0x12A }
+  flp_io_unit: io_$unit_num_t;                   { +0x12C }
+  flp_unit_count: pinteger := 16#8000;           { +0x12E }
+  flp_fmt_addr_lo: flp_$byte_t;                  { +0x130 }
+  flp_fmt_addr_hi: flp_$byte_t;                  { +0x132 }
+  flp_initialized: boolean;                      { +0x134 }
+  flp_map_allocated: boolean;                    { +0x136 }
+
+{ ---- WIRED_PROC ---- }
+%include 'flp/int.pas';                     { FLP_$INT }
+
+{ ---- .TEXT ---- }
+%include 'flp/revalidate.pas';              { FLP_$REVALIDATE }
 %include 'flp/format_track.pas';            { flp_format_track }
 %include 'flp/flp_do_io.pas';               { FLP_DO_IO }
 %include 'flp/do_io.pas';                   { FLP_$DO_IO }

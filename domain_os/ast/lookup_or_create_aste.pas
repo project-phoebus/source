@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E0255C  ast_$lookup_or_create_aste (module-local)
+    sau4  0x0F802974  ast_$lookup_or_create_aste (module-local)
     sau9  0x3C4038F4  ast_$lookup_or_create_aste (module-local)
 
   Assume we're called with the AST lock held.
@@ -129,6 +130,21 @@ begin
             field, the flags cleared }
           dentry.daddr := fm_daddr;
           flags := flags - [0..9];
+%elseif region_mmu %then
+          { the file map's no-disk-copy bit into member 6, the flags
+            cleared one by one }
+          if 15 in flags then begin
+            flags := flags - [15];
+            flags := flags + [6];
+          end;
+          flags := flags - [ast_$pmap_resident];
+          flags := flags - [ast_$pmap_used];
+          flags := flags - [ast_$pmap_modified];
+          flags := flags - [12];
+          flags := flags - [11];
+          flags := flags - [ast_$pmap_in_trans];
+          flags := flags - [ast_$pmap_installed];
+          flags := flags - [7..8];
 %else
           if 15 in flags then begin
             flags := flags - [15];

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E70106  SMD_$DISSOC
+    sau4  0x0F87AA12  SMD_$DISSOC
     sau5  0x00E72632  SMD_$DISSOC
     sau9  0x3C47677C  SMD_$DISSOC
 

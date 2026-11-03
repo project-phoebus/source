@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E76F9E  RING_$SVC_WRITE
+    sau4  0x0F88481E  RING_$SVC_WRITE
     sau3  0x00E7878E  RING_$SVC_WRITE
     sau5  0x00E7E21E  RING_$SVC_WRITE
     sau8  0x03C8386A  RING_$SVC_WRITE

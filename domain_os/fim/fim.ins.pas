@@ -330,7 +330,8 @@ procedure fim_$signal(status: status_$t); options(extern, val_param);
 
 
 const
-  { The two statuses PEB_$TEST_PARITY_ERR stores, with the names and
+  { The two statuses PEB_$TEST_PARITY_ERR stores (the first also
+    MEM_$ECCC_LOG's crash), with the names and
     values of Apollo's customer fault.ins.pas of SR10.2 (lines 51 and 63;
     stcode.db.10.2's texts: "uncorrectable memory error detected", "PEB
     WCS parity error"). }
@@ -439,6 +440,20 @@ procedure fim_$fp_undflo; extern;
 procedure fim_$fp_op_err; extern;
 procedure fim_$fp_ovrflo; extern;
 procedure fim_$fp_sig_nan; extern;
+%if mmu_fault_vectors %then
+{ FIM_$ACC_VIOL, FIM_$FP_TRAP (map symbols; hand assembly): the access
+  violation's and the FP ASID exception's entries, vectors 16#83 and 16#84
+  (`mmu_fault_vectors'), never called. }
+procedure fim_$acc_viol; extern;
+procedure fim_$fp_trap; extern;
+%endif
+%if ecc_memory %then
+{ FIM_$ECCC_TRAP, FIM_$ECCU_TRAP (map symbols; hand assembly): the
+  corrected and the uncorrectable memory error's entries, vectors 16#F0
+  and 16#FF (`ecc_memory'), never called. }
+procedure fim_$eccc_trap; extern;
+procedure fim_$eccu_trap; extern;
+%endif
 
 { FIM_$PARITY_TRAP (hand assembly in FIM's code, a map symbol): an
   exception entry, never called; OS_$INIT stores its address into
@@ -460,6 +475,16 @@ procedure fim_$nmi; extern;
   Declared as a procedure for its address only, as the other entries
   above. }
 procedure fim_$bus_err; extern;
+
+%if mmu_fault_vectors %then
+{ FIM_$REG_FAULT, FIM_$PAGE_FAULT (map symbols; hand assembly in FIM's
+  exception code): OS_$INIT installs the first for the region fault
+  (vector 128) and the second for the segment and page faults (129,
+  130), with the bus-error vector (`mmu_fault_vectors').  For their
+  addresses only. }
+procedure fim_$reg_fault; extern;
+procedure fim_$page_fault; extern;
+%endif
 
 type
   { The signal context a user signal handler returns through (4.3BSD's

@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E6EFB4  SMD_$UNBLANK
+    sau4  0x0F8796F8  SMD_$UNBLANK
     sau5  0x00E71364  SMD_$UNBLANK
     sau9  0x3C4757B4  SMD_$UNBLANK
 

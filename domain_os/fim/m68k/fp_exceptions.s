@@ -52,10 +52,20 @@
  * Byte gate (tools/asm_compare.py): identical to the image modulo
  * relocations (R_68K_PC8 against fim_fp_frame_pc, R_68K_PC16 against
  * FIM_COMMON_FAULT).
+ *
+ * The SAU4's vector table installs the five exceptions INEXACT..OVRFLO
+ * only (`fp_five_exceptions', base/config.ins.pas): its FIM_UNWIRED has
+ * no FIM_$FP_BSUN or FIM_$FP_SIG_NAN, and fim_fp_frame_pc is a return in
+ * the place of FIM_$FP_OVRFLO's pad (sau4 0xF822AFE), the floating-point
+ * registers being the CPU's own (no coprocessor mid-instruction frame);
+ * its five stubs are the SAU2's bytes at 0xF822AB0..0xF822AFF.
  */
+
+        .include "base/config.inc"
 
         .extern FIM_COMMON_FAULT        /* fim/m68k/com.s, image 0xE213A0 */
 
+        .if !fp_five_exceptions
         .section ".text.FIM_$FP_BSUN","ax",@progbits
         .even
         .global FIM_$FP_BSUN
@@ -66,6 +76,7 @@ FIM_$FP_BSUN:
         .short  0x0013                          /* e214ba  signal 0x13 */
         .short  0xA004                          /* e214bc  class */
         .short  0x0000                          /* e214be  pad */
+        .endif
 
         .section ".text.FIM_$FP_INEXACT","ax",@progbits
         .even
@@ -120,8 +131,15 @@ FIM_$FP_OVRFLO:
         .long   0x00120026                      /* e21506  status "FP overflow" */
         .short  0x0008                          /* e2150a  signal 8 */
         .short  0xA004                          /* e2150c  class */
+        .if fp_five_exceptions
+        .global fim_fp_frame_pc
+fim_fp_frame_pc:
+        rts                                     /* sau4 f822afe  4e75 */
+        .else
         .short  0x0000                          /* e2150e  pad */
+        .endif
 
+        .if !fp_five_exceptions
         .section ".text.FIM_$FP_SIG_NAN","ax",@progbits
         .even
         .global FIM_$FP_SIG_NAN
@@ -140,3 +158,4 @@ fim_fp_frame_pc:
 .Lfp_frame_pc_done:
         rts                                     /* e2152c */
         .short  0x0000                          /* e2152e  pad; FIM_$PRIV_VIOL is at 0xE21530 */
+        .endif

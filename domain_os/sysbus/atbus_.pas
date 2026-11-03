@@ -4,6 +4,7 @@
   Image addresses:
     sau2  0x00E22904  ATBUS_ data (WIRED_DATA, 0x2C bytes)
     sau3  0x00E218D8  ATBUS_ data (WIRED_DATA, 0x2C bytes)
+    sau4  0x0F824BB4  ATBUS_ data (WIRED_DATA, 0x100 bytes)
     sau9  0x3C425548  ATBUS_ data (WIRED_DATA, 0x80 bytes)
 
   One compilation unit, `module atbus_, wired_proc, wired_data;': the
@@ -18,7 +19,9 @@
     .. SYSBUS_$INIT, the routines of the system bus's sixteen
     interrupt levels (0x320 bytes on the SAU9; the four device
     routines with `util_pic'), and a block of 128 bytes, the map's
-    SYSBUS_$INT_VEC, all zero in the image;
+    SYSBUS_$INT_VEC, all zero in the image; with `sysbus_vectors_90'
+    (the SAU4's) 32 levels on two ranges of vectors (0x160 bytes) and a
+    block of 256 bytes;
   - without it (the SAU2's): DISK_INTERRUPT, RING_INTERRUPT (from disk/
     and ring/), SYSBUS_$INIT and SYSBUS_$DEFINE_INT (0x118 bytes), and a
     block of 44 bytes, all zero in the image, which SYSBUS_$INIT fills:
@@ -40,10 +43,9 @@ module atbus_, wired_proc, wired_data;
 
 { TODO(sau) the other SAUs' ATBUS_ code
 
-  The SAU4's and SAU6's SYSBUS_$INT, SYSBUS_$UNDEF_INT,
-  SYSBUS_$DEFINE_INT and SYSBUS_$INIT are in other forms than the
-  SAU9's (with SYSBUS_$INT_VEC, and on the SAU6 SYSBUS_$DUP_VEC before
-  it).  Their conditionals go in
+  The SAU6's SYSBUS_$INT, SYSBUS_$UNDEF_INT, SYSBUS_$DEFINE_INT and
+  SYSBUS_$INIT are in other forms than the SAU9's and the SAU4's (with
+  SYSBUS_$INT_VEC, and SYSBUS_$DUP_VEC before it).  Their conditionals go in
   this file and its fragments, each with its own part, when they are
   translated. }
 

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0D1C8  MMAP_$SET_WS_INDEX
+    sau4  0x0F80D838  MMAP_$SET_WS_INDEX
     sau8  0x03C0E0D8  MMAP_$SET_WS_INDEX
     sau9  0x3C40F128  MMAP_$SET_WS_INDEX
 

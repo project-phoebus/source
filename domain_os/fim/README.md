@@ -123,6 +123,11 @@ unit's; the unit's block declares a 0x3C-byte pad and char elements
 where `fim.pas` has fim_in_fim (booleans), unused_3a and fim_$byte_t
 elements: the same offsets and bytes, no code difference.
 
+On the SAU4 FIM_$BUILD_DF takes an access fault's address from the
+frame's longword at +0x0A (`fault_frame_addr`) and saves no FPU state
+(`fp_state_in_cpu`); its entry also saves FP2..FP7 with a descriptor
+for them, which no source construct here produces (its TODO(pascal)).
+
 ## Open items
 
 ### Behavior
@@ -135,7 +140,8 @@ faults (whose frames fill it) read it.
 
 - `build_df.pas`: the frame is not reproduced (the result variable
   between the locals, the register-held locals' slots); bit 23 of a
-  status read as the sign of its second byte.
+  status read as the sign of its second byte; the SAU4's FP register
+  save around the routine (`fp_state_in_cpu`).
 - `init_asid.pas`: 16 frame bytes (stand-in `unused_10`).
 - `free_asid.pas`: 4 frame bytes (stand-in `unused_4`).
 

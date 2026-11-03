@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6FAA8  smd_$is_valid_blt_ctl (module-local)
+    sau4  0x0F87A368  smd_$is_valid_blt_ctl (module-local)
     sau5  0x00E71F5E  smd_$is_valid_blt_ctl (module-local)
 
   - It accepts the four control longwords the driver takes.

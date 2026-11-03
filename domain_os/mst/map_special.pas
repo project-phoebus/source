@@ -2,12 +2,13 @@
   space.
 
   Image addresses:
+    sau4  0x0F84C7F6  MST_$MAP_SPECIAL
     sau8  0x03C4C994  MST_$MAP_SPECIAL
     sau9  0x3C44BB18  MST_$MAP_SPECIAL
 
   - ASID 0 crashes the system.
   - Under the ASID lock, count segments from special segment seg (the
-    top 16 of private B) get pages of MSTEs and obj_uid.
+    top 16 of private B, with the 8192 segments the top 9) get pages of MSTEs and obj_uid.
   - An entry holding SPECIAL_SEG_$UID is left alone; any other used
     entry stops the mapping.
   - Each entry filled counts in its group's MST_$SEGS_MAPPED.
@@ -34,7 +35,7 @@ begin
   if asid = 0 then
     crash_system(status_$mst_asid_0_illegal);
   ml_$lock(ml_$mst_asid_lock);
-%if large_address_space %then
+%if large_address_space or vm_8192_segs %then
   s := seg + (mst_$seg_global_b_offset - mst_special_segs);
 %elseif run_time_layout %then
   s := mst_$private_a_size + seg + (mst_private_b_count - mst_special_segs);
@@ -58,7 +59,7 @@ begin
       end;
     s := s + 1;
   end;
-%if large_address_space %then
+%if large_address_space or vm_8192_segs %then
   mst_$map_special := univ_ptr(lshft(seg, 15) +
                         lshft(mst_$seg_global_b - mst_special_segs, 15));
 %elseif run_time_layout %then

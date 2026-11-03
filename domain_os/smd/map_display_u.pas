@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6F8D0  SMD_$MAP_DISPLAY_U
+    sau4  0x0F87A184  SMD_$MAP_DISPLAY_U
     sau5  0x00E71D7A  SMD_$MAP_DISPLAY_U
     sau9  0x3C475F64  SMD_$MAP_DISPLAY_U
 

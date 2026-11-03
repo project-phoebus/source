@@ -4,6 +4,7 @@
   Image addresses:
     sau2  0x00E337F4  OS_$INIT
     sau3  0x00E31C3C  OS_$INIT
+    sau4  0x0F836A38  OS_$INIT
     sau5  0x00E357E8  OS_$INIT
     sau8  0x03C37034  OS_$INIT
     sau9  0x3C439E2E  OS_$INIT
@@ -53,6 +54,11 @@
     flag false.
   - `lpr_driver', `iic_driver': the line printer and the internet
     interface controller are started.
+  - `fp_five_exceptions', `mmu_fault_vectors', `ecc_memory': the vector
+    table's floating-point, MMU and memory-error cells, and the MMU's
+    fault vectors set after the bus error's; `region_mmu': a type-4
+    boot sets the kernel's segments' protection in the segment map
+    entries; `peb_setup': PEB_$INIT and PEB_$LOAD_WCS.
   - `early_as_init': AS_$INIT before COLD's segment goes;
     `boot_flags_diskless', `boot_flags_server': the diskless and server
     settings from the boot flags; `pbu_wire_at_boot',
@@ -70,14 +76,15 @@
   compares the index with 44), where the two parts' cells give 45: not
   looked at. }
 
-{ TODO(sau) the forms of the SAU4, SAU6 and SAU7 not compared
+{ TODO(sau) the forms of the SAU6 and SAU7 not compared
 
   The arms of `pft_mmu', `large_vm', `crash_reboot', `ring_node_id',
   `smd_display_memory', `calendar_service_mode' and `pmmu_page_maps'
   follow the SAU9's and the SAU8's code, their banks the other SAUs'
   maps and calls.  Not compared there: TIME_$INIT's argument without
-  the calendar probe on the SAU4, SAU6 and SAU7 (the SAU9's, SAU8's and
-  SAU3's `true'), CAL_$VERIFY's two literals (the SAU9's and SAU8's). }
+  the calendar probe on the SAU6 and SAU7 (the SAU9's, SAU8's, SAU4's
+  and SAU3's `true'), CAL_$VERIFY's two literals (the SAU9's and
+  SAU8's). }
 
 { TODO(pascal) OS_$INIT's frame
 
@@ -123,7 +130,11 @@ label
   10;                                     { after the paging file }
 const
   { the vector table's cells }
-%if vme_bus %then
+%if mmu_fault_vectors %then
+  { the SAU4's: without the coprocessor's, BSUN's and the signalling
+    NaN's cells, with the MMU's six and the memory errors' four }
+  os_init_vector_cells = 47;
+%elseif vme_bus %then
 %if fim_nmi %then
   os_init_vector_cells = 45;
 %else
@@ -195,9 +206,15 @@ var
     [handler := addr(fim_$trace)],
     [handler := addr(fim_$uii)],
     [handler := addr(fim_$uii)],
+%if fp_five_exceptions %then
+    [first_vector := 14, count := 1],             { the format error
+                                                    alone }
+    [handler := addr(fim_$inv_stack)],
+%else
     [first_vector := 13, count := 2],             { +0x108 }
     [handler := addr(fim_$coproc)],
     [handler := addr(fim_$inv_stack)],
+%endif
     [first_vector := 24, count := 1],             { +0x114 }
     [handler := addr(fim_$spurious_int)],
 %if vme_bus %then
@@ -232,6 +249,14 @@ var
     [handler := addr(fim_$undef_trap)],
     [handler := addr(fim_$undef_trap)],
     [handler := addr(fim_$soft_fault)],
+%if fp_five_exceptions %then
+    [first_vector := 49, count := 5],
+    [handler := addr(fim_$fp_inexact)],
+    [handler := addr(fim_$fp_div_zero)],
+    [handler := addr(fim_$fp_undflo)],
+    [handler := addr(fim_$fp_op_err)],
+    [handler := addr(fim_$fp_ovrflo)]
+%else
     [first_vector := 48, count := 7],             { +0x15C }
     [handler := addr(fim_$fp_bsun)],
     [handler := addr(fim_$fp_inexact)],
@@ -239,7 +264,26 @@ var
     [handler := addr(fim_$fp_undflo)],
     [handler := addr(fim_$fp_op_err)],
     [handler := addr(fim_$fp_ovrflo)],
-    [handler := addr(fim_$fp_sig_nan)]];          { +0x17C }
+    [handler := addr(fim_$fp_sig_nan)]            { +0x17C }
+%endif
+%if mmu_fault_vectors %then
+   ,[first_vector := 128, count := 5],            { the MMU's faults and
+                                                    the FP ASID trap }
+    [handler := addr(fim_$cold_bus_err)],
+    [handler := addr(fim_$cold_bus_err)],
+    [handler := addr(fim_$cold_bus_err)],
+    [handler := addr(fim_$acc_viol)],
+    [handler := addr(fim_$fp_trap)]
+%endif
+%if ecc_memory %then
+   ,[first_vector := 240, count := 1],            { the corrected and the
+                                                    uncorrectable memory
+                                                    errors }
+    [handler := addr(fim_$eccc_trap)],
+    [first_vector := 255, count := 1],
+    [handler := addr(fim_$eccu_trap)]
+%endif
+    ];
 
   boot: os_$boot_info_t;
   root_uid: uid_$t;
@@ -317,7 +361,7 @@ var
 %if not pft_mmu %then
   va_seg: pinteger;                       { va's segment number }
 %endif
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
   pmap_seg: pinteger;                     { va's segment in global B's
                                             segment map, after global
                                             A's }
@@ -528,6 +572,18 @@ begin
       va := va + 16#400;
     until va >= unwired_proc;
 
+%if region_mmu %then
+    { the wired kernel's segments, in ASID 0's map after global A's
+      entries: protection 16#13 }
+    va := kernel_base;
+    repeat
+      va_seg := rshft(va, 15);
+      smaps[va_seg + smap_asid_base[0] - mst_$seg_global_b +
+            mst_$global_a_size].e.prot := 16#13;
+      va := va + 16#8000;
+    until va >= unwired_proc;
+
+%endif
     va := unwired_proc;
     repeat
 %if pft_mmu %then
@@ -535,6 +591,12 @@ begin
       vtop_ppn := vtop_or_crash(vtop_va);
       mmu_$set_prot(vtop_ppn, 16#13);
       va := va + 16#400;
+%elseif region_mmu %then
+      { the unwired code's segments: protection 16#13 }
+      va_seg := rshft(va, 15);
+      smaps[va_seg + smap_asid_base[0] - mst_$seg_global_b +
+            mst_$global_a_size].e.prot := 16#13;
+      va := va + 16#8000;
 %else
       { the unwired code's segments, in ASID 0's map after global A's
         entries: write-protected and supervisor-only (members 2 and 8),
@@ -566,7 +628,9 @@ begin
 
 %endif
   { the I/O subsystem }
+%if peb_setup %then
   peb_$init;
+%endif
 %if prom_config_record %then
   cfg_ptr := integer32(addr(cfg));
   io_$init(cfg_ptr, 15 in boot.flags, status);
@@ -667,9 +731,10 @@ begin
   ec2_$init_s;
   print_build_time;
 
-  { the parity trap's vector (with `fim_nmi' vector 31 is the table's),
-    then the object managers; the disk only with a disk }
-%if not fim_nmi %then
+  { the parity trap's vector (with `fim_nmi' vector 31 is the table's;
+    none without `memory_parity'), then the object managers; the disk
+    only with a disk }
+%if memory_parity and not fim_nmi %then
   trap_page[31] := addr(fim_$parity_trap);
 %if parity_trap_vector_30 %then
   trap_page[30] := addr(fim_$parity_trap);
@@ -1007,10 +1072,16 @@ begin
 %endif
 
   { the load average, the file locks, the bus-error
-    vector (both addresses relocated cells), DXM's wired helper }
+    vector (both addresses relocated cells; with `mmu_fault_vectors' the
+    MMU faults' too), DXM's wired helper }
   proc1_$init_loadav;
   file_$lock_init;
   trap_page[2] := addr(fim_$bus_err);
+%if mmu_fault_vectors %then
+  trap_page[128] := addr(fim_$reg_fault);
+  trap_page[129] := addr(fim_$page_fault);
+  trap_page[130] := addr(fim_$page_fault);
+%endif
   discard(proc1_$create_p(addr(dxm_$helper_wired), 16#08000004, status));
   if status.all <> status_$ok then
     crash_system(status);
@@ -1060,7 +1131,7 @@ begin
     seg := 0;
     va := unwired_proc;
     repeat
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
 
       { TODO(pascal) one expression for pmap_seg
 
@@ -1068,11 +1139,12 @@ begin
         segment as rshft(va, 15) - MST_$SEG_GLOBAL_B + MST_$GLOBAL_A_SIZE,
         the two words read from MST_WIRED; with it the SAU7 and SAU9
         images subtract 30464, which is those two constants' difference
-        folded.  So the original is likely the one expression for both;
-        dpc compiles the constants' form as a subtraction and an
-        addition, so the large address space's arm keeps
-        mst_$seg_global_b_offset. }
-%if large_address_space %then
+        folded, and with the 8192 segments the SAU4 image 7680, the
+        same difference of its layout.  So the original is likely the
+        one expression for all; dpc compiles the constants' form as a
+        subtraction and an addition, so the arms with constant layouts
+        keep mst_$seg_global_b_offset. }
+%if large_address_space or vm_8192_segs %then
       pmap_seg := rshft(va, 15) - mst_$seg_global_b_offset;
 %else
       pmap_seg := rshft(va, 15) - mst_$seg_global_b + mst_$global_a_size;
@@ -1148,7 +1220,7 @@ begin
                            map_desc.all, status);
       if status.all <> status_$ok then
         crash_system(status);
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
       { the segment's page descriptors in OS_PMAPS, not resident }
       for i := 0 to 31 do
         os_pmaps[pmap_seg - mst_$global_a_size][i].flags :=
@@ -1271,7 +1343,9 @@ begin
   xpd_$init;
   pchist_$init;
   network_$load;
+%if peb_setup %then
   peb_$load_wcs;
+%endif
 
   { the vector page read-only; page 0's address
     the zero longword }

@@ -2,12 +2,14 @@
 
   Image addresses:
     sau3  0x00E89DE0  PBU2_$UNMAP
+    sau4  0x0F897D76  PBU2_$UNMAP
     sau5  0x00E921AA  PBU2_$UNMAP
     sau8  0x03CA5B56  PBU2_$UNMAP
 
   - At interrupt level (PBU_$TRAP6); no lock.  The buffer's entries
     lose their valid bit (bit 15) when the first page's entry holds the
-    buffer's first page (14 bits, 12 of a word entry).
+    buffer's first page (14 bits, 12 of a word entry); word entries
+    (`word_iomap') are cleared.
   - Only the first page's entry is compared.
   - Without the I/O map space (`io_regions') nothing is unmapped.
 
@@ -56,6 +58,8 @@ begin
   first := linteger(offset) div 1024 + dcte^.map_page;
 %if long_iomap %then
   entry_ppn := iomap[first] & 16#3FFF;
+%elseif word_iomap %then
+  entry_ppn := iomap[first] & 16#3FFF;
 %else
   entry_ppn := iomap[first].entry & 16#FFF;
 %endif
@@ -67,6 +71,8 @@ begin
   for k := first to first + npages - 1 do
 %if long_iomap %then
     iomap[k] := iomap[k] & (-16#8001);
+%elseif word_iomap %then
+    iomap[k] := 0;
 %else
     iomap[k].entry := iomap[k].entry & 16#7FFF;
 %endif

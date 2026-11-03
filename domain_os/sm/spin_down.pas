@@ -2,6 +2,7 @@
 
   Image addresses:
     sau3  0x00E6E56C  SM_$SPIN_DOWN
+    sau4  0x0F877C94  SM_$SPIN_DOWN
     sau5  0x00E6F8C4  SM_$SPIN_DOWN
 
   - A drive that answers a seek to cylinder 0 is still spinning: the

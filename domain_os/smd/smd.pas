@@ -5,6 +5,10 @@
     sau2  0x00E3537C  SMD data (OS_INIT_DATA, 0x4 bytes)
     sau2  0x00E82B8C  SMD data (.DATA, 0x1DA8 bytes)
     sau2  0x00E85714  SMD data (DATA$, 0x4 bytes)
+    sau4  0x0F831198  SMD data (WIRED_DATA, 0x1C bytes)
+    sau4  0x0F838A70  SMD data (OS_INIT_DATA, 0x4 bytes)
+    sau4  0x0F89135C  SMD data (.DATA, 0x1E58 bytes)
+    sau4  0x0F893D5C  SMD data (DATA$, 0x4 bytes)
     sau5  0x00E2F374  SMD data (WIRED_DATA, 0x1C bytes)
     sau5  0x00E37B88  SMD data (OS_INIT_DATA, 0x4 bytes)
     sau5  0x00E89F04  SMD data (.DATA, 0x1E58 bytes)
@@ -139,6 +143,9 @@ module smd;
 %include 'misc/crash_system.ins.pas';
 %include 'mst/mst.ins.pas';
 %include 'uid/uid.ins.pas';
+%if blt_main_memory %then
+%include 'pbu/pbu.ins.pas';
+%endif
 %include 'smd/smd.ins.pas';
 %include 'tpad/tpad.ins.pas';
 %include 'suma/suma.ins.pas';

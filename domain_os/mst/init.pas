@@ -4,6 +4,9 @@
     sau2  0x00E30AAE  mst_init_page (nested)
     sau2  0x00E30B10  mst_init_global_page (nested)
     sau2  0x00E30B88  MST_$INIT
+    sau4  0x0F8340E2  mst_init_page (nested)
+    sau4  0x0F834144  mst_init_global_page (nested)
+    sau4  0x0F8341BC  MST_$INIT
     sau8  0x03C33BD2  mst_init_page (nested)
     sau8  0x03C33C34  mst_init_global_page (nested)
     sau8  0x03C33CA8  MST_$INIT
@@ -26,6 +29,10 @@
     1's active regions are the global ones and region 0, whose segment
     map page ASID 1 gets with a copy of ASID 0's entry after its global
     segments; ASID 0 gets the BST pages of its global segments.
+  - With the region registers the same, the regions constants: ASID 1's
+    32 region registers follow ASID 0's, and its region 0 register,
+    valid and not global, points at the page of segment map entries it
+    gets.
 
   Status stored: none.
 }
@@ -120,7 +127,7 @@ begin
   for seg := mst_$global_a_size div 64 to
       (mst_$global_a_size + mst_$global_b_size) div 64 - 1 do
     mst_init_global_page(seg);
-%if large_address_space or run_time_layout %then
+%if large_address_space or run_time_layout or vm_8192_segs %then
   pages := mmap_$real_pages;
 %else
   if not m68020 then
@@ -141,7 +148,43 @@ begin
     page_avail_bitmap[word] := page_avail_bitmap[word] - [bit];
   for word := word + 1 to mst_bitmap_last do
     page_avail_bitmap[word] := [];
-%if large_address_space %then
+%if region_mmu %then
+  { every ASID's regions and segment counts cleared }
+  for asid := 0 to mst_max_asid do begin
+    mst_$regions_active[asid] := [];
+    for grp := 0 to mst_seg_groups - 1 do
+      mst_$segs_mapped[asid][grp] := 0;
+  end;
+  { ASID 1's region registers, after ASID 0's in RARS's first page, a
+    copy of them }
+  mmu_$rars_phaddr[1] := mmu_$rars_phaddr[0] + mst_region_members * 4;
+  mst_$rar_pages := [0];
+  for i := 0 to mst_region_members - 1 do
+    rars[rars_asid_base[1] + i] := rars[rars_asid_base[0] + i];
+  mst_$regions_active[0] := mst_global_regions;
+  mst_$regions_active[0] := mst_$regions_active[0] + [0];
+  mst_$regions_active[1] := mst_$regions_active[0];
+  { ASID 1's region 0: its page of segment map entries, the first one a
+    copy of ASID 0's after the global segments }
+  va := linteger(addr(smaps[smap_asid_base[1]])) & ~16#3FF;
+  n := mst_init_page(va);
+  rars[rars_asid_base[1]].all := 0;
+  rars[rars_asid_base[1]].rar.smap_pa := n * 1024;
+  rars[rars_asid_base[1]].bits := rars[rars_asid_base[1]].bits - [30];
+  rars[rars_asid_base[1]].bits := rars[rars_asid_base[1]].bits + [31];
+  smaps[smap_asid_base[1]] :=
+    smaps[smap_asid_base[0] + mst_$global_a_size + mst_$global_b_size];
+  { ASID 0's BST pages, for its global segments }
+  for asid := 0 to mst_max_asid do
+    mst_$bst_pages[asid] := [];
+  va := linteger(addr(bst));
+  for i := 0 to ((mst_$global_b_size + mst_$global_a_size) * 4 - 1)
+                div 1024 do begin
+    mst_$bst_pages[0] := mst_$bst_pages[0] + [i];
+    discard(mst_init_page(va));
+    va := va + 16#400;
+  end;
+%elseif large_address_space %then
   { every ASID's regions and segment counts cleared }
   for asid := 0 to mst_max_asid do begin
     mst_$regions_active[asid] := [];

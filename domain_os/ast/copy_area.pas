@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E03A30  AST_$COPY_AREA
+    sau4  0x0F803E3C  AST_$COPY_AREA
     sau8  0x03C03D7A  AST_$COPY_AREA
     sau9  0x3C404D86  AST_$COPY_AREA
 
@@ -93,7 +94,7 @@ begin
           exit;
       until not (ast_$pmap_installed in ent^.flags) or else (ast_$pmap_in_trans in ent^.flags);
 
-%if not pmmu_page_maps %then
+%if not (pmmu_page_maps or region_mmu) %then
       mmu_$install_list(got, wired_ppns, buffer_va, proc1_$as_id, 7);
 %endif
       discard(ast_$allocate_pages(got, got, new_ppns));
@@ -116,7 +117,7 @@ begin
         dst_row^.flags := dst_row^.flags + [ast_$pmap_installed];
         dst_row^.flags := dst_row^.flags + [ast_$pmap_resident];
         mmu_$install(new_ppns[i], temp_va, proc1_$as_id, 16#16);
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
         dst_row^.flags := dst_row^.flags + [ast_$pmap_used];
         dst_row^.flags := dst_row^.flags + [ast_$pmap_modified];
         os_$data_copy(ast_$page_ptr_t(buffer_va)^, temp_va^, 16#400);
@@ -232,7 +233,7 @@ begin
         end;
         dst_row^.vpn := new_ppns[i];
         dst_row^.flags := dst_row^.flags + [ast_$pmap_installed];
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
         dst_row^.flags := dst_row^.flags + [ast_$pmap_used];
         dst_row^.flags := dst_row^.flags + [ast_$pmap_modified];
 %else

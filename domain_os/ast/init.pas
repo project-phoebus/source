@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E2F000  AST_$INIT
+    sau4  0x0F832400  AST_$INIT
     sau8  0x03C31C00  AST_$INIT
     sau9  0x3C434C00  AST_$INIT
 

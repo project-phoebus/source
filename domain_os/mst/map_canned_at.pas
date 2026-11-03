@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E30FAA  MST_$MAP_CANNED_AT
+    sau4  0x0F8346A0  MST_$MAP_CANNED_AT
     sau8  0x03C342C2  MST_$MAP_CANNED_AT
     sau9  0x3C437052  MST_$MAP_CANNED_AT
 
@@ -79,8 +80,12 @@ begin
       aste^.pmap_link.asid := asid;
       aste^.pmap_link.seg := first;
       if uid = network_$paging_file_uid then
+%if region_mmu %then
+        smaps[i + smap_asid_base[0]].e.pmap_pa := aste^.pmap_pa;
+%else
         smaps[i + smap_asid_base[0]].table :=
           (smaps[i + smap_asid_base[0]].table & 15) + aste^.pmap_pa;
+%endif
     end;
   mmu_$purge;
 %endif

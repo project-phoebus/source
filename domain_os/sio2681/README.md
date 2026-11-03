@@ -21,6 +21,11 @@ OS_INIT_PROC 0x154, PROCEDURE$ 0xA8 and WIRED_DATA 0xA8; with
 `sio2681_pbu_int` SIO2681_$INIT also acquires the chip's interrupt
 through PBU_$ACQUIRE_INT.  The other routines are the SAU2's code.
 
+On the SAU4 (`sio2681_four_lines`) the module has SIO2681_$TONE but not
+the 6509's routines and table: WIRED_PROC 0x654 bytes, OS_INIT_PROC
+0x130, PROCEDURE$ 0xA8, WIRED_DATA 0xA8; TERM_$INIT calls SIO2681_$INIT
+for two chips.  The routines are the SAU2's code.
+
 Data: the map's SIO_IO data segment in WIRED_DATA (0xC8 bytes) is the
 module's variables, read through A5 by the WIRED_PROC routines
 (`sio2681.pas` lists every object, its value and its readers):

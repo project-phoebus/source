@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E14BBA  PROC1_$GET_LOADAV
+    sau4  0x0F81542E  PROC1_$GET_LOADAV
 
   Status stored: none.
 }

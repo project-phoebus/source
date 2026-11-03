@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E064B0  ast_$invalidate_no_wait (nested)
+    sau4  0x0F806848  ast_$invalidate_no_wait (nested)
     sau9  0x3C407734  ast_$invalidate_no_wait (nested)
 
   Assume we're called with the AST lock held.
@@ -60,7 +61,7 @@
             entry := addr(ast_pmaps[aste^.seg_index, first_in_seg]);
             for i := first_in_seg to last_in_seg do begin
               with entry^ do begin
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
                 while ast_$pmap_in_trans in flags do begin
                   mmu_$purge;
                   ast_$wait_for_page_transition;
@@ -78,7 +79,7 @@
                     modified := false;
                     disk_addr.aste_dirty := true;
                   end;
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
                   flags := flags - [ast_$pmap_modified];
 %else
                   pft[ppn].w_02 := pft[ppn].w_02 & 16#BFFF;
@@ -88,7 +89,7 @@
               entry := ast_$pmap_entry_ptr_t(integer32(entry) + 4);
             end;
             aste^.flags := aste^.flags + [13];
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
             mmu_$purge;
 %endif
             ml_$unlock(ml_$pmap_lock);

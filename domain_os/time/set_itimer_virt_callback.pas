@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E58A98  TIME_$SET_ITIMER_VIRT_CALLBACK
+    sau4  0x0F860F0C  TIME_$SET_ITIMER_VIRT_CALLBACK
 
   - While the address space's virtual interval timer element's expiry
     is set, the process is signaled (signal 29, time_$itimer_virtual).

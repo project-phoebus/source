@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E0A458  FIM_$BUILD_DF
     sau3  0x00E0A458  FIM_$BUILD_DF
+    sau4  0x0F80ABE0  FIM_$BUILD_DF
     sau5  0x00E0A32C  FIM_$BUILD_DF
     sau8  0x03C0B138  FIM_$BUILD_DF
     sau9  0x3C40BE38  FIM_$BUILD_DF
@@ -18,6 +19,9 @@
     keep the frame's bytes.
   - With the PBU (`pbu_driver'), a PBU fault's frame is built in the
     PBU's diagnostic area and handed to PBU_$INT_FAULT_COM.
+  - With `fault_frame_addr' an access fault's address is the frame's
+    longword at +0x0A, its status and instruction words zero; with
+    `fp_state_in_cpu' no FPU state is aborted or saved.
   - The MC68010's bus error frame (format 8) is taken only with
     `pft_mmu'; with `pmmu_page_maps' the information's word is the MMU's
     bus status; the board's status replaces a PEB interrupt's only with
@@ -44,6 +48,19 @@
   16#00800000' on `all', which would compile to a bit test or a longword
   mask instead. }
 
+{ TODO(pascal) the SAU4's FP register save around FIM_$BUILD_DF
+
+  The SAU4 image (`fp_state_in_cpu') enters with `pea' of a descriptor
+  cell after the code (16#0002, 16#003F, 16#FFFF, 16#FF64: the FP
+  registers' mask, FP2..FP7, and their save area at -0x9C), links, and
+  saves FP2..FP7 with six `fmove.d' before the integer registers; it
+  restores them with six F-line words (opmode 1, the cells at -0x9C ..
+  -0x74) before the integer registers and pops the descriptor after
+  `unlk'.  The parameters are 4 bytes further up the frame.  No other
+  routine of any SR10.2 image has this prologue, and the routine itself
+  uses no FP register.  Neither the source construct that asks for it
+  nor dpc's form of it is known; dpc emits the plain prologue. }
+
 function fim_$build_df(exception_frame: fim_$exc_frame_ptr_t; usp: integer32;
                        regs: fim_$regs_ptr_t; fault_class: fim_$word_set_t;
                        signal: integer; status: status_$t;
@@ -63,8 +80,10 @@ var
   d_mask: integer32;
   d_flag: boolean;
   new_usp: linteger;
+%if not fp_state_in_cpu %then
   fp_type: integer;
   fp_saved: integer;
+%endif
   df: fim_$df_ptr_t;
   kframe: integer32;
   user_frame: integer32;
@@ -86,6 +105,14 @@ begin
   format := frame^.format_vector.format;
   frame_size := fim_frame_size[format];
 
+%if fault_frame_addr %then
+  { an access fault's address, the frame's longword at +0x0A }
+  if 12 in fault_class then begin
+    info.ssw := [];
+    info.addr := frame^.f8_fault_addr;
+    info.word := 0;
+  end;
+%else
   case format of
 %if pft_mmu %then
     fim_$frame_format_bus_68010: begin
@@ -123,6 +150,7 @@ begin
     end;
     otherwise { empty };
   end;
+%endif
 %if pmmu_page_maps %then
   info.word := mmu_$bus_status;
 %endif
@@ -232,6 +260,7 @@ begin
      or else odd(new_usp) then
     new_usp := as_$stack_low + 1024;
 
+%if not fp_state_in_cpu %then
 %if pbu_driver %then
   if not pbu_mode then
 %endif
@@ -250,6 +279,7 @@ begin
     if fp_saved <> 0 then
       flags := flags + [9];
   end;
+%endif
 
   new_usp := new_usp - fim_df_size;
   df := fim_$df_ptr_t(new_usp);
@@ -295,10 +325,14 @@ begin
   df^.user_sr := fim_$exc_frame_ptr_t(user_frame)^.sr;
   df^.user_pc := fim_$exc_frame_ptr_t(user_frame)^.pc;
 
+%if fp_state_in_cpu %then
+  df^.fp_save_ptr := 0;
+%else
   if 9 in flags then
     df^.fp_save_ptr := new_usp + fim_df_size
   else
     df^.fp_save_ptr := 0;
+%endif
 
   { the caller's A6, up the frame chain }
   stack_top := os_stack_base[proc1_$current];

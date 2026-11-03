@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E148E6  PROC1_$GET_LOCKS
+    sau4  0x0F81515A  PROC1_$GET_LOCKS
 
   Status stored: none.
 }

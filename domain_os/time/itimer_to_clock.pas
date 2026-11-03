@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E58C3A  time_$itimer_to_clock (module-local)
+    sau4  0x0F8610AE  time_$itimer_to_clock (module-local)
 
   - The 48-bit value halved, the high longword's low bit carried into
     the low word's top.

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau3  0x00E70FD8  MT_$SIO
+    sau4  0x0F87DD48  MT_$SIO
     sau5  0x00E76B48  MT_$SIO
 
   - With nil (MT_$INT, the controller's interrupt) it finishes the
@@ -60,7 +61,7 @@ begin
       for i := 0 to 16#3FF - off do
         dst^[i] := src^[i];
     end;
-    if 5 in mmu.status then begin
+    if mt_mmu_bus_timeout in mmu.status then begin
       cur^.tape_status := cur^.tape_status + [0];
       cur^.tape_status := cur^.tape_status - [14];
     end;
@@ -106,10 +107,17 @@ begin
   else begin
     cur := pb;
     if mt_pb_built in cur^.flags then begin
+%if mbus_map_64k %then
+      page := rshft(mt_$getiova(cur^.iova), 10) + 192;
+%else
       page := rshft(mt_$getiova(cur^.iova), 10);
+%endif
 %if long_iomap %then
       for k := 1 to cur^.npages do
         iomap[page + k - 1] := cur^.ppns[k] + mt_iomap_bias;
+%elseif word_iomap %then
+      for k := 1 to cur^.npages do
+        iomap[page + k - 1] := cur^.ppns[k];
 %else
       for k := 1 to cur^.npages do
         iomap[page + k - 1].entry := cur^.ppns[k] + mt_iomap_bias;

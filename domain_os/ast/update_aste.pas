@@ -2,8 +2,10 @@
 
   Image addresses:
     sau2  0x00E01566  ast_$update_aste (module-local)
+    sau4  0x0F801976  ast_$update_aste (module-local)
     sau9  0x3C40295E  ast_$update_aste (module-local)
     sau2  0x00E01502  ast_$update_aste_log (nested)
+    sau4  0x0F801912  ast_$update_aste_log (nested)
     sau9  0x3C4028FE  ast_$update_aste_log (nested)
 
   - A dirty local segment's 32 page-map entries are turned into their
@@ -64,7 +66,7 @@ begin
       disk.fm.blocks[i] := mmap[segmap[i].vpn].disk_addr.daddr;
       { the ASTE-dirty bit of the address word, a member of its high
         word }
-%if large_vm %then
+%if pmmu_page_maps %then
       if 5 in mmap[segmap[i].vpn].disk_addr.hi_set then
 %else
       if 6 in mmap[segmap[i].vpn].disk_addr.hi_set then

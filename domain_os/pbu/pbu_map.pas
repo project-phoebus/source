@@ -3,6 +3,7 @@
 
   Image addresses:
     sau3  0x00E8A054  PBU_MAP data (PBU_WIRED_DATA, 0xC bytes)
+    sau4  0x0F897FD8  PBU_MAP data (PBU_WIRED_DATA, 0xC bytes)
     sau5  0x00E9241C  PBU_MAP data (PBU_WIRED_DATA, 0xC bytes)
     sau8  0x03CA5CB8  PBU_MAP data (PBU_WIRED_DATA, 0xC bytes)
 
@@ -16,6 +17,9 @@
   On the SAU3 the same routines in 0x450 bytes: PBU2_$MAP and
   PBU2_$UNMAP write word I/O map entries (no `long_iomap'), the
   module-local routines take `pbu_8_units' (pbu/pbu.ins.pas).
+
+  On the SAU4 0x434 bytes: the SAU3's routines with word I/O map
+  entries that are the page number alone (`word_iomap').
 
   On the SAU8 0x5F4 bytes: three module-local routines (the third,
   pbu_map_dma_error, the AT bus's), the DMA entries driving the AT
@@ -31,7 +35,7 @@
 
   Not part of the module: PBU_$PAGE_END, the map's symbol at the
   module's first byte, a marker: the end of the PBU page's hand-written
-  part (pbu/sau5/pbu_asm.s, pbu/sau3/pbu_asm.s).
+  part (pbu/sau5/pbu_asm.s, pbu/sau3/pbu_asm.s, pbu/sau4/pbu_asm.s).
 
   The data block, 0xC bytes, zero: a longword nothing names, then the
   map's PBU_$DCTE_INT_PTR and PBU_$VME_DISABLE_COUNT, defined variables

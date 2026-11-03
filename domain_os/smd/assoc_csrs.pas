@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E700E8  SMD_$ASSOC_CSRS
+    sau4  0x0F87A9F4  SMD_$ASSOC_CSRS
     sau5  0x00E72614  SMD_$ASSOC_CSRS
     sau9  0x3C476724  SMD_$ASSOC_CSRS
 

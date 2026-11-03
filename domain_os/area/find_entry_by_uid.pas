@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E0939C  area_$find_entry_by_uid (module-local)
+    sau4  0x0F8099B0  area_$find_entry_by_uid (module-local)
     sau9  0x3C40AC8E  area_$find_entry_by_uid (module-local)
 
   - For a reversed area the segment index becomes its group, -1 -

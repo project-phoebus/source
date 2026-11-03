@@ -72,12 +72,13 @@
  *
  * Not on the other SAUs whose crash may restart the node (`crash_reboot',
  * base/config.ins.pas): their CRASH_SYSTEM module is another form (the
- * SAU9's misc/m68k/crash_system_restart.s).
+ * SAU9's misc/m68k/crash_system_restart.s, the SAU4's
+ * misc/sau4/crash_system.s: `crash_cache_check').
  */
 
         .include "base/config.inc"
         /* (not `a || b': `|' starts a comment in m68k gas) */
-        .if     !(crash_reboot && !crash_prom_restart)
+        .if     !(crash_reboot && !crash_prom_restart) && !crash_cache_check
 
         .extern TIME_$CLOCKH_EC
         .extern DISP1_MEM               /* arch/m68k/sau2/iodefs.s, 0xFC0000 */

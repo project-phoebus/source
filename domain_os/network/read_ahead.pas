@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0FC08  NETWORK_$READ_AHEAD
+    sau4  0x0F810590  NETWORK_$READ_AHEAD
     sau8  0x03C10F38  NETWORK_$READ_AHEAD
 
   - Page-in requests (op 16#0C, version 8) for count pages from

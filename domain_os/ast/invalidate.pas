@@ -2,10 +2,13 @@
 
   Image addresses:
     sau2  0x00E0662E  AST_$INVALIDATE
+    sau4  0x0F8069C2  AST_$INVALIDATE
     sau9  0x3C4078B2  AST_$INVALIDATE
     sau2  0x00E062FA  ast_$invalidate_with_wait (nested)
+    sau4  0x0F806694  ast_$invalidate_with_wait (nested)
     sau9  0x3C407586  ast_$invalidate_with_wait (nested)
     sau2  0x00E064B0  ast_$invalidate_no_wait (nested)
+    sau4  0x0F806848  ast_$invalidate_no_wait (nested)
     sau9  0x3C407734  ast_$invalidate_no_wait (nested)
 
   - Inhibited and under the AST lock, the object's AOTE is found (marked

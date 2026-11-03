@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E74AB6  mst_$unwire_asid_pages (module-local)
+    sau4  0x0F882100  mst_$unwire_asid_pages (module-local)
     sau8  0x03C7F368  mst_$unwire_asid_pages (module-local)
     sau9  0x3C47C424  mst_$unwire_asid_pages (module-local)
 

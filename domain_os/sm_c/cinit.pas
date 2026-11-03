@@ -2,6 +2,7 @@
 
   Image addresses:
     sau3  0x00E6F33A  SM_C_$CINIT
+    sau4  0x0F87C0F2  SM_C_$CINIT
     sau5  0x00E74E9E  SM_C_$CINIT
 
   - The result is status_$ok, or status_$io_controller_not_in_system
@@ -40,7 +41,11 @@ begin
   if status.all <> 0 then
     crash_system(status);
   sm_c_alloc_count := 2;
+%if mbus_map_64k %then
+  sm_c_iomap_index := rshft(sm_c_alloc, 10) + 192;
+%else
   sm_c_iomap_index := rshft(sm_c_alloc, 10);
+%endif
   sm_c_iomap_entry := addr(iomap[sm_c_iomap_index + 1]);
   for unit := 0 to sm_max_unit do begin
     ec_$init(sm_$cb.c_unit[unit].ec);

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6D92E  SMD_$ALLOC_HDM
+    sau4  0x0F877FF0  SMD_$ALLOC_HDM
     sau5  0x00E6FC68  SMD_$ALLOC_HDM
     sau9  0x3C474614  SMD_$ALLOC_HDM
 

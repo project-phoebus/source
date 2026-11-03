@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E1C6B4  SIO_$I_XMIT_DONE
+    sau4  0x0F81D8C8  SIO_$I_XMIT_DONE
 
   - The transmit-active member is cleared and SIO_$I_TSTART sends the
     next character; the result is whether a transmission is active

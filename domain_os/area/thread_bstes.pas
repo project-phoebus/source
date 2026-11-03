@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E09722  AREA_$THREAD_BSTES
+    sau4  0x0F809DAA  AREA_$THREAD_BSTES
     sau9  0x3C40B090  AREA_$THREAD_BSTES
 
   - Under the area lock, after waiting out any operation in transition,

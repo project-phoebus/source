@@ -1,6 +1,7 @@
 { COLOR_$COLD_INIT - initialize the color board's driver at boot.
 
   Image addresses:
+    sau4  0x0F838310  COLOR_$COLD_INIT
     sau5  0x00E372BC  COLOR_$COLD_INIT
 
   - The board's interrupt registers and control store page (16#3A, the
@@ -17,6 +18,9 @@ var
   probe_data: integer;
 begin
   color_owner := 0;
+%if vm_regions %then
+  color_as_id := 0;
+%endif
   color_page_count := 0;
   color_associated := false;
   ec_$init(color_$iq_done_ec);

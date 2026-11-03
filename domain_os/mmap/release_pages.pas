@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E0CFF8  MMAP_$RELEASE_PAGES
+    sau4  0x0F80D648  MMAP_$RELEASE_PAGES
     sau8  0x03C0DEF4  MMAP_$RELEASE_PAGES
     sau9  0x3C40EF44  MMAP_$RELEASE_PAGES
 
@@ -24,7 +25,7 @@ var
   vpn: linteger;
   dirty: boolean;
   flush: boolean;
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
   entry: ast_$pmap_entry_ptr_t;
 %endif
 begin
@@ -40,7 +41,7 @@ begin
       if page.wire_count <> 0 then
         next;
 
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
       entry := addr(ast_pmaps[page.segment][page.seg_offset]);
       mmap_$remove_from_wsl(page, vpn);
 

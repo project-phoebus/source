@@ -10,6 +10,13 @@
  * (0x3C24074) is the SAU9's but for the limit, PROT itself, a fixup-table
  * cell (`run_time_layout').
  *
+ * The SAU4's (0xF8249FA, 0xAA bytes) knows the DNx60's frames
+ * (`fault_frame_addr'): after format 0 it tries top - 8 - 8 as the long
+ * fault frame, format 4 vector 2, and as format 8 vector 3, and nothing
+ * else; its SR test lets bits 7 and 6 through (SR & 0x3F20,
+ * `sr_user_bits_76'), and its limit is its PROT, 0xF7C0000
+ * (`vm_8192_segs').  Those lines carry the SAU4 image's addresses.
+ *
  * Transcribed from the SAU2 image, 0x00E2277C..0x00E22865 (map
  * FIM_$GET_USER_SR_PTR to FIM_$DELIVER_TRACE_FAULT, 234 bytes: 118 of the
  * routine and its 116-byte frame checker at 0x00E227F2), in its own
@@ -46,6 +53,8 @@
          * user/kernel VA limit. */
         .if large_address_space
         .equ    USER_VA_LIMIT, 0x3BFC0000       /* sau9: the map's PROT */
+        .elseif vm_8192_segs
+        .equ    USER_VA_LIMIT, 0x0F7C0000       /* sau4: the map's PROT (f824a86) */
         .elseif run_time_layout
         /* sau8: PROT itself, a fixup-table cell (3c2412c), which COLD
            moves with the MC68851's layout (svc/m68k/svc_macros.inc) */
@@ -66,6 +75,15 @@ FIM_$GET_USER_SR_PTR:
         bsr.b   .Lcheck_frame                   /* e22792 */
         beq.b   .Lgusp_found                    /* e22794 */
         movea.l %a0,%a1                         /* e22796  A1 = top - 8 */
+        .if fault_frame_addr
+        lea     (-0x8,%a1),%a0                  /* sau4 f824a16  41e9 fff8 */
+        move.w  #0x4008,%d1                     /* sau4 f824a1a  format 4, vector 2 */
+        bsr.b   .Lcheck_frame                   /* sau4 f824a1e */
+        beq.b   .Lgusp_found                    /* sau4 f824a20 */
+        move.w  #0x800c,%d1                     /* sau4 f824a22  format 8, vector 3 */
+        bsr.b   .Lcheck_frame                   /* sau4 f824a26 */
+        beq.b   .Lgusp_found                    /* sau4 f824a28 */
+        .else
         .if pft_mmu
         lea     (-0x32,%a1),%a0                 /* e22798 */
         move.w  #0x8008,%d1                     /* e2279c  format 8, vector 2 */
@@ -97,6 +115,7 @@ FIM_$GET_USER_SR_PTR:
         move.w  #0x9000,%d1                     /* e227e4  format 9, any vector */
         bsr.b   .Lcheck_frame                   /* e227e8 */
         beq.b   .Lgusp_found                    /* e227ea */
+        .endif
         movea.l %a1,%a0                         /* e227ec  none: top - 8 */
 .Lgusp_found:
         move.l  %a0,%d0                         /* e227ee */
@@ -146,7 +165,11 @@ FIM_$GET_USER_SR_PTR:
         move.w  (%a0),%d0                       /* e2282e  SR */
         btst.l  #13,%d0                         /* e22830  supervisor mode? */
         bne.b   .Lcf_return                     /* e22834  Z clear: rejected */
+        .if sr_user_bits_76
+        and.w   #0x3f20,%d0                     /* sau4 f824a74  c07c 3f20 */
+        .else
         and.w   #0x3fe0,%d0                     /* e22836  c07c 3fe0 */
+        .endif
         bne.b   .Lcf_reject                     /* e2283a */
         move.l  (0x2,%a0),%d0                   /* e2283c  PC */
         btst.l  #0,%d0                          /* e22840 */

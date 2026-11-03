@@ -3,6 +3,7 @@
 
   Image addresses:
     sau3  0x00E6F030  sm_c_$command (module-local)
+    sau4  0x0F87BE2C  sm_c_$command (module-local)
     sau5  0x00E74B94  sm_c_$command (module-local)
 
   - The wait is for the unit's eventcount or 20 clock ticks; a time-out
@@ -24,7 +25,9 @@ begin
     sm_c_unit := unit;
     sm_$cb.c_cmd := cmd;
     sm_$cb.c_status.all := 0;
+%if memory_parity %then
     flags.parity_err := false;
+%endif
     wait_value := ec.value + 1;
     pbu_sm_c_page.cmd := sm_c_reg_go;
     if ec_$wait(addr(ec), addr(time_$clockh_ec), addr(ec_$nil_ec),

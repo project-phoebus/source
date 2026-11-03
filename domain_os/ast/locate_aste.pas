@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E07050  AST_$LOCATE_ASTE
+    sau4  0x0F8073B8  AST_$LOCATE_ASTE
     sau9  0x3C408288  AST_$LOCATE_ASTE
 
   - The request's hint (the low bits of its +0x0A word) names an

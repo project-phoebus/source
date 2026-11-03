@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E06F88  AST_$RELEASE_PAGES
+    sau4  0x0F80730C  AST_$RELEASE_PAGES
     sau8  0x03C071CE  AST_$RELEASE_PAGES
     sau9  0x3C4081DA  AST_$RELEASE_PAGES
 
@@ -30,7 +31,7 @@ begin
   entry := addr(ast_pmaps[aste^.seg_index][0]);
   ml_$lock(ml_$pmap_lock);
 
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
   for i := 0 to 31 do begin
     if (ast_$pmap_installed in entry^.flags) and then
        (ast_$pmap_resident in entry^.flags) then begin

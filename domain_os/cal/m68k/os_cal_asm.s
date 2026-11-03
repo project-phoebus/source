@@ -31,6 +31,12 @@
  * the zero word after it, which ends the SAU2's and SAU5's segments on a
  * longword, is not there (0xE82F00 is one).
  *
+ * The SAU4's also writes the calendar unconditionally, and reaches the
+ * chip in the timer's page (`calendar_timer_page', as in
+ * time/m68k/time_asm.s: control CALENDAR + 0x81, data + 0x83; the map's
+ * CALENDAR = TIMR 0xFFFAC00); its segment (`D F88FE00 OS_CAL_ASM size =
+ * 164') is the SAU3's length.
+ *
  * Byte gate (tools/asm_compare.py, `make check-asm'): encodings
  * identical to the image; address operands resolve to our objects.
  *
@@ -85,6 +91,9 @@
         .elseif calendar_own_page
         .set    CAL_CTL, 0                      /* sau3: the page's start */
         .set    CAL_WDATA, 2
+        .elseif calendar_timer_page
+        .set    CAL_CTL, 0x81                   /* sau4: bytes of the timer's page */
+        .set    CAL_WDATA, 0x83
         .else
         .set    CAL_CTL, 0x20
         .set    CAL_WDATA, 0x22

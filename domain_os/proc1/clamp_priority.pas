@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E15222  proc1_$clamp_priority (module-local)
+    sau4  0x0F815A96  proc1_$clamp_priority (module-local)
 
   - Both compares are unsigned.
 

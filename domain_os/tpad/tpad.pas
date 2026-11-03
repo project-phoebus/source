@@ -2,10 +2,12 @@
 
   Image addresses:
     sau2  0x00E8245C  TPAD data (.DATA, 0x180 bytes)
+    sau4  0x0F890BD0  TPAD data (.DATA, 0x180 bytes)
 
   One compilation unit, in two code sections and one data section: the
   map's TPAD code segments in OS_INIT_PROC (0xFC bytes, TPAD_$INIT) and
-  in .TEXT (0x9C0 bytes, TPAD_$DATA .. TPAD_$INQ_PUNCH_IMPACT), and its
+  in .TEXT (0x9C0 bytes, TPAD_$DATA .. TPAD_$INQ_PUNCH_IMPACT; the
+  SAU4's 0x994, its multiplies the -cpu 460 instructions), and its
   TPAD data segment in .DATA (0x180 bytes), with no map symbol inside.
 
   The data, 0x180 bytes:

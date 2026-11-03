@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6DED4  SMD_$UTIL_INIT
+    sau4  0x0F878634  SMD_$UTIL_INIT
     sau5  0x00E70310  SMD_$UTIL_INIT
 
   - ctx gets the unit's display memory base, register block and display

@@ -32,6 +32,17 @@ const
   smd_unit_count = 1;
 %endif
 
+  { With `blt_main_memory': the most pages of main memory one BLT
+    reaches (SMD_$WIRE_MM's bound, and the display record's page list). }
+%if blt_main_memory %then
+  smd_mm_max_pages = 32;
+
+  { With `blt_main_memory': each unit's first I/O map entry for its BLT's
+    main-memory pages (the unit record's iomap_base). }
+  smd_unit1_iomap_base = 128;
+  smd_unit2_iomap_base = 96;
+%endif
+
 type
   { (From Apollo's smdu.ins.pas.)  The scroll direction: `smd_$direction_t
     = (smd_$up, smd_$down, smd_$left, smd_$right) ;', the type of
@@ -351,10 +362,17 @@ type
       record: smd_$window_limits_t's layout (xs, xe, ys, ye);
     - +0x56 the clip window, the same four words (SMD_$SET_CLIP_WINDOW
       clamps them against the limits);
-    - +0x5E a word (cleared by SMD_$INIT).
+    - +0x5E the count of main-memory pages wired for the BLT (cleared
+      by SMD_$INIT).
     Byte fields are boolean where the image sets them with a set
     instruction (field_20, cursor_visible), char where it only clears
-    them. }
+    them.
+
+    With `blt_main_memory' (base/config.ins.pas) the record is 0xE0
+    bytes: the physical pages SMD_$WIRE_MM wired, 32 longwords from
+    +0x40, come before the cursor eventcount, and every later field is
+    0x80 bytes on (cursor_ec +0xC0, field_4c +0xCC, disp_limits +0xCE,
+    clip_window +0xD6, mm_page_count +0xDE). }
   smd_display_hw_t = record
     display_type: smd_$display_type_t;    { 0x00 }
     lock_state: integer;                  { 0x02 }
@@ -377,11 +395,14 @@ type
     pad_3d: char;                         { 0x3D }
     field_3e: char;                       { 0x3E }
     pad_3f: char;                         { 0x3F }
-    cursor_ec: ec_$eventcount_t;          { 0x40 }
-    field_4c: smd_hw_event_set_t;         { 0x4C }
-    disp_limits: smd_$window_limits_t;    { 0x4E }
-    clip_window: smd_$window_limits_t;    { 0x56 }
-    field_5e: integer;                    { 0x5E }
+%if blt_main_memory %then
+    mm_pages: array[1..smd_mm_max_pages] of integer32;  { 0x40 }
+%endif
+    cursor_ec: ec_$eventcount_t;          { 0x40, 0xC0 }
+    field_4c: smd_hw_event_set_t;         { 0x4C, 0xCC }
+    disp_limits: smd_$window_limits_t;    { 0x4E, 0xCE }
+    clip_window: smd_$window_limits_t;    { 0x56, 0xD6 }
+    mm_page_count: integer;               { 0x5E, 0xDE }
   end;
   smd_display_hw_ptr_t = ^smd_display_hw_t;
 
@@ -602,10 +623,11 @@ type
     later field is 4 bytes on (the pointer the users form is 0xF8 bytes
     into the record, the hw field at -0xF8 from it; mapped_addresses
     +0x10, font_table +0xF8, hdm_list +0xFC, ctrl_regs +0x100,
-    display_uid +0x104, display_base +0x10C).  The SAU5's code never
-    reaches the 4 bytes; the SAU4's SMD_$INIT stores a word at +0x0C of
-    each record (16#80 and 16#60), so a word, then 2 bytes nothing
-    reaches.
+    display_uid +0x104, display_base +0x10C).  The word at +0x0C is the
+    unit's first I/O map entry for the BLT's main-memory pages: with
+    `blt_main_memory' SMD_$INIT stores 128 for unit 1 and 96 for unit 2
+    and SMD_$BLT reads it; the SAU5's code never reaches it.  The 2
+    bytes after it nothing reaches.
 
     With `display_devices' the record is 0x114 bytes, the SAU2's to
     +0xFC, then the device's vector and descriptor (SMD_$ADD_DEVICE
@@ -619,7 +641,7 @@ type
     field_08: proc1_$asid_t;              { 0x08 }
     field_0a: integer;                    { 0x0A }
 %if two_display_units %then
-    field_0c: integer;                    { 0x0C }
+    iomap_base: integer;                  { 0x0C }
     unused_0e: integer;                   { 0x0E }
 %endif
     mapped_addresses: array[proc1_$asid_t] of univ_ptr;  { 0x0C, 0x10 }
@@ -742,8 +764,9 @@ var
     display records, one, indexed from 1 (smd_$validate_unit,
     SMD_$INQ_DISP_INFO), 0x60 bytes up to SMD_TIME_$COM.  The compiled
     code reaches it by its address (13 sites).  Two with
-    `two_display_units' (the SAU5's 0xC0 bytes up to SMD_TIME_$COM;
-    SMD_$INIT stores element 2's address in unit 2's record). }
+    `two_display_units' (the SAU5's 0xC0 bytes up to SMD_TIME_$COM, the
+    SAU4's 0x1C0 with `blt_main_memory'; SMD_$INIT stores element 2's
+    address in unit 2's record). }
   smd_$display_com: extern array[1..smd_unit_count] of smd_display_hw_t;
 
   { SMD_TIME_$COM (map symbol, SMD_WIRED's hand-written data, the 6 bytes
@@ -869,6 +892,17 @@ procedure smd_$start_scroll(var hw: smd_display_hw_t;
 procedure smd_$continue_scroll(var hw: smd_display_hw_t;
                                ctrl_regs: smd_ctrl_regs_ptr_t);
   options(extern, val_param);
+
+%if blt_main_memory %then
+{ SMD_$UNWIRE_MM (map symbol; code in SMD_WIRED's data segment, hand
+  assembly, smd/sau4/wired_data.s): unwires the main-memory pages
+  SMD_$WIRE_MM wired into the display record.  SMD_$WIRE_MM,
+  SMD_$BLT and SMD_$ACQ_DISPLAY push the unit's ctrl_regs value and the
+  record's address, and read no D0: as SMD_$START_SCROLL's. }
+procedure smd_$unwire_mm(var hw: smd_display_hw_t;
+                         ctrl_regs: smd_ctrl_regs_ptr_t);
+  options(extern, val_param);
+%endif
 
 { SMD_$START_BLT (map symbol; smd/sau2/start_blt.s): the body reads the
   parameter words' address, the display record's address and the

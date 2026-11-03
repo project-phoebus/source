@@ -2,6 +2,7 @@
 
   Image addresses:
     sau3  0x00E7126A  MT_$GET_IOVA
+    sau4  0x0F87DFD6  MT_$GET_IOVA
     sau5  0x00E76DDA  MT_$GET_IOVA
 
   - The address is the object's page's entry of MT_$SCB.cfg_iova (one

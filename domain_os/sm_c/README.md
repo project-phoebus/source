@@ -47,8 +47,9 @@ variant is this controller's layout).
 
 ## Open items
 
-- TODO(sau): the SAU4's I/O map entries (`../sm/cinit.pas`); the SAU4's
-  and SAU6's own SM_C code.
+- TODO(sau): the SAU6's own SM_C code.
+- The SAU4's SM_C is the SAU3's with `mbus_map_64k`, `word_iomap`,
+  `large_vm` (sm_c_$fix_ecc) and without `memory_parity`.
 - TODO(pascal): the data block's open words (`sm_c.pas`).
 - The status codes the controller returns have no known names; the case
   labels are their numbers (`check_status.pas`).

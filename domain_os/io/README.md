@@ -9,9 +9,9 @@ segments' name), in three code sections:
 
 | section | code | routines | attribute |
 |---------|------|----------|-----------|
-| WIRED_PROC | 0x5D0 bytes (SAU3 0xB9C, SAU5 0xBB8, SAU8 0x9F0) | CHK (misc/), IO_$GET_DCTE, the module-local io_$check_unit, IO_$ACQUIRE (with the nested int_ids_match) .. IO_$ALLOC | none (the heading's) |
-| OS_INIT_PROC | 0x22C bytes (SAU3 0x278, SAU5 0x270, SAU8 0x23C, SAU9 0x4D0) | io_$build_dcte_list (module-local), io_$match_device (module-local, `prom_config_record`), IO_$INIT, IO_$LOG_SELF_TESTS (`prom_config_record`) | `[section(os_init_proc, os_init_data)]` |
-| PROCEDURE$ | 0x8C bytes (SAU3 0xA4, SAU5 0xB8, SAU8 0xC8) | IO_$GET_CONFIG | `[section(procedure$, data$)]` |
+| WIRED_PROC | 0x5D0 bytes (SAU3 0xB9C, SAU4 0xB7C, SAU5 0xBB8, SAU8 0x9F0) | CHK (misc/), IO_$GET_DCTE, the module-local io_$check_unit, IO_$ACQUIRE (with the nested int_ids_match) .. IO_$ALLOC | none (the heading's) |
+| OS_INIT_PROC | 0x22C bytes (SAU3 0x278, SAU4 0x270, SAU5 0x270, SAU8 0x23C, SAU9 0x4D0) | io_$build_dcte_list (module-local), io_$match_device (module-local, `prom_config_record`), IO_$INIT, IO_$LOG_SELF_TESTS (`prom_config_record`) | `[section(os_init_proc, os_init_data)]` |
+| PROCEDURE$ | 0x8C bytes (SAU3 0xA4, SAU4 0xB4, SAU5 0xB8, SAU8 0xC8) | IO_$GET_CONFIG | `[section(procedure$, data$)]` |
 
 Data: the map's IO_ data segment, 0x554 bytes in WIRED_DATA (0x684 on
 the SAU5, with PBU_$EXCLUSION_LOCK a sixth map symbol), with five
@@ -140,6 +140,21 @@ the routines are the SAU9's and the SAU5's sources but for these arms
   `mono_driver`); IO_DESC has the tape's, the floppy's and the
   Winchester's descriptors too (`io_desc.pas`).
 
+On the SAU4 the block has the SAU3's size and shape (0x9BC bytes, 64
+region nodes) without its reserved Multibus range, IO_$INIT is the
+SAU5's form, and the routines are the SAU3's sources but for these
+arms:
+
+- `pbu_alloc_mbus` with `mbus_map_64k`: IO_$ALLOC allocates in the
+  Multibus's map below 16#10000; IO_$ALLOC_MAP's range is 16#0..16#10000
+  for every unit, and the region's page is its start's page plus 192
+  (`alloc.pas`, `alloc_map.pas`);
+- `pbu_mcb_config` with `mcb_config_member_0`: IO_$GET_CONFIG reports
+  PBU_$MCB's flag as member 0 of the third set;
+- `floppy_dcte_request` and `sysbus_vectors_90`: FLP_DCTE of kind 3, with
+  its request on the system bus, and the ring's and the Winchester's
+  DCTEs with vector 16#90 (`dctes.pas`).
+
 None is called in the SAU2 image (Ghidra's xrefs and a byte search of
 the image file find no reference; the SVC tables do not name them).
 On the SR10.2 SAU3 the user-device manager calls them (PBU_$SETUP
@@ -207,6 +222,5 @@ ML_$EXCLUSION_INIT), `mmu/mmu.ins.pas` (MMU_$VTOP).
 
 ### TODO(sau)
 
-- `get_config.pas`: IO_$GET_CONFIG's form on the SAU4.
 - `dctes.pas`: the DCTES blocks of the SAUs other than the SAU2, SAU3,
-  SAU5, SAU8 and SAU9.
+  SAU4, SAU5, SAU8 and SAU9.

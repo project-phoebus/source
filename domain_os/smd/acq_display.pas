@@ -2,13 +2,15 @@
 
   Image addresses:
     sau2  0x00E6EB42  SMD_$ACQ_DISPLAY
+    sau4  0x0F8792D4  SMD_$ACQ_DISPLAY
     sau5  0x00E70FC0  SMD_$ACQ_DISPLAY
     sau9  0x3C47552E  SMD_$ACQ_DISPLAY
 
   - SMD_$LOCK_DISPLAY is tried until it succeeds; lock_data 1 marks a
     request in the record (+0x20) while the routine waits.
   - Lock states 1..5 and 7 wait for the lock eventcount, or 40 ticks
-    after which the state is forced to 0; state 6 is forced to 0 at once.
+    after which the state is forced to 0; state 6 is forced to 0 at once,
+    with `blt_main_memory' after the BLT's main-memory pages are unwired.
   - With `display_devices' (base/config.ins.pas) the unit's device
     locks the display; any state times out after 40 ticks.
   - The result is the display's video flags, read at entry.
@@ -59,6 +61,9 @@ begin
           disp^.lock_state := 0;
       end;
       6: begin
+%if blt_main_memory %then
+        smd_$unwire_mm(disp^, smd_$wired_data.unit[unit_num].ctrl_regs);
+%endif
         disp^.lock_state := 0;                       { merged with arm 1's }
       end;
     end;

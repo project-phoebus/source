@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E02898  ast_$setup_page_read (module-local)
+    sau4  0x0F802CC6  ast_$setup_page_read (module-local)
     sau9  0x3C403C0E  ast_$setup_page_read (module-local)
 
   Assume we're called with the PMAP lock held.

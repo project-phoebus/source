@@ -2,7 +2,9 @@
 
   Image addresses:
     sau2  0x00E087BA  area_$remote_sync (nested)
+    sau4  0x0F808B3C  area_$remote_sync (nested)
     sau2  0x00E08816  area_$resize (module-local)
+    sau4  0x0F808B98  area_$resize (module-local)
     sau8  0x03C08D16  area_$remote_sync (nested)
     sau8  0x03C08D72  area_$resize (module-local)
     sau9  0x3C409E32  area_$remote_sync (nested)
@@ -66,6 +68,7 @@ var
 
     Image addresses:
       sau2  0x00E087BA  area_$remote_sync (nested)
+      sau4  0x0F808B3C  area_$remote_sync (nested)
       sau8  0x03C08D16  area_$remote_sync (nested)
       sau9  0x3C409E32  area_$remote_sync (nested)
 
@@ -130,8 +133,12 @@ begin
           link.seg := s + entry.first_seg_index;
         while link.asid <> -1 do begin
           if mst[rshft(link.seg, 6) + mst_asid_base[link.asid]] <> 0 then
+%if region_mmu %then
+            smaps[smap_asid_base[link.asid] + link.seg].e.valid := false;
+%else
             smaps[smap_asid_base[link.asid] + link.seg].ctl.dt :=
               mst_smap_invalid;
+%endif
           next_link := bst[bst_asid_base[link.asid] + link.seg];
           bst[bst_asid_base[link.asid] + link.seg].asid := -1;
           link := next_link;

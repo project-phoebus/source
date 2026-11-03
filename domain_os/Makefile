@@ -31,6 +31,15 @@ endif
 ifeq ($(TARGET_SAU),sau8)
 ASFLAGS := -m68020 -m68851 -m68881
 endif
+# The SAU4 (DSP160, DN460, DN660) is a microcoded emulation of the MC68010
+# with no 68020 paths in its hand assembly: assembled for the 68010, so
+# gas keeps a PC-relative operand to another section at 16 bits, as the
+# image has it.  Its floating-point instructions are the CPU's own (no
+# coprocessor), which gas refuses for the 68010; fim/sau4/fp.s writes
+# them as words.
+ifeq ($(TARGET_SAU),sau4)
+ASFLAGS := -m68010
+endif
 PAS_ASFLAGS := -m68010
 NM := m68k-elf-nm
 LD := m68k-elf-ld
@@ -179,12 +188,27 @@ $(PAS_BUILD_DIR)/%.s: %.pas $(PAS_SRCS_ALL) $(DPC) Makefile
 # for reaching definitions (ref 6.4.24, p. 6-28, -opt 2; dpc
 # --substitute-constants).  Not the default: the SAU2's images keep such
 # stores and reloads in general, so it is given per SAU, per module, where
-# the image shows it (the SAU3's and SAU8's PBU_$SETUP and PBU_$SETDOWN).
+# the image shows it (the SAU3's, SAU4's and SAU8's PBU_$SETUP and
+# PBU_$SETDOWN).
 SUBST_CONST_MODULES :=
-ifneq ($(filter sau3 sau8,$(TARGET_SAU)),)
+ifneq ($(filter sau3 sau4 sau8,$(TARGET_SAU)),)
 SUBST_CONST_MODULES := pbu/pbu
 endif
 $(patsubst %,$(PAS_BUILD_DIR)/%.s,$(SUBST_CONST_MODULES)): DPC_FLAGS += --substitute-constants
+
+# The SAU4's (DSP160, DN460, DN660) own modules were compiled with -cpu 460
+# (ref 6.4.9, Table 6-3: 160, 460 and 660 select the same code), which
+# makes a longword multiply or divide one of those machines' extended
+# instructions; the modules it shares with the other MC68010 SAUs were
+# not, and still call M$ARITH (BAT_, VTOC_, DIR, CAL_, PACCT, PROC1, SIO,
+# TTY).  The list is the modules whose SAU4 image has such an instruction.
+CPU460_MODULES :=
+ifeq ($(TARGET_SAU),sau4)
+CPU460_MODULES := ast/ast mst/mst_unwired mt/mt network/network os/os \
+                  pbu/pbu_map pchist/pchist pmap/pmap time/time tpad/tpad \
+                  win/win
+endif
+$(patsubst %,$(PAS_BUILD_DIR)/%.s,$(CPU460_MODULES)): DPC_FLAGS += -cpu 460
 
 $(PAS_BUILD_DIR)/%.o: $(PAS_BUILD_DIR)/%.s
 	@echo "[AS] $<"
@@ -195,13 +219,14 @@ pascal: $(PAS_OBJS)
 # Compile every module file, keep going, and list the ones dpc refuses with
 # their first error and error count (build/sau2/pascal/report.txt).  The
 # .s files are the build's own, so a module gets its flags here too
-# (SUBST_CONST_MODULES).
+# (SUBST_CONST_MODULES, CPU460_MODULES).
 pascal-report:
 	@mkdir -p $(PAS_BUILD_DIR)
 	@ok=0; bad=0; : > $(PAS_BUILD_DIR)/report.txt; \
 	for m in $(PAS_MODULES); do \
 	  s=$(PAS_BUILD_DIR)/$${m%.pas}.s; mkdir -p $$(dirname $$s); \
 	  f=; case " $(SUBST_CONST_MODULES) " in *" $${m%.pas} "*) f=--substitute-constants;; esac; \
+	  case " $(CPU460_MODULES) " in *" $${m%.pas} "*) f="$$f -cpu 460";; esac; \
 	  if $(DPC) $(DPC_FLAGS) $$f -o $$s $$m > $$s.log 2>&1; then ok=$$((ok+1)); \
 	  else bad=$$((bad+1)); rm -f $$s; \
 	    printf '%s: %s error(s); first: %s\n' $$m "$$(grep -c 'error:' $$s.log)" \

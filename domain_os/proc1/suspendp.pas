@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E14876  PROC1_$SUSPENDP
+    sau4  0x0F8150EA  PROC1_$SUSPENDP
 
   - The result is true on the two error paths.
 

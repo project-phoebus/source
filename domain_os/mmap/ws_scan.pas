@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E0D364  MMAP_$WS_SCAN
     sau2  0x00E0D274  mmap_$move_pages_to_wsl_type (nested)
+    sau4  0x0F80D9D4  MMAP_$WS_SCAN
+    sau4  0x0F80D8E4  mmap_$move_pages_to_wsl_type (nested)
     sau8  0x03C0E256  MMAP_$WS_SCAN
     sau8  0x03C0E17C  mmap_$move_pages_to_wsl_type (nested)
     sau9  0x3C40F2CE  MMAP_$WS_SCAN
@@ -116,7 +118,7 @@ begin
       seg_entry := addr(ast_pmaps[page^.segment][page^.seg_offset]);
       next_p := page^.prev_vpn;
 
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
       if mode then begin
         if not ((page^.modified
                  or (ast_$pmap_modified in seg_entry^.flags))
@@ -148,7 +150,7 @@ begin
       mmap[page^.next_vpn].prev_vpn := next_p;
       mmap[next_p].next_vpn := page^.next_vpn;
       if page^.wire_count = 0 then begin
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
         { the translations are flushed once, after the walk }
         seg_entry^.flags := seg_entry^.flags - [ast_$pmap_resident];
         if (ast_$pmap_modified in seg_entry^.flags)
@@ -194,7 +196,7 @@ begin
       if removed >= pages_needed then
         exit;
     end;
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
     mmu_$purge;
 %endif
 

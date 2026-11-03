@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E07FC6  AREA_$FREE_FROM
+    sau4  0x0F8082B2  AREA_$FREE_FROM
     sau9  0x3C4095E4  AREA_$FREE_FROM
 
   - Under the area lock the UID's chain record (bucket UID mod 11) has

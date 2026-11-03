@@ -12,7 +12,7 @@ section:
 
 | section | code | routines (image order) | attribute |
 |---------|------|------------------------|-----------|
-| WIRED_PROC | 0x2F20 bytes (SAU9 0x3428) | area_$rpmap_get, area_$alloc_resources, area_$wait_in_trans, area_$wait_pite_in_trans, area_$internal_create, AREA_$CREATE, AREA_$CREATE_FROM, area_$internal_delete, AREA_$DELETE, AREA_$DELETE_FROM, AREA_$FREE_ASID, AREA_$SHUTDOWN, AREA_$FREE_FROM, AREA_$TRANSFER, area_$free_slot_segments (nested), area_$free_segments, area_$remote_sync (nested), area_$resize, AREA_$GROW, AREA_$GROW_TO, AREA_$INVALIDATE, AREA_$COPY, area_$find_entry_by_uid, AREA_$TOUCH, AREA_$ASSOC, AREA_$THREAD_BSTES, AREA_$REMOVE_SEG, area_$get_aste, area_$alloc_seg_table, area_$free_seg_table, AREA_$DEACTIVATE_ASTE | none (the heading's) |
+| WIRED_PROC | 0x2F20 bytes (SAU4 0x3518, SAU9 0x3428) | area_$rpmap_get, area_$alloc_resources, area_$wait_in_trans, area_$wait_pite_in_trans, area_$internal_create, AREA_$CREATE, AREA_$CREATE_FROM, area_$internal_delete, AREA_$DELETE, AREA_$DELETE_FROM, AREA_$FREE_ASID, AREA_$SHUTDOWN, AREA_$FREE_FROM, AREA_$TRANSFER, area_$free_slot_segments (nested), area_$free_segments, area_$remote_sync (nested), area_$resize, AREA_$GROW, AREA_$GROW_TO, AREA_$INVALIDATE, AREA_$COPY, area_$find_entry_by_uid, AREA_$TOUCH, AREA_$ASSOC, AREA_$THREAD_BSTES, AREA_$REMOVE_SEG, area_$get_aste, area_$alloc_seg_table, area_$free_seg_table, AREA_$DEACTIVATE_ASTE | none (the heading's) |
 | OS_INIT_PROC | 0x154 bytes (SAU9 0x14C) | AREA_$INIT | `[section(os_init_proc, os_init_data)]` |
 
 Data: the AREA_ block, 0x5E8 bytes in WIRED_DATA, through A5 in the
@@ -192,14 +192,25 @@ that map one page map.  AREA_ keeps them:
 - AREAS has 2688 entries, AREA_$INIT's maximum (`init.pas`,
   `area.ins.pas` area_max_entries).
 
-The 28-byte ASTE and the 21-bit disk addresses come in through the
-types alone.  The rest of the SAU9's AREA_ code, and its data block, is
+The 28-byte ASTE and (with `pmmu_page_maps`) the 21-bit disk
+addresses come in through the types alone.  The rest of the SAU9's AREA_ code, and its data block, is
 the SAU2's source compiled for the 68020.
 
 The SAU8's AREA_ is the SAU9's code but for area_$resize's MST test in
 a shrink: its MST is 7168 words (`mst_7168_words`,
 `mst/mst_internal.ins.pas`), so the index is a word, and the SAU8 image
 forms it in 16 bits.
+
+The SAU4's AREA_ (WIRED_PROC 0x3518 bytes, OS_INIT_PROC 0x154, the data
+block 0x5E8) is the large layout's code in 68010 forms, with
+`mst_7168_words` as the SAU8's, and the region registers' segment map
+entries (`region_mmu`, `mst/mst_internal.ins.pas`): a longword with the
+valid bit, the protection and the page map's physical address, where
+the SAU9's is an 8-byte table descriptor.  AREA_$TOUCH and AREA_$COPY
+store the page map's address and set the valid bit; area_$resize,
+AREA_$REMOVE_SEG and AREA_$DEACTIVATE_ASTE clear it.  AREA_ has no
+multiply or divide (its `mod`s call the run-time on every 68010
+SAU), so it needs no `-cpu 460`.
 
 ## Open items
 

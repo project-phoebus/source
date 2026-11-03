@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E2126C  FIM_ data (WIRED_DATA, 0x134 bytes)
+    sau4  0x0F82287C  FIM_ data (WIRED_DATA, 0x134 bytes)
 
   One compilation unit, one code segment and one data segment: the map's
   FIM_ code segment in WIRED_PROC (0x664 bytes, FIM_$BUILD_DF ..

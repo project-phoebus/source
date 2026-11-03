@@ -192,6 +192,34 @@ OS_$SHUTTING_DOWN_FLAG at +0xE); its code: OS_INIT_PROC 0x166C, .TEXT
   (`pmmu_page_maps`), and includes `mst/mst_internal.ins.pas` (SMAPS,
   RARS, MSTE_PAGES, the segment constants).
 
+The SAU4's OS is the same source with its parts; its blocks:
+OS_INIT_DATA 0x4A4 bytes (MMAP_$INIT's table of 248 longwords, the
+vector table's 47 cells), .DATA 0x18 (the restart code at +0xC),
+WIRED_DATA 0x20; its code: OS_INIT_PROC 0x15D4, .TEXT 0x5E8, WIRED_PROC
+0x38.  OS is a `-cpu 460` module (OS_$SHUTDOWN's delay loop multiply).
+
+- OS_$INIT (`init.pas`): the vector table without the coprocessor's,
+  BSUN's and the signalling NaN's cells (`fp_five_exceptions`), with
+  the MMU's faults and the FP ASID exception (`mmu_fault_vectors`) and the
+  memory errors' (`ecc_memory`), and the MMU's fault vectors set after
+  the bus error's; COLD's segment by MMU_$REMOVE_SPECIAL_SEG and the
+  type-4 protections by MMU_$PAGE_WRITE_BIT and the segment map
+  entries' protection field, for the wired kernel's segments too
+  (`region_mmu`); the paging loop's page map entries not resident
+  (`pmmu_page_maps or region_mmu`, the 8192 segments' folded offset);
+  no PEB_$INIT or PEB_$LOAD_WCS (`peb_setup` off), no parity trap
+  (`memory_parity` off); SERVER_$FLAG from boot flag 1
+  (`boot_flags_server`); MEM_$INIT, LPR_$INIT, the second display.
+- OS_$SHUTDOWN (`shutdown.pas`): FP_$SAVEP left alone
+  (`shutdown_keeps_fp_savep`); the power down through MMU_$SET_CSR
+  (`power_off_csr`); COLOR_$SHUTDOWN, PBU_$SHUTDOWN, the restart
+  through CRASH (`crash_reboot`).
+- OS_$INSTALL_DISPLAY_ASTE: AST_$ASSOC_IOPPN, MMU_$PURGE and the
+  touched pages' entries not resident (`region_mmu`).
+- OS_$BOOT_ERRCHK, VTOP_OR_CRASH, os_$free_va_page (the form without
+  `pft_mmu`), os_$start_proc2 and the other module-local routines:
+  existing code, addresses only.
+
 Headings of other modules for these arms are in `os.ins.pas` (SMD_'s
 graphic device id, GPU_, COLOR2_, COLOR_, PBU_, DISP2_PRESENT) and
 `os.pas` (DISPLAY2_$UID, DISPLAY3_$UID, GPU's register page), each under

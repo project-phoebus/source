@@ -23,8 +23,10 @@ const
     16#ABCDEF01 is above the largest integer32. }
   log_$pending_magic = -16#543210FF;
 
-  { Entry types.  LOG_$INIT logs 0 and 5; LOG_$SHUTDN 4. }
+  { Entry types.  LOG_$INIT logs 0 and 5; LOG_$SHUTDN 4; MEM_$ECCC_LOG
+    2, a corrected memory error. }
   log_$type_init = 0;
+  log_$type_ecc_error = 2;
   log_$type_shutdown = 4;
   log_$type_crash = 5;
   { IO_$LOG_SELF_TESTS logs 15: a controller whose PROM self-test

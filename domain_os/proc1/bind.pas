@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E14D1C  PROC1_$BIND
+    sau4  0x0F815590  PROC1_$BIND
 
   - Under the PROC1 create lock, the PCBs from pid 3 up are searched for
     one not bound.

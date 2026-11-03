@@ -44,9 +44,20 @@ const
     entries are longwords (the long_iomap part, base/config.ins.pas) the
     entry is the physical page number plus 16#48000; where they are the
     first word of the 4 bytes (pbu/pbu.ins.pas), the page number plus
-    16#8000, the entry's bit 15. }
+    16#8000, the entry's bit 15.  With the 64 KB Multibus map
+    (`mbus_map_64k') the command block is at 16#F400 on the bus, the
+    map's entries 253 and 254; where the entries are words (`word_iomap')
+    an entry is the page number alone.  sm_cb_iova: the command block's
+    bus address, PBU_$ALLOC's. }
+%if mbus_map_64k %then
+  sm_iomap_cb = 16#FD;
+  sm_iomap_buf = 16#FE;
+  sm_cb_iova = 16#F400;
+%else
   sm_iomap_cb = 16#1BD;
   sm_iomap_buf = 16#1BE;
+  sm_cb_iova = 16#6F400;
+%endif
 %if long_iomap %then
   sm_iomap_bias = 16#48000;
 %else

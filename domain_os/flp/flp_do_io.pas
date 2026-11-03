@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E3DDC6  FLP_DO_IO
+    sau4  0x0F845DB0  FLP_DO_IO
     sau8  0x03C45D74  FLP_DO_IO
 
   - The controller's ML lock (its DCTE's disk_error_que_hi) is held
@@ -18,6 +19,8 @@
     written page's (at FLP_PAGE), writes the sector again.
   - A bad format switches the motor off.
   - Global: a map symbol without `$'.
+  - The page DMA form puts the request's page in IOMAP's entry 1 and
+    programs the page's DMA channel for each try.
 
   Status stored: none.
 }
@@ -162,6 +165,102 @@ begin
 
     if not locked then
       ml_$unlock(flp_ctlr_table[vol.dev_info^.controller].dcte^.lock);
+  end;
+end;
+%elseif floppy_page_dma %then
+
+procedure flp_do_io(in vol: disk_$volume_t; var req: disk_$io_req_t;
+                    in param_3: univ integer32; zero: integer;
+                    out result: boolean);
+  options(val_param);
+label
+  10;
+var
+  status: integer32;
+  done: integer;
+  unit: integer;
+begin
+  with flp_ctlr_table[vol.dev_info^.controller] do begin
+    flp_hw_addr := hw_addr;
+    result := false;
+    ml_$lock(dcte^.lock);
+
+    if req.owner_op.op = disk_$req_op_format_track then
+      flp_format_track(vol, req)
+    else begin
+      { a write to a changed disk }
+      if (req.owner_op.op = disk_$req_op_write) and then
+         flp_disk_change[vol.dev_unit] then
+        status := status_$storage_module_stopped
+      else begin
+
+        flp_cmd_retry := 25;
+        flp_dma_retry := 500;
+        iomap[1] := req.ppn;
+        done := 0;
+
+        repeat
+          if (flp_hw_addr^.main_status & 16#1F) <> 0 then begin
+            status := status_$disk_controller_busy;
+            goto 10;
+          end;
+
+          { the page's DMA channel: the I/O map's page 1, 1024 bytes }
+          with flp_hw_addr^ do begin
+            dma_addr := 0;
+            dma_addr := 4;
+            dma_count := 16#FF;
+            dma_count := 3;
+            dma_all_mask := 16#0E;
+            if req.owner_op.op = disk_$req_op_read then
+              dma_mode := 4
+            else
+              dma_mode := 8;
+          end;
+
+          { the READ/WRITE DATA block }
+          flp_rw_cmd[1] := req.daddr.head * 4 + vol.dev_unit;
+          flp_rw_cmd[2] := req.daddr.cyl;
+          flp_rw_cmd[3] := req.daddr.head;
+          flp_rw_cmd[4] := req.daddr.sector + done + 1;
+
+          { seek with the block's first words }
+          unit := vol.dev_unit;
+          status := status_$ok;
+          if flp_unit_cyl[unit] <> req.daddr.cyl then begin
+            flp_rw_cmd[0] := 16#0F;
+            status := excs(flp_rw_cmd, 3, vol);
+            flp_unit_cyl[unit] := flp_$sregs[1].w;
+          end;
+
+          { the transfer }
+          if status = status_$ok then begin
+            if req.owner_op.op = disk_$req_op_read then
+              flp_rw_cmd[0] := flp_base_cmd + 6
+            else
+              flp_rw_cmd[0] := flp_base_cmd + 5;
+            status := excs(flp_rw_cmd, 9, vol);
+            if status = status_$ok then
+              done := done + 1;
+          end;
+
+          if (done = 0) and then (status = status_$ok) then
+            status := flp_$retry;
+        until status <> flp_$retry;
+
+        { a disk change during the transfer }
+        if (status = status_$ok) and then flp_disk_change[vol.dev_unit]
+        then
+          status := status_$storage_module_stopped;
+      end;
+
+  10: if status <> status_$ok then begin
+        disk_bptbl[req.owner_op.owner].io_pending := false;
+        req.status.all := status;
+      end;
+    end;
+
+    ml_$unlock(dcte^.lock);
   end;
 end;
 %else

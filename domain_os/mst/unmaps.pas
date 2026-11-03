@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E4479A  MST_$UNMAPS
+    sau4  0x0F84CBA8  MST_$UNMAPS
     sau8  0x03C4CD32  MST_$UNMAPS
     sau9  0x3C44BEBA  MST_$UNMAPS
 

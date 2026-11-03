@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E34BD0  DTTY_$INIT
     sau3  0x00E32F18  DTTY_$INIT
+    sau4  0x0F837E84  DTTY_$INIT
     sau5  0x00E36D18  DTTY_$INIT
     sau9  0x3C43B26C  DTTY_$INIT
 

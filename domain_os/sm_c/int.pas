@@ -2,6 +2,7 @@
 
   Image addresses:
     sau3  0x00E6F0CA  SM_C_$INT
+    sau4  0x0F87BEC0  SM_C_$INT
     sau5  0x00E74C2E  SM_C_$INT
 
   - The result is 3 when the chain ends (no request, its last, the
@@ -25,9 +26,11 @@ begin
     if sm_c_req = nil then
       last := true
     else begin
+%if memory_parity %then
       if parity_$during_dma then
         flags.parity_err :=
           parity_$chk_io(sm_c_cb_ppn, sm_c_req^.ppn) <> 0;
+%endif
       if sm_$cb.c_cmd = sm_c_cmd_read then begin
         sm_c_req^.header.l := sm_c_hdr^;
         stats.xfers[1] := stats.xfers[1] + 1;
@@ -37,7 +40,11 @@ begin
     status.all := sm_$cb.c_status.all;
     flags.cmd_reg := reg;
 
+%if memory_parity %then
     if last or ((reg & 16#40) <> 0) or flags.parity_err then begin
+%else
+    if last or ((reg & 16#40) <> 0) then begin
+%endif
       page^.cmd := sm_c_reg_ack;
       sm_c_pbu_info^.int_ec := addr(ec);
       sm_c_$int := 3;
@@ -50,6 +57,8 @@ begin
       end;
 %if long_iomap %then
       sm_c_iomap_entry^ := sm_c_req^.ppn + sm_iomap_bias;
+%elseif word_iomap %then
+      sm_c_iomap_entry^ := sm_c_req^.ppn;
 %else
       sm_c_iomap_entry^.entry := sm_c_req^.ppn + sm_iomap_bias;
 %endif

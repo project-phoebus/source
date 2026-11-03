@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E697BE  TPAD_$SET_MODE
+    sau4  0x0F873284  TPAD_$SET_MODE
 
   - TPAD_$SET_UNIT_MODE for the current unit; its status is ignored.
 

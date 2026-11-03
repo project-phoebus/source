@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E33570  TPAD_$INIT
+    sau4  0x0F8367B4  TPAD_$INIT
 
   - Unit 1 becomes the current unit.  Each display unit present gets its
     width and height less one as its maximum cursor limits and its

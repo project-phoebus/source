@@ -47,7 +47,9 @@ headings the driver calls (TODO(merge)).
 
 ## Open items
 
-- TODO(sau): the SAU4's I/O map entries (`cinit.pas`); the SAU4's and
-  SAU6's own SM code.
+- TODO(sau): the SAU6's own SM code.
+- The SAU4's SM is the SAU3's with `mbus_map_64k` (the command block at
+  bus address 16#F400, IOMAP's entries 253 and 254), `word_iomap` and
+  without `memory_parity`.
 - TODO(pascal): the data block's open longword at +0x1C (`sm.pas`).
 - TODO(merge): the PBU headings (`sm.ins.pas`).

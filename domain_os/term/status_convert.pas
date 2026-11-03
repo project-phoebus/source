@@ -4,6 +4,7 @@
   Image addresses:
     sau2  0x00E1AAA8  term_$status_convert (module-local)
     sau3  0x00E1A110  term_$status_convert (module-local)
+    sau4  0x0F81BCBC  term_$status_convert (module-local)
 
   - A status of module 16#33, 16#36 or 16#35 is replaced by its code's
     entry in that module's table (its statics, the map's OS_TERM

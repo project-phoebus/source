@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E698C2  TPAD_$SET_UNIT_CURSOR
+    sau4  0x0F873388  TPAD_$SET_UNIT_CURSOR
 
   - unitp becomes the current unit and the cursor is put at new_crsr;
     in a mode other than absolute the cursor offset is re-taken from

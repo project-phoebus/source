@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0A290  CHKSUM
+    sau4  0x0F80AB78  CHKSUM
     sau8  0x03C0ACAC  CHKSUM
     sau9  0x3C40BDD0  CHKSUM
 

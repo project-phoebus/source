@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E05540  AST_$SET_DTS
+    sau4  0x0F8058EC  AST_$SET_DTS
     sau9  0x3C4067EA  AST_$SET_DTS
 
   - Inhibited and under the AST lock, the object's AOTE is looked up, or

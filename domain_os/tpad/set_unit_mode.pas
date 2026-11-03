@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E697F0  TPAD_$SET_UNIT_MODE
+    sau4  0x0F8732B6  TPAD_$SET_UNIT_MODE
     sau9  0x3C4704BA  TPAD_$SET_UNIT_MODE
 
   - The conversion factors are recomputed (range div scale, 1024 for a

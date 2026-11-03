@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E12D84  pmap_$write_complete
+    sau4  0x0F8136BC  pmap_$write_complete (module-local)
     sau9  0x3C415100  pmap_$write_complete
 
   Assume we're called with the PMAP lock held.
@@ -44,7 +45,7 @@ begin
   else begin
     status.fail := true;
     page^.modified := true;
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
     ast_pmaps[segment][seg_offset].flags :=
       ast_pmaps[segment][seg_offset].flags + [ast_$pmap_used];
 %else

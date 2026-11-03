@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0CCBC  MMAP_$WIRE
+    sau4  0x0F80D30C  MMAP_$WIRE
     sau8  0x03C0DBDC  MMAP_$WIRE
     sau9  0x3C40EC18  MMAP_$WIRE
 

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E16AA8  TIME_$GET_ADJUST
+    sau4  0x0F817466  TIME_$GET_ADJUST
 
   - TIME_$CURRENT_DELTA, read with interrupts off, in 4-microsecond
     ticks, is returned as seconds and microseconds.

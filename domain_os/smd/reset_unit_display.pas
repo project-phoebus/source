@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6D736  smd_$reset_unit_display (module-local)
+    sau4  0x0F877D8E  smd_$reset_unit_display (module-local)
     sau5  0x00E6F9B8  smd_$reset_unit_display (module-local)
     sau9  0x3C4743FA  smd_$reset_unit_display (module-local)
 

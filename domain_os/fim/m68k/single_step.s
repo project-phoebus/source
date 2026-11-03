@@ -20,7 +20,12 @@
  * Byte gate (tools/asm_compare.py): identical to the image modulo
  * relocations; `and.w #imm,D0' is the Apollo assembler's <ea>=#imm form
  * (c07c), gas writes ANDI (recognised by the gate).
+ *
+ * The SAU4 keeps the SR's bits 7 and 6 for the user and not T0
+ * (`sr_user_bits_76', base/config.ins.pas: mask 0x80DF).
  */
+
+        .include "base/config.inc"
 
         .section ".text.FIM_$SINGLE_STEP","ax",@progbits
         .even
@@ -46,7 +51,11 @@ FIM_$SINGLE_STEP:
         move.l  (%a1),-(%a0)                    /* e217fc  frame PC = *pc */
         movea.l (0x8,%sp),%a1                   /* e217fe */
         move.w  (%a1),%d0                       /* e21802 */
+        .if sr_user_bits_76
+        and.w   #0x80df,%d0                     /* sau4 f822dd4  c07c 80df: T1 . . . . 7 6 XNZVC */
+        .else
         and.w   #0xc01f,%d0                     /* e21804  c07c c01f: T1 T0 S . . XNZVC */
+        .endif
         bset.l  #15,%d0                         /* e21808  T1: trace */
         move.w  %d0,-(%a0)                      /* e2180c  frame SR */
         movea.l (0xc,%sp),%a1                   /* e2180e  A1 = regs */

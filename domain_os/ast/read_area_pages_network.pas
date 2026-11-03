@@ -3,8 +3,10 @@
 
   Image addresses:
     sau2  0x00E02CA6  ast_$read_area_pages_network (module-local)
+    sau4  0x0F8030D4  ast_$read_area_pages_network (module-local)
     sau9  0x3C404000  ast_$read_area_pages_network (module-local)
     sau2  0x00E02C52  ast_$read_area_pages_net_log (nested)
+    sau4  0x0F803080  ast_$read_area_pages_net_log (nested)
     sau9  0x3C403FAC  ast_$read_area_pages_net_log (nested)
 
   Assume we're called with the PMAP lock held.

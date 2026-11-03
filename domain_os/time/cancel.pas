@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E164A4  TIME_$CANCEL
+    sau4  0x0F816E84  TIME_$CANCEL
 
   - The element is taken off the real-time queue.  If it had fired
     meanwhile, the eventcount is waited for to reach wait_value, so the

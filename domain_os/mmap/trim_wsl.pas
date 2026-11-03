@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E0C760  mmap_$trim_wsl (module-local)
+    sau4  0x0F80CDC0  mmap_$trim_wsl (module-local)
     sau8  0x03C0D69E  mmap_$trim_wsl (module-local)
     sau9  0x3C40E6C8  mmap_$trim_wsl (module-local)
 
@@ -50,7 +51,7 @@ begin
         seg_entry := addr(ast_pmaps[page^.segment][page^.seg_offset]);
         with page^ do begin
           next_link := prev_vpn;
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
           if (position > skip_count)
              or else not (ast_$pmap_used in seg_entry^.flags) then begin
 %else
@@ -65,7 +66,7 @@ begin
             if wire_count = 0 then begin
               page^.prev_vpn := collected;
               collected := current;
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
               { the translations are flushed once, after the walk }
               seg_entry^.flags := seg_entry^.flags - [ast_$pmap_resident];
 %else
@@ -82,14 +83,14 @@ begin
         if remaining = 0 then
           exit;
       end;
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
     mmu_$purge;
 %endif
 
     { the collected pages to the pools }
     while collected <> 0 do begin
       page := addr(mmap[collected]);
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
       seg_entry := addr(ast_pmaps[page^.segment][page^.seg_offset]);
       if page^.modified
          or else (ast_$pmap_modified in seg_entry^.flags) then begin

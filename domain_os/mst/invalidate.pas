@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E441CA  MST_$INVALIDATE
+    sau4  0x0F84C490  MST_$INVALIDATE
     sau8  0x03C4C648  MST_$INVALIDATE
     sau9  0x3C44B7E4  MST_$INVALIDATE
 
@@ -10,8 +11,9 @@
     caller's object (any for UID_$NIL) with protection 6 or 7, in
     consecutive object segments; the first entry fixes the object.
   - With the large address space the range must end below the top 8
-    segments of private B; with the large VM layout the protection test
-    is the segment map entry's write protect.
+    segments of private B (as with the 8192 segments); with the large
+    VM layout the protection test is the segment map entry's write
+    protect, with the region registers its protection, 6 or 7.
   - Partial pages are cleared (if zero_flag), whole ones invalidated
     through AREA_$INVALIDATE or AST_$INVALIDATE.
   - A length of 1 fails; only the first MSTE fixes the object; the head
@@ -80,7 +82,7 @@ begin
     status.all := status_$mst_invalid_length;
     return;
   end;
-%if large_address_space %then
+%if large_address_space or vm_8192_segs %then
   if lshft(linteger(mst_unmap_privi_first_refused), 15) <= end_va then
     goto illegal;
 %elseif run_time_layout %then
@@ -117,7 +119,14 @@ begin
       end;
       if (uid_$nil <> uid_copy) and then (uid <> uid_copy) then
         goto mismatch;
-%if large_vm %then
+%if region_mmu %then
+      smap := addr(smaps[slot + smap_asid_base[asid]]);
+      prot := smap^.e.prot;
+      if (prot <> prot_a) and then (prot <> prot_b) then begin
+        st.all := status_$mst_insufficient_rights;
+        exit;
+      end;
+%elseif large_vm %then
       smap := addr(smaps[slot + smap_asid_base[asid]]);
       if 2 in smap^.flags then begin
         st.all := status_$mst_insufficient_rights;

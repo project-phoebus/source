@@ -1,6 +1,7 @@
 { mst_$va_to_aste - activate and wire the segment of a virtual address.
 
   Image addresses:
+    sau4  0x0F80E8C4  mst_$va_to_aste (module-local)
     sau8  0x03C0F31C  mst_$va_to_aste (module-local)
     sau9  0x3C4103F8  mst_$va_to_aste (module-local)
 
@@ -38,6 +39,11 @@ begin
   if aste <> nil then begin
     ml_$lock(ml_$pmap_lock);
     with smaps[seg_index + smap_asid_base[asid]] do
+%if region_mmu %then
+      if not e.valid then begin
+        e.pmap_pa := aste^.pmap_pa;
+        e.valid := true;
+%else
       if ctl.dt = mst_smap_invalid then begin
         table := (table & 15) + aste^.pmap_pa;
         lim.limit := 31;
@@ -49,6 +55,7 @@ begin
         flags := flags + [10..15];
 %endif
         ctl.dt := mst_smap_valid;
+%endif
         bst[seg_index + bst_asid_base[asid]] :=
           mst_$pmap_link_t(aste^.pmap_link);
         aste^.pmap_link.asid := asid;

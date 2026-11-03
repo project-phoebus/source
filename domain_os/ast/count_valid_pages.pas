@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E0305C  ast_$count_valid_pages (nested)
+    sau4  0x0F80348A  ast_$count_valid_pages (nested)
     sau8  0x03C033A4  ast_$count_valid_pages (nested)
     sau9  0x3C4043B0  ast_$count_valid_pages (nested)
 

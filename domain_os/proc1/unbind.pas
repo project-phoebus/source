@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E14E24  PROC1_$UNBIND
+    sau4  0x0F815698  PROC1_$UNBIND
 
   - The current process suspends itself with interrupts off; it must end
     up suspended, else the system crashes.  Another process is first

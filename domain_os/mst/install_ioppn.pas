@@ -1,6 +1,7 @@
 { MST_$INSTALL_IOPPN - map an I/O page at a virtual address.
 
   Image addresses:
+    sau4  0x0F80E9F8  MST_$INSTALL_IOPPN
     sau8  0x03C0F4AE  MST_$INSTALL_IOPPN
     sau9  0x3C41059A  MST_$INSTALL_IOPPN
 

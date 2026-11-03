@@ -2,6 +2,7 @@
 
   Image addresses:
     sau3  0x00E6E1CC  sm_$format (module-local)
+    sau4  0x0F877914  sm_$format (module-local)
     sau5  0x00E6F524  sm_$format (module-local)
 
   Assume we're called with the controller's lock held.

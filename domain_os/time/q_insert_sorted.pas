@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E16AE8  time_$q_insert_sorted (module-local)
+    sau4  0x0F8174A0  time_$q_insert_sorted (module-local)
 
   Assume we're called with the queue's spin lock held.
 

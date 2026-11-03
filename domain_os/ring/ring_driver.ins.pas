@@ -41,6 +41,15 @@ const
   ring_sendp_res_not_ready = 4;
   ring_sendp_res_esb = 2;
 
+%if ring_board_dma %then
+  { The controller's interrupt vectors with the board's own DMA
+    (`ring_board_dma'), from the vector base in the DCTE's last word:
+    two receive vectors and the transmit's. }
+  ring_rcv_vector_1 = 9;
+  ring_rcv_vector_2 = 13;
+  ring_xmit_vector = 11;
+
+%endif
 %if ring8_controller %then
   { The controller types (the high byte of its ctlr_id register) the
     controller with buffers of its own comes in, by their memory: 16 KB
@@ -73,6 +82,80 @@ type
     (above, ring_sendp_res_*). }
   ring_$csr_t = set of 0..15;
 
+%if ring_board_dma %then
+  { A channel of the ring board's DMA controllers (`ring_board_dma'):
+    its address and its word count, each register a byte at an even
+    offset, written and read low byte first through the controller's
+    byte-pointer flip-flop.  The address is a word address in the I/O
+    map's space, a page's high byte; the count is the transfer's words
+    less one. }
+  ring_$dma_chan_t = record
+    addr: ring_$byte_t;                   { 0x00 }
+    unused_01: char;                      { 0x01 }
+    count: ring_$byte_t;                  { 0x02 }
+    unused_03: char;                      { 0x03 }
+  end;
+
+  { One of the ring board's two DMA controllers, 32 bytes of the
+    controller's register block: four channels' address and count
+    registers, then the command, mask, mode, flip-flop clear and master
+    clear registers, each a byte at an even offset (the register layout
+    of the Intel 8237).  The transmit's channels are 2 and 3 (header,
+    data), the receive's 0 and 1.  The words no routine reaches are the
+    unused_ fields. }
+  ring_$dma_t = record
+    chan: array[0..3] of ring_$dma_chan_t;  { 0x00 }
+    command: ring_$byte_t;                { 0x10 }
+    unused_11: char;                      { 0x11 }
+    unused_12: integer;                   { 0x12 }
+    mask: ring_$byte_t;                   { 0x14 }
+    unused_15: char;                      { 0x15 }
+    mode: ring_$byte_t;                   { 0x16 }
+    unused_17: char;                      { 0x17 }
+    clear_ff: ring_$byte_t;               { 0x18 }
+    unused_19: char;                      { 0x19 }
+    master_clear: ring_$byte_t;           { 0x1A }
+    unused_1b: char;                      { 0x1B }
+    unused_1c: integer32;                 { 0x1C }
+  end;
+
+  { The controller's registers with the board's own DMA
+    (`ring_board_dma', at the DCTE's disk_dinit address in RING_DCTE):
+    `[device]'.  The node id's three bytes are at 0x0A, 0x0C and 0x0E;
+    the transmit mask's byte at 0x10.  The words at 0x12 and 0x14 are
+    read as the receive and transmit status and written a byte at a
+    time as the receive and transmit commands (a variant record).  The
+    interrupts are acknowledged with a 1 in the bytes at 0x1A
+    (transmit) and 0x1C (receive); the transmit's DMA controller is at
+    0x40, the receive's at 0x60.  The words no routine reaches are the
+    unused_ fields. }
+  ring_$regs_t = [device] record
+    unused_00: array[0..9] of char;       { 0x00 }
+    id_0a: ring_$byte_t;                  { 0x0A }
+    unused_0b: char;                      { 0x0B }
+    id_0c: ring_$byte_t;                  { 0x0C }
+    unused_0d: char;                      { 0x0D }
+    id_0e: ring_$byte_t;                  { 0x0E }
+    unused_0f: char;                      { 0x0F }
+    tmask: ring_$byte_t;                  { 0x10 }
+    unused_11: char;                      { 0x11 }
+    case integer of
+      1: (rx_status: ring_$csr_t;         { 0x12 }
+          tx_status: ring_$csr_t);        { 0x14 }
+      2: (rx_cmd: ring_$byte_t;           { 0x12 }
+          unused_13: char;                { 0x13 }
+          tx_cmd: ring_$byte_t;           { 0x14 }
+          unused_15: char;                { 0x15 }
+          unused_16: integer32;           { 0x16 }
+          tx_int_ack: ring_$byte_t;       { 0x1A }
+          unused_1b: char;                { 0x1B }
+          rx_int_ack: ring_$byte_t;       { 0x1C }
+          unused_1d: char;                { 0x1D }
+          unused_1e: array[16#1E..16#3F] of char;  { 0x1E }
+          tx_dma: ring_$dma_t;            { 0x40 }
+          rx_dma: ring_$dma_t);           { 0x60 }
+  end;
+%else
   { The controller's registers (at the DCTE's disk_dinit address in
     RING_DCTE): `[device]'.  The transmit mask's byte is the unit's
     mask's low byte; the node id's three bytes are at 0x12, 0x14 and
@@ -120,6 +203,7 @@ type
     vector_50: integer;                   { 0x50 }
 %endif
   end;
+%endif
   ring_$regs_ptr_t = ^ring_$regs_t;
 
 %if ring8_controller %then
@@ -348,7 +432,12 @@ type
     started (rx_restart) and whether it has stopped for want of one
     (rx_stopped); the number of buffers; the word address of the
     transmit area and command block in the controller's memory, after
-    the last buffer; and the buffers. }
+    the last buffer; and the buffers.
+
+    With the board's own DMA (`ring_board_dma') the word at +0x236 is
+    the unit's first page in the I/O map (16#42 in the image for both
+    units): the transmit's header and data take the entries from it,
+    the receive's from four more. }
   ring_$state_t = set of 0..7;
   ring_$unit_t = record
     route_port: route_$port_ptr_t;        { 0x000 }
@@ -391,7 +480,11 @@ type
     rx_bufs: array[1..ring8_max_rx_bufs] of ring8_$rx_buf_t;
                                           { 0x264 }
 %else
+%if ring_board_dma %then
+    dma_page: integer;                    { 0x236 }
+%else
     unused_236: integer;                  { 0x236 }
+%endif
     rx_hdr_pa: integer32;                 { 0x238 }
     rx_hdr: integer32;                    { 0x23C }
     rx_data_pa: integer32;                { 0x240 }
@@ -402,7 +495,8 @@ type
 { TODO(pascal) five words of the unit record no field of the word rules explains
 
   ring_$unit_t's unused_46, unused_4a, unused_5e, unused_b2 and
-  unused_236 (with `ring8_controller', unused_24a and unused_24e) lie
+  unused_236 (with `ring8_controller', unused_24a and unused_24e; with
+  `ring_board_dma' the word at +0x236 is dma_page) lie
   where no instruction reaches and where the word rules (ref 3.10.5.5)
   put the next field directly; the image puts every object of 4 bytes
   or more at a multiple of 4, and the packet-type table's 10-byte
@@ -516,16 +610,20 @@ var
     ring/ring.pas. }
   ring_$ctl: extern array[0..1] of ring_$unit_t;
 
+%if not ring_board_dma %then
   { RING_$SCRUB (+0x488, +0x958) and RING_$FROM_ERR (+0x490, +0x960), map
     symbols, a longword per unit from 0: with `ring8_controller'
     RING_$SENDP counts a unit's error statuses in the second and every
-    third in a row in the first; else no instruction addresses them. }
+    third in a row in the first; else no instruction addresses them.
+    The block has neither with `ring_board_dma'. }
   ring_$scrub: extern array[0..1] of integer32;
   ring_$from_err: extern array[0..1] of integer32;
 
-  { RING_$FORCE_START (+0x568, +0xA3C, map symbol): a clock
-    (RING_$SENDP). }
+%endif
+  { RING_$FORCE_START (+0x568, +0xA3C, +0x558 with `ring_board_dma', map
+    symbol): a clock (RING_$SENDP). }
   ring_$force_start: extern time_$clock_t;
+
 
 %if ring8_controller %then
   { RING_RCV_PAGE and RING2_RCV_PAGE (map symbols without `$', in the
@@ -574,13 +672,15 @@ function ring_$init(var dcte: dcte_t): integer32; extern;
 %if ring8_controller %then
 { RING8_$INT - the ring controller's interrupt, for both units. }
 function ring8_$int(dcte: univ_ptr): boolean; options(extern, val_param);
+%elseif ring_board_dma %then
+{ RING_$XMIT_INT - a ring unit's transmit interrupt.
+  RING_$RCV_INT - a ring unit's receive interrupt. }
+function ring_$xmit_int(var dcte: dcte_t): boolean; extern;
+function ring_$rcv_int(var dcte: dcte_t): boolean; extern;
 %else
 { RING_$INT - a ring unit's interrupt. }
 function ring_$int(var dcte: dcte_t): boolean; extern;
 %endif
-
-{ RING_$SEND_NULL - an empty procedure. }
-procedure ring_$send_null; extern;
 
 { RING_$SENDP - send one packet on a ring unit. }
 procedure ring_$sendp(var socket: pinteger; hdr_pa: integer32;

@@ -19,15 +19,28 @@ const
     SAU9's form): sixteen levels, 0..15, delivered on the vectors 16#A0
     .. 16#AF (SYSBUS_$INIT traps them, and a vector less 16#A0 is its
     level); levels 0..7 are the bits of the controller's low registers,
-    8..15 those of its high ones. }
+    8..15 those of its high ones.  With `sysbus_vectors_90': 32 levels,
+    the vectors 16#90..16#9F and a second range, 16#F0..16#FF, whose
+    vectors are moved down by the gap between the ranges
+    (sysbus_$first_vector_2 - sysbus_$last_vector) before the first
+    vector is subtracted. }
+%if sysbus_vectors_90 %then
+  sysbus_$first_vector = 16#90;
+  sysbus_$last_vector = 16#9F;
+  sysbus_$first_vector_2 = 16#F0;
+  sysbus_$last_vector_2 = 16#FF;
+  sysbus_$max_level = 31;
+%else
   sysbus_$first_vector = 16#A0;
   sysbus_$last_vector = 16#AF;
   sysbus_$max_level = 15;
+%endif
   sysbus_$first_hi_level = 8;
 
 type
-  { A system bus level, 0..15.  The SAU9 image compares it with 8
-    unsigned, the form of a non-negative subrange. }
+  { A system bus level, 0..15 (0..31 with `sysbus_vectors_90').  The
+    SAU9 image compares it with 8 unsigned, the form of a non-negative
+    subrange. }
   sysbus_$level_t = 0..sysbus_$max_level;
 
   { A level's interrupt handler: called by SYSBUS_$INT with the argument

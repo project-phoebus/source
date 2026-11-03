@@ -46,7 +46,10 @@
 }
 module parity, wired_proc, wired_data;
 
+{ Without `memory_parity' (the SAU4, whose memory has error correction,
+  mem/eccc_log.pas) the module is empty. }
 %include 'base/base.ins.pas';
+%if memory_parity %then
 %include 'ec/ec.ins.pas';
 %include 'fim/fim.ins.pas';
 %include 'misc/crash_system.ins.pas';
@@ -159,4 +162,5 @@ define
 %include 'parity/chk_io.pas';               { PARITY_$CHK_IO }
 %if parity_dma_pages or parity_dma_page_pairs %then
 %include 'parity/set_state.pas';            { PARITY_$SET_STATE }
+%endif
 %endif

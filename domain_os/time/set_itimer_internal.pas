@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E58D14  time_$set_itimer_internal (module-local)
+    sau4  0x0F861188  time_$set_itimer_internal (module-local)
 
   - The old interval and time left are returned and the timer's element
     taken off its queue; a zero value leaves it idle.

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E163E4  TIME_$VT_INT
+    sau4  0x0F816DC4  TIME_$VT_INT
 
   - The current process's virtual-timer queue is run at its virtual
     time, then IN_VT_INT cleared so the timer handler may queue it

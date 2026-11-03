@@ -92,6 +92,13 @@
                      initialized, the drives' motor switched off by a
                      time-queue callback, and each write read back
                      into a page of its own to compare.
+    floppy_page_dma  with `floppy_disk': the floppy controller's
+                     registers at its page's start and its transfers on
+                     the DMA controller of its own page (its +16#80)
+                     through IOMAP's entries 0 and 1; its interrupt
+                     through IO_$ACQUIRE (with `floppy_dcte_request'),
+                     and the DMA's count checked after a transfer
+                     instead of DMA_$CHECK and a parity check.
     pbu_mcb_config   IO_$GET_CONFIG reports the PBU (member 1 of the
                      third set) when PBU_$MCB's flag is set.
     io_regions       IO_$ALLOC_MAP and IO_$FREE_MAP take the I/O maps'
@@ -103,6 +110,7 @@
 }
 
 %var vme_bus mbus_bus sysbus_routines smd_disk floppy_disk floppy_atbus
+%var floppy_page_dma
 %var pbu_mcb_config io_regions few_io_regions
 
 { The units' I/O descriptors (io/io_desc.pas).
@@ -121,9 +129,13 @@
                      Winchester controller's of kind 3, with their
                      units' I/O requests; the other form is kind 1,
                      with neither.
+    floppy_dcte_request
+                     without `named_dctes': the floppy's DCTE is of
+                     kind 3, with its unit's request (the interrupt
+                     vector 16#F3, the FLOP page, the system bus).
 }
 
-%var named_dctes
+%var named_dctes floppy_dcte_request
 
 { The bus interrupt routines (sysbus/, atbus/).
 
@@ -145,9 +157,14 @@
                      ATBUS_$INT_VEC holds for it.  The other form
                      reaches the AT bus's interrupts through the system
                      bus's levels.
+    sysbus_vectors_90
+                     with `sysbus_int_vec': the system bus's interrupts
+                     come on the vectors 16#90..16#9F and 16#F0..16#FF,
+                     and the ring's and the Winchester's DCTEs name
+                     vector 16#90.
 }
 
-%var sysbus_int_vec util_pic atbus_routines atbus_pics
+%var sysbus_int_vec util_pic atbus_routines atbus_pics sysbus_vectors_90
 
 { The MONO9 monochrome display (mono9/).
 
@@ -240,9 +257,15 @@
                          unit 2 when unit 1 has none, and takes its two
                          color types (smd_$color_display,
                          smd_$800_color).
+    dtty_color_board     the display TTY drives the COLOR_ board's display
+                         itself: dtty_$get_disp_type waits for the board
+                         on the color display types, dtty_$clear_window
+                         clears a color display's window with the board's
+                         command, and dtty_$load_font sends the board its
+                         mode word first.
 }
 
-%var second_display_unit
+%var second_display_unit dtty_color_board
 
 { The terminal lines and the keyboard (term/, kbd/, tone/, sio/).
 
@@ -274,13 +297,21 @@
                       chip's two channels and records channel A, through
                       which KBD_$RESET sends its bytes; OS_TERM_INIT's
                       block holds two TTY and SIO descriptors.
+    sio2681_four_lines
+                      the display console and three serial lines are the
+                      channels of two SIO2681s, with no SIO6509:
+                      TERM_$INIT sets the console and one serial line up
+                      on the first chip's two channels and two serial
+                      lines on the second's, and initializes each chip
+                      after its two lines; OS_TERM_INIT's block holds four
+                      TTY and SIO descriptors.
     sio2681_pbu_int   SIO2681_$INIT, after storing the chip's interrupt
                       routine in SIO_VEC, acquires the chip's interrupt
                       as PBU unit 1 (PBU_$ACQUIRE_INT).
 }
 
 %var kbd_tone kbd_key_ring_512 sio16550_lines kbd_commands console_sio2681
-%var sio2681_pbu_int
+%var sio2681_pbu_int sio2681_four_lines
 
 { The Winchester controller (win/).
 
@@ -293,9 +324,16 @@
                          through its ports by program (WIN_ASM), a
                          sector buffer in the controller, and its
                          interrupt through IO_$ACQUIRE.
+    win_ring_disk_ctlr   WIN_ drives the disk controller of the ring/disk
+                         board: up to four drives on its PRIAM or SMD
+                         interface, the transfers on two channels of the
+                         board's DMA controller through IOMAP's entries
+                         64 and 65, the drive found and its geometry by
+                         DISK_INIT, its interrupt on the board's vectors
+                         (SYSBUS_$DEFINE_INT); no SEEK global.
 }
 
-%var winchester_ctlr win_descriptor_ctlr win_atbus_ctlr
+%var winchester_ctlr win_descriptor_ctlr win_atbus_ctlr win_ring_disk_ctlr
 
 { The I/O map entries of the storage module, tape and PBU drivers (sm/,
   sm_c/, mt/, pbu/).
@@ -305,9 +343,12 @@
                      unit's whole transfer control (PBU2_); the other
                      form writes a word field of each entry, the page
                      number plus 16#8000.
+    word_iomap       IOMAP's entries are words, 2 bytes a page: the
+                     physical page number alone, 0 an unused entry,
+                     with no transfer control added (PBU2_).
 }
 
-%var long_iomap
+%var long_iomap word_iomap
 
 { The ring controller (ring/).
 
@@ -340,10 +381,20 @@
                          bytes of four words), and crashes the system
                          with 16#0011001F when the id is wider than 20
                          bits.
+    ring_board_dma       the ring controller's register block holds two
+                         DMA controllers of its own, the transmit's and
+                         the receive's, which address the host's pages
+                         through I/O map entries from the unit's
+                         dma_page; it interrupts on separate transmit and
+                         receive vectors (RING_$XMIT_INT, RING_$RCV_INT,
+                         which ring_$init_internal defines with
+                         SYSBUS_$DEFINE_INT) in place of RING_$INT, and
+                         the RING block has no RING_$SCRUB and
+                         RING_$FROM_ERR.
 }
 
 %var ring_controller_dma ring_vector_regs ring_owner_test_reversed
-%var ring8_controller nodeid_prom nodeid_prom_probe
+%var ring8_controller nodeid_prom nodeid_prom_probe ring_board_dma
 
 { The start-up and the shutdown (os/).
 
@@ -357,6 +408,12 @@
                       written.
     vme_power_off     that power register is bit 3 of the word at +0x30
                       of VME_CTL.
+    power_off_csr     that power register is the CPU control register:
+                      MMU_$SET_CSR writes it with 16#8000.
+    shutdown_keeps_fp_savep
+                      OS_$SHUTDOWN leaves FP_$SAVEP as it is, where the
+                      other form clears it before wiring the shutdown
+                      code.
     disp2_probe       OS_$INIT probes for a second display and installs
                       DISPLAY2_$UID's ASTE when one answers;
                       DISP2_PRESENT holds the answer.
@@ -366,6 +423,15 @@
                       OS_$SHUTDOWN calls COLOR_$SHUTDOWN, SMD uses the
                       board's routines for display types 3 and 4, and
                       the COLOR_ system calls.
+    color_board_iomap with `color_board': the board reaches the pages
+                      COLOR_$MAP wires through the I/O map, entries 95
+                      on (the page number, 16#FFF for none), where the
+                      other form loads the board's own color map
+                      (COLOR_$LOAD_MAP); its display commands are 16#E
+                      (on) and 16#6 (off), where the other's are 16#280E
+                      and 16#2806; its interrupt is vector 16#CE,
+                      which COLOR_$VECTOR_INIT fills itself, where the
+                      other's is 16#A8, defined with VME_$DEFINE_INT.
     crash_reboot      the node may restart itself (CRASH,
                       CRASH_$OK_TO_REBOOT): OS_$INIT allows the reboot
                       unless boot flag 15 is set, a server's node check
@@ -425,13 +491,31 @@
     parity_trap_vector_30
                       FIM_$PARITY_TRAP is installed for vector 30 as
                       well as 31.
+    fp_five_exceptions
+                      the vector table installs five floating-point
+                      exceptions, vectors 49..53, and the format error
+                      (14) alone: no coprocessor protocol violation
+                      (13), branch on unordered (48) or signalling NaN
+                      (54); FIM_UNWIRED has no stubs for those three,
+                      and the FP stubs' frame helper is a return.
+    mmu_fault_vectors the vector table installs the MMU's faults, vectors
+                      128..130 (region, segment and page fault) on
+                      FIM_$COLD_BUS_ERR, the access violation (131,
+                      FIM_$ACC_VIOL) and the FP ASID exception (132,
+                      FIM_$FP_TRAP); with `ecc_memory' also FIM_$ECCC_TRAP
+                      and FIM_$ECCU_TRAP for vectors 240 and 255.
+                      OS_$INIT later puts FIM_$REG_FAULT on 128 and
+                      FIM_$PAGE_FAULT on 129 and 130, with the bus
+                      error's FIM_$BUS_ERR.
 }
 
-%var power_off_check power_down vme_power_off disp2_probe color_board
+%var power_off_check power_down vme_power_off power_off_csr
+%var shutdown_keeps_fp_savep disp2_probe color_board color_board_iomap
 %var crash_reboot ring_node_id smd_display_memory calendar_service_mode
 %var fim_nmi vector_alignment_check prom_config_record shutdown_kbd_mode
 %var early_as_init boot_flags_diskless pbu_wire_at_boot atbus_int8_dummy
 %var vector_seg_prot boot_flags_server parity_trap_vector_30
+%var fp_five_exceptions mmu_fault_vectors
 
 { The display driver's displays (smd/).
 
@@ -452,9 +536,18 @@
                        defaults), without SMD_$BLT, SMD_$WS_INIT and the
                        other drawing and font routines; and the
                        hand-written COLOR4_ASM.
+    blt_main_memory    the BLT moves between a display and main memory:
+                       SMD_$WIRE_MM wires up to 32 pages of a buffer
+                       into the display's record, SMD_$BLT puts them in
+                       the I/O map from the unit's first entry and
+                       starts the main-memory modes, the hand-written
+                       SMD_$UNWIRE_MM unwires them, and SMD_$INQ_MM_BLT
+                       answers true; the other form refuses the modes
+                       (smd_$not_implemented).
 }
 
 %var two_display_units color_displays blt_request_start display_devices
+%var blt_main_memory
 
 { The crash reports and the calendar (misc/m68k/, fim/m68k/, time/,
   cal/; the hand assembly's `.if' arms).
@@ -491,23 +584,29 @@
 
     large_vm            the large layout: 28-byte ASTEs, each holding its
                         page map's physical address, 14-bit ASTE hints,
-                        21-bit disk addresses in the MMAP entries, the
-                        address spaces' segment maps (SMAPS) and a larger
-                        MST, where the other form has 20-byte ASTEs,
-                        9-bit hints and 22-bit addresses; OS_$INIT's
-                        SERVER_$FLAG in the node check and its MEM_$INIT
-                        after IO_$INIT.
+                        the address spaces' segment maps (SMAPS) and a
+                        larger MST, where the other form has 20-byte
+                        ASTEs and 9-bit hints; OS_$INIT's SERVER_$FLAG in
+                        the node check and its MEM_$INIT after IO_$INIT.
     vm_5760_astes       5760 ASTEs and 1280 AOTEs, instead of 504 and 280.
     vm_1536_astes       1536 ASTEs and 640 AOTEs.
+    vm_2432_astes       2432 ASTEs and 1280 AOTEs.
     pmap_threads        an ASTE heads the thread of the MST entries that
                         point at its page map (MST_$UNTHREAD_PMAP), which
-                        ast_$deactivate_segment ends; MST_$FIND and
-                        MST_$WIRE always fault the page in.
+                        ast_$deactivate_segment ends.
+    bst_va_lookup       with `pmap_threads': MST_$BST_TO_VA finds the
+                        virtual address an address space maps a page map
+                        at through its thread, and MST_$ASSOC associates
+                        a physical page with a virtual address's page.
+    find_touches        MST_$FIND and MST_$WIRE always fault the page in
+                        through MST_$TOUCH, where the other form looks
+                        the page up in the MMU first.
     pmmu_page_maps      the page maps' entries are MC68030 page
                         descriptors, the frame in bits 31..10 and the
                         flags in the low word (AST_$PTOV,
                         AST_$REMOVE_PAGE, AST_$ALLOC_CONTIG,
-                        MMAP_$ALLOC_CONTIG); FIM_$BUILD_DF stores
+                        MMAP_$ALLOC_CONTIG), and the MMAP entries' disk
+                        addresses 21 bits, not 22; FIM_$BUILD_DF stores
                         MMU_$BUS_STATUS as the fault's information word,
                         and OS_$INIT clears the resident bit of the
                         descriptors it mapped.
@@ -517,12 +616,26 @@
     mmap_ppns_10000     the pageable pages are 16#10000..16#1FFFF, and
                         the page entries' list links are 22-bit fields.
     mmap_ppns_400       the pageable pages are 16#400..16#23FF.
+    mmap_ppns_200_3fff  the pageable pages are 16#200..16#3FFF.
     mst_7168_words      the MST holds 7168 words.
     large_address_space the regions' segments are constants: private A
                         30336, global A 256 from 30336, private B 128
                         from 30592, global B 2048 from 30720, of 32768;
                         OS_$INIT clears COLD's RARS entry and frees the
                         page maps of the two unused global ranges.
+    vm_8192_segs        the regions' segments are constants: private A
+                        7424, global A 256 from 7424, private B 256 from
+                        7680, global B 256 from 7936, of 8192.
+    region_mmu          the MMU translates through 32 region registers
+                        (the DNx60's): an ASID's RARS is 32 longwords, a
+                        region's valid and global bits and the physical
+                        address of its page of segment map entries; a
+                        region is a 32nd of the segments; a segment map
+                        entry is a longword, its valid bit, the MST
+                        entry's five protection bits and the page map's
+                        physical address.  The other form's tables are
+                        the MC68030's descriptors: 256 root entries and
+                        8-byte segment map entries.
     vm_regions          an address space's segments are grouped in
                         regions: each ASID has a root table in RARS with
                         an entry per region for its page of segment map
@@ -543,6 +656,9 @@
                         to a page (MST_$RAR_PAGES), its BST pages a
                         longword set, and each new ASID gets a copy of
                         the OS wired segment's segment map entry.
+    set_mstes_no_cache_clear
+                        mst_$set_mstes leaves the cache alone, where the
+                        other form ends with CACHE_$CLEAR.
     smap_shared_global  MST_$TOUCH and mst_$va_to_aste leave a global
                         segment's map entry with bit 9 set (the MC68851's
                         shared-globally bit) and its bits 15..10 as they
@@ -551,8 +667,11 @@
 }
 
 %var large_vm vm_5760_astes vm_1536_astes pmap_threads pmmu_page_maps
+%var vm_2432_astes
+%var bst_va_lookup find_touches
 %var pmap_cache_inhibit
-%var mmap_ppns_10000 mmap_ppns_400 large_address_space
+%var mmap_ppns_10000 mmap_ppns_400 mmap_ppns_200_3fff large_address_space
+%var vm_8192_segs region_mmu set_mstes_no_cache_clear
 %var mst_7168_words vm_regions run_time_layout smap_shared_global
 
 { The start-up of the page purifiers (pmap/, os/).
@@ -601,9 +720,25 @@
                         byte of MMU_$PID_PRIV, at IPL 7: set while no
                         address space owns the FPU, cleared when one
                         takes it.
+    fp_state_in_cpu     the floating-point registers are the CPU's own:
+                        FIM_$BUILD_DF neither aborts nor saves an FPU's
+                        state (FIM_$FP_ABORT, FIM_$FSAVE), and the
+                        delivery frame's FP save pointer is 0; there
+                        is no line-F trap or FPU owner switch: an FP
+                        instruction of another address space traps on
+                        the FP ASID (FIM_$FP_TRAP), which switches the
+                        registers; FIM_$FRESTORE is a return, and trap
+                        1's entry for it is SVC_$UNIMPLEMENTED.
+    fault_frame_addr    FIM_$BUILD_DF takes an access fault's address
+                        from the exception frame's longword at +0x0A,
+                        the information's status and instruction words
+                        zero, where the other form decodes the frame by
+                        its format; FIM_$GET_USER_SR_PTR looks for the
+                        user's frame as format 4 vector 2 or format 8
+                        vector 3 below format 0, and no other format.
 }
 
-%var fpu_enable_ccr fpu_enable_cpu_control
+%var fpu_enable_ccr fpu_enable_cpu_control fp_state_in_cpu fault_frame_addr
 
 { The memory parity statistics (mem/).
 
@@ -620,12 +755,29 @@
                         holds an error's address, by the address's MB
                         above the first, and matches a page record by the
                         address's low 24 bits.
+    ecc_memory          the memory boards correct their errors: MEM_$INIT
+                        finds each board's error-correcting controller
+                        among the eight slots of its page of MEM, counts
+                        the boards and turns reporting on, and
+                        MEM_$ECCC_LOG, which the hand-written
+                        FIM_$ECCC_TRAP calls, logs and counts a corrected
+                        error by board and by page, quiets a board after
+                        2000 of them, and crashes the system on an
+                        uncorrectable one.  MEM_$MEM_REC's first word
+                        is 1 and the board slots precede MEM_$SIZE.
 }
 
-%var mem_ccr_board_size mem_board_jumpers
+%var mem_ccr_board_size mem_board_jumpers ecc_memory
 
 { The memory parity errors (parity/).
 
+    memory_parity       the memory's parity errors are handled: the
+                        PARITY module, and AST_'s recovery from them, a
+                        failed page frame dropped when it is clean
+                        (AST_$REMOVE_CORRUPTED_PAGE) and the object of a
+                        page whose memory failed while it was sent
+                        marked in trouble (AST_$SAVE_CLOBBERED_UID,
+                        AST_$SET_TROUBLE).
     parity_err_regs     PARITY_$CHK reads the failing byte lanes from
                         MMU_BESR and the page from MMU_PEARH and
                         MMU_PEARL, sets bits of MMU_CCR around
@@ -652,6 +804,7 @@
                         tells which of the two it was.
 }
 
+%var memory_parity
 %var parity_err_regs parity_dma_pages parity_cpu_status parity_dma_page_pairs
 
 { The floating-point hardware (peb/, xpd/).
@@ -662,9 +815,12 @@
                         routines testing PEB_$INFO (a 68881 first, else
                         the board), where the other form has PEB_ drive
                         the MC68881 alone.
+    peb_setup           the PEB_ module's set-up, PEB_$INIT and
+                        PEB_$LOAD_WCS, which OS_$INIT calls before IO_$INIT
+                        and after NETWORK_$LOAD.
 }
 
-%var peb_board
+%var peb_board peb_setup
 
 { The exception vector page (the PROM's cells, arch/, dtty/m68k/).
 
@@ -792,10 +948,20 @@
                         for a unit on the AT bus within the window of
                         the bus's memory that holds it, 16#80000..
                         16#100000 or 16#900000..16#1000000.
+    mbus_map_64k        the Multibus's I/O map is 64 KB: IO_$ALLOC
+                        allocates below 16#10000 (with `pbu_alloc_mbus'),
+                        IO_$ALLOC_MAP in 16#0..16#10000 for every unit,
+                        and a region's page is its start's page plus 192
+                        (IO_$ALLOC_MAP, PBU2_$ALLOCATE_MAP,
+                        pbu_clear_iomap); PBU_$SETUP gives no unit the
+                        wide map, and PBU_$GET_INFO's second word is 1.
+    mcb_config_member_0 with `pbu_mcb_config': PBU_$MCB's flag gives
+                        member 0 of the third set instead of member 1.
 }
 
 %var mbus_dev_routines mbus_map_reserved pbu_alloc_mbus winchester_config
 %var iic_port_config pbu_config_always pbu_alloc_atbus_windows
+%var mbus_map_64k mcb_config_member_0
 
 { The Multibus adapter (mbus/).
 
@@ -805,9 +971,17 @@
                          takes the first level from 7 down whose bit and
                          pending bit are set; MBUS_$HIGH_OK is bit 5 of
                          the probed register.
+    mbus_vectored_adapter
+                         MBUS_$INIT traps the vectors 16#B0..16#B7 to
+                         MBUS_$INT, one per level, gives levels 0..7
+                         MBUS_$UNDEF_INT, probes the adapter's register
+                         at +0x80 by a write and clears MBUS_$HIGH_OK;
+                         MBUS_$INT takes the vector, acknowledges the
+                         level at +0x80 and masks it at +0x82 while its
+                         handler runs.
 }
 
-%var mbus_polled_adapter
+%var mbus_polled_adapter mbus_vectored_adapter
 
 { The display and the line printer (os/, smd/, term/, kbd/, dtty/,
   lpr/).
@@ -825,9 +999,18 @@
     lpr_driver          the line printer driver (lpr/): OS_$INIT calls
                         LPR_$INIT after RING_$GET_ID, and the LPR_ system
                         calls.
+    lpr_pbu_unit        with `lpr_driver': the printer port is the PNA's
+                        (the PBU's unit 6, in PBU_CTL's page): LPR_$ACQUIRE
+                        sets the unit up with PBU_$ACQUIRE_INT for
+                        LPR_$INT, LPR_$WRITE enables it with
+                        PBU_$ENABLE_DEVICE, LPR_$RELEASE sets it down,
+                        LPR_$INIT finds the PNA by PBU_$MCB's present bit;
+                        no modes (LPR_$STATE refuses a mode).  The other
+                        form drives the port at LPR on the level 5
+                        autovector, with three modes.
 }
 
-%var display_driver lpr_driver
+%var display_driver lpr_driver lpr_pbu_unit
 
 { The PBU units (pbu/).
 
@@ -857,9 +1040,17 @@
                         the other form's PBU_$CONTROL answers [] and
                         refuses with status_$pbu_not_supported and a
                         unit's control is 0.
+    mbus_low_window     the Multibus is one 64 KB window of the physical
+                        address space at 16#10000: a unit's controller
+                        memory is mapped from page 16#40 (PBU2_$ASSOC)
+                        and its CSR pages from page 16#60 (PBU_$SETUP),
+                        where the other form maps the memory from page
+                        16#200, or 16#C00 for an address from 16#80000,
+                        and the CSR pages from page 16#1C0.
 }
 
 %var pbu_8_units pbu_wire_special pbu_atbus_units pbu_transfer_control
+%var mbus_low_window
 
 { The calendar, the PBU status call, the crash restart and the lights
   (time/, cal/, svc/, misc/m68k/; the hand assembly's `.if' arms).
@@ -884,10 +1075,45 @@
                         at DISP1, then REMAP_FRM_CNT pages from
                         REMAP_FRM_PPN at DISP1_MEM, where the other form
                         maps 128 pages from PPN 16#4000 at DISP1_MEM.
+    calendar_timer_page the MSM5832's registers are bytes of the timer's
+                        page (CALENDAR = TIMR): TIME_$READ_CAL and
+                        CAL_$WRITE_CALENDAR write the control at +16#81
+                        and the data at +16#83, and read the digits at
+                        +16#85, inverted, where the other form's are at
+                        +16#20, +16#22 and +16#24 of the calendar page.
+    cache_clear_stub    CACHE_$CLEAR is a return (the CPU has no CACR),
+                        and FIM_$DELIVER_TRACE_FAULT, FIM_$CLEAR_TRACE_FAULT
+                        and FIM_$EXIT do not call it after they patch
+                        FIM_$EXIT's first word.
+    mmu_status_word     the MMU's fault status is the word at MMU + 2:
+                        FIM_$BUS_ERR, PROC1_$DISPATCH and IO_$PROBE clear
+                        it with a word store, where the other form clears
+                        the byte at MMU + 3.
+    probe_settle_read   IO_$PROBE reads the word at 16#400 after a
+                        completed access, before it disarms
+                        BUS_ERROR_SWITCH.
+    mcr_change_low_bits the timer interrupt's every other CLOCKH step
+                        calls MMU_$MCR_CHANGE with 16#10F, which flips
+                        the low four bits of the MCR's copy, where the
+                        other form passes 7.
+    crash_cache_check   CRASH_SYSTEM first runs CRASH_CHK_CACHES, which
+                        reports the data cache's RAM failures from the
+                        CPU's failure log, and its restart is the
+                        SAU3's through the PROM's cell 16#128 with the
+                        SAU9's restart check and keyboard reset: the
+                        module is another form.
+    sr_user_bits_76     the status register's bits 7 and 6 belong to the
+                        user's state: FIM_$SINGLE_STEP and
+                        FIM_$FAULT_RETURN keep them, and not T0, in the
+                        SR they return with (mask 16#80DF, the other
+                        form's 16#C01F), and FIM_$GET_USER_SR_PTR accepts
+                        a user frame's SR with them set.
 }
 
 %var calendar_own_page calendar_write_unconditional pbu_get_status
 %var crash_prom_restart display_lights_stub crash_remap_cold_display
+%var calendar_timer_page cache_clear_stub mmu_status_word probe_settle_read
+%var mcr_change_low_bits crash_cache_check sr_user_bits_76
 
 { Each SAU's parts: one block per SAU, its parts in the order of their
   `%var's above, one `%enable' line for each section's parts. }
@@ -900,7 +1126,8 @@
   %enable ring_node_id;
   %enable boot_time_lock;
   %enable pft_mmu;
-  %enable peb_board;
+  %enable memory_parity;
+  %enable peb_board, peb_setup;
   %enable display_lights;
   %enable ring_xmit_light;
   %enable winchester_config;
@@ -913,6 +1140,8 @@
   %enable mbus_bus, sysbus_routines, smd_disk, io_regions;
   %enable power_off_check, crash_reboot, ring_node_id;
   %enable pft_mmu;
+  %enable memory_parity;
+  %enable peb_setup;
   %enable iic_driver;
   %enable circular_buffers;
   %enable mbus_map_reserved, pbu_alloc_mbus, iic_port_config;
@@ -927,21 +1156,40 @@
 { sau4: the DN460, DN660 and DSP160. }
 %if sau4 %then
   %enable mt_driver, pbu_driver;
-  %enable mbus_bus, sysbus_routines, smd_disk, floppy_disk, io_regions;
-  %enable sysbus_int_vec;
-  %enable second_display_unit;
-  %enable winchester_ctlr;
-  %enable power_off_check, power_down, disp2_probe, color_board, crash_reboot;
+  %enable mbus_bus, sysbus_routines, smd_disk, floppy_disk, floppy_page_dma;
+  %enable pbu_mcb_config;
+  %enable io_regions;
+  %enable floppy_dcte_request;
+  %enable sysbus_int_vec, sysbus_vectors_90;
+  %enable second_display_unit, dtty_color_board;
+  %enable sio2681_four_lines;
+  %enable winchester_ctlr, win_ring_disk_ctlr;
+  %enable word_iomap;
+  %enable ring_board_dma;
+  %enable power_off_check, power_down, power_off_csr;
+  %enable shutdown_keeps_fp_savep, disp2_probe, color_board;
+  %enable color_board_iomap, crash_reboot;
   %enable ring_node_id;
+  %enable boot_flags_server, fp_five_exceptions, mmu_fault_vectors;
   %enable two_display_units, color_displays, blt_request_start;
-  %enable large_vm, vm_regions;
+  %enable blt_main_memory;
+  %enable large_vm, vm_2432_astes, pmap_threads, vm_regions;
+  %enable mmap_ppns_200_3fff, mst_7168_words, vm_8192_segs, region_mmu;
+  %enable set_mstes_no_cache_clear;
+  %enable fp_state_in_cpu, fault_frame_addr;
+  %enable ecc_memory;
   %enable null_process_spins;
   %enable circular_buffers;
   %enable ring_xmit_light;
-  %enable winchester_config;
-  %enable display_driver, lpr_driver;
-  %enable pbu_8_units;
+  %enable pbu_alloc_mbus, winchester_config, mbus_map_64k;
+  %enable mcb_config_member_0;
+  %enable mbus_vectored_adapter;
+  %enable display_driver, lpr_driver, lpr_pbu_unit;
+  %enable pbu_8_units, mbus_low_window;
   %enable calendar_write_unconditional;
+  %enable calendar_timer_page, cache_clear_stub, mmu_status_word;
+  %enable probe_settle_read, mcr_change_low_bits, crash_cache_check;
+  %enable sr_user_bits_76;
 %endif
 
 { sau5: the DN550, DN560, DN570, DN580 and DN590. }
@@ -961,7 +1209,8 @@
   %enable crash_report_blank_lines, calendar_word_port;
   %enable boot_time_lock;
   %enable pft_mmu;
-  %enable peb_board;
+  %enable memory_parity;
+  %enable peb_board, peb_setup;
   %enable display_lights;
   %enable ring_xmit_light;
   %enable mbus_dev_routines, winchester_config;
@@ -985,6 +1234,8 @@
   %enable fim_nmi, shutdown_kbd_mode;
   %enable two_display_units, color_displays, blt_request_start;
   %enable large_vm, vm_5760_astes, pmap_threads, vm_regions;
+  %enable find_touches, region_mmu;
+  %enable peb_setup;
   %enable display_lights;
   %enable null_process_spins;
   %enable ring_xmit_light;
@@ -1017,10 +1268,12 @@
   %enable crash_remap_cold_display;
   %enable large_vm, vm_5760_astes, pmap_threads, pmmu_page_maps;
   %enable pmap_cache_inhibit, large_address_space, vm_regions;
+  %enable bst_va_lookup, find_touches;
   %enable cpu_status_register;
   %enable fpu_enable_cpu_control;
   %enable timer_int_pic;
-  %enable parity_dma_page_pairs;
+  %enable memory_parity, parity_dma_page_pairs;
+  %enable peb_setup;
   %enable trap_page_high;
   %enable null_process_spins;
   %enable cold_proc_tables;
@@ -1056,13 +1309,15 @@
   %enable parity_trap_vector_30;
   %enable display_devices;
   %enable large_vm, vm_1536_astes, pmap_threads, pmmu_page_maps;
+  %enable bst_va_lookup, find_touches;
   %enable mmap_ppns_400, mst_7168_words, vm_regions, run_time_layout;
   %enable smap_shared_global;
   %enable cpu_status_register;
   %enable fpu_enable_cpu_control;
   %enable timer_int_pic;
   %enable mem_board_jumpers;
-  %enable parity_cpu_status, parity_dma_page_pairs;
+  %enable memory_parity, parity_cpu_status, parity_dma_page_pairs;
+  %enable peb_setup;
   %enable null_process_spins;
   %enable ring_xmit_light;
   %enable winchester_config, pbu_alloc_atbus_windows;
@@ -1089,11 +1344,13 @@
   %enable calendar_indexed_rtc;
   %enable large_vm, vm_5760_astes, pmap_threads, pmmu_page_maps;
   %enable pmap_cache_inhibit, mmap_ppns_10000, large_address_space;
+  %enable bst_va_lookup, find_touches;
   %enable vm_regions;
   %enable cacr_clear_data;
   %enable fpu_enable_ccr;
   %enable mem_ccr_board_size;
-  %enable parity_err_regs, parity_dma_pages;
+  %enable memory_parity, parity_err_regs, parity_dma_pages;
+  %enable peb_setup;
   %enable trap_page_high;
   %enable interrupt_pc_histogram;
   %enable null_process_spins;

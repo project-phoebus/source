@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E1AB28  KBD_$RESET
     sau3  0x00E1A190  KBD_$RESET
+    sau4  0x0F81BD3C  KBD_$RESET
     sau8  0x03C1C0C8  KBD_$RESET
     sau9  0x3C41D660  KBD_$RESET
 

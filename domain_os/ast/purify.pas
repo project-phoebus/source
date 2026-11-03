@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0567A  AST_$PURIFY
+    sau4  0x0F805A26  AST_$PURIFY
     sau8  0x03C05918  AST_$PURIFY
     sau9  0x3C406924  AST_$PURIFY
 
@@ -155,7 +156,7 @@ begin
               while ast_$pmap_in_trans in
                     ast_pmaps[aste^.seg_index, i].flags do
                 ast_$wait_for_page_transition;
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
               if (ast_$pmap_installed in
                   ast_pmaps[aste^.seg_index, i].flags) and then
                  (ast_$pmap_modified in
@@ -175,7 +176,7 @@ begin
                 any_modified := true;
               end;
             end;
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
             { the descriptors' modified bits cleared: the cached
               translations flushed }
             if any_modified then begin

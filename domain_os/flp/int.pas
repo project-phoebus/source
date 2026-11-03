@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E19F6C  FLP_$INT
+    sau4  0x0F81ABD8  FLP_$INT
     sau8  0x03C1B130  FLP_$INT
 
   - The first three result bytes go into FLP_$SREGS; SENSE INTERRUPT

@@ -61,7 +61,8 @@
  *
  * Not on the SAUs whose crash does not restart the node, or restarts it
  * through the PROM's cell 0x128 from the SAU2's code (misc/m68k/
- * crash_system.s: `crash_reboot', `crash_prom_restart').
+ * crash_system.s: `crash_reboot', `crash_prom_restart'), nor on the SAU4
+ * (`crash_cache_check': misc/sau4/crash_system.s).
  *
  * Byte gate (tools/asm_compare.py, `make TARGET_SAU=sau9 check-asm',
  * `make TARGET_SAU=sau8 check-asm'): encodings identical to the image;
@@ -70,7 +71,7 @@
 
         .include "base/config.inc"
         /* (not `a || b': `|' starts a comment in m68k gas) */
-        .if     crash_reboot && !crash_prom_restart
+        .if     crash_reboot && !crash_prom_restart && !crash_cache_check
 
         .section ".text.CRASH_SYSTEM","ax",@progbits
         .even

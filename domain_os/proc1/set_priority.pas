@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E1523C  PROC1_$SET_PRIORITY
+    sau4  0x0F815AB0  PROC1_$SET_PRIORITY
 
   - An invalid pid crashes the system.
   - set_it stores the clamped range; with interrupts off the state is

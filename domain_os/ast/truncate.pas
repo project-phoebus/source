@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E05C40  AST_$TRUNCATE
+    sau4  0x0F805FDE  AST_$TRUNCATE
     sau8  0x03C05ECA  AST_$TRUNCATE
     sau9  0x3C406ED6  AST_$TRUNCATE
 
@@ -160,7 +161,7 @@ begin
     nblocks := 0;
     for i := rshft(seg_offset + 16#3FF, 10) to 31 do
       with row^[i] do begin
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
         while ast_$pmap_in_trans in flags do begin
           mmu_$purge;
           ast_$wait_for_page_transition;
@@ -178,16 +179,18 @@ begin
             end;
             if seg_offset <> i then
               crash_system(status_$pmap_mismatch);
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
             flags := flags - [ast_$pmap_resident];
-            flags := flags - [ast_$pmap_installed];
-            vpn := disk_addr.all;
 %else
             if ast_$pmap_resident in flags then begin
               flags := flags - [ast_$pmap_resident];
               mmu_$remove(ppn);
             end;
+%endif
             flags := flags - [ast_$pmap_installed];
+%if pmmu_page_maps %then
+            vpn := disk_addr.all;
+%else
             all := all & 16#FF800000;
             all := all ! disk_addr.all;
 %endif
@@ -212,7 +215,7 @@ begin
 %endif
       end;
 
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
     mmu_$purge;
 %endif
 

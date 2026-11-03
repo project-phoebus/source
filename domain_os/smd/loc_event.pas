@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6E9A0  SMD_$LOC_EVENT
+    sau4  0x0F879132  SMD_$LOC_EVENT
     sau5  0x00E70E1E  SMD_$LOC_EVENT
     sau9  0x3C47538A  SMD_$LOC_EVENT
 

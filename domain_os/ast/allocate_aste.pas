@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E01F1C  AST_$ALLOCATE_ASTE
+    sau4  0x0F802334  AST_$ALLOCATE_ASTE
     sau9  0x3C4032C6  AST_$ALLOCATE_ASTE
 
   - As ast_$allocate_aote, for segments: twelve entries are looked at,

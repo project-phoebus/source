@@ -2,6 +2,7 @@
 
   Image addresses:
     sau3  0x00E6F7E4  SM_C_$GET_STATS
+    sau4  0x0F87C598  SM_C_$GET_STATS
     sau5  0x00E7534C  SM_C_$GET_STATS
 
   - cnum is not read.

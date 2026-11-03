@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E6D254  os_$start_proc2 (module-local)
     sau3  0x00E6D800  os_$start_proc2 (module-local)
+    sau4  0x0F876D32  os_$start_proc2 (module-local)
     sau5  0x00E6E930  os_$start_proc2 (module-local)
     sau8  0x03C765D2  os_$start_proc2
 

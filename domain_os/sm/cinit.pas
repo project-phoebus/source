@@ -2,6 +2,7 @@
 
   Image addresses:
     sau3  0x00E6DF5C  SM_$CINIT
+    sau4  0x0F8776B2  SM_$CINIT
     sau5  0x00E6F2B4  SM_$CINIT
 
   - When the PBU is present and the controller answers the probe, the
@@ -17,12 +18,6 @@
 
   Status stored: none.
 }
-
-{ TODO(sau) the SAU4's I/O map entries
-
-  The SAU4's I/O map is a word an entry, at its own address, and its
-  SM_$DINIT and SM_$DO_IO store the page number alone; its SM_$CINIT
-  and SM_$INT differ elsewhere too.  Neither arm below is its form. }
 
 function sm_$cinit(var dcte: dcte_t): integer32;
 label
@@ -47,13 +42,15 @@ begin
   sm_pbu_info := pbu_$get_ptr(sm_pbu_unit, sm_pbu_unit, info, status);
   if status.all <> 0 then
     crash_system(status);
-  sm_$cb.alloc := pbu_$alloc(sm_pbu_unit, true, 2, 16#6F400, status);
+  sm_$cb.alloc := pbu_$alloc(sm_pbu_unit, true, 2, sm_cb_iova, status);
   if status.all <> 0 then
     crash_system(status);
   sm_$cb.alloc_count := 2;
 %if long_iomap %then
   iomap[sm_iomap_cb] :=
     mmu_$vtop(integer32(addr(sm_$cb)), status) + sm_iomap_bias;
+%elseif word_iomap %then
+  iomap[sm_iomap_cb] := mmu_$vtop(integer32(addr(sm_$cb)), status);
 %else
   iomap[sm_iomap_cb].entry :=
     mmu_$vtop(integer32(addr(sm_$cb)), status) + sm_iomap_bias;

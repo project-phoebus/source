@@ -296,7 +296,7 @@ BUS_ERROR_SWITCH:
  *
  * Assembly (0x00E218E8, 484 bytes):
  * ==================================================================== */
-        .if !pmmu_page_maps
+        .if !pmmu_page_maps && !region_mmu   /* the SAU4's: fim/sau4/bus_err.s */
         .section ".text.FIM_$BUS_ERR","ax",@progbits
         .even
 

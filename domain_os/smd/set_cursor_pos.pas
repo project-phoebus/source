@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6E766  SMD_$SET_CURSOR_POS
+    sau4  0x0F878EF8  SMD_$SET_CURSOR_POS
     sau5  0x00E70BE4  SMD_$SET_CURSOR_POS
     sau9  0x3C47515A  SMD_$SET_CURSOR_POS
 

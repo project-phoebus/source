@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E75250  SMD_$FREE_ASID
     sau3  0x00E767F0  SMD_$FREE_ASID
+    sau4  0x0F882A0C  SMD_$FREE_ASID
     sau5  0x00E7C3F0  SMD_$FREE_ASID
     sau9  0x3C47CDCC  SMD_$FREE_ASID
 

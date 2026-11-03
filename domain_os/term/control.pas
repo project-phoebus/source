@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E66916  TERM_$CONTROL
     sau3  0x00E67880  TERM_$CONTROL
+    sau4  0x0F87040A  TERM_$CONTROL
     sau9  0x3C46D6C2  TERM_$CONTROL
 
   - The option (0..36) picks a TTY_$K_ setter, the line's DTTE flag, the

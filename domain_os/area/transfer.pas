@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E08098  AREA_$TRANSFER
+    sau4  0x0F808384  AREA_$TRANSFER
     sau8  0x03C08594  AREA_$TRANSFER
     sau9  0x3C4096B0  AREA_$TRANSFER
 

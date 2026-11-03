@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6E8D6  smd_$enqueue_event (module-local)
+    sau4  0x0F879068  smd_$enqueue_event (module-local)
     sau5  0x00E70D54  smd_$enqueue_event (module-local)
     sau9  0x3C4752CA  smd_$enqueue_event (module-local)
 

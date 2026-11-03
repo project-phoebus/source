@@ -43,6 +43,18 @@
 # tools/rfc_segments_sau3.json (rfc_decode.py --sau 3), checked against
 # the map as the SAU5's is.
 #
+# The SAU4 (make TARGET_SAU=sau4 check-rfc) has the same kind of image at
+# its own addresses but no fixup table: load 0x201800, COLD 0x800 bytes,
+# the DUMP page 0x400 bytes at file 0x800 (VA 0xF800800, copied to PPN
+# 0x803), the kernel from file 0xC00 (VA 0xF800C00), the split at PPN
+# 0x95F with the pages past it at PPN 0xA00, the crash record at PPN
+# 0x800.  Its COLD (cold/sau4/cold_start.s) builds the region MMU's tables
+# from a map table of the SAU2's form; it has no fixup pass, so the file
+# ends at RELOC and the items about the table (5, the 68020 path of 7) are
+# replaced by that end; COLD and DUMP are compared with the original's
+# modulo our ELF's 32-bit relocation cells in them.  IODEFS_GUARD is the
+# map's OS_LOW_END (the low region lies above the VM tables).
+
 # The items below are written for the SAU2, with its addresses.
 #
 # Our image (every item fails the check):
@@ -112,21 +124,40 @@ import rfc_elf  # noqa: E402
 # the instruction addresses in its comments, checked against the SAU5
 # image's bytes).  The scalar ones are the same in both.
 SAU = 2
-SAUS = (2, 3, 5, 8, 9)
+SAUS = (2, 3, 4, 5, 8, 9)
 
 # The RFC header's machine word: the SAU's number.
-MACHINE = {2: 2, 3: 3, 5: 5, 8: 8}
+MACHINE = {2: 2, 3: 3, 4: 4, 5: 5, 8: 8}
 
 # The image's layout, by SAU: the load address (file byte 0), COLD's
 # size, the DUMP page's size and VA, the kernel's file offset and VA,
 # OS_BEGIN, and the kernel bytes in the low piece (COLD's KERNEL_LO_BYTES).
-LOADS = {2: 0x101400, 3: 0x101400, 5: 0x101400, 8: 0x101C00}
-COLD_SIZES = {2: 0x800, 3: 0x800, 5: 0x800, 8: 0xC00}
-DUMP_SIZES = {2: 0x400, 3: 0x400, 5: 0x400, 8: 0x800}
-DUMP_VAS = {2: 0xE00400, 3: 0xE00400, 5: 0xE00400, 8: 0x3C00400}
-KERNEL_VAS = {2: 0xE00800, 3: 0xE00800, 5: 0xE00800, 8: 0x3C00C00}
-OS_BEGINS = {2: 0xE00000, 3: 0xE00000, 5: 0xE00000, 8: 0x3C00000}
-LO_BYTES = {2: 0x55C00, 3: 0x55C00, 5: 0x55C00, 8: 0x54C00}
+LOADS = {2: 0x101400, 3: 0x101400, 4: 0x201800, 5: 0x101400, 8: 0x101C00}
+COLD_SIZES = {2: 0x800, 3: 0x800, 4: 0x800, 5: 0x800, 8: 0xC00}
+DUMP_SIZES = {2: 0x400, 3: 0x400, 4: 0x400, 5: 0x400, 8: 0x800}
+DUMP_VAS = {2: 0xE00400, 3: 0xE00400, 4: 0xF800800, 5: 0xE00400,
+            8: 0x3C00400}
+KERNEL_VAS = {2: 0xE00800, 3: 0xE00800, 4: 0xF800C00, 5: 0xE00800,
+              8: 0x3C00C00}
+OS_BEGINS = {2: 0xE00000, 3: 0xE00000, 4: 0xF800000, 5: 0xE00000,
+             8: 0x3C00000}
+LO_BYTES = {2: 0x55C00, 3: 0x55C00, 4: 0x55800, 5: 0x55C00, 8: 0x54C00}
+# The split (info +16), MOVE_TO_PPN (info +20), the PPN COLD copies DUMP
+# to, the crash record's PPN, and whether the file carries a fixup table
+# at RELOC (the SAU4's does not).
+SPLIT_PPNS = {2: 0x55F, 3: 0x55F, 4: 0x95F, 5: 0x55F, 8: 0x55F}
+MOVE_PPNS = {2: 0x600, 3: 0x600, 4: 0xA00, 5: 0x600, 8: 0x600}
+DUMP_PPNS = {2: 0x403, 3: 0x403, 4: 0x803, 5: 0x403, 8: 0x403}
+CRASH_PPNS = {2: 0x400, 3: 0x400, 4: 0x800, 5: 0x400, 8: 0x400}
+HAS_FIXUPS = {2: True, 3: True, 4: False, 5: True, 8: True}
+# sysboot's own pages, which a file page must not land in (sysboot
+# 0x13E238: PPN 0x5F3..0x600 below the SAU2's MOVE_TO_PPN); the SAU4's
+# sysboot is not known, so none is checked
+SYSBOOT_AREA = {2: (0x5F3, 0x600), 3: (0x5F3, 0x600), 4: None,
+                5: (0x5F3, 0x600), 8: (0x5F3, 0x600)}
+# The symbol IODEFS_GUARD equals: VM_TABLES_END, but the SAU4's low
+# region's end (the map's OS_LOW_END)
+IODEFS_GUARD_IS = {4: 'OS_LOW_END'}
 
 LOAD = 0x101400
 PAGE = 0x400
@@ -134,11 +165,11 @@ INFO = 0x10140C
 MOVE_TO_PPN = 0x101420
 # COLD's MMU map table and its two cells COLD fills in (the kernel's low
 # piece count; the high piece's count and PPN)
-MAP_TABLE = {2: 0x101850, 3: 0x101890, 5: 0x1018DC,
+MAP_TABLE = {2: 0x101850, 3: 0x101890, 4: 0x201BE2, 5: 0x1018DC,
              8: 0x102206}                       # cold_map_table
-MAP_LO_COUNT = {2: 0x1018E6, 3: 0x10193A,
+MAP_LO_COUNT = {2: 0x1018E6, 3: 0x10193A, 4: 0x201C14,
                 5: 0x1019C2, 8: 0x102238}       # cold_map_kernel_lo_count
-MAP_HI_COUNT_PPN = {2: 0x1018F0, 3: 0x101944,
+MAP_HI_COUNT_PPN = {2: 0x1018F0, 3: 0x101944, 4: 0x201C1E,
                     5: 0x1019CC, 8: 0x102242}   # cold_map_kernel_hi_count_ppn
 DUMP_LOW = 0x101C00
 DUMP_PPN = 0x403
@@ -162,23 +193,41 @@ KERNEL_LO_BYTES = 0x55C00
 # move.l #OS_PAGE_END 0x101DFC, sub.l #OS_PROC 0x101E0C, cmp.l #0x54C00
 # 0x101E12, add.l #MMAP 0x101E50, movea.l #P1_STACK_BASE 0x101F60,
 # movea.l #OS_$INIT 0x101F6E; no OS_BEGIN window and no MMU_$PTTX (None).
-OP_RELOC_VA_S = {2: 0x101496, 3: 0x101496, 5: 0x101496, 8: 0x101C9A}
-OP_KERNEL_VA_S = {2: 0x10149C, 3: 0x10149C, 5: 0x10149C, 8: 0x101CA0}
-OP_KERNEL_LOW_S = {2: 0x1014A2, 3: 0x1014A2, 5: 0x1014A2, 8: 0x101CA6}
-OP_SPLIT_LOW_S = {2: 0x1014A8, 3: 0x1014A8, 5: 0x1014A8, 8: 0x101CAC}
-OP_OS_BEGIN_S = {2: 0x1014E8, 3: 0x1014E8, 5: 0x1014E8, 8: None}
+# The SAU4's (cold/sau4/cold_start.s): no fixup pass, so none of the
+# first five (None); move.l #OS_PAGE_END 0x2018B0, sub.l #OS_PROC 0x2018C0,
+# cmp.l #0x55800 0x2018C6, add.l #MMAP 0x201904, movea.l #P1_STACK_BASE
+# 0x2019F2, movea.l #OS_$INIT 0x201A00, and its own two, add.l #SMAPS
+# 0x201A3C and add.l #OS_PMAPS 0x201A48 (OP_EXTRA).
+OP_RELOC_VA_S = {2: 0x101496, 3: 0x101496, 4: None, 5: 0x101496,
+                 8: 0x101C9A}
+OP_KERNEL_VA_S = {2: 0x10149C, 3: 0x10149C, 4: None, 5: 0x10149C,
+                  8: 0x101CA0}
+OP_KERNEL_LOW_S = {2: 0x1014A2, 3: 0x1014A2, 4: None, 5: 0x1014A2,
+                   8: 0x101CA6}
+OP_SPLIT_LOW_S = {2: 0x1014A8, 3: 0x1014A8, 4: None, 5: 0x1014A8,
+                  8: 0x101CAC}
+OP_OS_BEGIN_S = {2: 0x1014E8, 3: 0x1014E8, 4: None, 5: 0x1014E8, 8: None}
 OP_RELOC_VA = 0x101496
 OP_KERNEL_VA = 0x10149C
 OP_KERNEL_LOW = 0x1014A2
 OP_SPLIT_LOW = 0x1014A8
 OP_OS_BEGIN = 0x1014E8
-OP_PAGE_END = {2: 0x101592, 3: 0x1015A0, 5: 0x1015C6, 8: 0x101DFE}
-OP_KERNEL_VA2 = {2: 0x1015A2, 3: 0x1015B0, 5: 0x1015D6, 8: 0x101E0E}
-OP_LO_BYTES = {2: 0x1015A8, 3: 0x1015B6, 5: 0x1015DC, 8: 0x101E14}
-OP_MMAP_VA = {2: 0x1015E6, 3: 0x1015F4, 5: 0x10161A, 8: 0x101E52}
-OP_STACK = {2: 0x1016FA, 3: 0x10172A, 5: 0x101770, 8: 0x101F62}
-OP_ENTRY = {2: 0x101708, 3: 0x101738, 5: 0x10177E, 8: 0x101F70}
-OP_PTTX_VA = {2: 0x10176A, 3: 0x1017AA, 5: 0x1017F6, 8: None}
+OP_PAGE_END = {2: 0x101592, 3: 0x1015A0, 4: 0x2018B2, 5: 0x1015C6,
+               8: 0x101DFE}
+OP_KERNEL_VA2 = {2: 0x1015A2, 3: 0x1015B0, 4: 0x2018C2, 5: 0x1015D6,
+                 8: 0x101E0E}
+OP_LO_BYTES = {2: 0x1015A8, 3: 0x1015B6, 4: 0x2018C8, 5: 0x1015DC,
+               8: 0x101E14}
+OP_MMAP_VA = {2: 0x1015E6, 3: 0x1015F4, 4: 0x201906, 5: 0x10161A,
+              8: 0x101E52}
+OP_STACK = {2: 0x1016FA, 3: 0x10172A, 4: 0x2019F4, 5: 0x101770,
+            8: 0x101F62}
+OP_ENTRY = {2: 0x101708, 3: 0x101738, 4: 0x201A02, 5: 0x10177E,
+            8: 0x101F70}
+OP_PTTX_VA = {2: 0x10176A, 3: 0x1017AA, 4: None, 5: 0x1017F6, 8: None}
+# A SAU's further COLD operands: {key: (address, the link symbol)}
+OP_EXTRA = {4: {'smaps_va': (0x201A3E, 'SMAPS'),
+                'os_pmaps_va': (0x201A4A, 'OS_PMAPS')}}
 
 
 def select_sau(sau):
@@ -186,6 +235,7 @@ def select_sau(sau):
     global SAU, LOAD, INFO, MOVE_TO_PPN, DUMP_LOW, KERNEL_FILE, COLD_SIZE
     global DUMP_SIZE, DUMP_VA, KERNEL_VA, OS_BEGIN, KERNEL_LO_BYTES
     global OP_RELOC_VA, OP_KERNEL_VA, OP_KERNEL_LOW, OP_SPLIT_LOW, OP_OS_BEGIN
+    global DUMP_PPN
     SAU = sau
     if sau not in LOADS:
         return
@@ -205,6 +255,7 @@ def select_sau(sau):
     OP_KERNEL_LOW = OP_KERNEL_LOW_S[sau]
     OP_SPLIT_LOW = OP_SPLIT_LOW_S[sau]
     OP_OS_BEGIN = OP_OS_BEGIN_S[sau]
+    DUMP_PPN = DUMP_PPNS[sau]
 
 # The VM tables' run-time windows: map names and the
 # image's addresses (domain_os.10.2.map, VM_TABLES `D98 ED5000 size 7AC00';
@@ -227,12 +278,21 @@ VM_WINDOWS = {
         ('AREA_$RPMAP_CACHE', 0x3DE7800), ('MST', 0x3E4DC00),
         ('PIT_PAGES', 0x3E51400), ('MSTE_PAGES', 0x3E61400),
         ('VM_TABLES_END', 0x3F2E000)],
+    # the SAU4's from OS_PAGE_END (SMAPS + 0x7800, inside `D45 F8C4800
+    # OS_PMAPS'), as the SAU8's, with AST_AOT among them (AOT at AST +
+    # 0x10A00 starts no page)
+    4: [('OS_PAGE_END', 0xF912400), ('SMAPS_END', 0xFABDC00),
+        ('RARS_END', 0xFABFC00), ('AST', 0xFAC0800),
+        ('AST_PMAPS', 0xFB0D400), ('AREA_$RPMAP_CACHE', 0xFB59400),
+        ('BST', 0xFB5A000), ('MST', 0xFD0D000), ('PIT_PAGES', 0xFD10800),
+        ('MSTE_PAGES', 0xFD20800), ('VM_TABLES_END', 0xFDED400)],
 }
 # VAs COLD's map table maps to two physical pages, in the original: the
 # SAU5's DISP1 (0xFF9800, PPN 0x3C, then `the same VA, the next PPN' 0x3D,
 # cold/sau5/cold_start.s 0x101954 and 0x10195E).  The loader allows them
 # (the first PPN is the one it reads through).
-DOUBLE_MAPPED = {2: set(), 3: set(), 5: {0xFF9800}, 8: {0x3C00400}}
+DOUBLE_MAPPED = {2: set(), 3: set(), 4: set(), 5: {0xFF9800},
+                 8: {0x3C00400}}
 # The SAU8's: the first entry maps OS_BEGIN's two pages (PPN 0x400, 0x401)
 # and the next one DUMP's (PPN 0x403, 0x404) from OS_BEGIN + 0x400, so
 # 0x3C00400 is in both (cold/sau8/cold_start.s cold_map_table); COLD writes
@@ -242,15 +302,19 @@ DOUBLE_MAPPED_LAST = {8}
 # Map symbols in the VM-table windows whose page COLD maps itself: the
 # SAU8's RARS, the root tables at physical 0x101400 (the map table's `1,
 # 0x405, MAP_WIRED + RARS').
-COLD_MAPPED_IN_WINDOWS = {8: ['RARS']}
+COLD_MAPPED_IN_WINDOWS = {8: ['RARS'],
+                          # the SAU4's: COLD's RARS page, PPN 0x804
+                          4: ['RARS']}
 
 MST_MSTE_PAGES_MAX = 0x166      # mst/mst.h, MST_$INIT 0x00E30CF8
 # cold_start.s IO_WINDOW: from here the 68020 fixups treat a cell as I/O
 IO_FIXUP_WINDOW = {2: 0xFA0000, 3: 0xFA0000, 5: 0xF90000,
-                   8: 0x3F80000}   # the SAU8's last window
+                   8: 0x3F80000,   # the SAU8's last window
+                   4: 0xFFA0000}   # no fixups on the SAU4: its IODEFS
 # IODEFS, arch/m68k/<sau>/iodefs.s: DISP1_MEM on the SAU2, KOLOR_CTL on the
 # SAU5, the start of the I/O space on the SAU3
-IODEFS = {2: 0xFC0000, 3: 0xFC0000, 5: 0xF90000, 8: 0x3FA0000}
+IODEFS = {2: 0xFC0000, 3: 0xFC0000, 4: 0xFFA0000, 5: 0xF90000,
+          8: 0x3FA0000}
 
 # The 68020 fixups' windows on the value (COLD 0x1014C4..; the SAU5's from
 # its IO_WINDOW and *_WINDOW_020 constants)
@@ -275,6 +339,7 @@ WINDOWS = {
         (0x3DB6C00, 0x3E4DC00, '3DB6C00..3E4DC00 +B89C000'),
         (0x3E4DC00, 0x3F80000, '3E4DC00..3F80000 +B9D5800'),
         (0x3F80000, 0x4000000, '3F80000..4000000 +C000000')],
+    4: [],      # no fixup table
 }
 
 
@@ -336,21 +401,26 @@ def header_info(img, r):
             'info magic 0x%08X' % m)
     r.check(info['kernel_offset'] == KERNEL_FILE,
             'info +0 is 0x%X' % info['kernel_offset'])
-    r.check(info['split_ppn'] == 0x55F, 'info split 0x%X' % info['split_ppn'])
-    r.check(info['move_to_ppn'] == 0x600,
+    r.check(info['split_ppn'] == SPLIT_PPNS[SAU],
+            'info split 0x%X' % info['split_ppn'])
+    r.check(info['move_to_ppn'] == MOVE_PPNS[SAU],
             'info MOVE_TO_PPN 0x%X' % info['move_to_ppn'])
     return hdr, info
 
 
 def cold_constants(img):
-    cc = dict(reloc_va=img.b32(OP_RELOC_VA), kernel_va=img.b32(OP_KERNEL_VA),
-              kernel_low=img.b32(OP_KERNEL_LOW),
-              split_low=img.b32(OP_SPLIT_LOW),
-              os_page_end=img.b32(OP_PAGE_END[SAU]),
+    cc = dict(os_page_end=img.b32(OP_PAGE_END[SAU]),
               kernel_va2=img.b32(OP_KERNEL_VA2[SAU]),
               lo_bytes=img.b32(OP_LO_BYTES[SAU]),
               mmap_va=img.b32(OP_MMAP_VA[SAU]),
               initial_sp=img.b32(OP_STACK[SAU]), entry=img.b32(OP_ENTRY[SAU]))
+    # the fixup pass's operands (none on the SAU4)
+    for k, op in (('reloc_va', OP_RELOC_VA), ('kernel_va', OP_KERNEL_VA),
+                  ('kernel_low', OP_KERNEL_LOW), ('split_low', OP_SPLIT_LOW)):
+        if op is not None:
+            cc[k] = img.b32(op)
+    for k, (op, _) in OP_EXTRA.get(SAU, {}).items():
+        cc[k] = img.b32(op)
     # operands a SAU's COLD does not have (the SAU8's: None)
     if OP_OS_BEGIN is not None:
         cc['os_begin'] = img.b32(OP_OS_BEGIN)
@@ -411,8 +481,10 @@ class Loader:
                 ppn = ppn - split + move
             r.check(ppn not in self.phys, 'sysboot puts two file pages at '
                     'PPN 0x%X' % ppn)
-            r.check(not 0x5F3 <= ppn < 0x600, 'file page 0x%X lands in '
-                    'sysboot\'s own area (PPN 0x%X)' % (i, ppn))
+            area = SYSBOOT_AREA[SAU]
+            r.check(area is None or not area[0] <= ppn < area[1],
+                    'file page 0x%X lands in sysboot\'s own area (PPN 0x%X)'
+                    % (i, ppn))
             self.phys[ppn] = bytearray(img.d[i:i + PAGE].ljust(PAGE, b'\0'))
         # COLD 0x10154E: DUMP to PPN 0x403 (the SAU8's two pages, COLD
         # 0x101D5A, to PPN 0x403 and 0x404)
@@ -588,35 +660,46 @@ def check_ours(a, orig_cells_low):
     reloc_low = pos
     r.check(reloc - delta == reloc_low, 'RELOC 0x%X is not the end of the '
             'loaded bytes (low 0x%X)' % (reloc, reloc_low))
-    r.check(reloc_low > 0x157C00, 'RELOC low 0x%X is not past 0x157C00'
-            % reloc_low)
-
-    # 5. the fixup table
-    cells = fixup_table(img, reloc_low, r, exact_end=True)
-    room = sym('RFC_FIXUP_TABLE_END')
-    tend = reloc + 2 + 4 * len(cells)
-    r.check(room is not None and tend <= room, 'the fixup table ends at '
-            '0x%X, past the room kernel.ld leaves (RFC_FIXUP_TABLE_END %s)'
-            % (tend, room))
-    bss_objs = [v for n, v, sz, info, shndx in elf.symbols()
-                if shndx == elf.section('.bss').index and sz and
-                info & 0xF == 1]
-    r.check(room is not None and bss_objs and min(bss_objs) >= room,
-            'a .bss object lies under the fixup table')
     want = elf_r68k_32_cells(elf)
-    r.check(set(cells) == want or (not want and cells == [LOAD]),
-            'fixup entries differ from the ELF\'s R_68K_32 cells (%d vs %d)'
-            % (len(cells), len(want)))
+    if HAS_FIXUPS[SAU]:
+        r.check(reloc_low > 0x157C00, 'RELOC low 0x%X is not past 0x157C00'
+                % reloc_low)
+
+        # 5. the fixup table
+        cells = fixup_table(img, reloc_low, r, exact_end=True)
+        room = sym('RFC_FIXUP_TABLE_END')
+        tend = reloc + 2 + 4 * len(cells)
+        r.check(room is not None and tend <= room, 'the fixup table ends '
+                'at 0x%X, past the room kernel.ld leaves '
+                '(RFC_FIXUP_TABLE_END %s)' % (tend, room))
+        bss_objs = [v for n, v, sz, info, shndx in elf.symbols()
+                    if shndx == elf.section('.bss').index and sz and
+                    info & 0xF == 1]
+        r.check(room is not None and bss_objs and min(bss_objs) >= room,
+                'a .bss object lies under the fixup table')
+        r.check(set(cells) == want or (not want and cells == [LOAD]),
+                'fixup entries differ from the ELF\'s R_68K_32 cells '
+                '(%d vs %d)' % (len(cells), len(want)))
+    else:
+        # 5. no fixup table: the file ends at RELOC
+        cells = []
+        r.check(img.end == reloc_low, 'the file ends at low 0x%X, not at '
+                'RELOC (low 0x%X): this SAU\'s image has no fixup table'
+                % (img.end, reloc_low))
 
     # 3. COLD and DUMP against the original
     if orig_cells_low is not None:
         orig = Image(a.orig)
-        mine_low = {c for c in cells if c < LOAD + KERNEL_FILE}
-        r.check(mine_low == orig_cells_low,
-                'COLD/DUMP relocation cells differ from the original\'s: '
-                'missing %s, extra %s'
-                % (sorted(hex(c) for c in orig_cells_low - mine_low)[:6],
-                   sorted(hex(c) for c in mine_low - orig_cells_low)[:6]))
+        if HAS_FIXUPS[SAU]:
+            mine_low = {c for c in cells if c < LOAD + KERNEL_FILE}
+            r.check(mine_low == orig_cells_low,
+                    'COLD/DUMP relocation cells differ from the original\'s: '
+                    'missing %s, extra %s'
+                    % (sorted(hex(c) for c in orig_cells_low - mine_low)[:6],
+                       sorted(hex(c) for c in mine_low - orig_cells_low)[:6]))
+        else:
+            # no table to agree with: our link's 32-bit address cells
+            mine_low = {c for c in want if c < LOAD + KERNEL_FILE}
         masked = set()
         for c in mine_low:
             masked.update(range(c, c + 4))
@@ -633,6 +716,7 @@ def check_ours(a, orig_cells_low):
 
     # 6. COLD's operands
     cc = cold_constants(img)
+    cc.setdefault('kernel_va', cc['kernel_va2'])
     expect = dict(reloc_va=reloc, kernel_va=sym('OS_PROC'),
                   kernel_va2=sym('OS_PROC'), os_begin=sym('OS_BEGIN'),
                   os_page_end=sym('OS_PAGE_END'),
@@ -640,6 +724,8 @@ def check_ours(a, orig_cells_low):
                   initial_sp=sym('P1_STACK_BASE'),
                   entry=sym('OS_$INIT'), kernel_low=LOAD + KERNEL_FILE,
                   split_low=0x157C00, lo_bytes=KERNEL_LO_BYTES)
+    for k, (_, name) in OP_EXTRA.get(SAU, {}).items():
+        expect[k] = sym(name)
     for k, v in expect.items():
         if k not in cc:
             continue     # an operand this SAU's COLD does not have
@@ -669,22 +755,27 @@ def check_ours(a, orig_cells_low):
     r.check(not unmapped, '%d kernel page(s) not mapped (first 0x%X)'
             % (len(unmapped), unmapped[0] if unmapped else 0))
     crash = sym('CRASH_$RECORD')
-    r.check(ld.vmap.get(crash >> 10) == 0x400 and
-            ld.vmap.get(sym('LOG_$LAST_ENTRY') >> 10) == 0x400,
+    r.check(ld.vmap.get(crash >> 10) == CRASH_PPNS[SAU] and
+            ld.vmap.get(sym('LOG_$LAST_ENTRY') >> 10) == CRASH_PPNS[SAU],
             'CRASH_$RECORD / LOG_$LAST_ENTRY not in the page COLD maps to '
-            'PPN 0x400')
+            'PPN 0x%X' % CRASH_PPNS[SAU])
     ppns = [p for e in ld.entries if e['va'] >= OS_BEGIN or
             e['va'] == LOAD for p in range(e['ppn'], e['ppn'] + e['count'])]
     r.check(len(ppns) == len(set(ppns)), 'a physical page is mapped twice')
-    a0, tphys = ld.table_phys(cc, info)
-    r.check(tphys is not None and
-            ld.phys.get(tphys >> 10, b'')[tphys & 0x3FF:(tphys & 0x3FF) + 2]
-            == img.bytes(reloc_low, 2),
-            'COLD\'s 68020 path does not find the fixup table')
+    if HAS_FIXUPS[SAU]:
+        a0, tphys = ld.table_phys(cc, info)
+        r.check(tphys is not None and
+                ld.phys.get(tphys >> 10, b'')[tphys & 0x3FF:
+                                              (tphys & 0x3FF) + 2]
+                == img.bytes(reloc_low, 2),
+                'COLD\'s 68020 path does not find the fixup table')
+    else:
+        a0, tphys = reloc_low, None
     # 8. the VM tables' run-time windows
     wins = [(n, sym(n)) for n, _ in VM_WINDOWS[SAU]]
-    r.check(sym('IODEFS_GUARD') == sym('VM_TABLES_END'),
-            'IODEFS_GUARD is not VM_TABLES_END')
+    guard = IODEFS_GUARD_IS.get(SAU, 'VM_TABLES_END')
+    r.check(sym('IODEFS_GUARD') == sym(guard),
+            'IODEFS_GUARD is not %s' % guard)
     vmt = elf.section('.vm_tables')
     r.check(vmt is not None and vmt.addr == sym(VM_WINDOWS[SAU][0][0]) and
             vmt.addr + vmt.size == sym('VM_TABLES_END') and not vmt.loaded,
@@ -716,9 +807,10 @@ def check_ours(a, orig_cells_low):
               ld.lo_pages, (LOAD + KERNEL_FILE) >> 10, ld.hi_pages,
               info['move_to_ppn'], cc['mmap_va'], cc.get('pttx_va', 0),
               cc['initial_sp'], cc['entry'], top))
-    wc = window_counts(img, cells)
-    r.note('fixup windows: %s' % ', '.join('%s %d' % kv for kv in
-                                            sorted(wc.items())))
+    if HAS_FIXUPS[SAU]:
+        wc = window_counts(img, cells)
+        r.note('fixup windows: %s' % ', '.join('%s %d' % kv for kv in
+                                                sorted(wc.items())))
     r.note('dry-run loader: %d MMU map entries; %d loaded bytes of %d '
            'sections (DUMP and the kernel) found at their VAs; %d kernel '
            'pages mapped' % (len(ld.entries), nbytes, len(loaded) - 1,
@@ -741,17 +833,32 @@ def check_orig(a):
         if k == 'move_to_phys':
             r.check(info['move_to_ppn'] << 10 == int(v, 16), k)
             continue
-        r.check(cc[k] == int(v, 16), 'COLD %s 0x%X, json %s' % (k, cc[k], v))
-    delta = cc['kernel_va'] - cc['kernel_low']
-    reloc_low = cc['reloc_va'] - delta
-    cells = fixup_table(img, reloc_low, r, exact_end=False)
-    r.check(len(cells) == seg['reloc']['entries'], 'fixup count %d, json %d'
-            % (len(cells), seg['reloc']['entries']))
-    r.check(window_counts(img, cells) == seg['reloc']['window_counts'],
-            'fixup window counts differ from the json')
-    below = {c for c in cells if c < LOAD + KERNEL_FILE}
-    r.check(below == {int(c, 16) for c in seg['reloc']['cells_below_kernel']},
-            'cells below the kernel differ from the json')
+        r.check(cc.get(k) == int(v, 16), 'COLD %s %s, json %s'
+                % (k, cc.get(k), v))
+    if HAS_FIXUPS[SAU]:
+        delta = cc['kernel_va'] - cc['kernel_low']
+        reloc_low = cc['reloc_va'] - delta
+        cells = fixup_table(img, reloc_low, r, exact_end=False)
+        r.check(len(cells) == seg['reloc']['entries'],
+                'fixup count %d, json %d'
+                % (len(cells), seg['reloc']['entries']))
+        r.check(window_counts(img, cells) == seg['reloc']['window_counts'],
+                'fixup window counts differ from the json')
+        below = {c for c in cells if c < LOAD + KERNEL_FILE}
+        r.check(below == {int(c, 16)
+                          for c in seg['reloc']['cells_below_kernel']},
+                'cells below the kernel differ from the json')
+    else:
+        # no fixup table: the file ends at RELOC (the map's)
+        cc.setdefault('kernel_va', cc['kernel_va2'])
+        delta = cc['kernel_va'] - (LOAD + KERNEL_FILE)
+        reloc_low = img.end
+        cc.setdefault('reloc_va', reloc_low + delta)
+        cells, below = [], set()
+        r.check(seg['reloc']['entries'] == 0, 'the json lists a fixup table')
+        if a.map:
+            r.check(map_symbol(a.map, 'RELOC') == cc['reloc_va'],
+                    'the file does not end at the map\'s RELOC')
 
     ld = Loader(img, info, cc, r)
     want = seg['mmu_map_table']
@@ -781,10 +888,13 @@ def check_orig(a):
         if r.check(ld.read(va, len(b)) == b, 'asm-ref run at VA 0x%X not '
                    'at its mapped physical page' % va):
             nok += 1
-    a0, tphys = ld.table_phys(cc, info)
-    r.check(tphys is not None and
-            ld.phys[tphys >> 10][tphys & 0x3FF:(tphys & 0x3FF) + 2] ==
-            img.bytes(reloc_low, 2), 'COLD does not find the fixup table')
+    if HAS_FIXUPS[SAU]:
+        a0, tphys = ld.table_phys(cc, info)
+        r.check(tphys is not None and
+                ld.phys[tphys >> 10][tphys & 0x3FF:(tphys & 0x3FF) + 2] ==
+                img.bytes(reloc_low, 2), 'COLD does not find the fixup table')
+    else:
+        a0, tphys = reloc_low, None
     r.note('info: 0x%X, .DATA 0x%X, 0x%X, 0x%08X, 0x%X, 0x%X'
            % (info['kernel_offset'], info['data_va'], info['kernel_va'],
               info['magic'], info['split_ppn'], info['move_to_ppn']))

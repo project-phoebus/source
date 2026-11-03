@@ -3,6 +3,7 @@
 
   Image addresses:
     sau3  0x00E6FF94  mt_$release_unit
+    sau4  0x0F87CD0C  mt_$release_unit
     sau5  0x00E75AFC  mt_$release_unit
 
   - When it was the last acquired unit, a failure to free the

@@ -17,6 +17,11 @@
  * word and the CPU status register (MMU) before the access, and the
  * register again after it (`D 3C2B0D8 TESTPAGE size = 70'); those lines
  * carry the SAU8 image's addresses.
+ * The SAU4 clears its MMU status word (MMU + 2, `mmu_status_word') where
+ * the SAU2 clears the status byte, and after a completed access reads the
+ * word at 0x400 while the recovery is still armed (`probe_settle_read';
+ * `D F82B7E8 TESTPAGE size = 64'); those lines carry the SAU4 image's
+ * addresses.
  *
  * Byte gate (tools/asm_compare.py, `make check'): encodings identical
  * to the image (modulo the documented widenings); address operands
@@ -126,6 +131,8 @@ _io_$probe:
         movea.l (PROC1_$CURRENT_PCB).l, %a0 /* sau8 0x3C2B100              */
         clr.w   (0x5c,%a0)              /* sau8 0x3C2B106                  */
         clr.w   (MMU).l                 /* sau8 0x3C2B10A  4279 03ff b400  */
+        .elseif mmu_status_word
+        clr.w   (MMU+2).l               /* sau4 0xF82B810  4279 0fff b402  */
         .else
         clr.b   MMU_STATUS_REG          /* 0x00E29160 fresh fault status   */
         .endif
@@ -157,6 +164,9 @@ _io_$probe:
                                         /* falls through                   */
 .Lprobe_ok:
         st      %d0                     /* 0x00E29182 D0.b = 0xFF          */
+        .if probe_settle_read
+        tst.w   (0x400).w               /* sau4 0xF82B834  4a78 0400       */
+        .endif
 
 .Lexit:
         clr.l   (BUS_ERROR_SWITCH).l    /* 0x00E29184 disarm the recovery  */

@@ -2,12 +2,15 @@
 
   Image addresses:
     sau2  0x00E3E112  FLP_$DINIT
+    sau4  0x0F8460DE  FLP_$DINIT
     sau8  0x03C461A6  FLP_$DINIT
 
   - The FORMAT TRACK table's page is wired the first time.
   - The geometry and the label come back only when the recalibrate
     succeeded and num_blocks was not positive; the label's word at 6 is
     set to 1 on every path.
+  - The page DMA form puts the FORMAT TRACK table's page in IOMAP's
+    entry 0 and keeps its offset as the DMA address bytes.
 
   Returns:
     status_$invalid_unit_number: the unit is above 3
@@ -157,6 +160,9 @@ var
   excs_vol: disk_$volume_t;
   ppn: integer32;
   status: status_$t;
+%if floppy_page_dma %then
+  offset: integer32;
+%endif
   unused_54: integer32;                   { stand-in }
   unused_58: integer32;                   { stand-in }
 begin
@@ -171,13 +177,22 @@ begin
   if not flp_initialized then begin
     ppn := mmu_$vtop(integer32(addr(flp_io_buffer)), status);
     wp_$wire(ppn);
+%if floppy_page_dma %then
+    offset := integer32(addr(flp_io_buffer)) & 16#3FF;
+    flp_fmt_addr_lo := offset;
+    flp_fmt_addr_hi := rshft(offset, 8);
+    iomap[0] := ppn;
+%else
     flp_fmt_buf_pa := lshft(ppn, 10) +
                       (integer32(addr(flp_io_buffer)) & 16#3FF);
+%endif
     flp_initialized := true;
   end;
 
   { recalibrate }
+%if not floppy_page_dma %then
   flp_hw_addr^.control := 3;
+%endif
   excs_vol.as_options := [];
   flp_cmd_retry := 0;
   flp_recal_cmd[1] := unit;

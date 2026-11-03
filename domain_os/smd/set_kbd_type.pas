@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6E1AE  SMD_$SET_KBD_TYPE
+    sau4  0x0F878938  SMD_$SET_KBD_TYPE
     sau5  0x00E70618  SMD_$SET_KBD_TYPE
     sau9  0x3C474AF6  SMD_$SET_KBD_TYPE
 

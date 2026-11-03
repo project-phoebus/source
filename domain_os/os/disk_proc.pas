@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E3824C  OS_DISK_PROC
+    sau4  0x0F84024C  OS_DISK_PROC
 
   - A volume of 0 forgets every entry; a forgotten entry gets the volume
     0 (invalid) and the age 16#FFFF.

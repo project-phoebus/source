@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E7665E  RING_$RCV1
+    sau4  0x0F883EDE  RING_$RCV1
     sau3  0x00E77E4E  RING_$RCV1
     sau5  0x00E7D8EA  RING_$RCV1
     sau8  0x03C82F4C  RING_$RCV1

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E69A2C  TPAD_$RE_RANGE_UNIT
+    sau4  0x0F8734F2  TPAD_$RE_RANGE_UNIT
     sau9  0x3C4706F6  TPAD_$RE_RANGE_UNIT
 
   - TPAD_$DATA ranges over the next 1000 touchpad samples, from the

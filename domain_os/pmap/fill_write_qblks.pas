@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E1327E  pmap_$fill_write_qblks
+    sau4  0x0F813B78  pmap_$fill_write_qblks (module-local)
     sau9  0x3C4155DC  pmap_$fill_write_qblks
 
   - A page with no disk address gets one from BAT_$ALLOCATE, with every
@@ -116,7 +117,7 @@ begin
       netlog_$log_it(3, qb^.header.uid, rshft(qb^.header.hint, 5),
                      page_idx, pages[i], 0, 0, 0);
     qb := qb^.next;
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
     if disk_$do_chksum then begin
       seg_entry^.flags := seg_entry^.flags - [ast_$pmap_resident];
       mmu_$purge;

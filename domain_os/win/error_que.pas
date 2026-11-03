@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E19D54  WIN_$ERROR_QUE
+    sau4  0x0F81A9C2  WIN_$ERROR_QUE
     sau5  0x00E1A148  WIN_$ERROR_QUE
 
   - The result byte is cleared.

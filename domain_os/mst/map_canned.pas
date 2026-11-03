@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E30E6C  MST_$MAP_CANNED
+    sau4  0x0F83457C  MST_$MAP_CANNED
     sau8  0x03C34188  MST_$MAP_CANNED
     sau9  0x3C436F2C  MST_$MAP_CANNED
 

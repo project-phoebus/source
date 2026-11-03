@@ -31,9 +31,14 @@
  * With `fpu_enable_cpu_control' (the SAU8) they set and clear bit 2 of
  * the CPU control register (MMU + 0x101) and of its copy, MMU_$PID_PRIV's
  * low byte, at IPL 7; those lines carry the SAU8 image's addresses.
+ *
+ * Not on the SAUs whose floating-point registers are the CPU's own
+ * (`fp_state_in_cpu', base/config.ins.pas): the SAU4's routine is
+ * in fim/sau4/fp.s.
  */
 
         .include "base/config.inc"
+        .if !fp_state_in_cpu
 
         .section ".text.FIM_$FP_GET_STATE","ax",@progbits
         .even
@@ -126,3 +131,4 @@ FIM_$FP_GET_STATE:
         move.l  %a4,(%a0)                       /* e21e7e */
         movem.l (%sp)+,%d2/%a2-%a4              /* e21e80 */
         rts                                     /* e21e84 */
+        .endif

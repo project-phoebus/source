@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6DC1C  SMD_$LOAD_FONT
+    sau4  0x0F878332  SMD_$LOAD_FONT
     sau5  0x00E70016  SMD_$LOAD_FONT
 
   - The result is the font's slot, 1..8: the first free one, its hidden

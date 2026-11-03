@@ -3,13 +3,15 @@
 
   Image addresses:
     sau3  0x00E59D7E  PBU2_$WIRE_MAP
+    sau4  0x0F86292A  PBU2_$WIRE_MAP
     sau5  0x00E59FDE  PBU2_$WIRE_MAP
     sau8  0x03C62476  PBU2_$WIRE_MAP
 
   - Under the exclusion lock each page is wired for the unit
     (PBU_$SAVE_PPN) and its I/O map entry written: the page number plus
     the unit's control, a longword (`long_iomap') or the entry's word
-    and the control's high word.
+    and the control's high word; with word entries (`word_iomap') the
+    page number alone.
   - A page already wired ends the loop; another failure unwires the
     pages wired so far (a failure there crashes the system).
   - The result is iova plus the buffer's offset in its page, its address
@@ -49,7 +51,9 @@ var
   first: linteger;
   last: linteger;
   slot: linteger;
+%if not word_iomap %then
   ctl: pbu_$ctl_t;
+%endif
   j: linteger;
   undo_status: status_$t;
 begin
@@ -93,12 +97,16 @@ begin
     return;
   end;
   first := linteger(offset) div 1024 + dcte^.map_page;
+%if not word_iomap %then
   ctl := dcte^.ctl;
+%endif
   ml_$exclusion_start(pbu_$exclusion_lock);
   last := first + npages;
   for slot := first to last do begin
 %if long_iomap %then
     iomap[slot] := pbu_$save_ppn(unit, va, status) + ctl.all;
+%elseif word_iomap %then
+    iomap[slot] := pbu_$save_ppn(unit, va, status);
 %else
     iomap[slot].entry := pbu_$save_ppn(unit, va, status) + ctl.entry;
 %endif

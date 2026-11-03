@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6E1CC  SHOW_CURSOR
+    sau4  0x0F878956  SHOW_CURSOR
     sau5  0x00E70642  SHOW_CURSOR
     sau9  0x3C474B14  SHOW_CURSOR
 

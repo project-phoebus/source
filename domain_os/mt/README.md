@@ -86,5 +86,8 @@ MT_$PRESENT's heading is `../io/io.ins.pas`'s until the merge
   PBU2_$UNWIRE, PBU2_$WIRE and PBU_$WAIT, and
   status_$pbu_page_already_wired (`mt.ins.pas`); IOMAP, repeated from
   `../sm/sm.ins.pas` (`mt.ins.pas`).
-- TODO(sau): the SAU4's I/O map entries in mt_$set_iomap and MT_$SIO
-  (`set_iomap.pas`).
+- The SAU4's MT is the SAU3's with `mbus_map_64k` (the entries from
+  192), `word_iomap`, the CPIO status register's bus timeout
+  (`region_mmu`, mt_mmu_bus_timeout) and `-cpu 460` (MT_$WAIT's
+  multiply).
+- TODO(sau): the SAU6's MT_$SIO bus timeout member (`mt.ins.pas`).

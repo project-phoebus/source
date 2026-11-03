@@ -2,6 +2,7 @@
 
   Image addresses:
     sau3  0x00E70BB8  MT_$SET_MODE
+    sau4  0x0F87D930  MT_$SET_MODE
     sau5  0x00E76722  MT_$SET_MODE
 
   - Each member of mode clears or sets one bit of the unit's state

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau3  0x00E6F81E  SM_C_$DO_IO
+    sau4  0x0F87C5D2  SM_C_$DO_IO
     sau5  0x00E75386  SM_C_$DO_IO
 
   - Runs under the controller's ML lock (its DCTE's disk_error_que_hi);
@@ -22,7 +23,9 @@ label
 var
   op: integer;
   head: disk_$io_req_ptr_t;
+%if memory_parity %then
   unit_rec: ^sm_c_$unit_t;
+%endif
   cmd: integer;
   status: integer32;
   try: integer;
@@ -42,7 +45,9 @@ begin
 
   sm_c_req := head;
   sm_c_vol := addr(vol);
+%if memory_parity %then
   unit_rec := addr(sm_$cb.c_unit[vol.dev_unit]);
+%endif
   if sm_c_req^.owner_op.op = 2 then begin
     cmd := sm_c_cmd_write;
     sm_c_hdr^ := sm_c_req^.header.l;
@@ -55,6 +60,8 @@ begin
 again:
 %if long_iomap %then
     sm_c_iomap_entry^ := sm_c_req^.ppn + sm_iomap_bias;
+%elseif word_iomap %then
+    sm_c_iomap_entry^ := sm_c_req^.ppn;
 %else
     sm_c_iomap_entry^.entry := sm_c_req^.ppn + sm_iomap_bias;
 %endif
@@ -100,8 +107,10 @@ again:
     goto failed;
 
 done:
+%if memory_parity %then
   if unit_rec^.flags.parity_err then
     status := status_$memory_parity_error_during_disk_write;
+%endif
   if status = 0 then
     goto unlock;
 

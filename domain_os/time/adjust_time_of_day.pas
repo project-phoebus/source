@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E168DE  TIME_$ADJUST_TIME_OF_DAY
+    sau4  0x0F8172BE  TIME_$ADJUST_TIME_OF_DAY
 
   - The delta in 4-microsecond ticks is rounded toward zero to a
     multiple of the skew step (167 ticks, 1670 beyond a second), which

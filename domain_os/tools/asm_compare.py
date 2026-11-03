@@ -141,7 +141,7 @@ import image_file  # noqa: E402  (Image: the image file by address)
 # Every address table below is keyed by SAU first: {2: {...}, 5: {...}};
 # an entry's address is that SAU's image address, with its evidence.
 SAU = 2
-SAUS = (2, 3, 5, 8, 9)
+SAUS = (2, 3, 4, 5, 8, 9)
 
 # Module data block names that the hand-written assembly references and
 # that are not map symbols, with their image addresses.  The Pascal tree
@@ -167,6 +167,8 @@ C_BLOCK_ADDRS = {
     8: {
         # the SAU8 map's PEB_$INFO
         'PEB_$INFO': 0x03C26D20,
+    },
+    4: {
     },
 }
 
@@ -593,6 +595,92 @@ LOCAL_SYMBOLS = {
         'STOP_$READ_CLOCK': 0x03C9A64C,
         'stop_$watch_trace_exit': 0x03C9A662,
     },
+    4: {
+        # The SAU4's addresses of the SAU2's labels, each at the SAU2's
+        # (and the SAU3's) distance from the same map symbol (`SYMBOL +
+        # off'), the bytes there the same but for absolute addresses.
+        # io/m68k/trap.s: IO_$COND_SWITCH_BACK + 0x16, in `D F831C00
+        # IO_$TBLS'
+        'io_$flih_dispatch': 0x0F831C5C,
+        # fim/m68k/com.s, soft_fault.s: `D F8229B0 FIM_UNWIRED size =
+        # 4B0', the SAU2's without the coprocessor and two FP stubs
+        'FIM_COMMON_FAULT': 0x0F8229B0,         # segment start
+        'FIM_COM': 0x0F8229B4,                  # alias of FIM_$COM
+        'FIM_SOFT_FAULT_TAIL': 0x0F822A68,      # FIM_$SOFT_FAULT+0xC
+        'FIM_SOFT_FAULT_PUSH': 0x0F822A72,      # FIM_$SOFT_FAULT+0x16
+        # fim/m68k/fp_exceptions.s: the FP stubs' frame helper, a return
+        # after FIM_$FP_OVRFLO's descriptor (FIM_$FP_OVRFLO + 0xE)
+        'fim_fp_frame_pc': 0x0F822AFE,
+        # smd/sau4/smd_utils.s: the SMD_UTILS bodies in `I F87AC20
+        # SMD_UTILS size = 4C0' (the map names only SMD_$INVERT_DISP
+        # there, at +0x82) and the GET_DTYPE body in the .DATA segment
+        # (SMD_$VERT_LINE + 0xA)
+        'smd_$copy_font_to_hdm_body': 0x0F87AC20,
+        'smd_$write_str_clip_body': 0x0F87ACE4,
+        'smd_$clear_window_body': 0x0F87AFCA,
+        'smd_$horiz_line_body': 0x0F87B056,
+        'smd_$vert_line_body': 0x0F87B0AE,
+        'smd_$get_dtype_body': 0x0F8931FE,
+        # smd/sau4/wired_proc.s: the bodies of the SMD_WIRED code segment
+        # `I F816404 SMD_WIRED size = 368' (the map names only
+        # SMD_$LOCK_DISPLAY and SMD_$BIT_SET there), reached by absolute
+        # address from the trampolines of the data segment
+        'smd_$xor_cursor_body': 0x0F816404,     # the segment start
+        'smd_$or_cursor_body': 0x0F81640E,
+        'smd_$start_scroll_body': 0x0F81660A,
+        'smd_$continue_scroll_body': 0x0F81663E,
+        'smd_$unwire_mm_body': 0x0F816670,
+        'smd_$start_blt_body': 0x0F8166F8,
+        # fim/m68k/bus_err.s: `jmp (BUS_ERROR_SWITCH).l' after the
+        # SAU4's CPU_B_PBU_SWITCH word (0xF822E9A), its operand the cell
+        # BUS_ERROR_SWITCH (0xF822E9E), and the pad ahead of FIM_$BUS_ERR,
+        # as on the SAU3
+        'JMP_TO_BUS_ERR': 0x0F822E9C,
+        'fim_bus_err_align': 0x0F822EBA,
+        # PROC1_ASM (`D F8200D8 PROC1_ASM size = 24A4', the SAU2's size):
+        # each label at the SAU2's distance from the map symbol before it
+        'proc1_$pcb_pool': 0x0F8201E2,          # PROC1_$READY_COUNT + 2
+        'atomic_op_error': 0x0F821FFE,          # PROC1_$BEGIN_ATOMIC_OP + 8
+        'set_lock_crash': 0x0F822166,           # ML_$LOCK + 0x44
+        'clr_lock_crash': 0x0F822166,
+        'Illegal_lock_err': 0x0F8223F4,         # LOCK_$EVENT_LISTS + 0x200
+        'proc1_$ec_waitn': 0x0F821C6A,          # EC_$WAITN + 0x1C
+        'proc1_$get_current_cpu_time': 0x0F821EE0,  # PROC1_$GET_CPU_USAGE + 0x26
+        'proc1_$set_lock_body': 0x0F8220F8,     # PROC1_$SET_LOCK + 4
+        'proc1_$clr_lock_body': 0x0F8221AE,     # PROC1_$CLR_LOCK + 0xC
+        'proc1_$release_tail': 0x0F8224C6,      # PROC1_$INHIBIT_END + 0x14
+        # svc/m68k/svc_tables.s: the dispatch tables after the trap
+        # dispatchers in `D F888840 SVC_CATCHER size = E40' (the SAU2's
+        # distances from SVC_$TRAP8)
+        'SVC_$TRAP0_TABLE': 0x0F888ADA,
+        'SVC_$TRAP1_TABLE': 0x0F888B5A,
+        'SVC_$TRAP2_TABLE': 0x0F888C62,
+        'SVC_$TRAP3_TABLE': 0x0F888E76,
+        'SVC_$TRAP4_TABLE': 0x0F8890E2,
+        'SVC_$TRAP5_TABLE': 0x0F8892EE,
+        'SVC_$TRAP7_TABLE': 0x0F88947A,
+        'SVC_$TRAP8_TABLE': 0x0F889566,
+        'SVC_$TRAP8_ARGCOUNT': 0x0F889646,
+        # time/m68k/time_asm.s, timer_handler.s: `D F82D4B0 TIME_ASM size
+        # = 484', the SAU2's laid out the same
+        'time_$read_cal_body': 0x0F82D4B0,
+        'time_$read_cal_delay_20': 0x0F82D608,  # TIME_$READ_CAL - 0xA
+        'time_$read_cal_delay': 0x0F82D60C,
+        'TIME_$TIMER_HANDLER': 0x0F82D7E4,      # TIME_$DI_RTE + 0x12
+        # io/m68k/probe.s: `D F82B7E8 TESTPAGE size = 64'
+        'io_$probe': 0x0F82B7E8,
+        # `D F82E8C0 PCHIST size = 128' (PCHIST_$ADDR at +0x20)
+        'PCHIST_$CONTROL': 0x0F82E8C0,
+        # stop/m68k/watch.s: the SAU2's distances from STOP_$WATCH and
+        # STOP_$WATCH_TRACE
+        'STOP_$MEASURE_LOOP': 0x0F89008A,
+        'STOP_$NULL_PROC': 0x0F8900B2,
+        'STOP_$UNHOOK': 0x0F890156,
+        'STOP_$HOOK': 0x0F89017E,
+        'STOP_$READ_CPUT': 0x0F8902C8,
+        'STOP_$READ_CLOCK': 0x0F8902D0,
+        'stop_$watch_trace_exit': 0x0F8902E6,
+    },
 }
 
 # Runs whose code is restructured relative to the image (not a matter of
@@ -610,6 +698,8 @@ KNOWN_DEVIATIONS = {
     9: {
     },
     8: {
+    },
+    4: {
     },
 }
 
@@ -681,6 +771,14 @@ REGISTER_BASES = {
         '.text.FIM_$CLEAR_TRACE_FAULT': {1: 0x03C230D0},
         '.text.FIM_$EXIT': {5: 0x03C230D0},
     },
+    4: {
+        # fim/m68k/deliver_trace_fault.s, clear_trace_fault.s, exit.s: the
+        # FIM_WIRED base FIM_$TRACE_BIT (0xF822E60) in A1 / A5, as on the
+        # SAU2
+        '.text.FIM_$DELIVER_TRACE_FAULT': {1: 0x0F822E60},
+        '.text.FIM_$CLEAR_TRACE_FAULT': {1: 0x0F822E60},
+        '.text.FIM_$EXIT': {5: 0x0F822E60},
+    },
 }
 
 # Code in the hand-written files that is NOT image code: a run starting at
@@ -697,6 +795,8 @@ ADDITIONS = {
     9: {
     },
     8: {
+    },
+    4: {
     },
 }
 
@@ -820,6 +920,24 @@ IMAGE_ALIASES = {
         # TIME_ASM cells the map does not name
         'TIME_$CURRENT_USEC': 0x03C2D052,       # TIME_$CURRENT_TIME + 4
     },
+    4: {
+        # PROC1_ASM cells the map does not name, at the SAU2's distances
+        'PROC1_$ATOMIC_OP_DEPTH': 0x0F821C1E,   # PROC1_$PID_TN + 2
+        'DAT_00e20606': 0x0F821C16,             # DI_$Q_HEAD + 4
+        'Bad_atomic_operation_err': 0x0F8223F8,  # LOCK_$EVENT_LISTS + 0x204
+        # the SVC dispatch tables (as LOCAL_SYMBOLS above)
+        'SVC_$TRAP0_TABLE': 0x0F888ADA,
+        'SVC_$TRAP1_TABLE': 0x0F888B5A,
+        'SVC_$TRAP2_TABLE': 0x0F888C62,
+        'SVC_$TRAP3_TABLE': 0x0F888E76,
+        'SVC_$TRAP4_TABLE': 0x0F8890E2,
+        'SVC_$TRAP5_TABLE': 0x0F8892EE,
+        'SVC_$TRAP7_TABLE': 0x0F88947A,
+        'SVC_$TRAP8_TABLE': 0x0F889566,
+        'SVC_$TRAP8_ARGCOUNT': 0x0F889646,
+        # TIME_ASM cells the map does not name
+        'TIME_$CURRENT_USEC': 0x0F82D7A8,       # TIME_$CURRENT_TIME + 4
+    },
 }
 
 # Sections whose module base register points at a different object in our
@@ -845,6 +963,8 @@ REBASES = {
     9: {
     },
     8: {
+    },
+    4: {
     },
 }
 

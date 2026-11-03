@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E75400  ring_$process_rx_packet (module-local)
+    sau4  0x0F882C00  ring_$process_rx_packet (module-local)
     sau5  0x00E7C800  ring_$process_rx_packet (module-local)
     sau8  0x03C816E6  ring_$process_rx_packet (module-local)
     sau9  0x3C47D2E6  ring_$process_rx_packet (module-local)
@@ -25,6 +26,9 @@
     arriving on a stopped unit crashes the system with
     status_$network_hardware_error.  RING_$SWDIAG_GOODRCV_CNT counts the
     diagnostic's good receives.
+  - With the board's own DMA (`ring_board_dma') the lengths are the
+    receive channels' counts and the channels are re-armed in place,
+    their buffers mapped in the I/O map from the unit's dma_page.
 
   Status stored: none.
 }
@@ -221,14 +225,22 @@ begin
   netbuf_$hdr_page_ptr_t(unit.rx_hdr)^.phys := unit.rx_hdr_pa;
   regs := unit.hw_regs;
   hdr := pkt_$hdr_ptr_t(unit.rx_hdr);
+%if ring_board_dma %then
+  csr := regs^.rx_status;
+%else
   csr := regs^.rcv_csr;
+%endif
 
   { the software diagnostic's counters }
   if (1 in hdr^.flag_bits.info_bits)
      and then (4 in hdr^.flag_bits.info_bits) then begin
     ring_$swdiag_rcvcnt := ring_$swdiag_rcvcnt + 1;
     ring_$swdiag_nodeid := hdr^.src_node;
+%if ring_board_dma %then
+    if csr <> [6, 7, 14] then
+%else
     if csr - [1, 2, 4] <> [] then
+%endif
       ring_$swdiag_goodrcv_cnt := ring_$swdiag_goodrcv_cnt + 1;
   end;
 
@@ -239,6 +251,17 @@ begin
     { the lengths received }
     hdr_bytes := (regs^.rx_hdr_resid & 16#3FF) * 2;
     data_bytes := (regs^.rx_data_resid & 16#3FF) * 2;
+%elseif ring_board_dma %then
+  if (csr = [6, 7, 14])
+     and then not ring_$logging_now then begin
+
+    { the lengths received: the receive channels' counts, read low byte
+      first }
+    regs^.rx_dma.clear_ff := 0;
+    hdr_bytes := (512 - (regs^.rx_dma.chan[0].count
+                         + regs^.rx_dma.chan[0].count * 256 + 1)) * 2;
+    data_bytes := (512 - (regs^.rx_dma.chan[1].count
+                          + regs^.rx_dma.chan[1].count * 256 + 1)) * 2;
 %else
   if (csr - [1, 2, 4] = [])
      and then not ring_$logging_now
@@ -355,6 +378,24 @@ begin
     regs^.rx_data_cnt := 512;
     regs^.rx_data_resid := 0;
     regs^.rx_data_addr := unit.rx_data_pa;
+%elseif ring_board_dma %then
+    regs^.rx_dma.clear_ff := 0;
+    regs^.rx_dma.chan[0].addr := 0;
+    regs^.rx_dma.chan[0].addr := unit.dma_page * 2 + 8;
+    regs^.rx_dma.chan[1].addr := 0;
+    regs^.rx_dma.chan[1].addr := unit.dma_page * 2 + 12;
+    regs^.rx_dma.chan[0].count := 255;    { 511: 512 words less one }
+    regs^.rx_dma.chan[0].count := 1;
+    regs^.rx_dma.chan[1].count := 255;
+    regs^.rx_dma.chan[1].count := 1;
+    regs^.rx_dma.mode := 4;
+    regs^.rx_dma.mode := 5;
+    regs^.rx_dma.mask := 0;
+    regs^.rx_dma.mask := 1;
+    iomap[unit.dma_page + 4] := rshft(unit.rx_hdr_pa, 10);
+    iomap[unit.dma_page + 5] := 0;
+    iomap[unit.dma_page + 6] := rshft(unit.rx_data_pa, 10);
+    iomap[unit.dma_page + 7] := 0;
 %else
     dma[0].mtc := 512;
     dma[0].mar := unit.rx_hdr_pa;
@@ -365,7 +406,11 @@ begin
     dma[1].mfc := chr(0);
     dma[1].ccr := chr(16#80);
 %endif
+%if ring_board_dma %then
+    regs^.rx_cmd := 16#81;
+%else
     regs^.rcv_csr := [13, 14];
+%endif
     ring_$process_rx_packet := nil;
     return;
 

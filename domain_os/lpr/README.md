@@ -6,8 +6,9 @@ SAU5..SAU9 kernels) what is left is one routine, LPR_$RELEASE, and it is
 `lpr_driver` (`../base/config.ins.pas`) the driver of the parallel
 printer port at LPR, translated from the SAU3 image: a module, LPR_,
 and the hand-written LPR_ASM, whose interrupt routine sends the lines
-queued in a circular buffer (`../cbuf/`) to the port.  The SAU4 has the
-driver in another form (the TODO(sau) in `lpr.pas`).
+queued in a circular buffer (`../cbuf/`) to the port.  The SAU4's
+driver (`lpr_pbu_unit`) drives the PNA's port, the PBU's unit 6, in
+`lpr.pas`'s other arm and each fragment's, with `sau4/lpr_asm.s`.
 
 ## Layout
 
@@ -73,4 +74,7 @@ state records, LPR_ASM's symbols, the markers and the headings.
 
 ## Open items
 
-- The TODO(sau) in `lpr.pas`: the SAU4's form.
+- The SAU4's form (`lpr_pbu_unit`): LPR_$INIT, LPR_$STATE, LPR_$ACQUIRE
+  arms of their own; LPR_$WRITE and LPR_$RELEASE the SAU3's bodies with
+  PBU_$ENABLE_DEVICE and PBU_$RELEASE_INT for the enable routines; no
+  lpr_set_mode; LPR_ASM `sau4/lpr_asm.s`.

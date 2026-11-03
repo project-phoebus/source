@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E58B58  TIME_$RELEASE
+    sau4  0x0F860FCC  TIME_$RELEASE
 
   - The real interval timer's element is taken off the real-time queue,
     the virtual one's off the current process's virtual-timer queue,

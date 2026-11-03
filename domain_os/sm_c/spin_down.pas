@@ -2,6 +2,7 @@
 
   Image addresses:
     sau3  0x00E6FA78  SM_C_$SPIN_DOWN
+    sau4  0x0F87C7F0  SM_C_$SPIN_DOWN
     sau5  0x00E755E0  SM_C_$SPIN_DOWN
 
   - A unit that answers the restore command is still spinning: a warning

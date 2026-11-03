@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E00F16  AST_$INVALIDATE_PAGE
+    sau4  0x0F801320  AST_$INVALIDATE_PAGE
     sau8  0x03C012FC  AST_$INVALIDATE_PAGE
     sau9  0x3C4022FC  AST_$INVALIDATE_PAGE
 
@@ -33,7 +34,11 @@ begin
 %else
     if ast_$pmap_resident in entry.flags then begin
       entry.flags := entry.flags - [ast_$pmap_resident];
+%if region_mmu %then
+      mmu_$purge;
+%else
       mmu_$remove(vpn);
+%endif
     end;
 
     entry.flags := entry.flags - [ast_$pmap_installed];

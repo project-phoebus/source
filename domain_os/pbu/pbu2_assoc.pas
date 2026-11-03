@@ -2,6 +2,7 @@
 
   Image addresses:
     sau3  0x00E58B78  PBU2_$ASSOC
+    sau4  0x0F8618BE  PBU2_$ASSOC
     sau5  0x00E58B8E  window_free (nested)
     sau5  0x00E58C08  PBU2_$ASSOC
     sau8  0x03C615F4  PBU2_$ASSOC
@@ -20,6 +21,8 @@
   - With the large virtual memory (`large_vm') the pages are mapped as
     I/O pages (MST_$INSTALL_IOPPN); a failure removes the pages mapped
     so far and frees the space.
+  - With the Multibus's window at 16#10000 (`mbus_low_window') the
+    memory's pages are the window's from page 16#40, whatever the bus.
 
   Status stored:
     io_$alloc's status: the memory was mapped, or its space not
@@ -137,6 +140,9 @@ begin
   dcte^.assoc_va := addr_va;
 %if large_vm %then
   dcte^.assoc_length := length;
+%if mbus_low_window %then
+  ppn := iova div 1024 + 16#40;
+%else
   ppn := iova div 1024;
   if dcte^.unit_info.bus <> io_$bus_vme then
 %if mbus_bus %then
@@ -146,6 +152,7 @@ begin
       ppn := ppn + 16#C00
 %endif
     ;
+%endif
   for i := 1 to npages do begin
     mst_$install_ioppn(ppn, addr_va, install_status);
     if install_status.all <> status_$ok then begin

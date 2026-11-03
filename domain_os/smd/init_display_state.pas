@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6F514  smd_$init_display_state (module-local)
+    sau4  0x0F879D38  smd_$init_display_state (module-local)
     sau5  0x00E71902  smd_$init_display_state (module-local)
     sau9  0x3C475B32  smd_$init_display_state (module-local)
 

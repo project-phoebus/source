@@ -2,8 +2,10 @@
 
   Image addresses:
     sau2  0x00E01950  ast_$deactivate_segment (module-local)
+    sau4  0x0F801D58  ast_$deactivate_segment (module-local)
     sau9  0x3C402CFE  ast_$deactivate_segment (module-local)
     sau2  0x00E01872  ast_$deactivate_segment_log (nested)
+    sau4  0x0F801C82  ast_$deactivate_segment_log (nested)
     sau9  0x3C402C26  ast_$deactivate_segment_log (nested)
 
   - With the AST lock released, the segment's pages are flushed and,
@@ -39,7 +41,7 @@ var
     if aste.page_count <> chr(0) then begin
       ml_$lock(ml_$pmap_lock);
       for i := 0 to 31 do
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
         if (ast_$pmap_installed in segmap[i].flags) and then
            (ast_$pmap_used in segmap[i].flags) then
 %else

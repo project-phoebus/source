@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E42D3A  MST_$ALLOC_ASID
+    sau4  0x0F84ACEE  MST_$ALLOC_ASID
     sau8  0x03C4AD92  MST_$ALLOC_ASID
     sau9  0x3C44A0C6  MST_$ALLOC_ASID
 
@@ -13,7 +14,9 @@
   - With the large address space no MSTE page is taken: an ASID other
     than 1 gets a RARS page, a copy of ASID 0's, and the global regions
     (the first two statuses only).
-  - With the layout chosen at boot an ASID other than 1 gets its root
+  - With the layout chosen at boot (and so with the region registers,
+    whose 32 registers are its root entries) an ASID other than 1 gets
+    its root
     entries in a page of RARS (installed if MST_$RAR_PAGES lacks it),
     a copy of ASID 0's, and the global regions; then every ASID gets
     its page of MSTEs as without, and a filled OS wired entry also gets
@@ -34,7 +37,7 @@ var
   asid: 0..mst_max_asid;
 %if large_address_space %then
   i: integer;
-%elseif run_time_layout %then
+%elseif run_time_layout or region_mmu %then
   i: integer;
   base: pinteger;
   ppn: integer32;
@@ -64,9 +67,9 @@ found:
                                  mst_global_regions;
   end;
   st.all := status_$ok;
-%elseif run_time_layout %then
-  { the ASID's root entries, a copy of ASID 0's (ASID 1's are
-    MST_$INIT's), and the global regions active }
+%elseif run_time_layout or region_mmu %then
+  { the ASID's root entries (region registers), a copy of ASID 0's
+    (ASID 1's are MST_$INIT's), and the global regions active }
   if asid <> 1 then begin
     rp := addr(rars[rars_asid_base[asid]]);
     page := rshft(integer32(rp) - integer32(addr(rars)), 10);
@@ -81,11 +84,18 @@ found:
     end;
     mmu_$rars_phaddr[asid] := ppn * 1024 +
       (integer32(addr(rars[rars_asid_base[asid]])) & 16#3FF);
+%if region_mmu %then
+    for i := 0 to mst_region_members - 1 do
+      rars[rars_asid_base[asid] + i] := rars[rars_asid_base[0] + i];
+    mst_$regions_active[asid] := mst_$regions_active[asid] +
+                                 mst_global_regions;
+%else
     for i := 0 to region_$tn - 1 do
       rars[rars_asid_base[asid] + i] := rars[rars_asid_base[0] + i];
     mst_$regions_active[asid] := mst_$regions_active[asid] +
       [region_$global_b .. region_$global_b + region_$global_b_size - 1,
        region_$global_a .. region_$global_a + region_$global_a_size - 1];
+%endif
   end;
   base := mst_asid_base[asid];
   st := mst_$alloc_table_page(asid, 0, mst[base]);

@@ -1,6 +1,7 @@
 { COLOR_$SHUTDOWN - give up the color board at shutdown.
 
   Image addresses:
+    sau4  0x0F87B21C  COLOR_$SHUTDOWN
     sau5  0x00E72DD8  COLOR_$SHUTDOWN
 
   - Once the board has been associated, the current process takes it

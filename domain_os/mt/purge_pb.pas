@@ -3,6 +3,7 @@
 
   Image addresses:
     sau3  0x00E709E4  MT_$PURGE_PB
+    sau4  0x0F87D75C  MT_$PURGE_PB
     sau5  0x00E7654E  MT_$PURGE_PB
 
   - The pages are unwired once (MT_$PB_WIRED clears its member): the

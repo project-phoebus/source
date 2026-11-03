@@ -97,6 +97,21 @@ the same; then:
 There the serial driver (SIO16550_$INIT, sio16550/) calls SIO_$INIT for
 each of its four ports; TERM_$INIT only calls SUMA_$INIT.
 
+With `sio2681_four_lines` (the SAU4) the WIRED_DATA segment is 0x1948
+bytes and the OS_INIT_DATA segment 0x34, the `console_sio2681` form's
+statics: the console and three serial lines on two SIO2681s, no SIO6509.
+The first 0xC4 bytes are the same; `unused_0c4` (0xBC bytes),
+`tty_descs` (four, +0x180), `sio_descs` (four, +0x14F0),
+`term_$console_drain` (+0x16D0), `kbd_descs` (+0x16E0), the two chips
+(`term_$sio2681_chip` +0x17C8, `term_$sio2681_chip_2` +0x17D4), the
+four channels (`tone_$channel` +0x17E0, `term_$serial_chan_b`,
+`term_$serial_chan_a2`, `term_$serial_chan_b2`, 0x1C bytes apart),
+DTTE +0x1850, TTY_$SPIN_LOCK +0x1934, TERM_$MAX_DTTE +0x1938, the two
+keyboard strings from +0x193C.  TERM_$INIT sets the console and the
+first serial line up on the first chip, the other two lines on the
+second, and TERM_$MAX_DTTE becomes 4 (`term/init.pas`); TERM_$P2_CLEANUP
+walks four lines.
+
 With `console_sio2681` (the SAU8) the WIRED_DATA segment is 0xFD4
 bytes and the OS_INIT_DATA segment 0x34 (TERM_$INIT's SIO2681 vtable
 and seven configuration words).  The first 0xC4 bytes are the same;

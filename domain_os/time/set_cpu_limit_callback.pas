@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E58AF8  TIME_$SET_CPU_LIMIT_CALLBACK
+    sau4  0x0F860F6C  TIME_$SET_CPU_LIMIT_CALLBACK
 
   - While the address space's CPU-limit element's expiry is set, the
     process is signaled (signal 27, time_$cpu_limit_f).

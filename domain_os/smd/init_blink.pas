@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E34EB2  SMD_$INIT_BLINK
+    sau4  0x0F8382BC  SMD_$INIT_BLINK
     sau5  0x00E37268  SMD_$INIT_BLINK
     sau9  0x3C43B604  SMD_$INIT_BLINK
 

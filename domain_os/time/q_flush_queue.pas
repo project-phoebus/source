@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E16C80  TIME_$Q_FLUSH_QUEUE
+    sau4  0x0F817638  TIME_$Q_FLUSH_QUEUE
 
   - The head is cleared; the elements' links and flags are not touched.
 

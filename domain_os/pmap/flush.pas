@@ -5,6 +5,9 @@
     sau2  0x00E1376C  PMAP_$FLUSH
     sau2  0x00E1359C  pmap_$update_seg_map (nested)
     sau2  0x00E1360C  pmap_$flush_write_batch (nested)
+    sau4  0x0F814058  PMAP_$FLUSH
+    sau4  0x0F813E88  pmap_$update_seg_map (nested)
+    sau4  0x0F813EF8  pmap_$flush_write_batch (nested)
     sau8  0x03C14986  PMAP_$FLUSH
     sau8  0x03C147B8  pmap_$update_seg_map (nested)
     sau8  0x03C14828  pmap_$flush_write_batch (nested)
@@ -135,7 +138,7 @@ begin
         if (vpn < mmap_$first_ppn) or else (vpn > mmap_$last_ppn) or else
            (mmap[vpn].wire_count <> 0) then begin
           if n_batch > 0 then begin
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
             mmu_$purge;
 %endif
             pmap_$flush_write_batch;
@@ -147,10 +150,17 @@ begin
         if mmap[vpn].seg_offset <> page then
           crash_system(status_$pmap_mismatch);
         mmap_$unavail_remov(vpn, true);
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
+%if region_mmu %then
+        { a resident page is made not resident, and the translations
+          flushed }
+        if (0 in flags) and then
+           (ast_$pmap_resident in segmap[page].flags) then begin
+%else
         { a resident descriptor is made invalid, and the translations
           flushed }
         if (0 in flags) and then odd(segmap[page].low) then begin
+%endif
           segmap[page].flags := segmap[page].flags - [ast_$pmap_resident];
           mmu_$purge;
         end;
@@ -179,7 +189,7 @@ begin
             batched := true;
             written := written + 1;
             if remote then begin
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
               mmu_$purge;
 %endif
               pmap_$write_page(vpn, status, not (2 in flags));
@@ -193,7 +203,7 @@ begin
               n_batch := n_batch + 1;
               batch_vpns[n_batch] := vpn;
               if n_batch = 16 then begin
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
                 mmu_$purge;
 %endif
                 pmap_$flush_write_batch;
@@ -212,7 +222,7 @@ begin
     end;
 
     if n_batch > 0 then begin
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
       mmu_$purge;
 %endif
       pmap_$flush_write_batch;

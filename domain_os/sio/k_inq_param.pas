@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6832A  SIO_$K_INQ_PARAM
+    sau4  0x0F871E1E  SIO_$K_INQ_PARAM
 
   - The descriptor's parameter block is copied out, the driver's
     inq_params entry filling in the live values for the mask's

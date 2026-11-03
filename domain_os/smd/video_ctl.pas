@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6F838  SMD_$VIDEO_CTL
+    sau4  0x0F87A0CA  SMD_$VIDEO_CTL
     sau5  0x00E71CB0  SMD_$VIDEO_CTL
     sau9  0x3C475ECA  SMD_$VIDEO_CTL
 

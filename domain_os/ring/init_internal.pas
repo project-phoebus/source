@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E2FA86  ring_$init_internal (module-local)
+    sau4  0x0F832F7E  ring_$init_internal (module-local)
     sau5  0x00E30FA6  ring_$init_internal (module-local)
     sau8  0x03C32780  ring_$init_internal (module-local)
     sau9  0x3C435678  ring_$init_internal (module-local)
@@ -9,6 +10,9 @@
   - The unit takes the DCTE's register block, which TESTPAGE probes.
   - With the vector registers (`ring_vector_regs', the SAU5's
     controller) the three are set to 16#3D00.
+  - With `ring_board_dma' the three vectors from the DCTE's base go to
+    RING_$RCV_INT (two) and RING_$XMIT_INT, and the controller and its
+    two DMA controllers are reset and given their modes.
   - With the controller with buffers of its own (`ring8_controller')
     the DCTE holds the unit's I/O descriptor: both CSR windows are
     mapped, the node id read (NODE_$ME), the controller's type taken
@@ -150,6 +154,9 @@ var
   regs: ring_$regs_ptr_t;
   location: univ_ptr;
   data: integer;
+%if ring_board_dma %then
+  int_id: io_$int_id_t;
+%endif
 begin
   regs := dcte.disk_dinit;
   unit.hw_regs := regs;
@@ -158,8 +165,27 @@ begin
   if not testpage(0, location, data) then
     ring_$init_internal := status_$io_controller_not_in_system
   else begin
+%if ring_board_dma %then
+    { the receive's two vectors and the transmit's, from the DCTE's
+      vector base }
+    int_id.vector := ring_rcv_vector_1 + dcte.disk_error_que_lo;
+    sysbus_$define_int(int_id, addr(ring_$rcv_int), addr(dcte));
+    int_id.vector := ring_rcv_vector_2 + dcte.disk_error_que_lo;
+    sysbus_$define_int(int_id, addr(ring_$rcv_int), addr(dcte));
+    int_id.vector := ring_xmit_vector + dcte.disk_error_que_lo;
+    sysbus_$define_int(int_id, addr(ring_$xmit_int), addr(dcte));
+
+    { the controller and its two DMA controllers }
+    regs^.tx_cmd := 16#42;
+    regs^.tx_dma.master_clear := 0;
+    regs^.tx_dma.command := 16#60;
+    regs^.rx_cmd := 16#50;
+    regs^.rx_dma.master_clear := 0;
+    regs^.rx_dma.command := 16#60;
+%else
     regs^.xmit_csr := [];
     regs^.rcv_csr := [];
+%endif
 %if ring_vector_regs %then
     regs^.vector_40 := 16#3D00;
     regs^.vector_48 := 16#3D00;

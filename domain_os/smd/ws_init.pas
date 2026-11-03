@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6DE58  SMD_$WS_INIT
+    sau4  0x0F87859C  SMD_$WS_INIT
     sau5  0x00E70278  SMD_$WS_INIT
 
   - ctx's font index, the caller's, picks the font; ctx gets its pointer

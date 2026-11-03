@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E01388  AST_$GET_DISM_SEQN
+    sau4  0x0F801798  AST_$GET_DISM_SEQN
     sau8  0x03C01778  AST_$GET_DISM_SEQN
     sau9  0x3C402784  AST_$GET_DISM_SEQN
 

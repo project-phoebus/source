@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E0C98A  MMAP_$SET_WS_PRI
+    sau4  0x0F80CFD8  MMAP_$SET_WS_PRI
     sau8  0x03C0D8BA  MMAP_$SET_WS_PRI
     sau9  0x3C40E8F4  MMAP_$SET_WS_PRI
 

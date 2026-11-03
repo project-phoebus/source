@@ -2,10 +2,12 @@
 
   Image addresses:
     sau3  0x00E6DED2  SM_$INT
+    sau4  0x0F877648  SM_$INT
     sau5  0x00E6F22A  SM_$INT
 
   - After a DMA parity error the drive's parity flag is set from
-    PARITY_$CHK_IO on the command block's and the buffer's pages.
+    PARITY_$CHK_IO on the command block's and the buffer's pages
+    (`memory_parity').
   - Returns 1 when the unit stopped (status bit 2; the drive is marked
     not ready), else 3, with the drive's eventcount given to the PBU to
     advance.
@@ -22,8 +24,10 @@ begin
     status := sm_$cb.int_word.all;
     sm_$cb.int_ack := 0;
     pbu_sm_page.go := sm_$cb.go_ack;
+%if memory_parity %then
     if parity_$during_dma then
       parity_err := parity_$chk_io(sm_cb_ppn, sm_buf_ppn) <> 0;
+%endif
     if 2 in status.bits then begin
       ready := false;
       sm_$int := 1;

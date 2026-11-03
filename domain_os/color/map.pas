@@ -1,10 +1,13 @@
 { COLOR_$MAP - wire a buffer's pages and load them into the color map.
 
   Image addresses:
+    sau4  0x0F87B240  COLOR_$MAP
     sau5  0x00E72DFC  COLOR_$MAP
 
   - Each page is wired, touched and loaded into the next color map
-    entry; offset is the first entry's number times 512.
+    entry, with `color_board_iomap' into the next of the I/O map's
+    entries from color_iomap_first; offset is the first entry's number
+    times 512.
   - A wiring failure unwires the pages this call wired.
 
   Status stored:
@@ -55,10 +58,18 @@ begin
     color_page_count := color_page_count + 1;
     touch := word_ptr_t(va)^;
     word_ptr_t(va)^ := touch;
+%if color_board_iomap %then
+    iomap[slot + color_iomap_first] := color_pages[slot];
+%else
     color_$load_map(addr(color_sup.map[slot]),
                     ((color_pages[slot] div 128) & 16#7F) ! 16#1E80,
                     (color_pages[slot] * 512) & 16#FE00);
+%endif
     va := va + 1024;
   end;
+%if color_board_iomap %then
+  offset := (first + color_iomap_first) * 512;
+%else
   offset := first * 512;
+%endif
 end;

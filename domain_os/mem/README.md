@@ -1,7 +1,10 @@
 # The MEM subsystem in Domain Pascal
 
 The memory parity-error statistics: the errors counted by memory board
-and by page, and on the SAU9 the count of the boards.
+and by page, and on the SAU9 the count of the boards.  On the SAU4
+(`ecc_memory`, without `memory_parity`) the memory boards correct their
+errors: MEM_$INIT finds their controllers and MEM_$ECCC_LOG logs and
+counts the corrected errors instead.
 
 ## Layout
 
@@ -10,7 +13,7 @@ segments' name):
 
 | section | code size | routines | attribute |
 |---------|-----------|----------|-----------|
-| WIRED_PROC | 0xB8 (SAU9 0x104, SAU8 0x250) | MEM_$INIT (SAU9), MEM_$PARITY_LOG (on the SAU2 0xB6 of code, then the module-end filler) | none (the heading's) |
+| WIRED_PROC | 0xB8 (SAU9 0x104, SAU8 0x250, SAU4 0x214) | MEM_$INIT (SAU9, SAU8, SAU4), MEM_$ECCC_LOG (SAU4), MEM_$PARITY_LOG (not the SAU4's; on the SAU2 0xB6 of code, then the module-end filler) | none (the heading's) |
 
 Data: the map's MEM_ data segment in WIRED_DATA (0x5C bytes), two map
 symbols, both `define`d variables of the module (ref 7.2.2, Method 2;
@@ -22,6 +25,10 @@ extern in `mem.ins.pas`):
 | +0x04 | `mem_$mem_rec` (MEM_$MEM_REC) | mem_$mem_rec_t, 0x56 bytes | initialized `[w_00 := 2, n_boards := 2]` (the SAU9's w_00 16#2B), the image's bytes; ASKNODE_$INTERNET_INFO copies it whole |
 | +0x5A | (2 bytes) | | the block rounded to a longword, not an object |
 
+With `ecc_memory` (the SAU4's 0x64 bytes) the module's own
+`mem_board_slot` (4 words, each board's controller slot) comes first,
+MEM_$SIZE at +0x08 and MEM_$MEM_REC at +0x0C (`[w_00 := 1]`).
+
 The MEM_LITES code and data segments are another module, not part of
 this subsystem.
 
@@ -30,6 +37,7 @@ this subsystem.
 | routine | fragment |
 |---------|----------|
 | MEM_$INIT | `init.pas` (SAU9 and SAU8, under `mem_ccr_board_size` and `mem_board_jumpers`) |
+| MEM_$ECCC_LOG | `eccc_log.pas` (SAU4, `ecc_memory`; a `goto` to the controller's write after the board loop) |
 | MEM_$PARITY_LOG | `parity_log.pas` (two `for` loops, `exit` and `return`; no nested or module-local routine) |
 | (data) | the define statement of `mem.pas` |
 
@@ -71,9 +79,9 @@ The part (`base/config.ins.pas`) that changes MEM_ is
   `parity_log.pas`).
 - MEM_$MEM_REC's second word is 0 (MEM_$INIT sets it).
 
-The SAU4, SAU6 and SAU7 have MEM_ code of their own, not expressed (the
-SAU7's is the SAU8's with ROADRUNNER arms, 4 MB limits and a 26-bit
-page match).
+The SAU6 and SAU7 have MEM_ code of their own, not expressed (the
+SAU6's is MEM_$ECCC6_LOG, another controller's; the SAU7's is the SAU8's
+with ROADRUNNER arms, 4 MB limits and a 26-bit page match).
 
 ## Open items
 
@@ -86,3 +94,8 @@ page match).
   element 0 in its copy of the record with MMAP_$REAL_PAGES or 0.
 - The 2 bytes at +0x5A of the block: read as the data block's rounding
   to a longword, not an object (0x5A rounded up to 4 is the map's 0x5C).
+
+### TODO(pascal)
+
+- `eccc_log.pas`: 4 frame bytes of the SAU4's frame unaccounted for (no
+  stand-in).

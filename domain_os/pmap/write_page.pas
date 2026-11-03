@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E12E5E  pmap_$write_page
+    sau4  0x0F81378E  pmap_$write_page (module-local)
     sau9  0x3C4151D0  pmap_$write_page
 
   Assume we're called with the PMAP lock held.
@@ -81,7 +82,7 @@ begin
     translation }
   ast_pmaps[segment][seg_offset].flags :=
     ast_pmaps[segment][seg_offset].flags + [ast_$pmap_in_trans];
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
   if not remote and then disk_$do_chksum then begin
     ast_pmaps[segment][seg_offset].flags :=
       ast_pmaps[segment][seg_offset].flags - [ast_$pmap_resident];
@@ -148,6 +149,7 @@ begin
       proc1_$stats[proc1_$current].stat[4] :=
         proc1_$stats[proc1_$current].stat[4] + 1;
     end
+%if memory_parity %then
     else if (status.all =
              status_$network_memory_parity_error_during_transmit) and then
             not is_area then begin
@@ -155,6 +157,7 @@ begin
       ast_$save_clobbered_uid(aote^.uid);
       ml_$lock(ml_$pmap_lock);
     end
+%endif
     else begin
       { a refused write invalidates the page; any other failure leaves it
         to pmap_$write_complete }

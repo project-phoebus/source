@@ -2,6 +2,7 @@
 
   Image addresses:
     sau3  0x00E6FC08  MT_PURGE_UCB
+    sau4  0x0F87C980  MT_PURGE_UCB
     sau5  0x00E75770  MT_PURGE_UCB
 
   - Only with the unit's flushing member set; each block is purged with

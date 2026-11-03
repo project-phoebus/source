@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E1D8B8  SMD_$LITES
     sau3  0x00E1C734  SMD_$LITES
+    sau4  0x0F81EC76  SMD_$LITES
     sau5  0x00E1E678  SMD_$LITES
     sau9  0x3C420288  SMD_$LITES
 

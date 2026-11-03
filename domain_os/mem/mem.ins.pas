@@ -13,6 +13,27 @@ const
     0x56, the record's size. }
   mem_page_error_records = 4;
 
+%if ecc_memory %then
+  { The memory boards' error-correcting controllers (`ecc_memory'): up to
+    four boards, each with its controller in one of eight slots of the
+    board's 256-byte page of MEM, which MEM_$INIT finds by probing. }
+  mem_ecc_boards = 4;
+  mem_ecc_slots = 8;
+
+  { The bits of a controller's status (members of its high word, `flags'
+    below): set when it has nothing to report (MEM_$ECCC_LOG passes the
+    board over), and an uncorrectable error. }
+  mem_ecc_no_error = 9;
+  mem_ecc_uncorrectable = 8;
+
+  { The control words written to a controller's high word: reporting on,
+    and the form MEM_$ECCC_LOG writes once a board has had
+    mem_ecc_error_limit corrected errors. }
+  mem_ecc_ctl_report = 3;
+  mem_ecc_ctl_quiet = 1;
+  mem_ecc_error_limit = 2000;
+%endif
+
 type
   { A byte of an address, an unsigned 8-bit integer (ref 3.15.5: "[byte]
     0..255 corresponds to the unsigned char data type in Domain/C"), the
@@ -27,6 +48,17 @@ type
     bits_23_0: 0..16#FFFFFF;              { bits 23..0 }
   end;
 
+%if ecc_memory %then
+  { An error-correcting controller's status as a packed record of 32
+    bits (ref 3.10.7): page, bits 23..14, is the failing location's page
+    as MEM_$ECCC_LOG records it. }
+  mem_$ecc_bits_t = packed record
+    bits_31_24: 0..255;                   { bits 31..24 }
+    page: 0..1023;                        { bits 23..14 }
+    bits_13_0: 0..16#3FFF;                { bits 13..0 }
+  end;
+
+%endif
   { A physical address as MEM_$PARITY_LOG reads it: the whole longword
     (`all', unsigned), its second byte, whose six low bits are address
     bits 21..16, and its low 24 bits.  A record with two variants (ref 3.10.3), so
@@ -41,7 +73,43 @@ type
                                             low six bits }
           bytes_2_3: pinteger);           { 0x02..0x03 }
       3: (bits: mem_$addr_bits_t);        { 0x00..0x03 }
+%if ecc_memory %then
+      4: (ecc: mem_$ecc_bits_t);          { 0x00..0x03: a controller's
+                                            status, MEM_$ECCC_LOG's }
+%endif
   end;
+
+%if ecc_memory %then
+  { A controller's status register, a longword: read whole, its high
+    word's bits tested as a set (member k bit 16 + k), the control word
+    written to the high word alone. }
+  mem_$ecc_csr_t = record
+    case integer of
+      1: (all: linteger);                 { 0x00..0x03 }
+      2: (flags: set of 0..15;            { 0x00 }
+          low: pinteger);                 { 0x02 }
+      3: (ctl: integer);                  { 0x00 }
+      4: (bits: mem_$ecc_bits_t);         { 0x00..0x03 }
+  end;
+
+  { A slot of a board's page, 32 bytes: the controller's status register
+    at +2. }
+  mem_$ecc_slot_t = record
+    unused_00: integer;                   { 0x00 }
+    csr: mem_$ecc_csr_t;                  { 0x02 }
+    unused_06: array[1..26] of char;      { 0x06..0x1F }
+  end;
+
+  { A board's page of MEM, 256 bytes. }
+  mem_$ecc_board_t = array[1..mem_ecc_slots] of mem_$ecc_slot_t;
+
+  { The entry MEM_$ECCC_LOG adds to the system log, 6 bytes: the board
+    and the controller's status. }
+  mem_$ecc_log_entry_t = record
+    board: integer;                       { 0x00 }
+    csr: linteger;                        { 0x02 }
+  end;
+%endif
 
   { One per-page parity-error record, 18 bytes: addr at 0, count at 4;
     the 12 bytes from 6 are never addressed in the image. }
@@ -73,12 +141,20 @@ type
 
 var
   { MEM_$SIZE, the first map symbol of the MEM_ data segment
-    (WIRED_DATA): the memory's size in bytes, which the SAU9's MEM_$INIT
-    reads; nothing in the SAU2 image reads or writes it. }
+    (WIRED_DATA; at +8 with `ecc_memory'): the memory's size in bytes,
+    which the SAU9's MEM_$INIT reads; nothing in the SAU2 image reads or
+    writes it. }
   mem_$size: extern integer32;
 
-  { MEM_$MEM_REC (map symbol), at +4 of the block. }
+  { MEM_$MEM_REC (map symbol), at +4 of the block (+0xC with
+    `ecc_memory'). }
   mem_$mem_rec: extern mem_$mem_rec_t;
+
+%if ecc_memory %then
+  { MEM (map symbol of the I/O definitions, without `$'): the memory
+    boards' pages, the controllers' registers. }
+  mem: extern array[1..mem_ecc_boards] of mem_$ecc_board_t;
+%endif
 
 { MEM_$INIT - count the memory boards (map symbol of the SAU4 and
   SAU6..SAU9 MEM_ code; OS_$INIT calls it, no arguments). }
@@ -87,3 +163,7 @@ procedure mem_$init; extern;
 { MEM_$PARITY_LOG - count a memory parity error. }
 procedure mem_$parity_log(phys_addr: mem_$phys_addr_t);
   options(extern, val_param);
+
+{ MEM_$ECCC_LOG - log and count a corrected memory error (`ecc_memory';
+  the hand-written FIM_$ECCC_TRAP calls it, no arguments). }
+procedure mem_$eccc_log; extern;

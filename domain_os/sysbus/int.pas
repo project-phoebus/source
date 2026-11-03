@@ -1,9 +1,12 @@
 { SYSBUS_$INT - dispatch a system bus interrupt to its level's handler.
 
   Image addresses:
+    sau4  0x0F80B2CC  SYSBUS_$INT
     sau9  0x3C40C438  SYSBUS_$INT
 
-  - A vector outside 16#A0..16#AF crashes the system.
+  - A vector outside 16#A0..16#AF crashes the system (with
+    `sysbus_vectors_90', outside 16#90..16#9F and 16#F0..16#FF).
+  - The second range's levels are 15..30.
   - With `util_pic' the level is disabled while its handler runs, and
     enabled again only when the handler returns true.
   - A fragment of the ATBUS_ module (sysbus/atbus_.pas), with
@@ -12,14 +15,12 @@
   Status stored: none.
 }
 
-{ TODO(sau) SYSBUS_$INT on the SAU4 and SAU6
+{ TODO(sau) SYSBUS_$INT on the SAU6
 
-  The SAU4's and SAU6's SYSBUS_$INT take two ranges of vectors (16#90
-  .. 16#9F and 16#F0..16#FF on the SAU4, 16#88..16#9F and 16#F0..16#F7
-  on the SAU6), the SAU6's with a second, duplicate vector it calls
-  when the first handler returns false; neither masks the level.  The
-  code below is the SAU9's.  To be written as conditional arms when
-  those SAUs are translated. }
+  The SAU6's SYSBUS_$INT takes two ranges of vectors (16#88..16#9F and
+  16#F0..16#F7), with a second, duplicate vector it calls when the first
+  handler returns false; it does not mask the level.  To be written as a
+  conditional arm when that SAU is translated. }
 
 [section(wired_proc, wired_data)]
 procedure sysbus_$int(vector: integer);
@@ -32,6 +33,12 @@ begin
   if (vector >= sysbus_$first_vector) and then
      (vector <= sysbus_$last_vector) then
     level := vector - sysbus_$first_vector
+%if sysbus_vectors_90 %then
+  else if (vector >= sysbus_$first_vector_2) and then
+          (vector <= sysbus_$last_vector_2) then
+    level := vector - (sysbus_$first_vector_2 - sysbus_$last_vector)
+             - sysbus_$first_vector
+%endif
   else
     crash_system(status_$sysbus_unknown_interrupt_id);
   handler := sysbus_$int_vec[level].handler;

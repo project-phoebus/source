@@ -18,8 +18,14 @@
  * Byte gate (tools/asm_compare.py): identical to the image modulo
  * relocations (the PC-relative FP_$ operands and the bsr.w to
  * fp_$switch_owner as R_68K_PC16).
+ *
+ * Not on the SAUs whose floating-point registers are the CPU's own
+ * (`fp_state_in_cpu', base/config.ins.pas): the SAU4's routine is
+ * in fim/sau4/fp.s.
  */
 
+        .include "base/config.inc"
+        .if !fp_state_in_cpu
         .section ".text.FIM_$FP_ABORT","ax",@progbits
         .even
 
@@ -46,3 +52,4 @@ FIM_$FP_ABORT:
         addq.l  #4,%sp                          /* e21bac */
 .Lfpa_done:
         rts                                     /* e21bae */
+        .endif

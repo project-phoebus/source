@@ -6,6 +6,9 @@
     sau3  0x00E335F4  OS data (OS_INIT_DATA, 0x188 bytes)
     sau3  0x00E83CBC  OS data (.DATA, 0x18 bytes)
     sau3  0x00E2CB78  OS data (WIRED_DATA, 0x20 bytes)
+    sau4  0x0F8385CC  OS data (OS_INIT_DATA, 0x4A4 bytes)
+    sau4  0x0F890E9C  OS data (.DATA, 0x18 bytes)
+    sau4  0x0F831124  OS data (WIRED_DATA, 0x20 bytes)
     sau5  0x00E379F4  OS data (OS_INIT_DATA, 0x194 bytes)
     sau5  0x00E89A44  OS data (.DATA, 0x18 bytes)
     sau5  0x00E2F300  OS data (WIRED_DATA, 0x20 bytes)
@@ -151,6 +154,17 @@ procedure mmu_$remove_special_seg(va: univ_ptr; asid: integer;
 procedure mmu_$page_write_bit(va: univ_ptr; prot: integer);
   options(extern, val_param);
 
+%if power_off_csr %then
+{ MMU_$SET_CSR (map symbol; hand assembly): write the CPU control
+  register, a word by value (OS_$SHUTDOWN's push). }
+procedure mmu_$set_csr(csr: pinteger); options(extern, val_param);
+
+const
+  { The CPU control register's word that turns the power off
+    (`power_off_csr'). }
+  os_csr_power_off = 16#8000;
+
+%endif
 %if vector_seg_prot %then
 { MMU_$SET_SEG_PROT (map symbol; hand assembly): set the protection of
   the segment at an address; the address and the protection word, by
@@ -308,7 +322,7 @@ var
   gpu: extern os_$gpu_regs_t;
 %endif
 
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
 { OS_PMAPS (map symbol without `$', the second object of the OS_PMAPS
   load section, after MMAP): the page maps of global B's 2048 segments,
   0x80 bytes each (ast/ast.ins.pas ast_$pmap_t), element 0 the first

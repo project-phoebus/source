@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E0E1BC  MST_$WIRE
+    sau4  0x0F80EB44  MST_$WIRE
     sau8  0x03C0F5A4  MST_$WIRE
     sau9  0x3C410690  MST_$WIRE
 
@@ -19,7 +20,7 @@ var
   ppn: integer32;
   local_status: status_$t;
 begin
-%if pmap_threads %then
+%if find_touches %then
   { the page is always faulted in, wired }
   mst_$wire := mst_$touch(vpn, local_status, 1);
 %else

@@ -255,6 +255,35 @@ SAU2's or SAU9's source as it stands.  dpc does not yet compile
 MST_$INIT, MST_$ALLOC_ASID and MST_$FREE_ASID: their TODO(pascal)
 blocks).
 
+## The region registers (SAU4)
+
+The SAU4 (DN460, DN660, DSP160) has the large VM layout, the regions
+and the page maps' thread (`pmap_threads`) with an MMU of its own
+(`region_mmu`): 32 region registers per address space, so a region is
+256 of its 8192 segments (`vm_8192_segs`: private A 7424, global A
+256, private B 256, global B 256, constants as with the large address
+space).  An ASID's 32 registers are longwords in RARS, 8 ASIDs to a
+page (MST_$RAR_PAGES); a register and a segment map entry each hold a
+valid bit and a 26-bit physical address, the register a global bit and
+the entry the MST entry's protection, which MST_$TOUCH,
+mst_$va_to_pte, MST_$INVALIDATE and MST_$GET_PRIVATE_SIZE read back.
+mst_$alloc_table_page gives each region made active its own page of
+entries and loads the register into the MMU (MMU_$INSTALL_REGION) when
+the address space is the current one; mst_$free_region clears it the
+same way and gives back the group's BST page and four MST words with
+the region.  MST_$INIT, MST_$ALLOC_ASID and MST_$FORK's tail follow
+the layout chosen at boot's forms with constants; MST_$FREE_ASID keeps
+the registers' shared page.  The MST is 7168 words
+(`mst_7168_words`); the special segments are the top 9 of private B;
+mst_$set_mstes does not clear the cache (`set_mstes_no_cache_clear`).
+MST_$FIND and MST_$WIRE are the SAU2's (`find_touches` is the SAU6..9
+form), and the map has no MST_$BST_TO_VA or MST_$ASSOC
+(`bst_va_lookup`).  The MST_WIRED block is 0x400 bytes and
+MST_UNWIRED's .DATA block 0xF78.
+
+Every routine of the SAU4 map's MST_WIRED, MST_ASM and MST_UNWIRED
+segments, and every module-local, has its sau4 address.
+
 ## Open items
 
 The TODO(pascal) blocks of `alloc_asid.pas`, `alloc_segs.pas`,

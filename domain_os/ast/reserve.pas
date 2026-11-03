@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0677E  AST_$RESERVE
+    sau4  0x0F806B12  AST_$RESERVE
     sau9  0x3C407A02  AST_$RESERVE
 
   - Inhibited and under the AST lock, the object's AOTE is found (marked

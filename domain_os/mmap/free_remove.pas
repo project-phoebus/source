@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E0CB86  MMAP_$FREE_REMOVE
+    sau4  0x0F80D1D6  MMAP_$FREE_REMOVE
     sau8  0x03C0DAA6  MMAP_$FREE_REMOVE
     sau9  0x3C40EAE2  MMAP_$FREE_REMOVE
 

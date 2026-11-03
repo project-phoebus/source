@@ -2,6 +2,7 @@
 
   Image addresses:
     sau3  0x00E6DC2E  sm_$wire (module-local)
+    sau4  0x0F8773AA  sm_$wire (module-local)
     sau5  0x00E6EF86  sm_$wire (module-local)
 
   - The PBU, then the module's code and data; the pages go into

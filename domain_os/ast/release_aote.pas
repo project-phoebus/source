@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E00F7C  ast_$release_aote (module-local)
+    sau4  0x0F80137E  ast_$release_aote (module-local)
     sau9  0x3C40235E  ast_$release_aote (module-local)
 
   - The entry's UID becomes UID_$NIL, its remote flag and volume index

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E153F8  PROC1_$GET_ANY_CPUT
+    sau4  0x0F815C6C  PROC1_$GET_ANY_CPUT
 
   - An invalid pid crashes the system.
 

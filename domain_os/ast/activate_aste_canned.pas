@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E2F1D4  AST_$ACTIVATE_ASTE_CANNED
+    sau4  0x0F8325D4  AST_$ACTIVATE_ASTE_CANNED
     sau9  0x3C434DD0  AST_$ACTIVATE_ASTE_CANNED
 
   - Under the AST lock the UID's AOTE is found (none crashes the
@@ -82,6 +83,31 @@ begin
       ast_pmaps[aste^.seg_index][i].dentry.daddr := 16#1FFFFF;
       ast_pmaps[aste^.seg_index][i].flags :=
         ast_pmaps[aste^.seg_index][i].flags - [0..9];
+%elseif region_mmu %then
+      { the region registers' flags 15..11 cleared, then resident, in
+        transition and installed }
+      ast_pmaps[aste^.seg_index][i].flags :=
+        ast_pmaps[aste^.seg_index][i].flags - [ast_$pmap_resident];
+      ast_pmaps[aste^.seg_index][i].flags :=
+        ast_pmaps[aste^.seg_index][i].flags - [ast_$pmap_used];
+      ast_pmaps[aste^.seg_index][i].flags :=
+        ast_pmaps[aste^.seg_index][i].flags - [ast_$pmap_modified];
+      ast_pmaps[aste^.seg_index][i].flags :=
+        ast_pmaps[aste^.seg_index][i].flags - [12];
+      ast_pmaps[aste^.seg_index][i].flags :=
+        ast_pmaps[aste^.seg_index][i].flags - [11];
+      ast_pmaps[aste^.seg_index][i].flags :=
+        ast_pmaps[aste^.seg_index][i].flags - [ast_$pmap_resident];
+      ast_pmaps[aste^.seg_index][i].flags :=
+        ast_pmaps[aste^.seg_index][i].flags - [ast_$pmap_in_trans];
+      ast_pmaps[aste^.seg_index][i].flags :=
+        ast_pmaps[aste^.seg_index][i].flags - [ast_$pmap_installed];
+      ast_pmap_row_bits_ptr_t(addr(ast_pmaps[aste^.seg_index]))^[i].
+        bits_24_23 := 0;
+      ast_pmap_row_bits_ptr_t(addr(ast_pmaps[aste^.seg_index]))^[i].
+        bit_22 := 1;
+      ast_pmap_row_bits_ptr_t(addr(ast_pmaps[aste^.seg_index]))^[i].
+        daddr := 16#3FFFFF;
 %else
       ast_pmaps[aste^.seg_index][i].flags :=
         ast_pmaps[aste^.seg_index][i].flags - [13];

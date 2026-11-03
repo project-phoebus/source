@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E4411C  mst_$va_to_pte (module-local)
+    sau4  0x0F84C3C6  mst_$va_to_pte (module-local)
     sau8  0x03C4C552  mst_$va_to_pte (module-local)
     sau9  0x3C44B6E8  mst_$va_to_pte (module-local)
 
@@ -47,12 +48,16 @@ begin
     else begin
 %if large_vm %then
       smap := addr(smaps[local_seg + smap_asid_base[segno]]);
+%if region_mmu %then
+      prot := smap^.e.prot;
+%else
       prot_bits := [1];
       if 0 in smap^.table_bits then prot_bits := prot_bits + [0];
       if 3 in smap^.table_bits then prot_bits := prot_bits + [3];
       if 8 in smap^.flags then prot_bits := prot_bits + [4];
       if not (2 in smap^.flags) then prot_bits := prot_bits + [2];
       prot := pinteger(prot_bits);
+%endif
 %else
       prot := e^.flags.prot;
 %endif

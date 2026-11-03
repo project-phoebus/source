@@ -1,6 +1,7 @@
 { COLOR_$DISSOC - take the color board back from its owner.
 
   Image addresses:
+    sau4  0x0F87B1C8  COLOR_$DISSOC
     sau5  0x00E72D86  COLOR_$DISSOC
 
   - Only the owner's call does anything: the instruction queue is

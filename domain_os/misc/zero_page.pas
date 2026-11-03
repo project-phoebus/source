@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E00EB0  zero_page (module-local)
+    sau4  0x0F8012B4  zero_page (module-local)
     sau9  0x3C402290  zero_page (module-local)
 
   - The page is mapped at AST_$ZERO_BUFF (address space 0, protection

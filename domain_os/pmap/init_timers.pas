@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E2F880  pmap_$init_timers
+    sau4  0x0F832D78  pmap_$init_timers (module-local)
     sau9  0x3C435478  pmap_$init_timers (module-local)
 
   - Both timers go on the real-time queue, first due 229 ticks from now;

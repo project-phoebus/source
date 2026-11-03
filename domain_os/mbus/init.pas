@@ -2,6 +2,7 @@
 
   Image addresses:
     sau3  0x00E2E0FC  MBUS_$INIT
+    sau4  0x0F83295C  MBUS_$INIT
     sau5  0x00E308FC  MBUS_$INIT
 
   - Levels 7..15 keep a nil handler until MBUS_$DEFINE_INT gives them
@@ -10,19 +11,20 @@
     installed for the Multibus's vector first, levels 0..7 get
     MBUS_$UNDEF_INT, MBUS_$HIGH_OK is bit 5 of the probed register and
     the adapter's third register is left alone.
+  - With `mbus_vectored_adapter' each level's vector goes to MBUS_$INT,
+    the probe writes the acknowledge register and MBUS_$HIGH_OK is false.
   - MBUS_$PRESENT is the adapter's answer to the probe; PBU_$INIT reads
     it and MBUS_$HIGH_OK afterwards.
 
   Status stored: none.
 }
 
-{ TODO(sau) MBUS_$INIT on the SAU4 and SAU6
+{ TODO(sau) MBUS_$INIT on the SAU6
 
-  The SAU4's and SAU6's MBUS_$INIT install MBUS_$INT with IO_$TRAP for
-  each level's own vector (16#B0 plus the level: eight on the SAU4,
-  seven on the SAU6); the SAU4's probes another register and clears
-  MBUS_$HIGH_OK, the SAU6's stores 16#1B05 in the third register.  To be
-  written as conditional arms when those images are translated. }
+  The SAU6's MBUS_$INIT installs MBUS_$INT with IO_$TRAP for each of
+  seven levels' own vectors (16#B0 plus the level) and stores 16#1B05
+  in the third register.  To be written as a conditional arm when that
+  image is translated. }
 
 [section(os_init_proc, os_init_data)]
 procedure mbus_$init;
@@ -32,6 +34,24 @@ var
   i: integer;
   ctl: ^mbus_$ctl_t;
 begin
+%if mbus_vectored_adapter %then
+  { each level's vector, and no handler yet }
+  for i := 0 to mbus_$vectored_levels - 1 do begin
+    io_$trap(mbus_$first_vector + i, addr(mbus_$int));
+    mbus_$int_vec[i].handler := addr(mbus_$undef_int);
+  end;
+
+  { is the adapter there: a word written to its acknowledge register }
+  ctl := addr(pbu_ctl);
+  probe_data := 16#17;
+  mbus_$present := testpage(3, addr(ctl^.ack), probe_data);
+  if mbus_$present then begin
+    mbus_$high_ok := false;
+    ctl^.int_mask := [4, 5, 7];
+    ctl^.int_mask := [0];
+    ctl^.int_mask := [0..7];
+  end;
+%else
 %if mbus_polled_adapter %then
   io_$trap(mbus_$int_vector, addr(mbus_$int));
 
@@ -62,4 +82,5 @@ begin
     ctl^.word_00 := csr ! 16#213;
 %endif
   end;
+%endif
 end;

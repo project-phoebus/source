@@ -2,15 +2,16 @@
 
   Image addresses:
     sau2  0x00E583F0  AS_$GET_ADDR
+    sau4  0x0F86089C  AS_$GET_ADDR
     sau8  0x03C60668  AS_$GET_ADDR
     sau9  0x3C45F7DC  AS_$GET_ADDR
 
   - region is one of as_$region_* (private A, global A, private B,
     global B); any other gets base 16#7FFFFFFF and size 0.
   - The sizes are the MST_ segment counts times 32 KB, except private
-    B's, a constant: 8 segments, or 128 with the large address space,
-    whose regions are mst/mst.ins.pas's constants, or 64 with the layout
-    chosen at boot.
+    B's, a constant: 8 segments, or 128 with the large address space
+    and 256 with the 8192 segments, whose regions are mst/mst.ins.pas's
+    constants, or 64 with the layout chosen at boot.
 
   Status stored: none.
 }
@@ -21,6 +22,8 @@ const
   segment_shift = 15;
 %if large_address_space %then
   as_private_b_size = 16#400000;
+%elseif vm_8192_segs %then
+  as_private_b_size = 16#800000;
 %elseif run_time_layout %then
   as_private_b_size = 16#200000;
 %else

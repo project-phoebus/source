@@ -308,6 +308,138 @@ type
     unused_4a: integer;                   { 0x4A }
   end;
   win_$dcte_ptr_t = ^win_$dcte_t;
+%elseif win_ring_disk_ctlr %then
+{ ---- The ring/disk board's disk controller (`win_ring_disk_ctlr',
+  base/config.ins.pas; the DN400/DN600 family's board, on the DNx60 the
+  WIN page): up to four drives on a PRIAM interface or, with the unit
+  record's smd_interface, an SMD interface, the transfers on two
+  channels of the board's DMA controller, the block header's page and
+  the data page.  The drive select's bits are active low on the PRIAM
+  interface (255 less the drive's bit, 16 shl n, and the head), a field
+  on the SMD interface (the drive in bits 6..4, bit 7 a strobe). ---- }
+
+const
+  { The drive's commands on the PRIAM interface (Domain Engineering
+    Handbook, ch. 8, "PRIAM command register"); the SMD interface's
+    take other values (DISK_INIT, seek). }
+  win_cmd_sequence_up = 1;
+  win_cmd_sequence_down = 2;
+  win_cmd_restore = 3;
+  win_cmd_seek = 4;
+  win_cmd_fault_reset = 5;
+
+  { The board's disk control values (ch. 8, "Disk control"): a read, a
+    write or a format with the interrupt enabled, the interrupt alone,
+    nothing. }
+  win_ctl_read = 16#81;
+  win_ctl_write = 16#41;
+  win_ctl_format = 16#21;
+  win_ctl_int = 16#01;
+  win_ctl_off = 0;
+
+  { The PRIAM interface's drive status bits (ch. 8, "PRIAM status
+    register"): 7 command rejected, 6 write protected, 5 drive fault,
+    4 busy, 3 on cylinder 0, 2 seek fault, 1 seek complete, 0 ready. }
+  win_st_write_protect = 6;
+  win_st_drive_fault = 5;
+  win_st_busy = 4;
+  win_st_cyl0 = 3;
+  win_st_ready = 0;
+
+  { The controller status bits (ch. 8, "Disk Controller Status"):
+    7 busy, 6 not ready, 5 CRC error, 4 time-out, 1 bus error in the
+    DMA, 0 DMA overrun. }
+  win_cs_busy = 7;
+  win_cs_crc_error = 5;
+  win_cs_timeout = 4;
+  win_cs_bus_error = 1;
+  win_cs_overrun = 0;
+
+type
+  { The board's disk registers, a byte at each even address (ch. 8,
+    "RING/DISK"), through the unit record's pointer; `[device]': each
+    access is the hardware's, in the order written.  The fields:
+    - 0x00 cyl_hi, 0x02 cyl_lo: the cylinder's high and low bytes, read
+      back after a PRIAM seek;
+    - 0x04 cmd: the drive's command register, read as its status (the
+      second variant's status);
+    - 0x06 head: the head number (the SMD interface's data byte);
+    - 0x08 select: the drive and head select;
+    - 0x0A sector: the sector;
+    - 0x0C control: the disk control (win_ctl_...);
+    - 0x10 ctlr_status: the controller status (win_cs_..., ctlr_bits);
+    - 0x18 int_ack: the disk interrupt's acknowledge;
+    - 0x40..0x46: the DMA controller's channel 0 address and count (the
+      block header) and channel 1 address and count (the data), each
+      written and read a byte at a time, low then high;
+    - 0x50 dma_command, 0x54 dma_mask (the single mask), 0x56 dma_mode,
+      0x58 dma_clear_ptr (the byte pointer's clear), 0x5A
+      dma_master_clear. }
+  win_$regs_t = [device] record
+    case integer of
+      1: (cyl_hi: win_$byte_t;            { 0x00 }
+          pad_01: char;
+          cyl_lo: win_$byte_t;            { 0x02 }
+          pad_03: char;
+          cmd: win_$byte_t;               { 0x04 }
+          pad_05: char;
+          head: win_$byte_t;              { 0x06 }
+          pad_07: char;
+          select: win_$byte_t;            { 0x08 }
+          pad_09: char;
+          sector: win_$byte_t;            { 0x0A }
+          pad_0b: char;
+          control: win_$byte_t;           { 0x0C }
+          pad_0d: char;
+          pad_0e: array[1..2] of char;
+          ctlr_status: win_$byte_t;       { 0x10 }
+          pad_11: char;
+          pad_12: array[1..6] of char;
+          int_ack: win_$byte_t;           { 0x18 }
+          pad_19: char;
+          pad_1a: array[1..38] of char;
+          dma_addr0: win_$byte_t;         { 0x40 }
+          pad_41: char;
+          dma_count0: win_$byte_t;        { 0x42 }
+          pad_43: char;
+          dma_addr1: win_$byte_t;         { 0x44 }
+          pad_45: char;
+          dma_count1: win_$byte_t;        { 0x46 }
+          pad_47: char;
+          pad_48: array[1..8] of char;
+          dma_command: win_$byte_t;       { 0x50 }
+          pad_51: char;
+          pad_52: array[1..2] of char;
+          dma_mask: win_$byte_t;          { 0x54 }
+          pad_55: char;
+          dma_mode: win_$byte_t;          { 0x56 }
+          pad_57: char;
+          dma_clear_ptr: win_$byte_t;     { 0x58 }
+          pad_59: char;
+          dma_master_clear: win_$byte_t); { 0x5A }
+      2: (pad_00b: array[0..3] of char;
+          status: [byte] set of 0..7;     { 0x04 }
+          pad_05b: char;
+          pad_06b: array[1..10] of char;
+          ctlr_bits: [byte] set of 0..7); { 0x10 }
+  end;
+
+  { An SMD drive's information record as DISK_INIT reads it from the
+    drive command register, at most 32 bytes: the drive type, the heads,
+    the cylinders, the blocks per track, two words DISK_INIT returns as
+    the geometry, and the count of blocks it takes off the total in
+    cylinders. }
+  win_$smd_info_t = record
+    case integer of
+      1: (b: array[1..32] of win_$byte_t);
+      2: (dtype: win_$byte_t;             { 0x00 }
+          heads: win_$byte_t;             { 0x01 }
+          cyls: pinteger;                 { 0x02 }
+          spt: pinteger;                  { 0x04 }
+          w_06: pinteger;                 { 0x06 }
+          w_08: pinteger;                 { 0x08 }
+          w_0a: pinteger);                { 0x0A }
+  end;
 %else
 
   { The drive's register block, through the unit record's pointer.
@@ -406,6 +538,23 @@ type
     unused_16: integer;                   { 0x16 }
   end;
 %else
+%if win_ring_disk_ctlr %then
+  { The ring/disk controller's unit word as WIN_$CINIT stores bit 12:
+    smd_interface, set when the controller answers its SMD interface's
+    probe (the drive types of class 16#200, the PRIAM's otherwise); the
+    routines test it as unit_bits' member win_smd_interface. }
+  win_$unit_flags_t = packed record
+    unused_15_13: 0..7;                   { bits 15..13 }
+    smd_interface: boolean;               { bit 12 }
+    unused_11_0: 0..4095;                 { bits 11..0 }
+  end;
+
+const
+  { unit_bits' member 12: the SMD interface (win_$unit_flags_t). }
+  win_smd_interface = 12;
+
+type
+%endif
   { The unit record at the module block's start, 12 bytes (DISK_INIT
     indexes the units with a stride of 12).  WIN_$CINIT fills it from
     the DCTE (the DCTE's address, its register block's address, its
@@ -421,6 +570,9 @@ type
     case integer of                       { 0x0A }
       1: (unit_bits: set of 0..15);       { 0x0A }
       2: (units: integer);                { 0x0A }
+%if win_ring_disk_ctlr %then
+      3: (flags: win_$unit_flags_t);      { 0x0A }
+%endif
   end;
 %endif
 
@@ -507,6 +659,7 @@ var
   win_page: extern array[0..1023] of char;
 
 %else
+%if not win_ring_disk_ctlr %then
   { The drive's general status as WIN_$CHECK_DISK_STATUS keeps it, 2
     bytes: the byte the drive reports (from REPORT GENERAL STATUS or the
     command register) and one more.  WIN_$ATTN has this type: its first
@@ -530,6 +683,7 @@ var
       2: (b0: win_$byte_t;                { 0x00 }
           b1: win_$byte_t);               { 0x01 }
   end;
+%endif
 
   { The geometry words DISK_INIT returns ([0] always 0, [1] the cylinder
     count reported), from 0. }
@@ -539,6 +693,23 @@ var
     request's, +0x60, is disk/disk.ins.pas's disk_$io_req_ptr_t). }
   win_$vol_ptr_t = ^disk_$volume_t;
 
+%if win_ring_disk_ctlr %then
+const
+  { IOMAP's entries 64 and 65 (pbu/pbu.ins.pas), the Winchester's pages
+    of the I/O map: the block header's page and the data page the DMA
+    channels address. }
+  win_iomap_first = 64;
+
+var
+  { The map symbols inside the map's WIN_ data segment (WIRED_DATA,
+    0x80 bytes), defined in win/win.pas:
+    - WIN_$CNT (+0x48), the statistics block (WIN_$GET_STATS copies it;
+      here w_10 counts the controller's time-outs);
+    - WIN_$STS (+0x7C), a longword nothing in the image addresses.
+    Only WIN_'s own code addresses the block. }
+  win_$cnt: extern win_$cnt_t;
+  win_$sts: extern integer32;
+%else
 var
   { The map symbols inside the map's WIN_ data segment (WIRED_DATA,
     0x78 bytes), defined in win/win.pas:
@@ -555,7 +726,9 @@ var
   win_$attn: extern win_$attn_t;
   win_$cstat: extern pinteger;
   win_$sense: extern win_$sense_t;
+%endif
 
+%if not win_ring_disk_ctlr %then
 { Routine headings, in map order: the map's WIN_ code segments in
   WIRED_PROC and in OS_INIT_PROC.  The map symbols without `$' (SEEK,
   DISK_INIT) are globals too.  The bodies repeat the full heading (ref
@@ -567,6 +740,7 @@ var
 function seek(unit: pinteger; dev_unit: pinteger; in req: disk_$io_req_t;
               wait: boolean): integer32;
   options(extern, val_param);
+%endif
 %endif
 
 %if win_atbus_ctlr %then
@@ -629,7 +803,15 @@ procedure win_$do_io(in vol: disk_$volume_t; var req: disk_$io_req_t;
                      in param_3: univ integer32; out result: boolean);
   extern;
 
-%if not win_descriptor_ctlr %then
+%if win_ring_disk_ctlr %then
+{ DISK_INIT - bring a drive up and find its geometry. }
+function disk_init(ctlr: pinteger; drive: pinteger;
+                   var total_blocks: integer32;
+                   var blocks_per_track: pinteger; var heads: pinteger;
+                   out geometry: win_$geometry_t;
+                   out drive_id: pinteger): integer32;
+  options(extern, val_param);
+%elseif not win_descriptor_ctlr %then
 { DISK_INIT - bring a drive up and find its geometry. }
 function disk_init(unit: pinteger; sub_unit: integer;
                    var total_blocks: integer32;

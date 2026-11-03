@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E05476  AST_$GET_DTV
+    sau4  0x0F805822  AST_$GET_DTV
     sau9  0x3C406720  AST_$GET_DTV
 
   - With process switching inhibited and under the AST lock, the

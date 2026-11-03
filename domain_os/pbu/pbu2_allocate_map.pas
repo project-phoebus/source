@@ -2,11 +2,14 @@
 
   Image addresses:
     sau3  0x00E58AC4  PBU2_$ALLOCATE_MAP
+    sau4  0x0F861804  PBU2_$ALLOCATE_MAP
     sau5  0x00E58AC4  PBU2_$ALLOCATE_MAP
     sau8  0x03C615E4  PBU2_$ALLOCATE_MAP
 
   - IO_$ALLOC_MAP for the unit's I/O unit; its start is the result
-    (unset when pbu_check_unit fails), recorded in the DCTE.
+    (unset when pbu_check_unit fails), recorded in the DCTE.  With the
+    64 KB Multibus map (`mbus_map_64k') the space's first page is the
+    map's 192 on, as IO_$ALLOC_MAP records it.
   - Without the I/O map space (`io_regions') nothing is allocated: the
     result is 0.
 
@@ -43,7 +46,11 @@ begin
                            status);
     pbu2_$allocate_map := start;
     if status.all = status_$ok then begin
+%if mbus_map_64k %then
+      dcte^.map_page := start div 1024 + 192;
+%else
       dcte^.map_page := start div 1024;
+%endif
       dcte^.map_start := start;
       dcte^.map_end := start + ((length + 1022) div 1024 + 1) * 1024;
       dcte^.flags.map_allocated := true;

@@ -65,7 +65,10 @@ The SAU8's NETWORK routines need no source of their own: against the
 SAU9's they differ only in addresses (the copy buffers, the memory map's
 base, which `mmap_ppns_400` gives the MMAP array, `mmap/mmap.ins.pas`)
 and, in NETWORK_$GET_PKT_SIZE, in the order of a comparison's operands,
-where the SAU8 compares as the SAU2 does.
+where the SAU8 compares as the SAU2 does.  Nor do the SAU4's: against
+the SAU2's they differ in addresses, in the 28-byte ASTE's wire count
+(`large_vm'), in NETWORK_$GET_PKT_SIZE's operand order (as the SAU9's)
+and in code generation.
 
 `fetch_diskless_info.pas` is the OS module's module-local routine (the
 first of OS's OS_INIT_PROC segment): it stays here and is included by

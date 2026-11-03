@@ -20,7 +20,13 @@
  * Byte gate (tools/asm_compare.py): identical to the image modulo
  * relocations (the call to the common fault entry, fim/m68k/com.s, is the
  * image's `bsr.w', R_68K_PC16).
+ *
+ * Where FIM_UNWIRED has no FIM_$COPROC (`fp_five_exceptions',
+ * base/config.ins.pas: the SAU4) there is no pad word after the
+ * descriptor: FIM_$GENERATE follows at FIM_$UII + 0x2E (0xF822AAA).
  */
+
+        .include "base/config.inc"
 
         .section ".text.FIM_$UII","ax",@progbits
         .even
@@ -49,4 +55,6 @@ FIM_$UII:
         .long   0x0012000A                      /* e21492  status "unimplemented instruction" */
         .short  0x0007                          /* e21496  signal number 7 */
         .short  0xA000                          /* e21498  fault class flags (FIM_FAULT_CLASS_OTHER) */
+        .if !fp_five_exceptions
         .short  0x0000                          /* e2149a  pad; FIM_$COPROC is at 0xE2149C */
+        .endif

@@ -19,7 +19,13 @@
  * Byte gate (tools/asm_compare.py): identical to the image modulo
  * relocations (the `bra.s' into FIM_$SOFT_FAULT, fim/m68k/soft_fault.s, is
  * R_68K_PC8 against FIM_SOFT_FAULT_TAIL).
+ *
+ * Without FIM_$FP_BSUN (`fp_five_exceptions', base/config.ins.pas: the
+ * SAU4) there is no pad word after it: FIM_$FP_INEXACT follows at
+ * FIM_$GENERATE + 6 (0xF822AB0).
  */
+
+        .include "base/config.inc"
 
         .section ".text.FIM_$GENERATE","ax",@progbits
         .even
@@ -31,4 +37,6 @@ FIM_$GENERATE:
         addq.w  #4,%sp                          /* e214a8  drop the return address */
         move.l  (%sp)+,%d0                      /* e214aa  D0 = status */
         bra.s   FIM_SOFT_FAULT_TAIL             /* e214ac  60aa */
+        .if !fp_five_exceptions
         .short  0x0000                          /* e214ae  pad; FIM_$FP_BSUN is at 0xE214B0 */
+        .endif

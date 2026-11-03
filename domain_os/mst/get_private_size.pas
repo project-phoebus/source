@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E44AAE  MST_$GET_PRIVATE_SIZE
+    sau4  0x0F84CF16  MST_$GET_PRIVATE_SIZE
     sau8  0x03C4D0AC  MST_$GET_PRIVATE_SIZE
     sau9  0x3C44C21C  MST_$GET_PRIVATE_SIZE
 
@@ -10,7 +11,8 @@
     walked; the entries with an object and without the skip bit are
     counted, and of those the read-write ones (protection 3).
   - With the large VM layout protection 3 is read back from the
-    segment map entry: the two bits mst_$set_mstes sets for it.
+    segment map entry: the two bits mst_$set_mstes sets for it, or with
+    the region registers the entry's protection field.
   - The sizes are the counts times 32 (pages).
 
   Status stored:
@@ -24,7 +26,7 @@ procedure mst_$get_private_size(in asid: pinteger;
                                 out status_ret: status_$t);
 const
   { private A's MST words }
-%if large_address_space %then
+%if large_address_space or vm_8192_segs %then
   private_a_words = mst_$private_a_size div 64;
 %elseif run_time_layout %then
   private_a_words = 25;
@@ -66,8 +68,13 @@ begin
             count := count + 1;
 %if large_vm %then
             smap := addr(smaps[seg + smap_asid_base[asid]]);
+%if region_mmu %then
+            if (smap^.e.prot & 7) = 3 then
+              rw_count := rw_count + 1;
+%else
             if (0 in smap^.table_bits) and then (2 in smap^.flags) then
               rw_count := rw_count + 1;
+%endif
 %else
             if (flags.prot & 7) = 3 then
               rw_count := rw_count + 1;

@@ -29,7 +29,13 @@
  *   00e242d8    bset.l #0x3,D0      ; Set bit 3 (Clear I-cache)
  *   00e242dc    movec D0,CACR       ; Write back to CACR
  *   00e242e0    rts
+ *
+ * With the part `cache_clear_stub' (base/config.ins.pas; the SAU4, whose
+ * CPU has no CACR) the routine is the return alone, at the SAU4's
+ * 0xF826566 in its MMU_ASM.
  */
+
+        .include "base/config.inc"
 
         .section ".text.CACHE_$CLEAR","ax",@progbits
     .globl  CACHE_$CLEAR
@@ -38,9 +44,11 @@
 
 CACHE_$CLEAR:
 _CACHE_$CLEAR:
+    .if !cache_clear_stub
     movec   %cacr, %d0              /* 0x00E242D4 */
     bset    #3, %d0                 /* 0x00E242D8 */
     movec   %d0, %cacr              /* 0x00E242DC */
+    .endif
     rts                             /* 0x00E242E0 */
 
     .size   CACHE_$CLEAR, .-CACHE_$CLEAR

@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E1A9C2  IO_$ALLOC
     sau3  0x00E19D40  IO_$ALLOC
+    sau4  0x0F81B8F8  IO_$ALLOC
     sau5  0x00E1AFF0  IO_$ALLOC
     sau8  0x03C1BE12  IO_$ALLOC
 
@@ -10,7 +11,7 @@
     pages, allocated anywhere in the bus's I/O map, or at iova when
     fixed; the result is the range's start.
   - With `pbu_alloc_mbus' the range is in the Multibus's map below
-    1 MB, whatever the unit's bus.
+    1 MB (64 KB with `mbus_map_64k'), whatever the unit's bus.
   - With `pbu_alloc_atbus_windows' the range must be fixed, and a unit
     on the AT bus allocates in one of the bus's two memory windows,
     the one that holds iova.
@@ -44,8 +45,13 @@ begin
 %if pbu_alloc_mbus %then
   if io_$check_unit(unit, status) then begin
     pages := (length + 1023) div 1024;
+%if mbus_map_64k %then
+    io_$alloc := io_$alloc_region(io_$bus_mbus, 0, 16#10000, fixed, pages,
+                                  iova, status);
+%else
     io_$alloc := io_$alloc_region(io_$bus_mbus, 0, 16#100000, fixed, pages,
                                   iova, status);
+%endif
   end;
 %elseif pbu_alloc_atbus_windows %then
   if io_$check_unit(unit, status) then

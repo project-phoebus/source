@@ -5,6 +5,8 @@
     sau2  0x00E86400  RING data (RING_DATA, 0x5D0 bytes)
     sau3  0x00E33428  RING data (OS_INIT_DATA, 4 bytes)
     sau3  0x00E86800  RING data (RING_DATA, 0x5D0 bytes)
+    sau4  0x0F838428  RING data (OS_INIT_DATA, 4 bytes)
+    sau4  0x0F894800  RING data (RING_DATA, 0x5C0 bytes)
     sau5  0x00E37828  RING data (OS_INIT_DATA, 4 bytes)
     sau5  0x00E8EC00  RING data (RING_DATA, 0x5D0 bytes)
     sau8  0x03C39428  RING data (OS_INIT_DATA, 0xB0 bytes)
@@ -108,6 +110,26 @@
   RING_ASM's hand assembly (RING_$RB_FROM, RING_$RB_TO) follows the
   block in RING_DATA.
 
+  With the board's own DMA (`ring_board_dma') the OS_INIT_PROC segment
+  is 0x22C bytes and RING_PROC 0x2BB4 (RING_$XMIT_INT and RING_$RCV_INT
+  in place of RING_$INT, and no ring_$clear_dma_channel).  The block
+  has no RING_$SCRUB and RING_$FROM_ERR, and the two units' dma_page
+  words are 16#42; RING_DATA is 0x5C0 bytes, every object from the wire
+  list 16 bytes below its place above:
+
+    +0x000  RING_$CTL                 0x488  the two units (each with
+                                             dma_page 16#42)
+    +0x488  ring_$wire_list           0x80
+    +0x508  ring_$driver              0x50
+    +0x558  RING_$FORCE_START         6
+    +0x560  ring_$scrub_delay .. ring_$wait_timeout  6 * 8
+    +0x590  ring_$port_array          4
+    +0x594  RING_$SET_TMASK_CHG_CNT .. RING_$RCV_INT_CNT  4 * 4
+    +0x5A4  ring_$wire_cnt            2
+    +0x5A6  RING_$UNEXPECTED_XMIT_STAT .. RING_$XMIT_WAITED  2 * 8
+    +0x5B6  unused_5c6                2      stand-in
+    +0x5B8  ring_$rcv_proc            8
+
   Build: dpc -I domain_os domain_os/ring/ring.pas.  Check:
   tools/pascal_check.sh.
 }
@@ -141,6 +163,7 @@ module ring, ring_proc, ring_data;
 %include 'misc/crash_system.ins.pas';
 %include 'os/os.ins.pas';
 %include 'io/io.ins.pas';
+%include 'sysbus/sysbus.ins.pas';
 %include 'node/node.ins.pas';
 %include 'proc1/proc1.ins.pas';
 %include 'netbuf/netbuf.ins.pas';
@@ -174,6 +197,10 @@ define
      rx_stopped := true]];                { +0x010 }
   ring_$scrub;                            { +0x958, zero }
   ring_$from_err;                         { +0x960, zero }
+%elseif ring_board_dma %then
+define
+  ring_$ctl := [[dma_page := 16#42], [dma_page := 16#42]];
+                                          { +0x000 }
 %else
 define
   ring_$ctl;                              { +0x000, zero }
@@ -204,6 +231,16 @@ var
     send_os := addr(ring_$send_os)];               { +0x518, +0x9E8 }
 %if ring8_controller %then
   ring_$io_unit: array[0..1] of io_$unit_num_t;  { +0xA38, zero }
+%endif
+%if ring_board_dma %then
+
+  { IOMAP (map symbol of the I/O definitions, without `$'): the I/O
+    map, a word per 1 KB page of the DMA controllers' space, the host
+    page's number (its physical address shifted right 10); each unit
+    maps a transfer's buffer in one entry and clears the next.  Declared
+    here, not in ring/ring_driver.ins.pas: pbu/pbu.ins.pas declares the
+    same map for the modules that include both. }
+  iomap: extern array[0..1023] of integer;
 %endif
 
 define
@@ -291,6 +328,9 @@ define
   ring_$init;
 %if ring8_controller %then
   ring8_$int;
+%elseif ring_board_dma %then
+  ring_$xmit_int;
+  ring_$rcv_int;
 %else
   ring_$int;
 %endif
@@ -351,7 +391,12 @@ function ring_$set_ccb(unit: integer; locked: boolean): integer32;
 %include 'ring/copy_rx.pas';                { ring_$copy_rx }
 %else
 %include 'ring/process_rx_packet.pas';      { ring_$process_rx_packet }
+%if ring_board_dma %then
+%include 'ring/xmit_int.pas';               { RING_$XMIT_INT }
+%include 'ring/rcv_int.pas';                { RING_$RCV_INT }
+%else
 %include 'ring/int.pas';                    { RING_$INT }
+%endif
 %include 'ring/clear_dma_channel.pas';      { ring_$clear_dma_channel }
 %include 'ring/setup_tx_dma.pas';           { ring_$setup_tx_dma }
 %include 'ring/setup_rx_dma.pas';           { ring_$setup_rx_dma }

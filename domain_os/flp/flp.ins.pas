@@ -65,6 +65,32 @@ type
           dig_in_bits: [byte] set of 0..7);
                                           { 0x07: 7 disk change }
   end;
+%elseif floppy_page_dma %then
+  { The FLOP page's registers with the page's own DMA controller
+    (`floppy_page_dma'): the controller's main status at 0x00 and its
+    data register at 0x01, and from 0x80 the DMA controller's registers,
+    a byte each (an 8237's: channel 0's address and count, written low
+    byte then high, the command, the mode, the master clear, the all
+    channels' mask).  `[device]', as the other forms. }
+  flp_$regs_t = [device] record
+    case integer of
+      1: (main_status: flp_$byte_t;       { 0x00 }
+          data_reg: flp_$byte_t;          { 0x01 }
+          pad_02: array[1..126] of char;
+          dma_addr: flp_$byte_t;          { 0x80 }
+          dma_count: flp_$byte_t;         { 0x81 }
+          pad_82: array[1..6] of char;
+          dma_command: flp_$byte_t;       { 0x88 }
+          pad_89: char;
+          pad_8a: char;
+          dma_mode: flp_$byte_t;          { 0x8B }
+          pad_8c: char;
+          dma_master_clear: flp_$byte_t;  { 0x8D }
+          pad_8e: char;
+          dma_all_mask: flp_$byte_t);     { 0x8F }
+      2: (main_status_bits: [byte] set of 0..7);
+                                          { 0x00: 7 RQM, 6 DIO }
+  end;
 %else
   flp_$regs_t = [device] record
     case integer of
@@ -97,7 +123,7 @@ type
     count). }
   flp_$words_t = array[0..8] of pinteger;
 
-%if floppy_atbus %then
+%if floppy_atbus or floppy_dcte_request %then
   { The controller's kind-3 DCTE (io/dctes.pas FLP_DCTE) as this form
     reads it: the controller number, the unit's request (IO_$MAP_CSR's
     and IO_$ACQUIRE's; the ports' address its CSR page's) and the high
@@ -119,7 +145,9 @@ type
     unused_4a: integer;                   { 0x4A }
   end;
   flp_$dcte_ptr_t = ^flp_$dcte_t;
+%endif
 
+%if floppy_atbus %then
   { A pointer to a page's last longword (FLP_DO_IO's read-back compares
     the written page's and the overrun page's). }
   flp_$long_ptr_t = ^integer32;
@@ -139,6 +167,13 @@ type
     unused_08: integer32;                 { 0x08 }
     unused_0c: integer32;                 { 0x0C }
     req: disk_$io_req_t;                  { 0x10 }
+  end;
+%elseif floppy_dcte_request %then
+  { One controller's slot: the kind-3 DCTE FLP_$CINIT was given and its
+    register base. }
+  flp_$ctlr_entry_t = record
+    dcte: flp_$dcte_ptr_t;                { 0x00 }
+    hw_addr: flp_$regs_ptr_t;             { 0x04 }
   end;
 %else
   { One controller's slot: the DCTE FLP_$CINIT was given and its register
@@ -245,7 +280,7 @@ procedure flp_$do_io(in vol: disk_$volume_t; var req: disk_$io_req_t;
   extern;
 
 { FLP_$CINIT - initialize a floppy controller. }
-%if floppy_atbus %then
+%if floppy_atbus or floppy_dcte_request %then
 function flp_$cinit(var dcte: flp_$dcte_t): integer32;
   extern;
 %else

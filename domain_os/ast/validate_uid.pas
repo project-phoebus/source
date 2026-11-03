@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E00BE8  ast_$validate_uid (module-local)
+    sau4  0x0F800FE8  ast_$validate_uid (module-local)
     sau9  0x3C401FC8  ast_$validate_uid (module-local)
 
   - The object's UID and the caller's tag longword go into

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E700E6  SMD_$SHUTDOWN
+    sau4  0x0F87A9F2  SMD_$SHUTDOWN
     sau5  0x00E72612  SMD_$SHUTDOWN
     sau9  0x3C47661E  SMD_$SHUTDOWN
 

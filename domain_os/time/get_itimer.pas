@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E58F06  TIME_$GET_ITIMER
+    sau4  0x0F86137A  TIME_$GET_ITIMER
 
   - time_$get_itimer_internal, the virtual timer's (which 1) values
     converted to the caller's units.

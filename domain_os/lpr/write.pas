@@ -2,11 +2,14 @@
 
   Image addresses:
     sau3  0x00E6E848  LPR_$WRITE
+    sau4  0x0F87B624  LPR_$WRITE
 
   - For the process that acquired the printer: a line of 1 to 284
     characters ending in a line feed or a form feed is copied into a
     block of the circular buffer (waiting for room), and the port's
     interrupt is started when none is expected.
+  - The PNA form starts the interrupts with PBU_$ENABLE_DEVICE, whose
+    failure is the status with its fail bit set.
 
   Status stored:
     status_$ok: the line was queued
@@ -30,7 +33,11 @@ begin
     status.all := status_$lpr_not_acquired;
     return;
   end;
+%if lpr_pbu_unit %then
+  if (len <= 0) or else (len > lpr_max_line) then begin
+%else
   if (len > lpr_max_line) or else (len <= 0) then begin
+%endif
     status.all := status_$lpr_invalid_string_length;
     return;
   end;
@@ -51,6 +58,12 @@ begin
   if not lpr_$int_expected then begin
     lpr_$ir_start_count := lpr_$ir_start_count + 1;
     lpr_$int_expected := true;
+%if lpr_pbu_unit %then
+    pbu_$enable_device(lpr_pbu_unit_number, status);
+    if status.all <> status_$ok then
+      status.fail := true;
+%else
     lpr_$enable_int;
+%endif
   end;
 end;

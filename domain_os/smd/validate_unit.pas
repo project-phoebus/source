@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E6D700  smd_$validate_unit (module-local)
     sau3  0x00E6E624  smd_$validate_unit (module-local)
+    sau4  0x0F877D4C  smd_$validate_unit (module-local)
     sau5  0x00E6F97C  smd_$validate_unit (module-local)
     sau9  0x3C47434C  smd_$validate_unit (module-local)
 

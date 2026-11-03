@@ -3,6 +3,8 @@
   Image addresses:
     sau3  0x00E19B5A  io_$alloc_region
     sau3  0x00E19AB8  fits (nested)
+    sau4  0x0F81B712  io_$alloc_region
+    sau4  0x0F81B670  fits (nested)
     sau5  0x00E1AE0A  io_$alloc_region
     sau5  0x00E1AD68  fits (nested)
     sau8  0x03C1BC32  io_$alloc_region

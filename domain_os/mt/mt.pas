@@ -2,6 +2,7 @@
 
   Image addresses:
     sau3  0x00E2CC7C  MT data (WIRED_DATA, 0x54 bytes)
+    sau4  0x0F83124C  MT data (WIRED_DATA, 0x54 bytes)
     sau5  0x00E2F44C  MT data (WIRED_DATA, 0x54 bytes)
 
   Configured out on the SAU2 (the SAU3..SAU6 have the driver, the part

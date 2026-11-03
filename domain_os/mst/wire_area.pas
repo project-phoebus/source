@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E44BA4  MST_$WIRE_AREA
+    sau4  0x0F84D050  MST_$WIRE_AREA
     sau8  0x03C4D1E0  MST_$WIRE_AREA
     sau9  0x3C44C352  MST_$WIRE_AREA
 

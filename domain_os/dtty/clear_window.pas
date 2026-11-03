@@ -2,10 +2,13 @@
 
   Image addresses:
     sau2  0x00E1D592  dtty_$clear_window
+    sau4  0x0F81E862  dtty_$clear_window
     sau9  0x3C41FF7A  dtty_$clear_window
 
   - With `smd_display_memory' the whole screen is cleared
     (SMD_$CLEAR_SCREEN), whatever the window.
+  - With `dtty_color_board' a color display's window is cleared by the
+    color board (dtty_$color_clear_window).
 
   Status stored:
     smd_$clear_window's status: always
@@ -18,6 +21,11 @@ begin
   status.all := status_$ok;
 %if smd_display_memory %then
   smd_$clear_screen;
+%elseif dtty_color_board %then
+  if not dtty_flag_06 then
+    dtty_$color_clear_window(window, status)
+  else
+    smd_$clear_window(window, status);
 %else
   smd_$clear_window(window, status);
 %endif

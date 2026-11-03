@@ -2,6 +2,7 @@
 
   Image addresses:
     sau3  0x00E709B0  MT_$PRESENT
+    sau4  0x0F87D728  MT_$PRESENT
     sau5  0x00E7651A  MT_$PRESENT
 
   - True when the controller's PBU device is enabled; else the controller

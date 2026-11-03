@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6DFFA  smd_$cursor_op (module-local)
+    sau4  0x0F87877C  smd_$cursor_op (module-local)
     sau5  0x00E70458  smd_$cursor_op (module-local)
 
   - The hand-written SMD_$XOR_CURSOR draws the cursor (clear_flag false)

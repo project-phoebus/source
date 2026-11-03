@@ -76,6 +76,51 @@ the data segment adds SMD_$GET_DTYPE (its body there too: a bus-error
 probe of the display memory, then a BLT test); the keyboard tables are
 the SAU2's.  Every byte is the SAU5 image's.
 
+### The SAU4
+
+The SAU4's map has the SAU5's five modules with these sizes: SMD_WIRED
+code 0x368 and data 0x7C0 (SMD_$UNWIRE_MM besides the SAU2's and
+SMD_$DISP2_INT, SMD_$BLINK_CURSOR_2; no SMD_$GRAPHIC_DEVICE_ID or
+COLOR3_$CR_CONTENTS), SMD in WIRED_PROC 0x228, OS_INIT_PROC 0x2D8,
+.TEXT 0x2ED4, PROC2_DELETE_PRO 0x80 (the others the SAU5's sizes), the
+overlay SMD_$WIRED_DATA 0x250, SMD_UTILS code 0x4C0 and data 0x5C8.  The
+compiled SMD module is the SAU5's source with the SAU5's parts but
+`gpu_driver' (`two_display_units', `color_displays', `blt_request_start',
+`color_board'), and one of its own, `blt_main_memory'
+(base/config.ins.pas): the BLT moves between a display and main memory.
+
+- the display record is 0xE0 bytes: 32 wired page numbers at +0x40
+  (mm_pages) before the cursor eventcount, so SMD_$DISPLAY_COM is 0x1C0
+  bytes; the last word is the count of wired pages (mm_page_count); the
+  unit record's word at +0x0C is the unit's first I/O map entry for
+  them (iomap_base, 128 and 96: SMD_$INIT);
+- SMD_$WIRE_MM wires the pages, SMD_$BLT puts them in the I/O map and
+  starts the main-memory modes, the hand-written SMD_$UNWIRE_MM unwires
+  them after a synchronous BLT or when SMD_$ACQ_DISPLAY clears lock
+  state 6, and SMD_$INQ_MM_BLT answers true.
+
+The other routines are the SAU5's source; their SAU4 code differs only
+by the display record's offsets, the removed `gpu_driver' arms, the
+constant cells' places and register choice.  SMD_WIRED is `sau4/*.s`
+and the three shared files, the SAU5's division: the code segment is
+`sau4/wired_proc.s` (the cursor body, which draws on the color board
+through its command port, the scroll bodies, SMD_$UNWIRE_MM's body and
+the BLT body) around `m68k/lock_display.s` and `m68k/bit_set.s`; the
+data segment's code is `sau4/disp1_int.s` .. `sau4/start_blt.s` (the
+SAU2's interrupt state machine with the SAU5's BLT registers, a state 6
+for wired pages, SMD_$UNWIRE_MM's trampoline), and its data
+`m68k/wired_data.s` with `color_board' and `blt_main_memory' arms.  The
+bodies reach the data segment's cells at fixed displacements from its
+base, SMD_$DISP2_INT, as the SAU5's.  Every byte was checked against
+the SAU4 image by assembling and linking the files at the map's
+addresses (the shared SMD_$LOCK_DISPLAY's CMP <ea>=#imm is the
+assembler-spelling difference the byte gate allows, as on the SAU2 and
+SAU5).  SMD_UTILS is `sau4/smd_utils.s`: the SAU5's file with the
+clip window's seventeen operands at the SAU4 record's +0xD6..+0xDC
+(SMD_$WRITE_STR_CLIP's body); the keyboard tables are the shared
+`m68k/national_ktt.s`.  Every byte of both segments is the SAU4
+image's.
+
 ### The SAU9 (`display_devices`)
 
 The SAU9's map (and the SAU7's and SAU8's, the same module sizes but the
@@ -241,6 +286,7 @@ named after itself (kbd's convention).
 | SMD_$DISP1_INT | none: hand assembly (`sau2/disp1_int.s`) |
 | SMD_$BLINK_CURSOR_1, SMD_$BLINK_CURSOR | none: hand assembly (`sau2/blink_cursor_1.s`) |
 | SMD_$INTERRUPT_INIT | none: hand assembly (code in the SMD_WIRED data segment; `sau2/interrupt_init.s`) |
+| SMD_$UNWIRE_MM (`blt_main_memory`) | none: hand assembly (code in the SMD_WIRED data segment; `sau4/unwire_mm.s`) |
 | (SMD_WIRED data) | none: hand assembly (`m68k/wired_data.s`) |
 | SMD_$NOP2, SMD_$NOP_COPY, SMD_$NOP_BLINK, SMD_$NOP_XOR, SMD_$NOP_REL, SMD_$NOP_LITE, SMD_$NOP_PUT, SMD_$NOP_FIFOWAIT, SMD_$NOP_TOUCH (`display_devices`) | `nop2.pas`, `nop_copy.pas`, `nop_blink.pas`, `nop_xor.pas`, `nop_rel.pas`, `nop_lite.pas`, `nop_put.pas`, `nop_fifowait.pas`, `nop_touch.pas` |
 | SMD_$COPY_FONT_TO_MD_HDM | `copy_font_to_md_hdm.pas` |

@@ -30,7 +30,14 @@
  * Byte gate (tools/asm_compare.py): identical to the image modulo
  * relocations (the call into fim/m68k/fp_init.s's helper keeps its
  * `jsr (d16,PC)' form as R_68K_PC16).
+ *
+ * Not on the SAUs whose floating-point registers are the CPU's own
+ * (`fp_state_in_cpu', base/config.ins.pas): the SAU4's map has no
+ * FIM_$FSAVE.
  */
+
+        .include "base/config.inc"
+        .if !fp_state_in_cpu
 
         .section ".text.FIM_$FSAVE","ax",@progbits
         .even
@@ -103,3 +110,4 @@ FIM_$FSAVE:
 .Lfs_done:
         movem.l (%sp)+,%d0-%d3/%a0-%a3          /* e21cce */
         rts                                     /* e21cd2 */
+        .endif

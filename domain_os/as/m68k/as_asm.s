@@ -10,6 +10,8 @@
  * (`run_time_layout': global A at 0x03200000, PROT 0x039C0000; SAU8 map:
  * "D 3C2DBB0 AS_ASM size = 64"), checked by assembling with `m68k-elf-as
  * -m68020 -m68881' against the image's bytes (all but the PROT cell).
+ * The SAU4's is its 8192-segment space (`vm_8192_segs': global A at
+ * 0x0E800000, PROT 0x0F7C0000; SAU4 map: "D F82DFD0 AS_ASM size = 64").
  *
  * Byte gate (tools/asm_compare.py, `make check-asm'): the
  * bytes are the image's.
@@ -87,6 +89,32 @@ AS_$STACK_OFFSET:
 AS_$INIT_STACK_FILE_SIZE:
         .long   0x00048000                      /* +0x4C */
         .long   0x3B3D8000, 0x00000004          /* +0x50 cr_rec_file, +0x54 */
+AS_$CR_REC_FILE_SIZE:
+        .long   0x00030000                      /* +0x58 */
+        .elseif vm_8192_segs
+        /* the SAU4's 8192-segment space (sau4 0xF82DFD0) */
+        .long   0x00020000                      /* +0x00 */
+AS_$GLOBAL_A:
+        .long   0x0E800000, 0x00800000          /* +0x04 base, size */
+        .long   0x0E800000, 0x00800000          /* +0x0C */
+AS_$PRIVATE:
+        .long   0x00008000                      /* +0x14 */
+AS_$STACK_FILE_LOW:
+        .long   0x0E780000                      /* +0x18 */
+AS_$CR_REC:
+        .long   0x0E7D0000, 0x00008000          /* +0x1C */
+        .long   0x0E7D8000, 0x00028000          /* +0x24 cr_rec_end */
+        .long   0x0E780000, 0x00008000          /* +0x2C stack_file_high */
+AS_$STACK_LOW:
+        .long   0x0E788000, 0x00040000          /* +0x34 */
+AS_$STACK_HIGH:
+        .long   0x0E7C8000                      /* +0x3C */
+AS_$STACK_OFFSET:
+        .long   0x00048000, 0x0E7C8000          /* +0x40, +0x44 */
+        .long   0x00008000                      /* +0x48 */
+AS_$INIT_STACK_FILE_SIZE:
+        .long   0x00048000                      /* +0x4C */
+        .long   0x0E7D8000, 0x00000004          /* +0x50 cr_rec_file, +0x54 */
 AS_$CR_REC_FILE_SIZE:
         .long   0x00030000                      /* +0x58 */
         .elseif run_time_layout

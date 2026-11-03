@@ -65,6 +65,8 @@ Routines (47 compiled, none hand assembly; there is no ring/sau2/):
 | ringlog_$stop_logging, RINGLOG_$CNTL | `cntl.pas` (the first nested in the second) |
 | ring_$process_rx_packet | `process_rx_packet.pas` |
 | RING_$INT | `int.pas` |
+| RING_$XMIT_INT (`ring_board_dma`) | `xmit_int.pas` |
+| RING_$RCV_INT (`ring_board_dma`) | `rcv_int.pas` |
 | ring_$clear_dma_channel | `clear_dma_channel.pas` |
 | ring_$setup_tx_dma | `setup_tx_dma.pas` |
 | ring_$setup_rx_dma | `setup_rx_dma.pas` |
@@ -242,6 +244,29 @@ the image):
 Without `ring8_controller` none of the new routines is compiled; with
 it RING_$INT, ring_$clear_dma_channel, ring_$setup_tx_dma and
 ring_$setup_rx_dma are not.
+
+The SAU4's controller has two DMA controllers of its own in its
+register block (`ring_board_dma`), which reach the host's pages through
+the I/O map (IOMAP, declared in `ring.pas`), and separate transmit and
+receive interrupts.  Its blocks: RING_DATA 0x5C0 bytes, without
+RING_$SCRUB and RING_$FROM_ERR, the two units' dma_page words 16#42;
+OS_INIT_DATA 4; RING_WIRED 0xAC (the SAU2's bytes).
+
+- new: RING_$XMIT_INT (`xmit_int.pas`) and RING_$RCV_INT
+  (`rcv_int.pas`), in place of RING_$INT;
+- conditional arms: RING_$GET_ID (`get_id.pas`: other id registers, no
+  store back), ring_$init_internal (`init_internal.pas`: the three
+  vectors through SYSBUS_$DEFINE_INT, the controllers' resets),
+  ring_$process_rx_packet (`process_rx_packet.pas`), ring_$setup_tx_dma
+  and ring_$setup_rx_dma (`setup_tx_dma.pas`, `setup_rx_dma.pas`: the
+  board's channels and the I/O map), RING_$SENDP (`sendp.pas`: command
+  bytes, the controller's transmit status bits, a transmit bus error
+  crashes), ring_$validate_receive and RING_$RCV_FROM_UNIT_PRIV
+  (`rcv_from_unit_priv.pas`), RING_$POLL_STICKY_BPHERR
+  (`poll_sticky_bpherr.pas`);
+- ring_$clear_dma_channel and its calls are not compiled;
+- the rest is the SAU2's source, the block's offsets 16 lower from the
+  wire list on.
 
 ## Open items
 

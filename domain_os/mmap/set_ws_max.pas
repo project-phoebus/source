@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0CA7A  MMAP_$SET_WS_MAX
+    sau4  0x0F80D0CA  MMAP_$SET_WS_MAX
     sau8  0x03C0D99C  MMAP_$SET_WS_MAX
     sau9  0x3C40E9D8  MMAP_$SET_WS_MAX
 

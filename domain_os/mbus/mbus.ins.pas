@@ -32,6 +32,14 @@ const
   mbus_$int_vector = 16#1C;
   mbus_$pending_bits = 8;
 
+  { With the vectored adapter (`mbus_vectored_adapter'): the first of the
+    levels' vectors (level 0's; the level is the vector less it), the
+    levels MBUS_$INIT traps, and what MBUS_$INT adds to the level for the
+    adapter's acknowledge register. }
+  mbus_$first_vector = 16#B0;
+  mbus_$vectored_levels = 8;
+  mbus_$ack_base = 16#60;
+
 type
   { A Multibus interrupt handler: called with the argument
     MBUS_$DEFINE_INT stored beside it, by value; its boolean says
@@ -62,6 +70,17 @@ type
     word_00: integer;                     { 0x00 }
     int_enable: set of 0..15;             { 0x02 }
     word_04: integer;                     { 0x04 }
+%if mbus_vectored_adapter %then
+    word_06: integer;                     { 0x06: the PNA's printer
+                                            port's control (LPR_$INIT) }
+    unused_08: array[4..63] of integer;   { 0x08 }
+    ack: integer;                         { 0x80: the level being served,
+                                            plus mbus_$ack_base; MBUS_$INIT
+                                            probes it }
+    int_mask: set of 0..15;               { 0x82: a level's bit set while
+                                            its handler runs; MBUS_$INIT
+                                            writes three words to it }
+%endif
   end;
 
 var
@@ -92,8 +111,14 @@ function mbus_$undef_int(handler_arg: univ_ptr): boolean;
 procedure mbus_$init; extern;
 
 { MBUS_$INT (mbus/int.pas, `mbus_polled_adapter'): the routine IO_$TRAP
-  installs for the Multibus's vector; no arguments. }
+  installs for the Multibus's vector; no arguments.  With
+  `mbus_vectored_adapter' the vector it was entered by, a word by value
+  (the hand-written first-level handler pushes it). }
+%if mbus_vectored_adapter %then
+procedure mbus_$int(vector: integer); options(extern, val_param);
+%else
 procedure mbus_$int; extern;
+%endif
 procedure mbus_$define_int(id: io_$int_id_t; handler: univ_ptr;
                            handler_arg: univ_ptr);
   options(extern, val_param);

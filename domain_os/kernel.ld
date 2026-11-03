@@ -250,8 +250,10 @@ SECTIONS {
     }
 
     /* `D52 F4FC00 IODEFS_GUARD' = VM_TABLES_END: OS_$INIT's ceiling check
-     * at 0x00E3397C (`move.l #IODEFS_GUARD,D0', a fixup cell). */
-    IODEFS_GUARD = VM_TABLES_END;
+     * at 0x00E3397C (`move.l #IODEFS_GUARD,D0', a fixup cell).  A SAU
+     * whose map puts it elsewhere gives IODEFS_GUARD_AT before INCLUDing
+     * this script (the SAU4: the low region's end). */
+    IODEFS_GUARD = DEFINED(IODEFS_GUARD_AT) ? IODEFS_GUARD_AT : VM_TABLES_END;
 
     /* NET_PORT_TABLE (`D28 E2E0A0 NET_PORT_TABLE size = 2E0', an overlay
      * section): route/route_wired.pas defines it as ROUTE_$PORT, the eight
@@ -307,4 +309,4 @@ ASSERT(NULL_STACK_GUARD == OS_PAGE && MMAP >= OS_PAGE, "the stacks and MMAP lie 
 
 /* The VM tables' run-time windows: from OS_PAGE_END,
  * page aligned; the SAU's script checks their map order and offsets. */
-ASSERT(OS_PAGE_END % 0x400 == 0 && VM_TABLES_END % 0x400 == 0 && OS_PAGE_END < VM_TABLES_END && IODEFS_GUARD == VM_TABLES_END, "the VM-table windows from OS_PAGE_END to VM_TABLES_END = IODEFS_GUARD, on pages")
+ASSERT(OS_PAGE_END % 0x400 == 0 && VM_TABLES_END % 0x400 == 0 && OS_PAGE_END < VM_TABLES_END && IODEFS_GUARD == (DEFINED(IODEFS_GUARD_AT) ? IODEFS_GUARD_AT : VM_TABLES_END), "the VM-table windows from OS_PAGE_END to VM_TABLES_END, on pages; IODEFS_GUARD the SAU's or VM_TABLES_END")

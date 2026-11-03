@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6EC10  SMD_$REL_DISPLAY
+    sau4  0x0F8793C0  SMD_$REL_DISPLAY
     sau5  0x00E71094  SMD_$REL_DISPLAY
     sau9  0x3C4755DC  SMD_$REL_DISPLAY
 

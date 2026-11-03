@@ -2,6 +2,7 @@
 
   Image addresses:
     sau3  0x00E6E2BA  SM_$DO_IO
+    sau4  0x0F877A02  SM_$DO_IO
     sau5  0x00E6F612  SM_$DO_IO
 
   - Under the controller's lock.  A format request (operation 3) goes
@@ -64,6 +65,8 @@ begin
     end;
 %if long_iomap %then
     iomap[sm_iomap_buf] := req.ppn + sm_iomap_bias;
+%elseif word_iomap %then
+    iomap[sm_iomap_buf] := req.ppn;
 %else
     iomap[sm_iomap_buf].entry := req.ppn + sm_iomap_bias;
 %endif
@@ -98,8 +101,10 @@ begin
       io_status := status_$storage_module_stopped;
     if io_status <> 0 then
       goto failed;
+%if memory_parity %then
     if parity_err then
       io_status := status_$memory_parity_error_during_disk_write;
+%endif
     if io_status = 0 then begin
       if op = 1 then
         req.header.l := sm_$hdr_ptr_t(sm_dcte^.io_va)^;

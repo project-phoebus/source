@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E1D89E  SMD_$BUSY_WAIT
+    sau4  0x0F81EC5C  SMD_$BUSY_WAIT
     sau5  0x00E1E65E  SMD_$BUSY_WAIT
     sau9  0x3C420232  SMD_$BUSY_WAIT
 

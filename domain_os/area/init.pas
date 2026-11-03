@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E2F3A8  AREA_$INIT
+    sau4  0x0F832808  AREA_$INIT
     sau9  0x3C434F70  AREA_$INIT
 
   - The table's maximum is AREAS' size, area_max_entries; the free

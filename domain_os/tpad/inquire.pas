@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6993A  TPAD_$INQUIRE
+    sau4  0x0F873400  TPAD_$INQUIRE
 
   - TPAD_$INQUIRE_UNIT for the current unit; its status is ignored.
 

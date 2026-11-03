@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E06B1E  AST_$GET_SEG_MAP
+    sau4  0x0F806EBA  AST_$GET_SEG_MAP
     sau8  0x03C06DA0  AST_$GET_SEG_MAP
     sau9  0x3C407DAC  AST_$GET_SEG_MAP
 
@@ -148,7 +149,7 @@ begin
             if (ast_$seg_map_all_pages in flags) or else
                not mmap[entry^.vpn].disk_addr.aste_dirty or else
                mmap[entry^.vpn].modified or else
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
                (ast_$pmap_modified in entry^.flags) then
 %else
                (14 in ast_$word_set_t(pft[entry^.vpn].w_02)) then

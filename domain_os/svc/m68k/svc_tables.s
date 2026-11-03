@@ -220,7 +220,7 @@ SVC_$TRAP1_TABLE:            | 0xE7B35E, 66 entries
         svc_display SMD_$INIT_STATE         | 0x32
         svc_display SMD_$CLR_TRK_RECT       | 0x33
         .long   PROC2_$GET_SIG_MASK         | 0x34
-        .long   FIM_$FRESTORE               | 0x35
+        svc_entry !fp_state_in_cpu, FIM_$FRESTORE | 0x35 (SVC_$UNIMPLEMENTED where the FP registers are the CPU's)
         .long   TIME_$GET_TIME_OF_DAY       | 0x36
         .long   PROC1_$GET_LOADAV           | 0x37
         .long   PROC2_$GET_BOOT_FLAGS       | 0x38

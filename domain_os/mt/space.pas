@@ -2,6 +2,7 @@
 
   Image addresses:
     sau3  0x00E70CF0  MT_$SPACE
+    sau4  0x0F87DA68  MT_$SPACE
     sau5  0x00E7685A  MT_$SPACE
 
   - mode selects the operation (mt/mt.ins.pas); mode 2 has its own for

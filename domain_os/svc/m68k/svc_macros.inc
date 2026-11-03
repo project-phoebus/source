@@ -51,11 +51,15 @@
 | a reference to the absolute symbol PROT (arch/m68k/<sau>/iodefs.s).
 | Where the segment layout is chosen at boot (`run_time_layout', the
 | SAU8: 0x39C0000) the cells are in the fixup table, which COLD applies
-| for the MC68851's layout, so they are references to PROT.
+| for the MC68851's layout, so they are references to PROT.  The SAU4's
+| 8192-segment space (`vm_8192_segs') ends the user's at 0xF7C0000, a
+| literal.
 
         .include "base/config.inc"
         .if large_address_space
         .equ    PROT_LITERAL, 0x3BFC0000
+        .elseif vm_8192_segs
+        .equ    PROT_LITERAL, 0x0F7C0000
         .elseif run_time_layout
         .equ    PROT_LITERAL, PROT
         .else

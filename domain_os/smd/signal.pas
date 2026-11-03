@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6F1DA  SMD_$SIGNAL
+    sau4  0x0F879924  SMD_$SIGNAL
     sau5  0x00E71590  SMD_$SIGNAL
     sau9  0x3C47599A  SMD_$SIGNAL
 

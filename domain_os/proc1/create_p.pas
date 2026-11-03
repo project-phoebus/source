@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E15148  PROC1_$CREATE_P
+    sau4  0x0F8159BC  PROC1_$CREATE_P
 
   - The process type decides the working-set parameter (5 for types 3,
     4, 5 and 10, 6 for type 8, else 0).  The stack is both the initial

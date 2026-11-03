@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E44010  MST_$GET_UID_ASID
+    sau4  0x0F84C2BA  MST_$GET_UID_ASID
     sau8  0x03C4C446  MST_$GET_UID_ASID
     sau9  0x3C44B5DC  MST_$GET_UID_ASID
 

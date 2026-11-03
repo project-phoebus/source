@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E08DD0  AREA_$INVALIDATE
+    sau4  0x0F8092E4  AREA_$INVALIDATE
     sau9  0x3C40A5C2  AREA_$INVALIDATE
 
   - Nothing is done for a count of 0, an area never touched or one of

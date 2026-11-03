@@ -2,8 +2,10 @@
 
   Image addresses:
     sau2  0x00E00D46  ast_$allocate_pages (module-local)
+    sau4  0x0F80114A  ast_$allocate_pages (module-local)
     sau9  0x3C40212A  ast_$allocate_pages (module-local)
     sau2  0x00E00CAC  ast_$allocate_pages_log (nested)
+    sau4  0x0F8010AC  ast_$allocate_pages_log (nested)
     sau9  0x3C40208C  ast_$allocate_pages_log (nested)
 
   Assume we're called with the PMAP lock held.

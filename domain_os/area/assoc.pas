@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E096A2  AREA_$ASSOC
+    sau4  0x0F809D2A  AREA_$ASSOC
     sau9  0x3C40B010  AREA_$ASSOC
 
   - The page's segment's ASTE is found and wired; AST_$ASSOC_AREA

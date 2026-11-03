@@ -2,6 +2,7 @@
   driver (the DN570/DN580 class color display of the SAU4 and SAU5).
 
   Image addresses:
+    sau4  0x0F89377C  COLOR data (.DATA, 0x8C bytes)
     sau5  0x00E8C324  COLOR data (.DATA, 0x8C bytes)
 
   With the board (`color_board', base/config.ins.pas: the maps of the
@@ -9,11 +10,13 @@
   with three code segments and one data segment.  Without the board the
   module compiles to nothing.
 
-  On the SAU5 the map's COLOR code segments are in WIRED_PROC (0x24
-  bytes, COLOR_$VIDEO_CTL), OS_INIT_PROC (0x70 bytes, COLOR_$COLD_INIT)
-  and .TEXT (0x440 bytes, COLOR_$INT_INIT .. COLOR_$INQ_DONE_WAIT); its
-  data segment in .DATA (0x8C bytes).  The module is the map segment's
-  name, COLOR.  The hand-written COLOR_ASM is color/sau5/color_asm.s.
+  The map's COLOR code segments are in WIRED_PROC (0x24 bytes,
+  COLOR_$VIDEO_CTL), OS_INIT_PROC (0x70 bytes on the SAU5, 0x74 on the
+  SAU4, COLOR_$COLD_INIT) and .TEXT (0x440 bytes on the SAU5, 0x474 on
+  the SAU4, COLOR_$INT_INIT .. COLOR_$INQ_DONE_WAIT); its data segment
+  in .DATA (0x8C bytes).  The module is the map segment's name, COLOR.
+  The hand-written COLOR_ASM is color/sau4/color_asm.s and
+  color/sau5/color_asm.s.
 
   COLOR_$VIDEO_CTL is headed `[section(wired_proc, wired_data)]',
   COLOR_$COLD_INIT `[section(os_init_proc, os_init_data)]' (it reaches
@@ -26,6 +29,11 @@
     +0x86  color_owner       the process that holds the board, 0 for none
     +0x88  color_associated  COLOR_$ASSOC ran (COLOR_$SHUTDOWN's test)
     +0x89  3 bytes: the block's rounding to a longword
+  With `vm_regions' the owner's address space comes first:
+    +0x86  color_as_id       the ASID the board's user page was put in
+    +0x88  color_owner
+    +0x8A  color_associated
+    +0x8B  1 byte: the rounding
 
   The routines live in one fragment file each (color/<name>.pas), in
   image order.
@@ -45,7 +53,9 @@ module color;
 %include 'fim/fim.ins.pas';
 %include 'misc/crash_system.ins.pas';
 %include 'mst/mst.ins.pas';
+%include 'uid/uid.ins.pas';
 %include 'wp/wp.ins.pas';
+%include 'pbu/pbu.ins.pas';
 %include 'smd/smd.ins.pas';
 %include 'tpad/tpad.ins.pas';
 %include 'suma/suma.ins.pas';
@@ -54,18 +64,17 @@ module color;
 %include 'color/color.ins.pas';
 %include 'smd/smd_internal.ins.pas';
 
-{ TODO(sau) the SAU4 COLOR code
-
-  The module's code below is the SAU5's.  The SAU4's COLOR segments
-  differ in size (0x24, 0x74 and 0x474 bytes against the SAU5's 0x24,
-  0x70 and 0x440; its COLOR_ASM 0x34 bytes against 0x9C): its own form,
-  with its own part, when it is translated. }
-
 var
   color_pages: array[0..color_max_pages - 1] of linteger;   { +0x00 }
   color_page_count: integer;                    { +0x84 }
+%if vm_regions %then
+  color_as_id: integer;                         { +0x86 }
+  color_owner: pinteger;                        { +0x88 }
+  color_associated: boolean;                    { +0x8A }
+%else
   color_owner: pinteger;                        { +0x86 }
   color_associated: boolean;                    { +0x88 }
+%endif
 
 { The global routines this module defines (ref 7.3.4, Method 2), in map
   order. }

@@ -144,10 +144,13 @@ const
     (ring_$process_rx_packet, ring_$clear_dma_channel), 110010 ("bad
     checksum") and 110013 ("receive bus error") from two
     (ring_$validate_receive), and RING_$SENDP stores 110016 ("memory
-    parity error during transmit"). }
+    parity error during transmit"); with the ring board's own DMA
+    (`ring_board_dma') RING_$SENDP passes CRASH_SYSTEM 110014
+    ("transmit bus error"). }
   status_$network_hardware_error = 16#00110009;
   status_$network_bad_checksum = 16#00110010;
   status_$network_receive_bus_error = 16#00110013;
+  status_$network_transmit_bus_error = 16#00110014;
   status_$network_memory_parity_error_during_transmit = 16#00110016;
 
 type

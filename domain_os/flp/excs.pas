@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E3E268  EXCS
+    sau4  0x0F84624E  EXCS
     sau8  0x03C46486  EXCS
 
   - While command retries remain, an error spends one and becomes
@@ -9,6 +10,9 @@
   - A bad format on the wrong cylinder spends the retries on one
     recalibrate.
   - Global: a map symbol without `$'.
+  - The page DMA form, with no error in ST0 and not after a RECALIBRATE,
+    checks the page's DMA count at its end: else a retry while the
+    budget lasts, then status_$bus_error_occurred_during_disk_dma_transfer.
 
   Returns:
     SHAKE's or DMA_$CHECK's result: either fails
@@ -28,7 +32,7 @@ var
   which: integer;
   unit: integer;
   st3: flp_$sreg_t;
-%if not floppy_atbus %then
+%if memory_parity and not floppy_atbus %then
   parity_err: boolean;
 %endif
 begin
@@ -48,7 +52,9 @@ begin
 %if not floppy_atbus %then
   { parity and DMA, not after a RECALIBRATE }
   excs := status_$ok;
+%if dma_driver %then
   if (cmd[0] & 7) <> 7 then begin
+%if memory_parity %then
     if 1 in flp_hw_addr^.w_06 then begin
       parity_err := parity_$chk_io(1, flp_buf_pa) <> 0;
       if parity_err then begin
@@ -56,6 +62,7 @@ begin
         return;
       end;
     end;
+%endif
     status := dma_$check(3);
     if (status <> status_$ok) and then
        (status <> status_$dma_not_at_end_of_range) then begin
@@ -70,12 +77,28 @@ begin
       end;
     end;
   end;
+%endif
 
 %endif
   if which <> 0 then
     flp_$sregs[0].w := 16#10;
+%if floppy_page_dma %then
+  if (flp_$sregs[0].w & 16#D8) = 0 then begin
+    { the DMA channel's count at its end, not after a RECALIBRATE }
+    if (cmd[0] & 7) <> 7 then
+      if flp_hw_addr^.dma_count + flp_hw_addr^.dma_count <> 16#1FE then
+        if flp_cmd_retry <> 0 then begin
+          flp_cmd_retry := flp_cmd_retry - 1;
+          excs := flp_$retry;
+        end
+        else
+          excs := status_$bus_error_occurred_during_disk_dma_transfer;
+    return;
+  end;
+%else
   if (flp_$sregs[0].w & 16#D8) = 0 then
     return;
+%endif
 
   { the drive's status }
   flp_sense_cmd[1] := cmd[1];

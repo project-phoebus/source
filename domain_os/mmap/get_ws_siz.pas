@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0C9E4  MMAP_$GET_WS_SIZ
+    sau4  0x0F80D034  MMAP_$GET_WS_SIZ
     sau8  0x03C0D910  MMAP_$GET_WS_SIZ
     sau9  0x3C40E94C  MMAP_$GET_WS_SIZ
 

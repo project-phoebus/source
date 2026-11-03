@@ -128,25 +128,28 @@ import rfc_elf  # noqa: E402
 # SAU2 (the same RFC load address, kernel offset and kernel VA), only the
 # addresses differ.
 SAU = 2
-SAUS = (2, 3, 5, 8, 9)
+SAUS = (2, 3, 4, 5, 8, 9)
 
 # OS_BEGIN: the bottom of the kernel's VAs (`D95 E00000 OS_BEGIN' on both)
 RFC_LOAD_ADDR = {2: 0x00E00000, 3: 0x00E00000, 5: 0x00E00000,
+                 4: 0x0F800000,   # D94 F800000 OS_BEGIN
                  8: 0x03C00000,   # D00 3C00000 OS_BEGIN
                  9: 0x3C400000}   # D98 3C400000 OS_BEGIN
 # 24-bit physical/virtual space of the SAU2 and the SAU5
 KERNEL_VA_END = {2: 0x01000000, 3: 0x01000000, 5: 0x01000000,
+                 4: 0x10000000,   # the SAU4's 28-bit space (MMU FFFB400)
                  8: 0x04000000,   # the SAU8's 26-bit space (MMU 3FFB400)
                  9: 0x40000000}   # the SAU9's 30-bit space (PROM 3FFE0000)
 # Map addresses below FIXED_LOW_END that are not fixed: the SAU9's OS_COLD
 # module (os/cold.pas: its data and code, `D 4002FFC OS_COLD' and `I
 # 4003068 OS_COLD size = 568'), compiled code laid out after COLD_START in
 # kernel.ld's `.cold'.
-FIXED_EXEMPT = {2: [], 3: [], 5: [], 8: [], 9: [(0x04002FFC, 0x040035D0)]}
+FIXED_EXEMPT = {2: [], 3: [], 4: [], 5: [], 8: [], 9: [(0x04002FFC, 0x040035D0)]}
 # The fixed VAs from OS_BEGIN up (check_elf compares them with the map):
 # the crash record page; on the SAU9 also the trap page (OS_BEGIN +
 # 0x1000, `trap_page_high'), up to DUMP.
 FIXED_LOW_END = {2: 0x00E00400, 3: 0x00E00400, 5: 0x00E00400,
+                 4: 0x0F800800,   # D23 F800800 DUMP
                  8: 0x03C00400,   # D24 3C00400 DUMP
                  9: 0x3C401400}   # D24 3C401400 DUMP
 
@@ -174,6 +177,7 @@ IMAGE_BSS_START = {
     2: 0x00E88834,      # I20 E88834 RELOC
     3: 0x00E8A434,      # I20 E8A434 RELOC
     5: 0x00E92834,      # I20 E92834 RELOC
+    4: 0x0F898434,      # I20 F898434 RELOC
     8: 0x03CA65F8,      # I21 3CA65F8 RELOC
     9: 0x3C4A75D8,      # I21 3C4A75D8 RELOC
 }
@@ -186,6 +190,10 @@ IMAGE_BSS_END = {
     2: 0x00F4FC00,      # D52 F4FC00 IODEFS_GUARD
     3: 0x00F4FC00,      # D56 F4FC00 IODEFS_GUARD
     5: 0x00F48000,      # D55 F48000 IODEFS_GUARD
+    # the SAU4's low region (`D95 FE44000 UNWIRED_STACKS' .. OS_LOW_END,
+    # the linker script's fixed VAs) lies between its VM tables' end
+    # (FDED400) and IODEFS_GUARD
+    4: 0x0FEFC400,      # D55 FEFC400 IODEFS_GUARD
     8: 0x03F2E000,      # D62 3F2E000 IODEFS_GUARD
     9: 0x3E52C000,      # D58 3E52C000 IODEFS_GUARD
 }
@@ -195,6 +203,7 @@ FIXED_IO_START = {
     2: 0x00FC0000,      # FC0000 IODEFS (= DISP1_MEM)
     3: 0x00FC0000,      # FC0000 IODEFS (no display memory there)
     5: 0x00F90000,      # F90000 IODEFS (= KOLOR_CTL)
+    4: 0x0FFA0000,      # FFA0000 IODEFS (= DISP2_MEM)
     8: 0x03FA0000,      # 3FA0000 IODEFS (= DISP1_MEM)
     9: 0x3FF97C00,      # 3FF97C00 IODEFS (= RING_8025_2)
 }
@@ -228,6 +237,7 @@ VM_WINDOWS_START = {
     2: 0x00EE4C00,      # EE4C00 AREA_$RPMAP_CACHE
     3: 0x00EE4C00,      # EE4C00 AREA_$RPMAP_CACHE
     5: 0x00EDD000,      # EDD000 AREA_$RPMAP_CACHE
+    4: 0x0F912400,      # F912400 OS_PAGE_END
     8: 0x03CF6400,      # 3CF6400 OS_PAGE_END
     9: 0x3C650800,      # 3C650800 OS_PAGE_END
 }
@@ -255,6 +265,17 @@ VM_WINDOW_MARKS[8] = [
     # 3CF6400, 3DAF800 (SMAPS_END = RARS), 3DB6C00 (RARS_END, AUDIT_LIST),
     # 3DB7800 (VM_TABLES = AST_PMAPS), 3DE7800 (= AST_PMAPS_END),
     # 3DE8400, 3E4DC00, 3E51400, 3E61400, 3F2E000
+
+# The SAU4's as the SAU9's (COLD maps the kernel up to OS_PAGE_END, SMAPS +
+# 0x7800 inside OS_PMAPS; AST and AOT in `D99 FAC0800 AST_AOT' past it).
+VM_WINDOW_MARKS[4] = [
+    'OS_PAGE_END', 'SMAPS_END', 'RARS', 'RARS_END', 'AST', 'AOT',
+    'AST_PMAPS', 'VM_TABLES', 'AREA_$RPMAP_CACHE', 'AST_PMAPS_END', 'BST',
+    'MST', 'PIT_PAGES', 'MSTE_PAGES', 'VM_TABLES_END']
+    # F912400, FABDC00 (SMAPS_END = RARS), FABFC00 (RARS_END, AUDIT_LIST),
+    # FAC0800 (AST_AOT), FAD1200, FB0D400 (VM_TABLES = AST_PMAPS),
+    # FB59400 (= AST_PMAPS_END), FB5A000, FD0D000, FD10800, FD20800,
+    # FDED400
 
 # The map's data segments past OS_DATA_END that no object fills: the
 # binder's windows, segments of modules with no code and no file bytes
@@ -333,19 +354,30 @@ BSS_WINDOWS[8] = [
     # OS_PMAP_SPECIAL, OS_PMAP_END and SMAPS, up to OS_PAGE_END 0x3CF6400.
     (0x03CCC800, 'OS_PMAPS', []),
 ]
+# The SAU4's: the stacks page and OS_PMAPS below its OS_PAGE_END, as the
+# SAU9's.
+BSS_WINDOWS[4] = [
+    # D66 F8C0000 PAGE / D F8C0000 STACK size = 2C00: NULL_STACK_GUARD ..
+    # INT_STACK_GUARD = P1_STACK_BASE 0xF8C2000; INT_STACK_BASE is its end
+    # (the map lists it under `D67 F8C2C00 VTOC_CACHE').
+    (0x0F8C0000, 'STACK', ['INT_STACK_BASE']),
+    # D45 F8C4800 OS_PMAPS size = 1FB400: here MMAP, OS_PMAPS, OS_PMAP0,
+    # OS_PMAP_SPECIAL, OS_PMAP_END and SMAPS, up to OS_PAGE_END 0xF912400.
+    (0x0F8C4800, 'OS_PMAPS', []),
+]
 # Overlay sections in the low region below OS_BEGIN, fixed VAs that the
 # SAU's script defines (sau9.ld: the Ethernet's and the 802.5 ring's
 # buffers, `D53 3C06F800 ETHERNET_$BUFFER', `D64 3C070800
 # RING8025_$AUX_DA'); the layout leaves them alone.
 # The SAU3's: the internet interface controller's lines' control pages
 # (`D89 D65C00 IIC_$CONTROL_PAG size = 2000', iic/iic.pas), in sau3.ld.
-LOW_OVERLAYS = {2: set(), 3: {'IIC_$CONTROL_PAG'}, 5: set(),
+LOW_OVERLAYS = {2: set(), 3: {'IIC_$CONTROL_PAG'}, 4: set(), 5: set(),
                 8: {'ETHERNET_$BUFFER', 'RING8025_$AUX_DA'},
                 9: {'ETHERNET_$BUFFER', 'RING8025_$AUX_DA'}}
 # Overlay sections in the VM tables' windows (layout_vm.ld): the SAU9's
 # AUDIT_LIST (`D91 3D39E800 AUDIT_LIST size = C00') lies past its
 # OS_PAGE_END; the SAU2's and SAU5's overlays are all below theirs.
-VM_OVERLAYS = {2: False, 3: False, 5: False, 8: True, 9: True}
+VM_OVERLAYS = {2: False, 3: False, 4: True, 5: False, 8: True, 9: True}
 # Map names inside the windows that something else defines.
 BSS_WINDOW_SKIP = {'OS_PAGE', 'OS_PAGE_END'}
 
@@ -571,11 +603,64 @@ TEXT_MARKS[3] = [
                                               # E89BA4 PBU_WIRED_PROC)
     (0x00E8A360, 'PBU_$DATA_END', None),      # E8A360 PBU_$DATA_END
 ]
+# The SAU4's: the SAU3's marks at its map's addresses (most of them map
+# symbols there), with OS_INIT_DATA_START as the SAU8's; no IIC code or
+# data (the map's IIC_$ marks are all at RING_DATA_START), no PEB wired
+# data, LPR_$DATA_END the last byte of CBUF's block as on the SAU3.
+TEXT_MARKS[4] = [
+    (0x0F81F000, 'OS_DATA_WIRED', PAGE),      # D24 F81F000 WIRED_DATA
+    (0x0F8312C4, 'DCTE_START', None),         # D47 F8312C4 DCTE_START
+    (0x0F8312C4, 'DCTE_END', None),           # D46 F8312C4 DCTE_END
+    (0x0F832400, 'OS_INIT_START', PAGE),      # I 5 F832400 OS_INIT_PROC
+    (0x0F838400, 'OS_INIT_DATA_START', PAGE),  # D25 F838400 OS_INIT_DATA
+    (0x0F838A74, 'OS_INIT_END', None),        # F838A74 OS_INIT_END
+    (0x0F840000, 'OS_PROC_UNWIRED', 0x8000),  # I 1 F840000 .TEXT
+    (0x0F8466FA, 'OS_DISK_PROC_END', None),   # I F8466F8 OS_DISK_END
+    (0x0F87727C, 'SM_$PROC_START', None),     # I F87727C SM
+    (0x0F877D4A, 'OS_PROC_SHUTWIRED_END', None),  # I F877D48 OS_SHUTWIRED_END
+    (0x0F87B568, 'PEB_$WIRED_PROC_START', None),  # I F87B568 PEB_WIRED
+    (0x0F87B5CA, 'PEB_$WIRED_PROC_END', None),    # I F87B5C8 PEB_WIRED_END
+    (0x0F87B5CC, 'LPR_$PROC_START', None),        # I F87B5CC LPR_
+    (0x0F87BC10, 'SM_C_$PROC_START', None),       # I F87BC10 SM_C
+    (0x0F87DD48, 'MT_$PROC_START', None),         # I F87DD48 MT_$SIO
+    (0x0F87E0B0, 'AUDIT_$PROC_START', None),      # I F87E0B0 AUDIT
+    (0x0F87EEC6, 'AUDIT_$PROC_END', None),        # I F87EEC4 AUDIT (size 4)
+    (0x0F87EEC8, 'NETLOG_$PROC_START', None),     # I F87EEC8 NETLOG
+    (0x0F87F32E, 'NETLOG_$PROC_END', None),       # I F87F32C NETLOG (size 4)
+    (0x0F882C00, 'RING_PROC_START', PAGE),    # I 8 F882C00 RING_PROC / D60
+                                              # RING_PROC_START
+    (0x0F8857B4, 'RING_PROC_END', None),      # D59 F8857B4 RING_PROC_END
+    (0x0F885C00, 'OS_DATA_UNWIRED', PAGE),    # D21 F885C00 .DATA (= OS_DATA)
+    (0x0F885CD0, 'OS_DISK_DATA', None),       # D F885CD0 VTOC_
+    (0x0F888840, 'OS_DISK_DATA_END', None),   # D F888840 SVC_CATCHER
+    (0x0F89089C, 'OS_DATA_SHUTWIRED', None),      # D F89089C FILE_
+    (0x0F890EB4, 'SM_$DATA_START', None),         # D F890EB4 SM
+    (0x0F890F10, 'OS_DATA_SHUTWIRED_END', None),  # D F890F10 DTTY_ASM
+    (0x0F890F10, 'SM_$DATA_END', None),           # D F890F10 DTTY_ASM
+    (0x0F893808, 'PEB_$WIRED_DATA_START', None),  # D F893808 LPR_
+    (0x0F893808, 'PEB_$WIRED_DATA_END', None),    # D F893808 LPR_
+    (0x0F893808, 'LPR_$DATA_START', None),        # D F893808 LPR_
+    (0x0F893B20, 'LPR_$DATA_END', None),          # F893B1F (D F893B1C CBUF
+                                                  # size = 4, then D F893B20
+                                                  # AUDIT): MARK_DELTAS
+    (0x0F893B20, 'AUDIT_$DATA_START', None),      # D F893B20 AUDIT
+    (0x0F893CCC, 'AUDIT_$DATA_END', None),        # D F893CCC NETLOG
+    (0x0F893CCC, 'NETLOG_$DATA_START', None),     # D F893CCC NETLOG
+    (0x0F893D50, 'NETLOG_$DATA_END', None),       # D29 F893D50 DATA$
+    (0x0F894800, 'RING_DATA_START', PAGE),    # D30 F894800 RING_DATA / D58
+                                              # RING_DATA_START
+    (0x0F894DC0, 'RING_DATA_END', None),      # D57 F894DC0 RING_DATA_END
+    (0x0F895400, 'RTWIRED_PROC_START', PAGE),  # I12 F895400 RTWIRED_CODE
+    (0x0F896628, 'RTWIRED_DATA_END', None),   # F896628 RTWIRED_DATA_END
+    (0x0F897B44, 'PBU_$PAGE_END', None),      # F897B44 PBU_$PAGE_END (I16
+                                              # F897B44 PBU_WIRED_PROC)
+    (0x0F8982E4, 'PBU_$DATA_END', None),      # F8982E4 PBU_$DATA_END
+]
 # Marks the map puts off the item boundary they are emitted at: `NAME = .
 # + delta;'.  The SAU3's LPR_$DATA_END (E844D7) is the last byte of CBUF's
 # 4-byte block (`D E844D4 CBUF'), the byte before IIC's block (the SAU2's,
 # E854D7, the byte before AUDIT's block).
-MARK_DELTAS = {3: {'LPR_$DATA_END': -1}}
+MARK_DELTAS = {3: {'LPR_$DATA_END': -1}, 4: {'LPR_$DATA_END': -1}}
 # The SAU9's: the same marks at its map's addresses (most of them map
 # symbols there), the page-aligned starts of the drivers' sections its
 # Pascal names for MST_$WIRE_AREA (ETHER_PROC_START, ETHER_DATA_START,
@@ -716,6 +801,10 @@ BSS_MARKS[2] = [
 BSS_MARKS[3] = [
     (0x00EAB284, 'OS_DATA_END', None),        # D92 EAB284 OS_DATA_END
     (0x00EB0000, 'OS_PAGE', 0x8000),          # D68 EB0000 PAGE / D91 OS_PAGE
+]
+BSS_MARKS[4] = [
+    (0x0F8B9284, 'OS_DATA_END', None),        # D90 F8B9284 OS_DATA_END
+    (0x0F8C0000, 'OS_PAGE', 0x8000),          # D66 F8C0000 PAGE / D89 OS_PAGE
 ]
 BSS_MARKS[5] = [
     (0x00EB3684, 'OS_DATA_END', None),        # D91 EB3684 OS_DATA_END
@@ -878,6 +967,26 @@ ANCHORS[3] = {
     '.text.NULLPROC': 0xE23BAC,
     # `D E27AA4 TESTPAGE size = 60'
     '.text.io_$probe': 0xE27AA4,
+}
+# The same sections at the SAU4's addresses (tools/asm_compare.py's SAU4
+# LOCAL_SYMBOLS give the first symbol of each), and smd/sau4/
+# wired_proc.s's two sections with no map symbol.
+ANCHORS[4] = {
+    # SVC_$TRAP0_TABLE, inside `D F888840 SVC_CATCHER size = E40'
+    '.text.svc_tables': 0x0F888ADA,
+    # TIME_$TIMER_HANDLER, the end of TIME_ASM after TIME_$DI_RTE + 0x12
+    '.text.TIME_$TIMER_HANDLER': 0x0F82D7E4,
+    # `D F8229B0 FIM_UNWIRED size = 4B0'
+    '.text.FIM_UNWIRED': 0x0F8229B0,
+    # `D F8270FC NULLPROC size = 18' (NULL_LOOP)
+    '.text.NULLPROC': 0x0F8270FC,
+    # `D F82B7E8 TESTPAGE size = 64'
+    '.text.io_$probe': 0x0F82B7E8,
+    # smd/sau4/wired_proc.s: the start of `I F816404 SMD_WIRED size = 368'
+    # up to SMD_$LOCK_DISPLAY, and the body after SMD_$BIT_SET from
+    # 0xF8166F8 to the segment's end; neither defines a map symbol
+    '.text.SMD_WIRED': 0x0F816404,
+    '.text.smd_$start_blt_body': 0x0F8166F8,
 }
 # The same sections at the SAU5's addresses (tools/asm_compare.py's SAU5
 # LOCAL_SYMBOLS give the first symbol of each), and smd/sau5/
@@ -1580,6 +1689,47 @@ SPECIAL_PAIRS[3] = [
     # 0xE865D0 (D39 E865C8 IIC_AQWRD_DATA size = 8)
     (0x00E85400, 0x00E86210, 0x00E86210, 0x00E865D0),
 ]
+# The SAU4's: the same eight in the same order (SPECIAL_DATA_MARKED
+# indexes them), then the ranges of the SAU4's own drivers that their
+# acquire routines wire (mst_$wire_area by the marks of TEXT_MARKS[4]),
+# as the SAU3's; no IIC range (the map's IIC_$ marks are one address).
+SPECIAL_PAIRS[4] = [
+    # OS_DISK_PROC 0xF84024C .. OS_DISK_PROC_END (I F8466F8 OS_DISK_END);
+    # OS_DISK_DATA (D F885CD0 VTOC_) .. D F888840 SVC_CATCHER
+    (0x0F84024C, 0x0F8466FA, 0x0F885CD0, 0x0F888840),
+    # OS_PROC_SHUTWIRED 0xF866B44 .. I F877D48 OS_SHUTWIRED_END; D F88FF88
+    # STOP_WATCH, OS_DATA_SHUTWIRED (D F89089C FILE_) .. D F890F10 DTTY_ASM
+    (0x0F866B44, 0x0F877D4A, 0x0F88FF88, 0x0F890F10),
+    # I F87B568 PEB_WIRED .. I F87B5C8 PEB_WIRED_END; no PEB wired data
+    (0x0F87B568, 0x0F87B5CA, 0x0F893808, 0x0F893808),
+    # I F87EEC8 NETLOG size = 464 (+ I F87F32C NETLOG); D F893CCC NETLOG
+    # size = 84
+    (0x0F87EEC8, 0x0F87F32E, 0x0F893CCC, 0x0F893D50),
+    # D60 F882C00 RING_PROC_START .. D59 F8857B4 RING_PROC_END; D58 F894800
+    # RING_DATA_START .. D57 F894DC0 RING_DATA_END
+    (0x0F882C00, 0x0F8857B4, 0x0F894800, 0x0F894DC0),
+    # D54 F885800 ETHER_PROC_START .. D53 F885814 ETHER_PROC_END (size 4);
+    # D52 F895000 ETHER_DATA_START .. D51 F895004 ETHER_DATA_END (size 4)
+    (0x0F885800, 0x0F885818, 0x0F895000, 0x0F895008),
+    # I12 F895400 RTWIRED_CODE size = D68; D34 F896168 RTWIRED_DATA ..
+    # F896628 RTWIRED_DATA_END
+    (0x0F895400, 0x0F896168, 0x0F896168, 0x0F896628),
+    # PBU_$PAGE_START (D36 F897400 PBU_PAGE) and I16 F897B44 PBU_WIRED_PROC
+    # size = 494; D37 F897FD8 PBU_WIRED_DATA (and the SCSI/MONO/COLOR cells)
+    # .. RELOC
+    (0x0F897400, 0x0F897FD8, 0x0F897FD8, 0x0F898434),
+    # SM_C_$PROC_START (I F87BC10 SM_C size = C90) .. SM_C_$PROC_END
+    # 0xF87C90E; SM_C_$DATA_START = SM_C_$DATA_END = 0xF893B20 (no data)
+    (0x0F87BC10, 0x0F87C90E, 0x0F893B20, 0x0F893B20),
+    # MT_$PROC_START (I F87DD48 MT_$SIO size = 2BC) .. MT_$PROC_END
+    # 0xF87E006; the MT page (D39 F896800 MT_PAGE size = C00)
+    (0x0F87DD48, 0x0F87E006, 0x0F896800, 0x0F897400),
+    # LPR_$PROC_START (I F87B5CC LPR_ size = 358, then CBUF) ..
+    # LPR_$PROC_END 0xF87BC0D (I F87BC0C LPR_END_ADDR); LPR_$DATA_START
+    # (D F893808 LPR_) .. LPR_$DATA_END 0xF893B1F, with LPR_ASM and CBUF's
+    # block
+    (0x0F87B5CC, 0x0F87BC10, 0x0F893808, 0x0F893B20),
+]
 # The SAU5's: the same eight in the same order (SPECIAL_DATA_MARKED
 # indexes them), then the ranges of the SAU5's own drivers that their
 # acquire routines wire (mst_$wire_area by the marks of TEXT_MARKS[5]).
@@ -1723,6 +1873,19 @@ CODE_TO_DATA[3] = [
     # E8A054 PBU_WIRED_DATA
     (0x00E89400, 0x00E8A054, 0x00E8A054, 0x00E8A434),
 ]
+CODE_TO_DATA[4] = [
+    # I 4 F800C00 WIRED_PROC; D24 F81F000 WIRED_DATA .. I 5 F832400
+    (0x0F800C00, 0x0F81F000, 0x0F81F000, 0x0F832400),
+    # I 5 F832400 OS_INIT_PROC; D25 F838400 OS_INIT_DATA .. I 1 F840000
+    (0x0F832400, 0x0F838400, 0x0F838400, 0x0F840000),
+    # I 1 F840000 .TEXT; D21 F885C00 .DATA .. I20 F898434 RELOC
+    (0x0F840000, 0x0F885C00, 0x0F885C00, 0x0F898434),
+    # I12 F895400 RTWIRED_CODE; D34 F896168 RTWIRED_DATA
+    (0x0F895400, 0x0F896168, 0x0F896168, 0x0F896628),
+    # D36 F897400 PBU_PAGE (PBU_ASM) and I16 F897B44 PBU_WIRED_PROC; D37
+    # F897FD8 PBU_WIRED_DATA
+    (0x0F897400, 0x0F897FD8, 0x0F897FD8, 0x0F898434),
+]
 CODE_TO_DATA[5] = [
     # I 4 E00800 WIRED_PROC; D24 E1E800 WIRED_DATA .. I 5 E30400
     (0x00E00800, 0x00E1E800, 0x00E1E800, 0x00E30400),
@@ -1768,6 +1931,7 @@ CODE_TO_DATA[9] = [
 WIRED_DATA_REGION = {
     2: (0x00E1DC00, 0x00E2F000),
     3: (0x00E1CC00, 0x00E2DC00),    # D24 E1CC00 WIRED_DATA .. I 5 E2DC00
+    4: (0x0F81F000, 0x0F832400),    # D24 F81F000 WIRED_DATA .. I 5 F832400
     5: (0x00E1E800, 0x00E30400),    # D24 E1E800 WIRED_DATA .. I 5 E30400
     8: (0x03C1F400, 0x03C31C00),    # D25 3C1F400 WIRED_DATA .. I 5 3C31C00
     9: (0x3C420800, 0x3C434C00),    # D25 3C420800 WIRED_DATA .. I 6 3C434C00
@@ -1775,6 +1939,7 @@ WIRED_DATA_REGION = {
 UNWIRED_DATA_REGION = {
     2: (0x00E78400, 0x00E88834),
     3: (0x00E79C00, 0x00E8A434),    # D21 E79C00 .DATA .. I20 E8A434 RELOC
+    4: (0x0F885C00, 0x0F898434),    # D21 F885C00 .DATA .. I20 F898434 RELOC
     5: (0x00E7F800, 0x00E92834),    # D21 E7F800 .DATA .. I20 E92834 RELOC
     8: (0x03C8D800, 0x03CA65F8),    # D22 3C8D800 .DATA .. I21 3CA65F8 RELOC
     9: (0x3C489800, 0x3C4A75D8),    # D22 3C489800 .DATA .. I21 3C4A75D8 RELOC
@@ -1793,6 +1958,12 @@ REGION_DATA_END_KEY = {
         C_WIRED: (0x00E2CCF3, LATE),
         # D21 E79C00 .DATA size = ABB4: its end is 0xE847B4
         C_UNWIRED: (0x00E847B3, LATE),
+    },
+    4: {
+        # D24 F81F000 WIRED_DATA size = 122C4: its end is 0xF8312C4
+        C_WIRED: (0x0F8312C3, LATE),
+        # D21 F885C00 .DATA size = E150: its end is 0xF893D50
+        C_UNWIRED: (0x0F893D4F, LATE),
     },
     5: {
         # D24 E1E800 WIRED_DATA size = 10CC4: its end is 0xE2F4C4
@@ -1823,6 +1994,7 @@ REGION_DATA_END_KEY = {
 RUNTIME_KEY = {
     2: (0x00E0ADB0, -1),
     3: (0x00E0AE5C, -1),    # I E0AC80 M$ARITH size = 1DC; I E0AE5C MEM_
+    4: (0x0F80B608, -1),    # I F80B42C M$ARITH size = 1DC; I F80B608 MEM_
     5: (0x00E0AF5C, -1),    # I E0AD80 M$ARITH size = 1DC; I E0AF5C MEM_
     8: (0x03C0BBC8, -1),    # I 3C0B9EC M$ARITH size = 1DC; I 3C0BBC8 MEM_
     9: (0x3C40CC00, -1),    # I 3C40CA24 M$ARITH size = 1DC; I 3C40CC00 MEM_
@@ -1833,7 +2005,7 @@ RUNTIME_KEY = {
 # data in its modules, whose blocks the map keys (dpc_blocks), so the SAU2
 # and SAU5 have none.  A key
 # in the image's bss (past RELOC) makes a bss object NOBITS there.
-DATA_ANCHORS = {2: {}, 3: {}, 5: {}, 8: {
+DATA_ANCHORS = {2: {}, 3: {}, 4: {}, 5: {}, 8: {
     # mono/, color4/, color5/: the display drivers' initialized overlay
     # sections, the map's numbered sections after SCSI_WIRED_DATA (names
     # cut at 16 characters; the COLOR6_ and COLOR7_ sections after them
@@ -1873,6 +2045,12 @@ SPECIAL_DATA_MARKED = {
         10: (0x00E8417C, 0x00E844D8),   # LPR_$DATA_START .. LPR_$DATA_END
         11: (0x00E86210, 0x00E865D0),   # IIC_$PROC_END .. IIC_$DATA_END
     },
+    4: {
+        0: (0x0F885CD0, 0x0F888840),    # VTOC_ .. SVC_CATCHER
+        1: (0x0F89089C, 0x0F890F10),    # FILE_ .. DTTY_ASM
+        4: (0x0F894800, 0x0F894DC0),    # RING_DATA_START .. RING_DATA_END
+        10: (0x0F893808, 0x0F893B20),   # LPR_$DATA_START .. LPR_$DATA_END
+    },
     5: {
         0: (0x00E7F8D0, 0x00E82308),    # VTOC_ .. SVC_CATCHER
         1: (0x00E89444, 0x00E89AB8),    # FILE_ .. DTTY_ASM
@@ -1900,6 +2078,8 @@ CLASS_BOUNDS = {
     2: (0x00E2F000, 0x00E38000, 0x00EA9684),
     # I 5 E2DC00 OS_INIT_PROC, I 1 E38000 .TEXT, D92 EAB284 OS_DATA_END
     3: (0x00E2DC00, 0x00E38000, 0x00EAB284),
+    # I 5 F832400 OS_INIT_PROC, I 1 F840000 .TEXT, D90 F8B9284 OS_DATA_END
+    4: (0x0F832400, 0x0F840000, 0x0F8B9284),
     # I 5 E30400 OS_INIT_PROC, I 1 E38000 .TEXT, D91 EB3684 OS_DATA_END
     5: (0x00E30400, 0x00E38000, 0x00EB3684),
     # I 5 3C31C00 OS_INIT_PROC, I 1 3C40000 .TEXT, D96 3CC7448 OS_DATA_END
@@ -2539,7 +2719,7 @@ def data_fragment(layout, map_path):
 
 # The SAUs whose RFC image carries the fixup table at RELOC (the SAU2's,
 # SAU3's, SAU5's, SAU8's; the SAU9's image ends at RELOC with no table).
-RFC_FIXUP_TABLE = {2: True, 3: True, 5: True, 8: True, 9: False}
+RFC_FIXUP_TABLE = {2: True, 3: True, 4: False, 5: True, 8: True, 9: False}
 FIXUP_SLACK = 0    # entries beyond the inputs' count (every input is
                    # seen)
 

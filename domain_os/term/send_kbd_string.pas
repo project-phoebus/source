@@ -4,6 +4,7 @@
   Image addresses:
     sau2  0x00E1AAFC  TERM_$SEND_KBD_STRING
     sau3  0x00E1A164  TERM_$SEND_KBD_STRING
+    sau4  0x0F81BD10  TERM_$SEND_KBD_STRING
 
   - KBD_$PUT for line 0 with type 0; the converted status is dropped.
 

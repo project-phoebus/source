@@ -3,6 +3,7 @@
 
   Image addresses:
     sau3  0x00E0AB20  MBUS_$UNDEF_INT
+    sau4  0x0F80B204  MBUS_$UNDEF_INT
     sau5  0x00E0AA0C  MBUS_$UNDEF_INT
 
   - CRASH_SYSTEM does not return, so the result false (not handled) is

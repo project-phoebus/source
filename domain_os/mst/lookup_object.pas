@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E43CBE  mst_$lookup_object (module-local)
+    sau4  0x0F84BD90  mst_$lookup_object (module-local)
     sau8  0x03C4BEC2  mst_$lookup_object (module-local)
     sau9  0x3C44B080  mst_$lookup_object (module-local)
 

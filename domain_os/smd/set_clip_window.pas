@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6FE30  SMD_$SET_CLIP_WINDOW
+    sau4  0x0F87A738  SMD_$SET_CLIP_WINDOW
     sau5  0x00E7235C  SMD_$SET_CLIP_WINDOW
 
   - The window is clamped to the display's limits.

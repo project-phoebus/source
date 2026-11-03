@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E16C8E  TIME_$Q_REENTER_ELEM
+    sau4  0x0F817646  TIME_$Q_REENTER_ELEM
 
   - Under the queue's spin lock the element is taken off the queue, its
     expiry set to when (plus now for a relative time) and inserted in

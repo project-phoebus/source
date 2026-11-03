@@ -504,9 +504,12 @@ type
     edx: pinteger;                        { 0x18 }
   end;
 
-{ SMD_$BLT - start a bit-block transfer on the current process's display. }
-procedure smd_$blt(in blt_regs: smd_$blt_regs_t; in param2: integer32;
-                   in param3: integer; out status: status_$t); extern;
+{ SMD_$BLT - start a bit-block transfer on the current process's display.
+  With `blt_main_memory' (base/config.ins.pas) the main-memory buffer's
+  address and page count go on to SMD_$WIRE_MM; the other form reads
+  neither. }
+procedure smd_$blt(in blt_regs: smd_$blt_regs_t; in mm_va: integer32;
+                   in mm_pages: pinteger; out status: status_$t); extern;
 
 const
   { The status SMD_$BLT stores for a transfer the display cannot do.
@@ -515,6 +518,11 @@ const
     "non-conforming and main memory blts not implemented", the three
     mode bits SMD_$BLT refuses). }
   smd_$not_implemented = 16#00130028;
+
+  { The status SMD_$WIRE_MM stores for more pages than the display record
+    holds (`blt_main_memory').  Apollo's customer smdu.ins.pas of SR10.2
+    names it: `smd_$too_many_pages = 16#0013000A ;'. }
+  smd_$too_many_pages = 16#0013000A;
 
   { The status the routines that draw into display memory return for a
     color display (`color_displays', base/config.ins.pas: SMD_$WS_INIT,
@@ -569,9 +577,12 @@ const
 { SMD_$EOF_WAIT - wait for the display's next end of frame, or a quit. }
 procedure smd_$eof_wait(out status: status_$t); extern;
 
-{ SMD_$WIRE_MM - wire main memory for display use. }
-procedure smd_$wire_mm(in param1: integer32; in param2: integer32;
-                       in param3: integer32;
+{ SMD_$WIRE_MM - wire main memory for display use.  With
+  `blt_main_memory' (base/config.ins.pas) the buffer's address, its
+  page count (compared unsigned) and the display unit, each read
+  through its address; the other form reads none of them. }
+procedure smd_$wire_mm(in va: integer32; in npages: pinteger;
+                       in unit: pinteger;
                        out status: status_$t); extern;
 
 { SMD_$SEND_RESPONSE - answer a pending borrow request and wake the

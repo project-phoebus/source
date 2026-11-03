@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E16DD4  TIME_$Q_ADD_CALLBACK
+    sau4  0x0F81778C  TIME_$Q_ADD_CALLBACK
 
   - The element's expiry is when (plus now for a relative time); its
     callback, datum, flags and repeat interval are set, and

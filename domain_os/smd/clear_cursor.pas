@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6E0AA  SMD_$CLEAR_CURSOR
+    sau4  0x0F878832  SMD_$CLEAR_CURSOR
     sau5  0x00E7050E  SMD_$CLEAR_CURSOR
 
   Status stored:

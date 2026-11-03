@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E03FBC  ast_$flush_installed_pages (nested)
+    sau4  0x0F80439C  ast_$flush_installed_pages (nested)
     sau8  0x03C042E8  ast_$flush_installed_pages (nested)
     sau9  0x3C4052F4  ast_$flush_installed_pages (nested)
 
@@ -15,7 +16,7 @@
 
   procedure ast_$flush_installed_pages;
   begin
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
     { the entries are cleared by the caller: the translations flushed }
     mmu_$purge;
 %else

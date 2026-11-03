@@ -2,12 +2,15 @@
 
   Image addresses:
     sau3  0x00E89CA4  PBU2_$MAP
+    sau4  0x0F897C44  PBU2_$MAP
     sau5  0x00E92068  PBU2_$MAP
     sau8  0x03CA5B46  PBU2_$MAP
 
   - At interrupt level, from a user handler (PBU_$TRAP6); no lock.
   - Each page's I/O map entry is the page number plus the unit's
-    control: a longword (`long_iomap'), else a word and the high word.
+    control: a longword (`long_iomap'), else a word and the high word;
+    with word entries (`word_iomap') the page number alone, and a page
+    not wired clears the entries before it.
   - The result is iova plus the buffer's offset in its page, unset when
     a check fails.
   - The fit test compares an offset with the space's end address; the
@@ -43,7 +46,9 @@ var
   last: integer;
   slot: integer;
   k: integer;
+%if not word_iomap %then
   ctl: pbu_$ctl_t;
+%endif
 begin
   status.all := status_$ok;
   dcte := pbu_map_check_unit(unit, status);
@@ -67,7 +72,9 @@ begin
   end;
   npages := (va + length - 1) div 1024 - va div 1024;
   first := linteger(offset) div 1024 + dcte^.map_page;
+%if not word_iomap %then
   ctl := dcte^.ctl;
+%endif
   last := first + npages;
   for slot := first to last do begin
 %if long_iomap %then
@@ -75,6 +82,11 @@ begin
     if (iomap[slot] & 16#3FFF) = 0 then begin
       for k := first to slot - 1 do
         iomap[k] := iomap[k] & (-16#8001);
+%elseif word_iomap %then
+    iomap[slot] := pbu_map_owned_ppn(unit, va);
+    if iomap[slot] = 0 then begin
+      for k := first to slot - 1 do
+        iomap[k] := 0;
 %else
     iomap[slot].entry := pbu_map_owned_ppn(unit, va) + ctl.entry;
     if (iomap[slot].entry & 16#FFF) = 0 then begin

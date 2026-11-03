@@ -4,6 +4,7 @@
   Image addresses:
     sau2  0x00E723C0  TERM_$GET_EC
     sau3  0x00E73AAC  TERM_$GET_EC
+    sau4  0x0F87F99C  TERM_$GET_EC
 
   - The real line's DTTE input (0) or output (1) eventcount is
     registered (EC2_$REGISTER_EC1) and its handle handed back.

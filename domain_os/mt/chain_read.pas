@@ -3,6 +3,7 @@
 
   Image addresses:
     sau3  0x00E7070C  MT_$CHAIN_READ
+    sau4  0x0F87D484  MT_$CHAIN_READ
     sau5  0x00E76276  MT_$CHAIN_READ
 
   - When the unit has a header buffer, the header is placed to end at

@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E43A0C  MST_$REMAP_PRIVI
+    sau4  0x0F84BAE2  MST_$REMAP_PRIVI
     sau8  0x03C4BC12  MST_$REMAP_PRIVI
     sau9  0x3C44ADD4  MST_$REMAP_PRIVI
 

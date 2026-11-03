@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E5C1A4  XPD_$GET_REGISTERS
+    sau4  0x0F865D38  XPD_$GET_REGISTERS
 
   - The target (XPD_$FIND_INDEX, under the process-table lock) must
     have a published debug state.  By mode: 0 the register block; 1 the

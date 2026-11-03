@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E3366C  network_$fetch_diskless_info (module-local)
     sau3  0x00E31AB4  network_$fetch_diskless_info (module-local)
+    sau4  0x0F8368B0  network_$fetch_diskless_info (module-local)
     sau8  0x03C36EB8  network_$fetch_diskless_info
 
   - A fragment of the OS module (os/os.pas), the first routine of its

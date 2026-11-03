@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E70062  SMD_$INQ_DISP_UID
     sau3  0x00E6E652  SMD_$INQ_DISP_UID
+    sau4  0x0F87A96E  SMD_$INQ_DISP_UID
     sau5  0x00E7258E  SMD_$INQ_DISP_UID
     sau9  0x3C4764AC  SMD_$INQ_DISP_UID
 

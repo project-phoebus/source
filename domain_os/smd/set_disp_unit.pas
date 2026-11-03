@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6F7D4  SMD_$SET_DISP_UNIT
+    sau4  0x0F87A066  SMD_$SET_DISP_UNIT
     sau5  0x00E71C4C  SMD_$SET_DISP_UNIT
     sau9  0x3C475E66  SMD_$SET_DISP_UNIT
 

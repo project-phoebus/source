@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6F3AE  SMD_$EOF_WAIT
+    sau4  0x0F879B0E  SMD_$EOF_WAIT
     sau5  0x00E7177A  SMD_$EOF_WAIT
 
   - The display is acquired, its end-of-frame interrupt armed (mode word

@@ -7,12 +7,14 @@
     status has bit 0, is aborted; else a channel error crashes the
     system.  The channel's status is then cleared.
   - Not compiled for a controller that moves its packets itself
-    (`ring_controller_dma'), which has no DMA channels.
+    (`ring_controller_dma'), which has no DMA channels, nor with the
+    board's own DMA (`ring_board_dma'), whose channels are left as they
+    are.
 
   Status stored: none.
 }
 
-%if not ring_controller_dma %then
+%if not ring_controller_dma and not ring_board_dma %then
 procedure ring_$clear_dma_channel(channel: integer; unit: integer);
   internal;
 var

@@ -58,6 +58,11 @@
 |   -- none of the three (0x00E2B270) --
 |               IO_$COND_SWITCH_BACK, restore, FIM_$SPURIOUS_INT
 |
+| The SAU4's passes MMU_$MCR_CHANGE 0x10F (`mcr_change_low_bits': its
+| MMU_$MCR_CHANGE flips the low four bits of an argument from 0xFF up
+| without the shift; mmu/sau4/mmu_asm.s) where the SAU2 passes 7; that
+| line carries the SAU4 image's address.
+|
 | The image spells `cmp.l' / `sub.l #1000000,D0' as CMP/SUB <ea>=#imm;
 | they are `.short' opcode words with their immediates here.
 |
@@ -250,7 +255,11 @@ TIME_$TIMER_HANDLER:
         subq.w  #1,(%a0)                        | e2b1e2  5350
         bne.s   .Le2b1f6                        | e2b1e4  6610
         move.w  #2,(%a0)                        | e2b1e6  30bc 0002
+        .if mcr_change_low_bits
+        move.w  #0x10f,-(%sp)                   | sau4 f82d89e  3f3c 010f
+        .else
         move.w  #7,-(%sp)                       | e2b1ea  3f3c 0007
+        .endif
         jsr     MMU_$MCR_CHANGE                 | e2b1ee  4eb9 00e2 42a0
         addq.l  #2,%sp                          | e2b1f4  548f
 .Le2b1f6:

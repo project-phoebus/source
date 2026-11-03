@@ -13,7 +13,12 @@
  * Byte gate (tools/asm_compare.py): identical to the image modulo
  * relocations; `and.w #imm,D0' is the <ea>=#imm form (c07c) in the image,
  * ANDI in ours (recognised by the gate).
+ *
+ * The SAU4 keeps the SR's bits 7 and 6 for the user and not T0
+ * (`sr_user_bits_76', base/config.ins.pas: mask 0x80DF).
  */
+
+        .include "base/config.inc"
 
         .section ".text.FIM_$FAULT_RETURN","ax",@progbits
         .even
@@ -59,7 +64,11 @@ FIM_$FAULT_RETURN:
         /* sc_ps is a longword (at +0x18, as BSD's
          * `int sc_ps'); the SR is its low word (+0x1A). */
         move.l  (0x18,%a2),%d0                  /* e2184a  sc_ps, read as a long */
+        .if sr_user_bits_76
+        and.w   #0x80df,%d0                     /* sau4 f822e1e  c07c 80df */
+        .else
         and.w   #0xc01f,%d0                     /* e2184e  c07c c01f */
+        .endif
         move.w  %d0,-(%a0)                      /* e21852  frame SR */
         move.l  (0xc,%a2),-(%a0)                /* e21854  sc_fp */
         move.l  (0x10,%a2),-(%a0)               /* e21858  sc_ap */

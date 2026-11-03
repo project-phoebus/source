@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E047A0  AST_$GET_ATTRIBUTES
+    sau4  0x0F804B4C  AST_$GET_ATTRIBUTES
     sau9  0x3C405A8A  AST_$GET_ATTRIBUTES
 
   - A nil UID is validated instead of looked up.

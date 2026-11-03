@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E6D476  OS_$SHUTDOWN
     sau3  0x00E6D850  OS_$SHUTDOWN
+    sau4  0x0F876F72  OS_$SHUTDOWN
     sau5  0x00E6EB52  OS_$SHUTDOWN
     sau8  0x03C7681A  OS_$SHUTDOWN
     sau9  0x3C474082  OS_$SHUTDOWN
@@ -89,7 +90,9 @@ begin
   pbu_$shutdown(volx_status);
 %endif
 
+%if not shutdown_keeps_fp_savep %then
   fp_$savep := nil;
+%endif
 
   { wire the shutdown-wired code, then data }
   mst_$wire_area(addr(os_proc_shutwired), addr(os_proc_shutwired_end),
@@ -128,6 +131,9 @@ begin
       disable;
 %if vme_power_off %then
       vme_ctl.ctl_30.power := false;
+%endif
+%if power_off_csr %then
+      mmu_$set_csr(os_csr_power_off);
 %endif
     end;
 %endif

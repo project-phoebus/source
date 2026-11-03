@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E3DC54  FLP_$REVALIDATE
+    sau4  0x0F845C54  FLP_$REVALIDATE
     sau8  0x03C45A20  FLP_$REVALIDATE
 
   - After a new disk was noticed, the unit may do I/O again; the unit is

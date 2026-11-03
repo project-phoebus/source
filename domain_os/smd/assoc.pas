@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6D882  SMD_$ASSOC
+    sau4  0x0F877F1E  SMD_$ASSOC
     sau5  0x00E6FB96  SMD_$ASSOC
     sau9  0x3C47451A  SMD_$ASSOC
 

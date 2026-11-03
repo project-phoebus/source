@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E1C7A8  SIO_$I_TSTART
+    sau4  0x0F81D9BC  SIO_$I_TSTART
 
   - Nothing is sent while a state member 0..4 is set; a pending
     handshake sends XOFF (16#13) or XON (16#11).

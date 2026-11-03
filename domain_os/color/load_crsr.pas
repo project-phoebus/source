@@ -1,6 +1,7 @@
 { COLOR_$LOAD_CRSR - load a cursor into the color board's memory.
 
   Image addresses:
+    sau4  0x0F87B412  COLOR_$LOAD_CRSR
     sau5  0x00E72FF2  COLOR_$LOAD_CRSR
 
   - Only when the board is ready and takes a cursor: size rows of size

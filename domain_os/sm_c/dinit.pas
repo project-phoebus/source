@@ -2,6 +2,7 @@
 
   Image addresses:
     sau3  0x00E6F4C2  SM_C_$DINIT
+    sau4  0x0F87C280  SM_C_$DINIT
     sau5  0x00E75026  SM_C_$DINIT
 
   - The driver is wired, and the first time the controller set up; a
@@ -31,6 +32,8 @@ begin
       crash_system(status);
 %if long_iomap %then
     iomap[sm_c_iomap_index] := sm_c_cb_ppn + sm_iomap_bias;
+%elseif word_iomap %then
+    iomap[sm_c_iomap_index] := sm_c_cb_ppn;
 %else
     iomap[sm_c_iomap_index].entry := sm_c_cb_ppn + sm_iomap_bias;
 %endif

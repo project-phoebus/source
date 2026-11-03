@@ -1,6 +1,7 @@
 { MST_$REMOVE_IOPPN - unmap the I/O page at a virtual address.
 
   Image addresses:
+    sau4  0x0F80EA54  MST_$REMOVE_IOPPN
     sau8  0x03C0F50A  MST_$REMOVE_IOPPN
     sau9  0x3C4105F6  MST_$REMOVE_IOPPN
 

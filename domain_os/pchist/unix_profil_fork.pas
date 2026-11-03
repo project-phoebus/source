@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E5CC32  PCHIST_$UNIX_PROFIL_FORK
+    sau4  0x0F866742  PCHIST_$UNIX_PROFIL_FORK
 
   - Only when the current process is profiled: the child gets a copy of
     its parameters and its bitmap bit, counted (and the terminal manager

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6EACE  SMD_$STOP_TP_CURSOR
+    sau4  0x0F879260  SMD_$STOP_TP_CURSOR
     sau5  0x00E70F4C  SMD_$STOP_TP_CURSOR
     sau9  0x3C4754BA  SMD_$STOP_TP_CURSOR
 

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E148CA  PROC1_$TST_LOCK
+    sau4  0x0F81513E  PROC1_$TST_LOCK
 
   Status stored: none.
 }

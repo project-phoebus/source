@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E15324  PROC1_$GET_TYPE
+    sau4  0x0F815B98  PROC1_$GET_TYPE
 
   - An invalid pid crashes the system.
 

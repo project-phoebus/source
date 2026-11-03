@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6D29A  OS_$INSTALL_DISPLAY_ASTE
+    sau4  0x0F876D7A  OS_$INSTALL_DISPLAY_ASTE
     sau8  0x03C7661A  OS_$INSTALL_DISPLAY_ASTE
     sau9  0x3C473E8E  OS_$INSTALL_DISPLAY_ASTE
 
@@ -107,7 +108,7 @@ begin
         if status.all <> status_$ok then
           crash_system(status);
         va := va + 1024;
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
         { the page's descriptor in OS_PMAPS, not resident }
         os_pmaps[segno - mst_$global_a_size + seg][page].flags :=
           os_pmaps[segno - mst_$global_a_size + seg][page].flags -

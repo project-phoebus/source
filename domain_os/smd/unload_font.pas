@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6DD18  SMD_$UNLOAD_FONT
+    sau4  0x0F878436  SMD_$UNLOAD_FONT
     sau5  0x00E7011A  SMD_$UNLOAD_FONT
 
   - The font's hidden display memory goes back to the free list (its

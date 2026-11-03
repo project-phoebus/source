@@ -48,7 +48,9 @@
  * SAU3 (the PBU arms without the display window's 0x3E bytes,
  * `display_driver' in fim/m68k/bus_err.s) 0x6A8; on the SAU8
  * (`cpu_status_register' with `parity_cpu_status': its own FIM_$BUS_ERR,
- * fim/sau8/bus_err.s, and the FPU routines' longer enable) 0x73C.  Where
+ * fim/sau8/bus_err.s, and the FPU routines' longer enable) 0x73C; on the
+ * SAU4 (`region_mmu': its MMU's fault handlers, fim/sau4/bus_err.s, and
+ * the FP save tables, fim/sau4/fp.s) 0x1384.  Where
  * the bus error status is the CPU status register (`cpu_status_register')
  * the routine also clears it after the `lea', 12 bytes that put its cells
  * 12 further on (.Lspur_pre).
@@ -69,7 +71,9 @@
         .else
         .set    .Lspur_pre, 0
         .if pbu_driver
-        .if display_driver
+        .if region_mmu
+        .set    .Lspur_dist, 0x1384     /* sau4: 0xF8241E4 - 0xF822E60 */
+        .elseif display_driver
         .set    .Lspur_dist, 0x6e4      /* sau5: 0xE22C3C - 0xE22558 */
         .else
         .set    .Lspur_dist, 0x6a8      /* sau3: 0xE20E70 - 0xE207C8 */

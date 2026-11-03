@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E1D5B2  dtty_$report_error
+    sau4  0x0F81E89C  dtty_$report_error
     sau9  0x3C41FF8E  dtty_$report_error
 
   - "Error status <status> returned from <func_name>", then " while

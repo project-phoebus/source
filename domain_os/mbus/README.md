@@ -52,10 +52,17 @@ register gets the probed value with 16#293, the third is not written.
 MBUS_$UNDEF_INT and MBUS_$DEFINE_INT are the SAU5's code; the data
 block is the same 0x84 bytes.
 
+On the SAU4 (`mbus_vectored_adapter`) each of levels 0..7 has its own
+vector, 16#B0 plus the level: MBUS_$INIT traps the eight to MBUS_$INT
+and probes the adapter by writing its acknowledge register (+0x80),
+clears MBUS_$HIGH_OK and writes the mask register (+0x82) three times;
+MBUS_$INT takes the vector, acknowledges the level and masks it while
+its handler runs.  The data block is the same 0x84 bytes.
+
 ## Open items
 
-- TODO(sau): MBUS_$INT's and MBUS_$INIT's SAU4 and SAU6 forms,
-  MBUS_$DEFINE_INT's SAU6 form.
+- TODO(sau): MBUS_$INT's and MBUS_$INIT's SAU6 forms, MBUS_$DEFINE_INT's
+  SAU6 form.
 - TODO(pascal): the `integer32` transfer on the status constant, for
   dpc (mbus.ins.pas).
 - MBUS_$INIT sets only levels 0..6 to MBUS_$UNDEF_INT; levels 7..15 keep

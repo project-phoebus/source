@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E69AC4  TPAD_$INQ_DTYPE
+    sau4  0x0F87358A  TPAD_$INQ_DTYPE
 
   Status stored: none.
 }

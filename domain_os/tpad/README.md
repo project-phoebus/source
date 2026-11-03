@@ -23,6 +23,14 @@ data are in the default sections, the heading names none; TPAD_$INIT is
 headed `[section(os_init_proc, os_init_data)]` and reaches the block by
 its absolute address.  `tpad.pas`'s header has the details.
 
+### The SAU4
+
+The SAU4's TPAD is the same source.  The module is compiled with `-cpu
+460` (the Makefile's CPU460_MODULES): TPAD_$DATA's six longword
+multiplies are the DN460's extended instructions where the other SAUs
+call M$MIS$LLW and M$MIS$LLL, so its .TEXT segment is 0x994 bytes.  The
+data segment's bytes are the SAU2's and SAU5's.
+
 ## Routines and their fragments
 
 | routine                   | fragment |

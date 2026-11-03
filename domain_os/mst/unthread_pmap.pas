@@ -2,6 +2,7 @@
   thread.
 
   Image addresses:
+    sau4  0x0F80E844  MST_$UNTHREAD_PMAP
     sau8  0x03C0F20E  MST_$UNTHREAD_PMAP
     sau9  0x3C4102E6  MST_$UNTHREAD_PMAP
 
@@ -26,7 +27,11 @@ begin
     asid := p^.asid;
     seg := p^.seg;
     p := addr(bst[seg + bst_asid_base[asid]]);
+%if region_mmu %then
+    smaps[seg + smap_asid_base[asid]].e.valid := false;
+%else
     smaps[seg + smap_asid_base[asid]].ctl.dt := mst_smap_invalid;
+%endif
   end;
   link.asid := -1;
   ml_$unlock(ml_$pmap_lock);

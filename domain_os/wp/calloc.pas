@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E070EC  WP_$CALLOC
+    sau4  0x0F807456  WP_$CALLOC
     sau9  0x3C408326  WP_$CALLOC
 
   - Under ml_$pmap_lock, ast_$allocate_pages takes one page; its number

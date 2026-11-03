@@ -3,6 +3,7 @@
 
   Image addresses:
     sau3  0x00E2CBE4  SM_C data (WIRED_DATA, 0x98 bytes)
+    sau4  0x0F8311B4  SM_C data (WIRED_DATA, 0x98 bytes)
     sau5  0x00E2F3B4  SM_C data (WIRED_DATA, 0x98 bytes)
 
   One compilation unit, one code segment and one data segment: on the
@@ -18,7 +19,10 @@
   empty: its whole body is conditional.  The SAU3's code is the SAU5's
   but for the I/O map entries: longwords with the long_iomap part, the
   first word of each entry's 4 bytes without it (pbu/pbu.ins.pas).  The
-  SAU4's and SAU6's are their own.
+  SAU4's is the SAU3's with the 64 KB Multibus map's entry
+  (`mbus_map_64k'), word entries (`word_iomap'), the large virtual
+  memory's ECC page mapping (`large_vm', sm_c_$fix_ecc) and no parity
+  checks (`memory_parity'); the SAU6's is its own.
 
   Not part of the module: the map's SM_X_ASM segment (SM_FIX_ECC, hand
   assembly, sm_c/m68k/sm_x_asm.s) and SM_C_END_ADDR
@@ -106,6 +110,8 @@ var
   sm_c_alloc: integer32;                        { +0x74 }
 %if long_iomap %then
   sm_c_iomap_entry: ^integer32;                 { +0x78 }
+%elseif word_iomap %then
+  sm_c_iomap_entry: ^pinteger;                  { +0x78 }
 %else
   sm_c_iomap_entry: ^pbu_$iomap_entry_t;        { +0x78 }
 %endif

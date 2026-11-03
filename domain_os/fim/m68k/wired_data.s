@@ -35,10 +35,23 @@
 | The C called the run FIM_$WIRED_DATA; the hand-written users now name
 | these symbols.
 |
+| The SAUs whose memory corrects its errors (`ecc_memory',
+| base/config.ins.pas) have no parity record: the SAU4's run starts with
+| MISS_STATUS (0xF824278, after FIM_$ECCU_TRAP's two status words), the
+| rest laid out as above.
+|
+        .include "base/config.inc"
+
+        .if ecc_memory
+        .section ".text.MISS_STATUS","ax",@progbits
+        .else
         .section ".text.PARITY_$INFO","ax",@progbits
+        .endif
         .balign 2
 
+        .if !ecc_memory
         .globl  PARITY_$INFO
+        .endif
         .globl  MISS_STATUS
         .globl  PENDING_TRACE_FAULTS
         .globl  FIM_$QUIT_EC
@@ -56,8 +69,10 @@
         .endr
         .endm
 
+        .if !ecc_memory
 PARITY_$INFO:                           | 0xE21FE6
         .space  0x14
+        .endif
 MISS_STATUS:                            | 0xE21FFA
         .long   0
 PENDING_TRACE_FAULTS:                   | 0xE21FFE

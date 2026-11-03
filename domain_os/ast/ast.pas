@@ -5,6 +5,8 @@
   Image addresses:
     sau2  0x00E1DC80  AST_ data (WIRED_DATA, 0x498 bytes)
     sau2  0x00E35000  AST_ data (OS_INIT_DATA, 4 bytes)
+    sau4  0x0F81F080  AST_ data (WIRED_DATA, 0x490 bytes)
+    sau4  0x0F838400  AST_ data (OS_INIT_DATA, 4 bytes)
     sau8  0x03C1F480  AST_ data (WIRED_DATA, 0x498 bytes)
     sau8  0x03C39400  AST_ data (OS_INIT_DATA, 4 bytes)
     sau9  0x3C420880  AST_ data (WIRED_DATA, 0x498 bytes)
@@ -61,6 +63,9 @@
     +0x48A  unused_48a, a stand-in      2 bytes
     +0x48C  ast_$attr_timestamp_mask    [2..4, 12, 13, 19..22, 25]
     +0x490  ast_$clobbered_uid          8 bytes
+
+  Without `memory_parity' the block ends at +0x490 (0x490 bytes): there
+  is no ast_$clobbered_uid.
 
   The routines live in one fragment file each (ast/<name>.pas), in
   image order; ast/README.md has the table.  ZERO_PAGE
@@ -535,13 +540,24 @@ type
     `true' would be a bit set on its byte), so it is
     a 0..1 subrange.  A row of 32, as ast_$pmap_t, reached through a
     pointer type transfer of the row's address (ref p. 4-197).  daddr is
-    named as in ast/ast.ins.pas's ast_$pmap_dentry_t. }
+    named as in ast/ast.ins.pas's ast_$pmap_dentry_t.  With the region
+    registers the flags reach down to bit 25 (member 9): the field
+    cleared is bits 24..23. }
+%if region_mmu %then
+  ast_pmap_entry_bits_t = packed record
+    bits_31_25: 0..127;                   { bits 31..25 }
+    bits_24_23: 0..3;                     { bits 24..23 }
+    bit_22: 0..1;                         { bit 22 }
+    daddr: 0..16#3FFFFF;                  { bits 21..0 }
+  end;
+%else
   ast_pmap_entry_bits_t = packed record
     bits_31_29: 0..7;                     { bits 31..29 }
     bits_28_23: 0..63;                    { bits 28..23 }
     bit_22: 0..1;                         { bit 22 }
     daddr: 0..16#3FFFFF;                  { bits 21..0 }
   end;
+%endif
   ast_pmap_row_bits_t = array[0..31] of ast_pmap_entry_bits_t;
   ast_pmap_row_bits_ptr_t = ^ast_pmap_row_bits_t;
 
@@ -662,7 +678,9 @@ var
                                                        above }
   ast_$attr_timestamp_mask: set of 0..31 := [2..4, 12, 13, 19..22, 25];
                                                      { +0x48C }
+%if memory_parity %then
   ast_$clobbered_uid: uid_$t;                        { +0x490, zero }
+%endif
 
 { PMAP_$FLUSH's heading and its flags type are pmap/pmap_flush.ins.pas's
   (included above). }
@@ -715,15 +733,21 @@ define
 %if pmmu_page_maps %then
   ast_$alloc_contig;
   ast_$remove_page;
+%endif
+%if pmmu_page_maps or pmap_threads %then
   ast_$assoc_ioppn;
   ast_$remove_ioppn;
 %endif
+%if memory_parity %then
   ast_$set_trouble;
   ast_$save_clobbered_uid;
+%endif
 %if pmmu_page_maps %then
   ast_$ptov;
 %endif
+%if memory_parity %then
   ast_$remove_corrupted_page;
+%endif
 %if pmap_cache_inhibit %then
   ast_$cache_inhibit_ppn;
   ast_$cache_enable_ppn;
@@ -807,15 +831,21 @@ define
 %if pmmu_page_maps %then
 %include 'ast/alloc_contig.pas';             { AST_$ALLOC_CONTIG }
 %include 'ast/remove_page.pas';              { AST_$REMOVE_PAGE }
+%endif
+%if pmmu_page_maps or pmap_threads %then
 %include 'ast/assoc_ioppn.pas';              { AST_$ASSOC_IOPPN }
 %include 'ast/remove_ioppn.pas';             { AST_$REMOVE_IOPPN }
 %endif
+%if memory_parity %then
 %include 'ast/set_trouble.pas';              { AST_$SET_TROUBLE }
 %include 'ast/save_clobbered_uid.pas';       { AST_$SAVE_CLOBBERED_UID }
+%endif
 %if pmmu_page_maps %then
 %include 'ast/ptov.pas';                     { AST_$PTOV }
 %endif
+%if memory_parity %then
 %include 'ast/remove_corrupted_page.pas';    { AST_$REMOVE_CORRUPTED_PAGE }
+%endif
 %if pmap_cache_inhibit %then
 %include 'ast/cache_inhibit_ppn.pas';        { AST_$CACHE_INHIBIT_PPN }
 %include 'ast/cache_enable_ppn.pas';         { AST_$CACHE_ENABLE_PPN }

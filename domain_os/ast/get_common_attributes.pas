@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E04A00  AST_$GET_COMMON_ATTRIBUTES
+    sau4  0x0F804DAC  AST_$GET_COMMON_ATTRIBUTES
     sau9  0x3C405CEA  AST_$GET_COMMON_ATTRIBUTES
 
   - From AST_$GET_ATTRIBUTES' full record: its first four bytes, its

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E046C8  AST_$GET_LOCATION
+    sau4  0x0F804A74  AST_$GET_LOCATION
     sau9  0x3C4059B2  AST_$GET_LOCATION
 
   - A nil UID is validated instead of looked up.

@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E04542  AST_$ASSOC_AREA
+    sau4  0x0F8048FE  AST_$ASSOC_AREA
     sau8  0x03C04832  AST_$ASSOC_AREA
     sau9  0x3C40583E  AST_$ASSOC_AREA
 
@@ -31,7 +32,7 @@ begin
     if ast_$pmap_installed in flags then begin
       old_ppn := vpn;
       with mmap[old_ppn] do begin
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
         flags := flags - [ast_$pmap_resident];
         mmu_$purge;
 %else
@@ -77,7 +78,7 @@ begin
 
     vpn := ppn;
     flags := flags + [ast_$pmap_installed];
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
     { installed but not resident: the next touch maps it }
     flags := flags - [ast_$pmap_resident];
     flags := flags + [ast_$pmap_used];

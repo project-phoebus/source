@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E09822  AREA_$REMOVE_SEG
+    sau4  0x0F809FCA  AREA_$REMOVE_SEG
     sau9  0x3C40B29C  AREA_$REMOVE_SEG
 
   - Under the area lock, after waiting out any operation in transition,
@@ -96,11 +97,21 @@ begin
 
 %if large_vm %then
     if not release then
+%if region_mmu %then
+      smaps[seg_index + smap_asid_base[asid]].bits :=
+        smaps[seg_index + smap_asid_base[asid]].bits - [31];
+%else
       smaps[seg_index + smap_asid_base[asid]].ctl.dt := mst_smap_invalid;
+%endif
 %endif
     if whole then begin
 %if large_vm %then
+%if region_mmu %then
+      smaps[seg_index + smap_asid_base[asid]].bits :=
+        smaps[seg_index + smap_asid_base[asid]].bits - [31];
+%else
       smaps[seg_index + smap_asid_base[asid]].ctl.dt := mst_smap_invalid;
+%endif
 %endif
       area_$internal_delete(entry^, seg_rec.area_id, status_ret, true);
       ec_$advance(area_$in_trans_ec);
@@ -122,7 +133,12 @@ begin
         next_link := bst[link^.seg + bst_asid_base[link^.asid]];
         bst[link^.seg + bst_asid_base[link^.asid]].asid := -1;
         link^ := next_link;
+%if region_mmu %then
+        smaps[seg_index + smap_asid_base[asid]].bits :=
+          smaps[seg_index + smap_asid_base[asid]].bits - [31];
+%else
         smaps[seg_index + smap_asid_base[asid]].ctl.dt := mst_smap_invalid;
+%endif
         exit;
       end;
       link := addr(bst[link^.seg + bst_asid_base[link^.asid]]);

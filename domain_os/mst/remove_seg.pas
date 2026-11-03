@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0E0D6  MST_$REMOVE_SEG
+    sau4  0x0F80E73C  MST_$REMOVE_SEG
     sau8  0x03C0F10A  MST_$REMOVE_SEG
     sau9  0x3C4101E4  MST_$REMOVE_SEG
 
@@ -31,14 +32,24 @@ begin
 %if large_vm %then
   { seg is the segment's index in its address space, segno the address
     space (the ASID): the segment map entry's index }
+%if region_mmu %then
+  if not smaps[seg + smap_asid_base[segno]].e.valid then
+    return;
+%else
   if smaps[seg + smap_asid_base[segno]].ctl.dt = mst_smap_invalid then
     return;
+%endif
   ml_$lock(ml_$ast_lock);
   aste := ast_$locate_aste(request);
   ml_$lock(ml_$pmap_lock);
+%if region_mmu %then
+  if smaps[seg + smap_asid_base[segno]].e.valid then begin
+    smaps[seg + smap_asid_base[segno]].e.valid := false;
+%else
   if smaps[seg + smap_asid_base[segno]].ctl.dt <> mst_smap_invalid then
   begin
     smaps[seg + smap_asid_base[segno]].ctl.dt := mst_smap_invalid;
+%endif
     if aste <> nil then begin
       { the entry off its page map's thread }
       link := addr(aste^.pmap_link);

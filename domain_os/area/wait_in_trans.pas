@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E07742  area_$wait_in_trans (module-local)
+    sau4  0x0F807A30  area_$wait_in_trans (module-local)
     sau9  0x3C408D72  area_$wait_in_trans (module-local)
 
   Assume we're called with the area lock held.

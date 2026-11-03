@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E430D0  mst_$audit_map (nested)
     sau2  0x00E43182  mst_$alloc_segs (module-local)
+    sau4  0x0F84B1C6  mst_$audit_map (nested)
+    sau4  0x0F84B278  mst_$alloc_segs (module-local)
     sau8  0x03C4B2DC  mst_$audit_map (nested)
     sau8  0x03C4B38E  mst_$alloc_segs (module-local)
     sau9  0x3C44A4E4  mst_$audit_map (nested)
@@ -14,8 +16,8 @@
     for a run of free MSTEs (backing missing MST pages).
   - It threads an anonymous area's BSTEs, fills the MSTEs
     (mst_$set_mstes) and returns the mapping's virtual address.
-  - With the large address space a private B-space mapping goes in
-    the top 8 segments of private B.
+  - With the large address space or the 8192 segments a private
+    B-space mapping goes in the top 8 segments of private B.
   - The result is written on the success path only; an anonymous area's
     location has only bit 31 set.
 
@@ -181,7 +183,7 @@ bad_length:
       end;
     end
     else if b_space then begin
-%if large_address_space %then
+%if large_address_space or vm_8192_segs %then
       lo := mst_$seg_tn - mst_b_space_segs;
 %elseif run_time_layout %then
       lo := mst_$private_a_size + mst_b_space_first;

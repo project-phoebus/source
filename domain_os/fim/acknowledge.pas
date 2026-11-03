@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0A96C  FIM_$ACKNOWLEDGE
+    sau4  0x0F80B0B4  FIM_$ACKNOWLEDGE
     sau9  0x3C40C2FC  FIM_$ACKNOWLEDGE
 
   Status stored: none.

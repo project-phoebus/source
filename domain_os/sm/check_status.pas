@@ -2,6 +2,7 @@
 
   Image addresses:
     sau3  0x00E6DCB8  sm_$check_status (module-local)
+    sau4  0x0F877434  sm_$check_status (module-local)
     sau5  0x00E6F010  sm_$check_status (module-local)
 
   - With an error block (status bit 6) the drive's error block is read

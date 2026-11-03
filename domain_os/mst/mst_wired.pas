@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E24304  MST_WIRED data (WIRED_DATA, 0x164 bytes)
+    sau4  0x0F82658C  MST_WIRED data (WIRED_DATA, 0x400 bytes)
     sau8  0x03C25EB0  MST_WIRED data (WIRED_DATA, 0x6E8 bytes)
     sau9  0x3C427298  MST_WIRED data (WIRED_DATA, 0xA58 bytes)
 
@@ -102,7 +103,21 @@ define
     +0x9E0  mst_asid_base           0x74  58 words
     +0xA54  mst_$touch_count        2
     +0xA56  mst_$got_color          1
-    +0xA57  (1 byte: the block's rounding) }
+    +0xA57  (1 byte: the block's rounding)
+
+  With the region registers (the SAU4 map's block, 0x400 bytes, zero)
+  the same objects, MST_$REGIONS_ACTIVE 4 bytes per ASID:
+
+    +0x088  mst_$regions_active     0xE8   4 bytes per ASID
+    +0x170  bst_asid_base           0xE8
+    +0x258  smap_asid_base          0xE8
+    +0x340  mst_$map_alter_lock     0x12  (6 open bytes after it)
+    +0x358  mst_$asid_allocate_lock 0x12  (6 open bytes after it)
+    +0x370  mst_$asid_lock          0x12  (6 open bytes after it)
+    +0x388  mst_asid_base           0x74
+    +0x3FC  mst_$touch_count        2
+    +0x3FE  mst_$got_color          1
+    +0x3FF  (1 byte: the block's rounding) }
 
 define
   mst_$diskless_msg;                      { +0x000, zero }
@@ -162,7 +177,7 @@ define
   mst_$seg_global_a := 16#640;            { +0x6E0 }
   mst_$global_a_size := 192;              { +0x6E2 }
   mst_$seg_tn := 1664;                    { +0x6E4 }
-%elseif not large_address_space %then
+%elseif not (large_address_space or vm_8192_segs) %then
   mst_$global_b_size := 96;               { +0x146 }
   mst_$seg_mem_top := 16#200;             { +0x148 }
   mst_$seg_high := 16#1F8;                { +0x14A }
@@ -186,8 +201,10 @@ define
   mst_$remove_seg;
 %if pmap_threads %then
   mst_$unthread_pmap;
+%if bst_va_lookup %then
   mst_$bst_to_va;
   mst_$assoc;
+%endif
   mst_$install_ioppn;
   mst_$remove_ioppn;
 %endif
@@ -201,9 +218,13 @@ define
 %include 'mst/remove_seg.pas';            { MST_$REMOVE_SEG }
 %if pmap_threads %then
 %include 'mst/unthread_pmap.pas';         { MST_$UNTHREAD_PMAP }
+%if bst_va_lookup %then
 %include 'mst/bst_to_va.pas';             { MST_$BST_TO_VA }
+%endif
 %include 'mst/va_to_aste.pas';            { mst_$va_to_aste }
+%if bst_va_lookup %then
 %include 'mst/assoc.pas';                 { MST_$ASSOC }
+%endif
 %include 'mst/install_ioppn.pas';         { MST_$INSTALL_IOPPN }
 %include 'mst/remove_ioppn.pas';          { MST_$REMOVE_IOPPN }
 %endif

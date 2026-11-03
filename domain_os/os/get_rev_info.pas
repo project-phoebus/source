@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E38030  OS_$GET_REV_INFO
+    sau4  0x0F840030  OS_$GET_REV_INFO
 
   - A fragment of the PRINT_BUILD_TIME module, whose module file
     (misc/print_build_time_.pas) includes it: its code lies in that

@@ -6,6 +6,8 @@
     sau2  0x00E1A4DC  int_ids_match (nested)
     sau3  0x00E195C0  IO_$ACQUIRE
     sau3  0x00E19574  int_ids_match (nested)
+    sau4  0x0F81B190  IO_$ACQUIRE
+    sau4  0x0F81B144  int_ids_match (nested)
     sau5  0x00E1A870  IO_$ACQUIRE
     sau5  0x00E1A824  int_ids_match (nested)
     sau8  0x03C1B6AC  IO_$ACQUIRE

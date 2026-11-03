@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E02F34  AST_$MSTE_ACTIVATE_AND_WIRE
+    sau4  0x0F803362  AST_$MSTE_ACTIVATE_AND_WIRE
     sau9  0x3C404288  AST_$MSTE_ACTIVATE_AND_WIRE
 
   - As AST_$ACTIVATE_AND_WIRE, for an MSTE's UID, location word (not

@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E062FA  ast_$invalidate_with_wait (nested)
+    sau4  0x0F806694  ast_$invalidate_with_wait (nested)
     sau9  0x3C407586  ast_$invalidate_with_wait (nested)
 
   Assume we're called with the AST lock held.
@@ -63,56 +64,53 @@
         scratch := 0;
         first_in_seg := page & 16#1F;
         for i := first_in_seg to last_in_seg do begin
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
           while ast_$pmap_in_trans in entry^.flags do begin
             mmu_$purge;
             ast_$wait_for_page_transition;
           end;
-          if ast_$pmap_installed in entry^.flags then begin
-            ppn := entry^.vpn;
-            if mmap[ppn].wire_count <> 0 then begin
-              local_status.all := status_$pmap_pages_wired;
-              exit;
-            end;
-            entry^.flags := entry^.flags - [ast_$pmap_resident];
-            entry^.flags := entry^.flags - [ast_$pmap_installed];
-            entry^.vpn := mmap[ppn].disk_addr.all;
-            entry^.hi_flags := entry^.hi_flags + [15];
-            mmap_$free_remove(mmap[ppn], ppn);
-            aste^.page_count := pred(aste^.page_count);
-          end
-          else if entry^.dentry.daddr <> 0 then
-            entry^.hi_flags := entry^.hi_flags + [15];
-          entry := ast_$pmap_entry_ptr_t(integer32(entry) - 4);
-        end;
-        aste^.flags := aste^.flags + [13];
-        { the translations of the pages invalidated flushed }
-        mmu_$purge;
 %else
           while ast_$pmap_in_trans in entry^.flags do
             ast_$wait_for_page_transition;
+%endif
           if ast_$pmap_installed in entry^.flags then begin
             ppn := entry^.vpn;
             if mmap[ppn].wire_count <> 0 then begin
               local_status.all := status_$pmap_pages_wired;
               exit;
             end;
+%if pmmu_page_maps or region_mmu %then
+            entry^.flags := entry^.flags - [ast_$pmap_resident];
+%else
             if ast_$pmap_resident in entry^.flags then begin
               entry^.flags := entry^.flags - [ast_$pmap_resident];
               mmu_$remove(ppn);
             end;
+%endif
             entry^.flags := entry^.flags - [ast_$pmap_installed];
+%if pmmu_page_maps %then
+            entry^.vpn := mmap[ppn].disk_addr.all;
+            entry^.hi_flags := entry^.hi_flags + [15];
+%else
             entry^.all := entry^.all & 16#FF800000;
             entry^.all := entry^.all ! mmap[ppn].disk_addr.all;
             entry^.flags := entry^.flags + [6];
+%endif
             mmap_$free_remove(mmap[ppn], ppn);
             aste^.page_count := pred(aste^.page_count);
           end
           else if entry^.dentry.daddr <> 0 then
+%if pmmu_page_maps %then
+            entry^.hi_flags := entry^.hi_flags + [15];
+%else
             entry^.flags := entry^.flags + [6];
+%endif
           entry := ast_$pmap_entry_ptr_t(integer32(entry) - 4);
         end;
         aste^.flags := aste^.flags + [13];
+%if pmmu_page_maps or region_mmu %then
+        { the translations of the pages invalidated flushed }
+        mmu_$purge;
 %endif
         ml_$unlock(ml_$pmap_lock);
         ml_$lock(ml_$ast_lock);

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E03548  AST_$TOUCH_AREA
+    sau4  0x0F803960  AST_$TOUCH_AREA
     sau8  0x03C0388A  AST_$TOUCH_AREA
     sau9  0x3C404896  AST_$TOUCH_AREA
 
@@ -12,7 +13,9 @@
   - Otherwise the page is read: from a diskless node's partner, else
     from the disk.  The pages got are installed, wired and put in the
     working set.
-  - Both run loops stop after their first entry.
+  - Both run loops stop after their first entry; with the region
+    registers (`region_mmu') they take up to 4 entries, never past the
+    segment's last page.
 
   Status stored:
     status_$ok: the page was made resident
@@ -21,7 +24,7 @@
 }
 
 procedure ast_$touch_area(area_id: pinteger; seg_index: pinteger;
-                          page: integer; area_page: linteger;
+                          page: pinteger; area_page: linteger;
                           var ppn_array: univ ast_$ppn_list_t;
                           out status: status_$t);
 label
@@ -43,6 +46,9 @@ var
   pages_marked: integer;
   pages_done: integer;
   i: integer;
+%if region_mmu %then
+  run_max: integer;
+%endif
 begin
   status.all := status_$ok;
   entry := addr(areas[area_id]);
@@ -53,12 +59,16 @@ begin
   pages_marked := n;
   while ast_$pmap_in_trans in segmap^.flags do
     ast_$wait_for_page_transition;
+%if region_mmu %then
+  { the runs: the segment's pages from this one, at most 4 }
+  run_max := min(32 - page, 4);
+%endif
 
   { an installed page }
   if ast_$pmap_installed in segmap^.flags then begin
     repeat
       segmap^.flags := segmap^.flags + [ast_$pmap_resident];
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
       segmap^.flags := segmap^.flags + [ast_$pmap_used];
 %else
       pft[segmap^.vpn].w_02 := pft[segmap^.vpn].w_02 ! 16#2000;
@@ -67,13 +77,18 @@ begin
       out := ast_$ppn_ptr_t(integer32(out) + 4);
       n := n + 1;
       segmap := ast_$pmap_entry_ptr_t(integer32(segmap) + 4);
+%if region_mmu %then
+      if n >= run_max then
+        exit;
+%else
       if n > 0 then
         exit;
+%endif
 %if pmmu_page_maps %then
       if odd(segmap^.low) then
         exit;
 %else
-      if 13 in segmap^.flags then
+      if ast_$pmap_resident in segmap^.flags then
         exit;
 %endif
       if ast_$pmap_in_trans in segmap^.flags then
@@ -126,13 +141,18 @@ begin
       segmap^.flags := segmap^.flags + [ast_$pmap_in_trans];
       pages_marked := pages_marked + 1;
       segmap := ast_$pmap_entry_ptr_t(integer32(segmap) + 4);
+%if region_mmu %then
+      if pages_marked >= run_max then
+        exit;
+%else
       if pages_marked > 0 then
         exit;
+%endif
 %if pmmu_page_maps %then
       if odd(segmap^.low) then
         exit;
 %else
-      if 13 in segmap^.flags then
+      if ast_$pmap_resident in segmap^.flags then
         exit;
 %endif
       if ast_$pmap_in_trans in segmap^.flags then
@@ -199,7 +219,7 @@ begin
       end;
       segmap^.vpn := ppn_array[i];
       segmap^.flags := segmap^.flags + [ast_$pmap_resident];
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
       segmap^.flags := segmap^.flags + [ast_$pmap_used];
       segmap^.flags := segmap^.flags - [ast_$pmap_modified];
 %else

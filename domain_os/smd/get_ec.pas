@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6FD90  SMD_$GET_EC
+    sau4  0x0F87A692  SMD_$GET_EC
     sau5  0x00E722B6  SMD_$GET_EC
     sau9  0x3C4762B6  SMD_$GET_EC
 

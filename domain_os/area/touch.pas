@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E094FE  AREA_$TOUCH
+    sau4  0x0F809B12  AREA_$TOUCH
     sau9  0x3C40ADDE  AREA_$TOUCH
 
   - Under the area lock, after waiting out any operation in transition,
@@ -67,6 +68,14 @@ begin
   { the segment's map entry onto the ASTE's page map }
   if proc1_$type[proc1_$current] <> area_page_server_type then begin
     smap := addr(smaps[seg_index + smap_asid_base[proc1_$as_id]]);
+%if region_mmu %then
+    if not smap^.e.valid then begin
+      ml_$lock(ml_$pmap_lock);
+      smap^.e.pmap_pa := aste^.pmap_pa;
+      smap^.bits := smap^.bits + [31];
+      ml_$unlock(ml_$pmap_lock);
+    end;
+%else
     if smap^.ctl.dt <> mst_smap_valid then begin
       ml_$lock(ml_$pmap_lock);
       smap^.table := (smap^.table & 15) + aste^.pmap_pa;
@@ -76,6 +85,7 @@ begin
       smap^.flags := smap^.flags + [10..15];
       ml_$unlock(ml_$pmap_lock);
     end;
+%endif
   end;
 
 %endif

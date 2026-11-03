@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E16BDA  time_$q_setup_timer (module-local)
+    sau4  0x0F817592  time_$q_setup_timer (module-local)
 
   - The delay is the head's expiry less now, 0 when already past.
   - A virtual-timer queue hands it to PROC1_$SET_VT for its process;

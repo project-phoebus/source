@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E67D9C  SIO_$I_ERR
+    sau4  0x0F871890  SIO_$I_ERR
 
   - The conditions asked for (all five, or with check_all false only
     the DCD and CTS changes) are taken off the pending set under SIO's

@@ -26,11 +26,14 @@
  * (fim/m68k/com.s) is relocated.
  *
  * Not on the SAUs whose vector 31 is FIM_$NMI (`fim_nmi',
- * base/config.ins.pas): their maps have no FIM_$PARITY_TRAP.
+ * base/config.ins.pas): their maps have no FIM_$PARITY_TRAP; nor on
+ * those whose memory corrects its errors (`ecc_memory'): the SAU4's
+ * vectors 240 and 255 are FIM_$ECCC_TRAP and FIM_$ECCU_TRAP
+ * (fim/sau4/ecc_trap.s).
  */
 
         .include "base/config.inc"
-        .if     !fim_nmi
+        .if     !fim_nmi && !ecc_memory
 
         .section ".text.FIM_$PARITY_TRAP","ax",@progbits
         .even

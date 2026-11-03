@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E05B9C  AST_$COND_FLUSH
+    sau4  0x0F805F3A  AST_$COND_FLUSH
     sau9  0x3C406E32  AST_$COND_FLUSH
 
   - With process switching inhibited and under the AST lock, an active

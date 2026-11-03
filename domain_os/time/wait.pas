@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E1650A  TIME_$WAIT
+    sau4  0x0F816EEA  TIME_$WAIT
 
   - A local eventcount is set to be advanced at the time (an absolute
     time rebased onto the absolute clock), then waited for together

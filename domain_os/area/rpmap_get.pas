@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E07370  area_$rpmap_get (module-local)
+    sau4  0x0F807660  area_$rpmap_get (module-local)
     sau9  0x3C4089A8  area_$rpmap_get (module-local)
 
   Assume we're called with the AST lock held.
