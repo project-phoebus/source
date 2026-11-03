@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E041A8  AST_$FETCH_PMAP_PAGE
+    sau8  0x03C044BE  AST_$FETCH_PMAP_PAGE
     sau9  0x3C4054CA  AST_$FETCH_PMAP_PAGE
 
   - A physical page is allocated and the diskless partner asked for the

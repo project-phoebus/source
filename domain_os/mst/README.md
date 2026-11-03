@@ -181,9 +181,8 @@ ASID is freed (MST_$FREE_ASID), goes back through mst_$free_region: the
 region leaves MST_$REGIONS_ACTIVE, its RARS entry is made invalid, and
 the group's page of segment map entries, its BST page (when the other
 group of the page is not active) and its two pages of MSTEs are given
-back.  mst_$unwire_page removes a page by its virtual address; MMU's
-large-VM headings are declared in `mst_unwired.pas` for now (its
-TODO).
+back.  mst_$unwire_page removes a page by its virtual address
+(`mmu/mmu.ins.pas`'s large-VM MMU_$REMOVE).
 
 With the large VM layout the protection lives in the segment map
 entries: mst_$set_mstes stores it there (made invalid for MST_$TOUCH to
@@ -215,13 +214,54 @@ rest are the SAU2's source: the large address
 space's constants, the 68020 forms, or the same code (MST_$SET and
 MST_$SET_CLEAR byte for byte).
 
+## The layout chosen at boot (SAU8)
+
+The SAU8 (DN3000 family) has the large VM layout and the regions
+(`vm_regions`) without the large address space's constants: its
+segment layout is MST_WIRED's words, as on the SAU2, and MST_$PRE_INIT
+replaces the default layout's (2048 segments: private A 1600, private
+B 64, global A and B 192 each) with the MC68851 PMMU's (8192 segments:
+private A 7360, private B 64, global A 256, global B 512) when
+MMU_$HAVE_PMMU is set (`run_time_layout`).  With them go the region
+words, REGION_$PRIVATE_TN .. REGION_$TN, regions of 64 segments, and
+SPECIAL_$SEG, the special segments' first address.  The MST_WIRED block
+is 0x6E8 bytes and MST_UNWIRED's .DATA block 0x3670.
+
+Two regions share a page of segment map entries (64 entries of 8
+bytes): mst_$alloc_table_page gives a region its partner's page when
+the partner is active, the odd one the page's second half, and
+mst_$free_region gives the page back with the last of the two.  A BST
+page serves four groups, freed when none of them has a segment mapped.
+Each ASID's root entries are REGION_$TN longwords in RARS, several
+ASIDs to a page; MST_$RAR_PAGES records the pages installed.  ASID 1's
+follow ASID 0's in RARS's first page (MST_$INIT); every new ASID gets
+its page of MSTEs as on the SAU2, its OS wired entry, and a copy of
+ASID 0's spare segment map entry (the one after its global segments)
+for that entry; MST_$FORK leaves the child's first entry valid.
+MST_$FREE_ASID frees the active regions but the global ones and keeps
+the root entries' page.  MST_$TOUCH and mst_$va_to_aste leave a global
+segment's map entry with the MC68851's shared-globally bit
+(`smap_shared_global`).
+
+MST_ is done for the SAU8: every routine of the SAU8 map's MST_WIRED,
+MST_ASM and MST_UNWIRED segments, and every module-local, has its sau8
+address.  New arms: MST_$PRE_INIT, MST_$INIT, MST_$ALLOC_ASID,
+mst_$alloc_table_page, mst_$free_region, MST_$FREE_ASID, MST_$FORK's
+tail; layout arms in mst_$alloc_segs, MST_$INVALIDATE,
+MST_$MAP_SPECIAL, MST_$UNMAP_PRIVI and MST_$GET_PRIVATE_SIZE; the
+segment map fill of MST_$TOUCH and mst_$va_to_aste.  The rest are the
+SAU2's or SAU9's source as it stands.  dpc does not yet compile
+`mst_unwired.pas` for the SAU8 (the run-time-range set constructors of
+MST_$INIT, MST_$ALLOC_ASID and MST_$FREE_ASID: their TODO(pascal)
+blocks).
+
 ## Open items
 
 The TODO(pascal) blocks of `alloc_asid.pas`, `alloc_segs.pas`,
 `change_rights.pas`, `fork.pas`, `free_asid.pas`, `get_private_size.pas`,
 `grow_area.pas`, `init.pas`, `init_table_page.pas`, `lookup_object.pas`,
 `map_canned.pas`, `map_canned_at.pas`, `map_initial_area.pas`,
-`mst_unwired.pas` (MMU's large-VM headings), `pre_init.pas`, `priv_set_touch_ahead_cnt.pas`, `remap_privi.pas`,
+`pre_init.pas`, `priv_set_touch_ahead_cnt.pas`, `remap_privi.pas`,
 `set_mstes.pas` and `unmap_privi.pas` (frames and the image's forms dpc
 does not reproduce).  The lock stand-ins of `mst_wired.pas` follow RIP's
 open question.  The names copy_on_write and

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E76B7C  ring_$open_internal (module-local)
+    sau8  0x03C83456  ring_$open_internal (module-local)
 
   - The driver is wired; under the transmit lock the first open starts
     the unit's receive process, and a unit without bit 0 in its mask

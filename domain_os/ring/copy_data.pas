@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E76F1E  ring_$copy_data (module-local)
+    sau8  0x03C837EE  ring_$copy_data (module-local)
 
   - len bytes from vector element idx (from 1) at offset onward go to
     the address in dest; idx and offset are left where the copy stopped.

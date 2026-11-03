@@ -3,6 +3,7 @@
   Image addresses:
     sau5  0x00E76F10  ct_unwire_pages (module-local)
     sau9  0x3C477BDE  ct_unwire_pages (module-local)
+    sau8  0x03C7A0CC  ct_unwire_pages (module-local)
 
   - Each entry's page is unwired (WP_$UNWIRE), but a flagged entry's
     (one that may repeat the page before it) only when it is not the

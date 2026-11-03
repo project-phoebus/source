@@ -2,6 +2,7 @@
   that overlaps a range.
 
   Image addresses:
+    sau8  0x03C85DF2  ethernet_find_range
     sau9  0x3C4819F2  ethernet_find_range
 
   - first..last against the first count ranges of the list; the result

@@ -4,6 +4,7 @@
     sau2  0x00E1A910  IO_$UNMAP_CSR
     sau3  0x00E199C0  IO_$UNMAP_CSR
     sau5  0x00E1AC70  IO_$UNMAP_CSR
+    sau8  0x03C1BAAC  IO_$UNMAP_CSR
     sau9  0x3C41D464  IO_$UNMAP_CSR
 
   - The bus translates the pages' bus address and each page's mapping

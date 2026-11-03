@@ -5,12 +5,14 @@
   scratch page, the module's map-global variable and its routines; the
   module is parity/parity.pas.  With `parity_err_regs' the error
   registers PARITY_$CHK reads, with `parity_dma_pages' the DMA channel
-  table and its routines' headings.
+  table and its routines' headings; with `parity_cpu_status' the CPU
+  status register's error word, with `parity_dma_page_pairs' the
+  two-page form of the DMA channel table and its routines' headings.
 
   Apollo's customer insert files of SR10.2 declare none of these
   (fault.ins.pas has only the fault status codes, fim/fim.ins.pas).
   Include base/base.ins.pas before it, and mmu/mmu.ins.pas without
-  `parity_err_regs'.
+  `parity_err_regs' and `parity_cpu_status'.
 }
 
 const
@@ -23,6 +25,10 @@ const
     notes. }
   parity_dma_channels = 3;
   parity_dma_max_pages = 32;
+
+%elseif parity_dma_page_pairs %then
+  { The DMA channels PARITY_$DMA_TABLE has. }
+  parity_dma_channels = 3;
 
 %endif
 type
@@ -83,6 +89,57 @@ type
     status: parity_$besr_t;               { 0x00 }
     addrs: parity_$err_addrs_t;           { 0x02: phys_addr, virt_addr }
   end;
+%elseif parity_cpu_status %then
+  { The CPU status register's word (the first of MMU's page, the
+    Technical Reference's "CPU status register"), and its copy in
+    PARITY_$INFO, a packed record of 16 bits (fields from the most
+    significant bit).
+    - lane_0_err .. lane_3_err: bits 7..4, the byte lanes of the failing
+      longword with a parity error, bit 7 the first (the lowest
+      address).
+    - bit_10: an error with it set is only logged, as one of a DMA
+      channel's pages is.
+    - all: the whole word, which a store of 0 clears. }
+  parity_$cpu_status_t = packed record
+    case integer of
+      1: (bits_15_11: 0..31;              { bits 15..11 }
+          bit_10: boolean;                { bit 10 }
+          bits_9_8: 0..3;                 { bits 9..8 }
+          lane_0_err: boolean;            { bit 7 }
+          lane_1_err: boolean;            { bit 6 }
+          lane_2_err: boolean;            { bit 5 }
+          lane_3_err: boolean;            { bit 4 }
+          bits_3_0: 0..15);               { bits 3..0 }
+      2: (all: pinteger);
+  end;
+
+  { PARITY_$INFO, 0x14 bytes (the map's next symbol, MISS_STATUS, gives
+    the size).
+    - err_status: the CPU status register's copy.
+    - err_data: the half of the failing longword the lane is in. }
+  parity_$info_t = record
+    spurious_count: integer;              { 0x00 }
+    chk_in_progress: boolean;             { 0x02 }
+    reserved_03: char;                    { 0x03 }
+    err_ppn: integer32;                   { 0x04 }
+    err: parity_$err_addrs_t;             { 0x08, 0x0C }
+    err_status: parity_$cpu_status_t;     { 0x10 }
+    err_data: pinteger;                   { 0x12 }
+  end;
+
+  { PARITY_$INFO as PARITY_$CHK reaches it, `[device]' (ref 3.15.3):
+    every access a load or store of its own, the zero and true stores
+    as moves, as the image has them; the hand-written FIM_$NMI and
+    FIM_$PARITY_TRAP change it under the routine. }
+  parity_$info_dev_t = [device] parity_$info_t;
+
+  { The entry PARITY_$CHK adds to the system log, 10 bytes: the status
+    word at 0 and the two addresses at 2, word aligned (ref 3.10.5.5:
+    objects longer than a byte on word boundaries in a record). }
+  parity_$log_entry_t = record
+    status: parity_$cpu_status_t;         { 0x00 }
+    addrs: parity_$err_addrs_t;           { 0x02: phys_addr, virt_addr }
+  end;
 %else
   { PARITY_$INFO, 0x14 bytes (the map's next symbol, MISS_STATUS, gives
     the size).
@@ -123,6 +180,17 @@ type
     took_error: boolean;                  { 0x82 }
   end;
 
+%elseif parity_dma_page_pairs %then
+  { One channel of PARITY_$DMA_TABLE, 0x0C bytes apart (the image's
+    index scaling): the two pages a transfer uses (PARITY_$SET_STATE's
+    arguments) and, for each, whether PARITY_$CHK found the error in
+    it.  PARITY_$CHK_IO reports and clears the channel. }
+  parity_$dma_chan_t = record
+    ppn: array[1..2] of integer32;        { 0x00 }
+    took_error: array[1..2] of boolean;   { 0x08 }
+    unused_0a: integer;                   { 0x0A }
+  end;
+
 %endif
 var
   { PARITY_$INFO (map symbol, inside the hand-written FIM's data segment
@@ -131,11 +199,16 @@ var
     chk_in_progress and the byte after it after each call of
     PARITY_$CHK.  The map names it apart from FIM's other data, so it is
     a variable of its own here. }
+%if parity_cpu_status %then
+  parity_$info: extern parity_$info_dev_t;
+%else
   parity_$info: extern parity_$info_t;
+%endif
 
-%if parity_dma_pages %then
+%if parity_dma_pages or parity_dma_page_pairs %then
   { PARITY_$DMA_TABLE (map symbol, the only object of the PARITY data
-    segment, WIRED_DATA, 0x18C bytes), defined in parity/parity.pas. }
+    segment, WIRED_DATA: 0x18C bytes, 0x24 with
+    `parity_dma_page_pairs'), defined in parity/parity.pas. }
   parity_$dma_table: extern array[0..parity_dma_channels - 1]
                        of parity_$dma_chan_t;
 %else
@@ -144,9 +217,16 @@ var
   parity_$during_dma: extern boolean;
 %endif
 
+%if parity_cpu_status %then
+  { PAR_BUFF (map symbol, IODEFS): the scratch page the failing frame is
+    mapped at, 256 longwords, which PARITY_$CHK reads and writes
+    whole. }
+  par_buff: extern array[0..255] of integer32;
+%else
   { PAR_BUFF (map symbol, IODEFS): the scratch page the failing frame is
     mapped at, 512 words (the 1 KB page the SAU1 scan reads). }
   par_buff: extern array[0..511] of pinteger;
+%endif
 
 %if parity_err_regs %then
   { MMU_BESR, MMU_PEARH, MMU_PEARL (map symbols of the I/O definitions,
@@ -163,7 +243,20 @@ var
 { PARITY_$CHK - diagnose and log a memory parity error. }
 function parity_$chk: boolean; extern;
 
-%if parity_dma_pages %then
+%if parity_dma_page_pairs %then
+{ PARITY_$CHK_IO - tell an I/O driver which of its DMA channel's two
+  pages took the parity error.  The callers pass the channel's two pages
+  as well, which the routine does not read. }
+function parity_$chk_io(channel: integer; ppn1: integer32;
+                        ppn2: integer32): integer;
+  options(extern, val_param);
+
+{ PARITY_$SET_STATE - note the two pages a DMA channel's transfer
+  uses. }
+procedure parity_$set_state(channel: integer; ppn1: integer32;
+                            ppn2: integer32);
+  options(extern, val_param);
+%elseif parity_dma_pages %then
 { PARITY_$CHK_IO - tell an I/O driver whether its DMA channel's transfer
   took the parity error. }
 function parity_$chk_io(channel: integer): integer;

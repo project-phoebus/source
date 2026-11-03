@@ -1,6 +1,7 @@
 { ETHERNET_$STOP - stop a unit.
 
   Image addresses:
+    sau8  0x03C86672  ETHERNET_$STOP
     sau9  0x3C482272  ETHERNET_$STOP
 
   - Under the unit's lock: a user goes and the unit stops taking Domain

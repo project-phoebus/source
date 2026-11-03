@@ -76,6 +76,8 @@ None is nested (none reads a static link), none is hand assembly.
 | WIN_$DINIT | `dinit.pas` |
 | WIN_$ERROR_QUE | `error_que.pas` |
 | WIN_$GET_STATS | `get_stats.pas` |
+| WIN_$FILL_CTL_BUF (SAU8, WIN_ASM) | none: hand assembly, `sau8/win_asm.s` |
+| WIN_$EMPTY_CTL_BUF (SAU8, WIN_ASM) | none: hand assembly, `sau8/win_asm.s` |
 | WIN_$CINIT | `cinit.pas` |
 | (data) | the variables in `win.pas`; the literal cells of the code are the constants passed by address (`chr(0)`, the status constants, `0`) |
 
@@ -99,12 +101,67 @@ of these fragments' bodies, in its image order:
 | WIN_$ERROR_QUE, WIN_$GET_STATS | the SAU2's code |
 | WIN_$CINIT | `cinit.pas` (the arm) |
 
+The SAU8's driver (`win_atbus_ctlr`, the WIN8_ driver of a controller
+on the AT bus) is the third arm of `win.pas`, with a block of its own
+(the map's WIN_ data segment, 0x380 bytes in WIRED_DATA) and the map's
+WIN_ code segments in WIRED_PROC (0xF40 bytes) and OS_INIT_PROC (0x18C
+bytes, WIN_$CINIT), in its image order:
+
+| routine | fragment |
+|---------|----------|
+| WIN_$SPIN_DOWN | `spin_down.pas` (the arm) |
+| win_$wait_phase | `wait_phase.pas` (new) |
+| win_$send_command | `send_command.pas` (new) |
+| win_$check_status | `check_status.pas` (new) |
+| win_$format_track | `format_track.pas` (the arm) |
+| win_$read_mfg_badspots | `read_mfg_badspots.pas` (new) |
+| WIN8_$DO_IO | `win8_do_io.pas` |
+| WIN8_$DINIT | `win8_dinit.pas` |
+| WIN8_$INT | `win8_int.pas` |
+| WIN8_$ERROR_QUE | `win8_error_que.pas` |
+| WIN8_$GET_STATS | `win8_get_stats.pas` |
+| WIN_$FILL_CTL_BUF, WIN_$EMPTY_CTL_BUF | none: hand assembly, `sau8/win_asm.s` |
+| WIN_$CINIT | `cinit.pas` (the arm: another heading) |
+
+Its block, zero but where noted:
+
+| offset | variable | type |
+|--------|----------|------|
+| +0x000 | `win_stats` | the two drives' statistics, 24 bytes apart (win_$stats_slot_t: the 22-byte record and a pad word) |
+| +0x030 | `unused_030`, a stand-in (win.pas's TODO) | 704 bytes |
+| +0x2F0 | `win_units` | array[0..1] of win_$unit_t (the DCTE, the ports, 4 bytes) |
+| +0x308 | `win_jump_table` | WIN_$SPIN_DOWN, nil, WIN8_$DINIT, nil, WIN8_$DO_IO, WIN8_$ERROR_QUE, WIN8_$GET_STATS |
+| +0x324 | `unused_324` | integer32 |
+| +0x328 | `win_unit_ec` | array[0..1] of ec_$eventcount_t |
+| +0x340 | WIN_$CNT (`define`d, map symbol) | win_$stats_t, addressed by nothing |
+| +0x358 | `win_page_pmape` | WIN_PAGE's page table entry's address |
+| +0x35C | `win_hdr` | the header pointer of a read's first request |
+| +0x360 | `win_buf` | the page's address WIN_ASM is given |
+| +0x364 | `win_cmd` | win_$cmd_t, the command block |
+| +0x36C | `win_total_blocks` | integer32 := 1 (addressed by nothing here) |
+| +0x370 | `win_unit_bits` | integer := 16#2800, DISK_$REGISTER's units |
+| +0x372 | `win_last_phase`, `win_last_status` | the phase a time-out waited for, the port's value |
+| +0x376 | `win_sector_size` | 256 or 512 (a reporting controller's) |
+| +0x378 | `win_max_count` | the sectors of a run: 7, or 31 for a reporting controller |
+| +0x37A | `win_count` | the sectors of the run, then those done before an error |
+| +0x37C | `win_params_reported` | boolean: the controller reports the drive |
+
+Its types (`win.ins.pas`, under the part): the ports (`[device]`), the
+command block, the sense bytes and the drive parameters as packed
+records with their bit fields, the label information, a buffer
+address's page number, the kind-3 DCTE's view (io/dctes.pas WIN8_DCTE),
+the controller record, the statistics; WIN_$CNT, WIN_PAGE and the
+WIN_ASM headings; the commands and phases as named constants.  The
+PARITY_ routines are parity/parity.ins.pas's with the channel and two
+pages (`parity_dma_page_pairs`).
+
 `win.ins.pas` has the SAU5's window, descriptor and drive records, its
 statuses and commands, its map variables and its SEEK, RESTORE,
 RETRY_DATA_CHECK and WIN_$DINIT headings under the part.  Open: dpc
 refuses the window's record assignments (RESTORE, SEEK,
 win_$ecc_correct; their TODO(pascal)), so `win.pas` does not compile
-for the SAU5 yet; the other SAUs' WIN_ drivers (TODO(sau)).
+for the SAU5 yet; the SAU4's, SAU6's and SAU7's WIN_ drivers
+(TODO(sau)).
 
 Headings (`win.ins.pas`): WIN_$DO_IO, WIN_$SPIN_DOWN, WIN_$INT and
 WIN_$CINIT the default convention (every argument by address, as FLP's
@@ -163,7 +220,12 @@ routine returns a pointer, so no D0 parking.
   `format_track.pas`, `disk_init.pas`: eight frame bytes each;
   `reinit_drive.pas`: twelve; `int.pas`: four (stand-ins).
 - `get_stats.pas`: the zero record's fill, written through a pointer
-  walk with adjacent words merged; the field stores are the reading.
+  walk with adjacent words merged; the field stores are the reading
+  (WIN8_$GET_STATS has the same fill).
+- `win.pas` (AT bus form): the block's 704 bytes at +0x30 nothing
+  addresses, a stand-in.
+- `win.ins.pas` (AT bus form): the statistics array's 24-byte elements
+  of a 22-byte record, a wrapper record with a pad word.
 
 The SAU2 frames: win_$check_disk_status,
 WIN_$DO_IO, WAIT_FOR_CONTROLLER, WIN_$SPIN_DOWN, WIN_$DINIT,

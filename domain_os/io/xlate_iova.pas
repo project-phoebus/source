@@ -4,6 +4,7 @@
     sau2  0x00E1A970  IO_$XLATE_IOVA
     sau3  0x00E19A20  IO_$XLATE_IOVA
     sau5  0x00E1ACD0  IO_$XLATE_IOVA
+    sau8  0x03C1BAF4  IO_$XLATE_IOVA
 
   - The result is the bus's xlate_iova answer, a physical page number;
     for a unit not acquired it is not set.

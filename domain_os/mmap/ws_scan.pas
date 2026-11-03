@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E0D364  MMAP_$WS_SCAN
     sau2  0x00E0D274  mmap_$move_pages_to_wsl_type (nested)
+    sau8  0x03C0E256  MMAP_$WS_SCAN
+    sau8  0x03C0E17C  mmap_$move_pages_to_wsl_type (nested)
     sau9  0x3C40F2CE  MMAP_$WS_SCAN
     sau9  0x3C40F1CC  mmap_$move_pages_to_wsl_type (nested)
 

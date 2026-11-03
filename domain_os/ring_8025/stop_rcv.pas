@@ -1,6 +1,7 @@
 { ring_8025_stop_rcv - take a unit off line and end its receive process.
 
   Image addresses:
+    sau8  0x03C89FA2  ring_8025_stop_rcv
     sau9  0x3C485BA6  ring_8025_stop_rcv
 
   - Clears the unit's online flag and waits 4 ticks; a running receive

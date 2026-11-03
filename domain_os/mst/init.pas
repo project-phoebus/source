@@ -4,6 +4,9 @@
     sau2  0x00E30AAE  mst_init_page (nested)
     sau2  0x00E30B10  mst_init_global_page (nested)
     sau2  0x00E30B88  MST_$INIT
+    sau8  0x03C33BD2  mst_init_page (nested)
+    sau8  0x03C33C34  mst_init_global_page (nested)
+    sau8  0x03C33CA8  MST_$INIT
     sau9  0x3C436AB0  mst_init_page (nested)
     sau9  0x3C436B14  mst_init_global_page (nested)
     sau9  0x3C436B8C  MST_$INIT
@@ -18,6 +21,11 @@
     and the bound 9830; every ASID's regions and segment counts are
     cleared, ASID 1 gets its RARS page (a copy of ASID 0's) and both
     the global regions, and ASID 0 its first nine BST pages.
+  - With the layout chosen at boot ASID 1's root entries follow ASID
+    0's in RARS's first page and are a copy of them; ASID 0's and ASID
+    1's active regions are the global ones and region 0, whose segment
+    map page ASID 1 gets with a copy of ASID 0's entry after its global
+    segments; ASID 0 gets the BST pages of its global segments.
 
   Status stored: none.
 }
@@ -36,7 +44,7 @@ var
   i: integer;
   n: integer32;
   ten_percent: linteger;
-%if large_address_space %then
+%if vm_regions %then
   asid: integer;
   grp: integer;
 %endif
@@ -112,7 +120,7 @@ begin
   for seg := mst_$global_a_size div 64 to
       (mst_$global_a_size + mst_$global_b_size) div 64 - 1 do
     mst_init_global_page(seg);
-%if large_address_space %then
+%if large_address_space or run_time_layout %then
   pages := mmap_$real_pages;
 %else
   if not m68020 then
@@ -156,6 +164,41 @@ begin
     discard(mst_init_page(va));
     va := va + 16#400;
   end;
+%elseif run_time_layout %then
+  { every ASID's regions and segment counts cleared }
+  for asid := 0 to mst_max_asid do begin
+    mst_$regions_active[asid] := [];
+    for grp := 0 to region_$private_tn - 1 do
+      mst_$segs_mapped[asid][grp] := 0;
+  end;
+  { ASID 1's root entries, after ASID 0's in RARS's first page, a copy
+    of them }
+  mmu_$rars_phaddr[1] := mmu_$rars_phaddr[0] + region_$tn * 4;
+  mst_$rar_pages := [0];
+  for i := 0 to region_$tn - 1 do
+    rars[rars_asid_base[1] + i] := rars[rars_asid_base[0] + i];
+  mst_$regions_active[0] :=
+    [region_$global_b .. region_$global_b + region_$global_b_size - 1,
+     region_$global_a .. region_$global_a + region_$global_a_size - 1];
+  mst_$regions_active[0] := mst_$regions_active[0] + [0];
+  mst_$regions_active[1] := mst_$regions_active[0];
+  { ASID 1's region 0: its page of segment map entries, the first one a
+    copy of ASID 0's after the global segments }
+  va := linteger(addr(smaps[smap_asid_base[1]])) & ~16#3FF;
+  rars[rars_asid_base[1]].all := mst_init_page(va) * 1024 +
+                                 mst_rars_valid;
+  smaps[smap_asid_base[1]] :=
+    smaps[smap_asid_base[0] + mst_$global_a_size + mst_$global_b_size];
+  { ASID 0's BST pages, for its global segments }
+  for asid := 0 to mst_max_asid do
+    mst_$bst_pages[asid] := [];
+  va := linteger(addr(bst));
+  for i := 0 to ((mst_$global_b_size + mst_$global_a_size) * 4 - 1)
+                div 1024 do begin
+    mst_$bst_pages[0] := mst_$bst_pages[0] + [i];
+    discard(mst_init_page(va));
+    va := va + 16#400;
+  end;
 %endif
 end;
 
@@ -173,3 +216,10 @@ end;
     16-byte set built in the frame, where dpc stores immediates and sets
     the bit in place; the 15% is divided unsigned (the SAU2's
     M$DIU$LLW), dpc's signed. }
+
+{ TODO(pascal) MST_$INIT's global regions with the layout chosen at boot
+
+  The set constructor of the global regions has run-time ranges, which
+  dpc does not compile yet; the image builds it in a 16-byte frame
+  temporary.  The count and root-entry loops have no zero-trip test in
+  the image, which a `for' has. }

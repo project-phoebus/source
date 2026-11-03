@@ -3,23 +3,28 @@
   Image addresses:
     sau3  0x00E19E76  IO_$ALLOC_MAP
     sau5  0x00E1B12E  IO_$ALLOC_MAP
+    sau8  0x03C1BF40  IO_$ALLOC_MAP
 
   - The pages a buffer of length bytes can span, in its bus's map below
     1 MB (64 KB without io_$attr_wide_iomap), go into the unit's region
     list (io_$add_region); the result is the region's start.
   - The result is assigned only when the region is allocated.
+  - Without the region list (`io_regions') nothing is allocated: the
+    result is 0, the status status_$pbu_not_supported.
 
   Status stored:
     io_$alloc_region's status: the unit and length are good
     io_$check_unit's status: the unit is not good
     status_$pbu_not_supported: a unit on the VME bus (`vme_bus')
     status_$pbu_bad_parameter: a length of 0 or less
+    status_$pbu_not_supported: without the region list
 }
 
 function io_$alloc_map(unit: io_$unit_num_t; length: integer32;
                        fixed: boolean; iova: linteger;
                        out status: status_$t): integer32;
   options(val_param);
+%if io_regions %then
 var
   lo: linteger;
   pages: integer32;
@@ -51,3 +56,9 @@ begin
         end;
       end;
 end;
+%else
+begin
+  status.all := status_$pbu_not_supported;
+  io_$alloc_map := 0;
+end;
+%endif

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0CC30  MMAP_$UNAVAIL_REMOV
+    sau8  0x03C0DB50  MMAP_$UNAVAIL_REMOV
     sau9  0x3C40EB8C  MMAP_$UNAVAIL_REMOV
 
   - The page is taken off its list; the second argument is not read.

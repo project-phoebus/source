@@ -1,6 +1,7 @@
 { ETHERNET_$GET_STATS - return a unit's statistics.
 
   Image addresses:
+    sau8  0x03C86AC6  ETHERNET_$GET_STATS
     sau9  0x3C4826C6  ETHERNET_$GET_STATS
 
   - The driver record's get_stats entry: for a unit that takes Domain

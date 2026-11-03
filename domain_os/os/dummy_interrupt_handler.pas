@@ -4,6 +4,7 @@
   Image addresses:
     sau2  0x00E6D46C  DUMMY_INTERRUPT_HANDLER
     sau3  0x00E6D846  DUMMY_INTERRUPT_HANDLER
+    sau8  0x03C76810  DUMMY_INTERRUPT_HANDLER
 
   - The result true is an interrupt routine's "handled" (FLP_$INT,
     WIN_$INT).

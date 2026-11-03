@@ -1,6 +1,7 @@
 { ETHERNET_$SVC_WRITE - send a packet on a user channel.
 
   Image addresses:
+    sau8  0x03C87464  ETHERNET_$SVC_WRITE
     sau9  0x3C483064  ETHERNET_$SVC_WRITE
 
   - The driver record's svc_write entry.  Under a cleanup handler the

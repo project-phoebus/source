@@ -13,7 +13,10 @@
  * the inverted digit at +0x22 and the select and strobe bytes at +0x20.
  * The SAU9's calendar is another chip (`calendar_indexed_rtc'): its
  * CAL_$WRITE_CALENDAR is cal/sau9/write_calendar.s, and the routines
- * after it are this file's (SAU9 0x3C499EE0 on).
+ * after it are this file's (SAU9 0x3C499EE0 on).  The SAU8's chip has its
+ * registers in the calendar page's bytes (`calendar_mapped_rtc'): its
+ * CAL_$WRITE_CALENDAR (`D 3C9A1BC OS_CAL_ASM size = 120', 0x90 bytes) is
+ * the arm below, with the SAU8 image's addresses.
  * The SAU5's segment (`D E8899C OS_CAL_ASM size = 16C') is 4 bytes
  * shorter: CAL_$SEC_TO_CLOCK and the rest are at the SAU2's offsets less
  * 4.  The address and byte columns are the SAU2 image's, except on the
@@ -94,6 +97,63 @@
         .globl  CAL_$WRITE_CALENDAR
 CAL_$WRITE_CALENDAR:
         movem.l %d2-%d7,-(%sp)                  /* e8167c  48e7 3f00 */
+        .if calendar_mapped_rtc
+        /* sau8: the clock chip's registers are the bytes of the calendar
+           page.  Register 10 (divider 16#20) is written, its update bit
+           (7) waited out for up to 1001 turns, register 11 set to 16#86
+           (SET, binary, 24 hours); the year mod 100, month, day and
+           weekday go to registers 9..6, the hour to 4, the minute to 2
+           and the second to 0, written downward from register 10; then
+           register 11 = 6 (binary, 24 hours) lets the clock run. */
+        move.b  #0x20,(CALENDAR+10).l           /* sau8 3c9a1c0  13fc 0020 03ff ad0a */
+        move.w  #1000,%d5                       /* sau8 3c9a1c8  3a3c 03e8 */
+.Lrtc_uip:
+        move.b  (CALENDAR+10).l,%d0             /* sau8 3c9a1cc  1039 03ff ad0a */
+        btst    #7,%d0                          /* sau8 3c9a1d2  0800 0007 */
+        beq.s   .Lrtc_set                       /* sau8 3c9a1d6  6704 */
+        dbf     %d5,.Lrtc_uip                   /* sau8 3c9a1d8  51cd fff2 */
+.Lrtc_set:
+        move.b  #0x86,(CALENDAR+11).l           /* sau8 3c9a1dc  13fc 0086 03ff ad0b */
+        lea     (CALENDAR+10).l,%a1             /* sau8 3c9a1e4  43f9 03ff ad0a */
+        movea.l (0x1c,%sp),%a0                  /* sau8 3c9a1ea  206f 001c  year */
+        move.w  (%a0),%d1                       /* sau8 3c9a1ee  3210 */
+        ext.l   %d1                             /* sau8 3c9a1f0  48c1 */
+        divu.w  #100,%d1                        /* sau8 3c9a1f2  82fc 0064 */
+        swap    %d1                             /* sau8 3c9a1f6  4841  year mod 100 */
+        move.w  %d1,%d2                         /* sau8 3c9a1f8  3401 */
+        move.b  %d1,-(%a1)                      /* sau8 3c9a1fa  1301  register 9 */
+        movea.l (0x20,%sp),%a0                  /* sau8 3c9a1fc  206f 0020  month */
+        move.w  (%a0),%d1                       /* sau8 3c9a200  3210 */
+        move.w  %d1,%d3                         /* sau8 3c9a202  3601 */
+        move.b  %d1,-(%a1)                      /* sau8 3c9a204  1301  register 8 */
+        movea.l (0x24,%sp),%a0                  /* sau8 3c9a206  206f 0024  day */
+        move.w  (%a0),%d1                       /* sau8 3c9a20a  3210 */
+        move.b  %d1,-(%a1)                      /* sau8 3c9a20c  1301  register 7 */
+        movea.l (0x28,%sp),%a0                  /* sau8 3c9a20e  206f 0028  weekday */
+        move.w  (%a0),%d1                       /* sau8 3c9a212  3210 */
+        move.b  %d1,-(%a1)                      /* sau8 3c9a214  1301  register 6 */
+        subq.l  #1,%a1                          /* sau8 3c9a216  5389 */
+        movea.l (0x2c,%sp),%a0                  /* sau8 3c9a218  206f 002c  hour */
+        move.w  (%a0),%d1                       /* sau8 3c9a21c  3210 */
+        move.b  %d1,-(%a1)                      /* sau8 3c9a21e  1301  register 4 */
+        subq.l  #1,%a1                          /* sau8 3c9a220  5389 */
+        movea.l (0x30,%sp),%a0                  /* sau8 3c9a222  206f 0030  minute */
+        move.w  (%a0),%d1                       /* sau8 3c9a226  3210 */
+        move.b  %d1,-(%a1)                      /* sau8 3c9a228  1301  register 2 */
+        subq.l  #1,%a1                          /* sau8 3c9a22a  5389 */
+        movea.l (0x34,%sp),%a0                  /* sau8 3c9a22c  206f 0034  second */
+        move.w  (%a0),%d1                       /* sau8 3c9a230  3210 */
+        move.b  %d1,-(%a1)                      /* sau8 3c9a232  1301  register 0 */
+        move.b  #6,(CALENDAR+11).l              /* sau8 3c9a234  13fc 0006 03ff ad0b */
+        movem.l (%sp)+,%d2-%d7                  /* sau8 3c9a23c  4cdf 00fc */
+        rts                                     /* sau8 3c9a240  4e75 */
+        /* a delay loop no code reaches (the other form's .Ldelay40) */
+        move.w  #0x28,%d5                       /* sau8 3c9a242  3a3c 0028 */
+.Lrtc_delay:
+        subq.w  #1,%d5                          /* sau8 3c9a246  5345 */
+        bge.s   .Lrtc_delay                     /* sau8 3c9a248  6cfc */
+        rts                                     /* sau8 3c9a24a  4e75 */
+        .else
         .if !calendar_write_unconditional
         tst.b   (NETWORK_$REALLY_DISKLESS).l    /* e81680  4a39 00e2 4c4a */
         bne.w   .Lexit                          /* e81686  6600 00c4 */
@@ -197,6 +257,7 @@ CAL_$WRITE_CALENDAR:
         subq.w  #1,%d5                          /* e81756  5345 */
         bge.b   .Ldelay                         /* e81758  6cfc */
         rts                                     /* e8175a  4e75 */
+        .endif  /* calendar_mapped_rtc */
 
         .endif
 

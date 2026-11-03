@@ -27,6 +27,22 @@ With `parity_dma_pages` (the SAU9's 0x18C bytes):
 |--------|----------|------|-------|
 | +0x00 | `parity_$dma_table` (PARITY_$DMA_TABLE) | array[0..2] of `parity_$dma_chan_t` | 0x84 bytes a channel: 32 page numbers, the count (+0x80), the flag (+0x82) |
 
+With `parity_dma_page_pairs` (the SAU8's 0x24 bytes):
+
+| offset | variable | type | notes |
+|--------|----------|------|-------|
+| +0x00 | `parity_$dma_table` (PARITY_$DMA_TABLE) | array[0..2] of `parity_$dma_chan_t` | 0x0C bytes a channel: two page numbers, a flag for each (+0x08, +0x09) |
+
+On the SAU8 (`parity_cpu_status`, `parity_dma_page_pairs`; WIRED_PROC
+0x320 bytes: PARITY_$CHK 0x29C, PARITY_$CHK_IO 0x48, PARITY_$SET_STATE
+0x3C) PARITY_$CHK reads the CPU status register's word at MMU, the page
+from MMU_$PARITY_PPN, and turns bit 0 of the CPU control register's
+privilege byte off around the scan of PAR_BUFF's 256 longwords
+(MMU_$PID_PRIV's copy of it); PARITY_$INFO is a `[device]` there
+(`parity.ins.pas`).  The registers are declared in `parity.pas` (the
+MMU symbol's layout differs from mmu/mmu.ins.pas's).  PARITY_$CHK_IO
+and PARITY_$SET_STATE take the channel and two page numbers.
+
 The state both routines work on, PARITY_$INFO (0x14 bytes), is a map
 symbol inside the hand-written FIM's data (FIM_WIRED), so it is an
 extern variable in `parity.ins.pas`, not this module's.
@@ -35,9 +51,9 @@ extern variable in `parity.ins.pas`, not this module's.
 
 | routine | fragment |
 |---------|----------|
-| PARITY_$CHK | `chk.pas` (no nested or module-local routine; labels and `goto`s; two constant cells) |
-| PARITY_$CHK_IO | `chk_io.pas` (the SAU2 and the `parity_dma_pages` bodies) |
-| PARITY_$SET_STATE | `set_state.pas` (`parity_dma_pages`) |
+| PARITY_$CHK | `chk.pas` (three forms: the SAU2, `parity_err_regs`, `parity_cpu_status`; no nested or module-local routine; labels and `goto`s; two constant cells) |
+| PARITY_$CHK_IO | `chk_io.pas` (the SAU2, the `parity_dma_pages` and the `parity_dma_page_pairs` bodies) |
+| PARITY_$SET_STATE | `set_state.pas` (`parity_dma_pages`, `parity_dma_page_pairs`) |
 | (data) | PARITY_$DURING_DMA is the define statement of `parity.pas`; the two status cells after PARITY_$CHK are fault_$parity and fault_$spurious_parity, passed to CRASH_SYSTEM as constants |
 
 `parity.ins.pas`: parity_scratch_prot; the 8-byte address pair

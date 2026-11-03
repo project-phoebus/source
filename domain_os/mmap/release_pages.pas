@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E0CFF8  MMAP_$RELEASE_PAGES
+    sau8  0x03C0DEF4  MMAP_$RELEASE_PAGES
     sau9  0x3C40EF44  MMAP_$RELEASE_PAGES
 
   - Each unwired page of the list on the address space's working set

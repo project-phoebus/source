@@ -2,6 +2,7 @@
   address.
 
   Image addresses:
+    sau8  0x03C8606A  ethernet_mcast_add
     sau9  0x3C481C6A  ethernet_mcast_add
 
   - The address must have the group bit and not be one of Apollo's two

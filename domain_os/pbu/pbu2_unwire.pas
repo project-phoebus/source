@@ -3,10 +3,13 @@
   Image addresses:
     sau3  0x00E59996  PBU2_$UNWIRE
     sau5  0x00E59C06  PBU2_$UNWIRE
+    sau8  0x03C620F0  PBU2_$UNWIRE
 
   - With touch each page is first referenced (its first word read and
     written back); then, under the exclusion lock, each page loses the
     unit from its owners (PBU_$DELETE_PPN), until one fails.
+  - A page's physical page is MMU_$VTOP's, else MST_$FIND's; with the
+    large virtual memory (`large_vm') MST_$FIND's.
 
   Status stored:
     status_$ok: the buffer was unwired
@@ -45,9 +48,13 @@ begin
   end;
   ml_$exclusion_start(pbu_$exclusion_lock);
   for i := 1 to npages do begin
+%if large_vm %then
+    ppn := mst_$find(p, 0);
+%else
     ppn := mmu_$vtop(p, status);
     if status.all <> status_$ok then
       ppn := mst_$find(p, 0);
+%endif
     if ppn = 0 then
       status.all := status_$pbu_page_not_wired
     else

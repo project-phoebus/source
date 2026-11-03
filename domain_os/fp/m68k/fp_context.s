@@ -61,6 +61,9 @@
  * enabled and disabled with bit 7 of MMU_CCR where the SAU2 writes the
  * FPU owner register (0xFFB402); those lines carry the SAU9 image's
  * addresses.
+ * With `fpu_enable_cpu_control' (the SAU8) they set and clear bit 2 of
+ * the CPU control register (MMU + 0x101) and of its copy, MMU_$PID_PRIV's
+ * low byte, at IPL 7; those lines carry the SAU8 image's addresses.
  */
 
         .extern PROC1_$AS_ID            /* 0x00E2060A */
@@ -113,6 +116,14 @@ fp_$switch_owner_d2:
         move.w  %d2, (FP_$OWNER).l      /* 00e21b22 */
         .if fpu_enable_ccr
         bclr    #7, (MMU_CCR).l         /* sau9 3c424792  08b9 0007 3ff9 f2d0 */
+        .elseif fpu_enable_cpu_control
+        move.w  %sr,%d3                         /* sau8 3c233b8  40c3 */
+        ori.w   #0x700,%sr                      /* sau8 3c233ba  007c 0700 */
+        move.w  (MMU_$PID_PRIV).l,%d1           /* sau8 3c233be  3239 03c2 56a4  the CPU control copy */
+        bclr    #2,%d1                          /* sau8 3c233c4  0881 0002 */
+        move.w  %d1,(MMU_$PID_PRIV).l           /* sau8 3c233c8  33c1 03c2 56a4 */
+        move.b  %d1,(MMU+0x101).l               /* sau8 3c233ce  13c1 03ff b501  the CPU control register */
+        move.w  %d3,%sr                         /* sau8 3c233d4  46c3 */
         .else
         move.b  %d2, (FP_HW_OWNER).l    /* 00e21b28  low byte to the hardware */
         .endif
@@ -225,6 +236,14 @@ fp_$check_owner:
         move.w  %d2, (FP_$OWNER).l      /* 00e21d82 */
         .if fpu_enable_ccr
         bclr    #7, (MMU_CCR).l         /* sau9 3c4249f4  08b9 0007 3ff9 f2d0 */
+        .elseif fpu_enable_cpu_control
+        move.w  %sr,%d2                         /* sau8 3c23646  40c2 */
+        ori.w   #0x700,%sr                      /* sau8 3c23648  007c 0700 */
+        move.w  (MMU_$PID_PRIV).l,%d1           /* sau8 3c2364c  3239 03c2 56a4  the CPU control copy */
+        bclr    #2,%d1                          /* sau8 3c23652  0881 0002 */
+        move.w  %d1,(MMU_$PID_PRIV).l           /* sau8 3c23656  33c1 03c2 56a4 */
+        move.b  %d1,(MMU+0x101).l               /* sau8 3c2365c  13c1 03ff b501  the CPU control register */
+        move.w  %d2,%sr                         /* sau8 3c23662  46c2 */
         .else
         move.b  %d2, (FP_HW_OWNER).l    /* 00e21d88 */
         .endif

@@ -4,6 +4,7 @@
 
   Image addresses:
     sau2  0x00E43E10  mst_$set_mstes (module-local)
+    sau8  0x03C4C00C  mst_$set_mstes (module-local)
     sau9  0x3C44B1CA  mst_$set_mstes (module-local)
 
   - The first entry gets the UID, the object segment, the protection
@@ -72,7 +73,7 @@ begin
       seg := last + 1;
     end;
   end;
-%if large_address_space %then
+%if vm_regions %then
   mst_$segs_mapped[asid][start_seg div mst_region_segs] :=
     mst_$segs_mapped[asid][start_seg div mst_region_segs] + 1;
 %endif
@@ -102,7 +103,7 @@ begin
       smap^.flags := smap^.flags + [2];
   end;
   for i := start_seg + 1 to end_seg do begin
-%if large_address_space %then
+%if vm_regions %then
     mst_$segs_mapped[asid][i div mst_region_segs] :=
       mst_$segs_mapped[asid][i div mst_region_segs] + 1;
 %endif

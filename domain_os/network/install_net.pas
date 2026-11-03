@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0F1E0  NETWORK_$INSTALL_NET
+    sau8  0x03C10534  NETWORK_$INSTALL_NET
 
   - A zero network is this node's own: the address's index is cleared.
     Otherwise the network's entry (of 64) gets its index into the

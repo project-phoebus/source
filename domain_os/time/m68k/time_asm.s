@@ -91,6 +91,12 @@
 | <ea>=#imm forms of CMP/ADD/SUB/AND, which gas spells CMPI/ADDI/SUBI/ANDI,
 | are `.short' opcode words followed by their immediates.
 |
+| The SAU8's calendar is a clock chip with its registers in the calendar
+| page's bytes (`calendar_mapped_rtc'): the body reads its binary time
+| under the chip's update bit (`D 3C2CDAC TIME_ASM size = 468'), and the
+| word after the MCR countdown is the timer handler's flag
+| (`timer_int_pic'); those lines carry the SAU8 image's addresses.
+|
 | Not on the SAUs with the timers of the TIMER block and the indexed
 | clock chip (`timer_dcte', `calendar_indexed_rtc', base/config.ins.pas):
 | their TIME_ASM is another segment (the SAU9's time/sau9/time_asm.s).
@@ -148,6 +154,106 @@
 time_$read_cal_body:
         movem.l %d2/%d6-%d7/%a5,-(%sp)          | e2adfc  48e7 2304
         movea.l %a0,%a5                         | e2ae00  2a48
+        .if calendar_mapped_rtc
+| The SAU8's clock chip (`calendar_mapped_rtc'): its registers are the
+| bytes of the calendar page.  Wait (up to 1001 turns) for the update bit
+| (register 10 bit 7) to clear, hold the clock (register 11 bit 7, SET),
+| push the binary time - registers 9..6 (year, month, day, weekday), then
+| 4, 2, 0 (hour, minute, second) - as words, release SET, and convert as
+| the other form does: days since 1980 from the year and month (March
+| based), then the clock (4 us ticks) and the seconds.
+        movea.l (.Lcalendar:w,%pc),%a0          | sau8 3c2cdb2  207a 0110
+        move.w  #1000,%d1                       | sau8 3c2cdb6  323c 03e8
+.Lrtc_uip:
+        move.b  (10,%a0),%d0                    | sau8 3c2cdba  1028 000a
+        btst    #7,%d0                          | sau8 3c2cdbe  0800 0007  updating?
+        beq.s   .Lrtc_hold                      | sau8 3c2cdc2  6704
+        dbf     %d1,.Lrtc_uip                   | sau8 3c2cdc4  51c9 fff4
+.Lrtc_hold:
+        move.b  (11,%a0),%d0                    | sau8 3c2cdc8  1028 000b
+        bset    #7,%d0                          | sau8 3c2cdcc  08c0 0007  SET
+        move.b  %d0,(11,%a0)                    | sau8 3c2cdd0  1140 000b
+        move.w  #3,%d0                          | sau8 3c2cdd4  303c 0003
+        lea     (10,%a0),%a1                    | sau8 3c2cdd8  43e8 000a
+        clr.w   %d1                             | sau8 3c2cddc  4241
+.Lrtc_date:
+        move.b  -(%a1),%d1                      | sau8 3c2cdde  1221  registers 9..6
+        move.w  %d1,-(%sp)                      | sau8 3c2cde0  3f01
+        dbf     %d0,.Lrtc_date                  | sau8 3c2cde2  51c8 fffa
+        move.w  #2,%d0                          | sau8 3c2cde6  303c 0002
+.Lrtc_time:
+        subq.l  #1,%a1                          | sau8 3c2cdea  5389
+        move.b  -(%a1),%d1                      | sau8 3c2cdec  1221  registers 4, 2, 0
+        move.w  %d1,-(%sp)                      | sau8 3c2cdee  3f01
+        dbf     %d0,.Lrtc_time                  | sau8 3c2cdf0  51c8 fff8
+        clr.l   %d0                             | sau8 3c2cdf4  4280
+        move.w  (0xa,%sp),%d0                   | sau8 3c2cdf6  302f 000a  the month
+        move.w  #1,%d1                          | sau8 3c2cdfa  323c 0001
+        subq.w  #3,%d0                          | sau8 3c2cdfe  5740
+        bge.s   .Lrtc_march                     | sau8 3c2ce00  6c06
+        clr.w   %d1                             | sau8 3c2ce02  4241
+        .short  0xd07c; .short 0x000c           | sau8 3c2ce04  d07c 000c  add.w   #0xc,%d0, the <ea>=#imm form
+.Lrtc_march:
+        move.w  (0xc,%sp),%d2                   | sau8 3c2ce08  342f 000c  the year
+        add.w   %d1,%d2                         | sau8 3c2ce0c  d441
+        .short  0x947c; .short 0x0051           | sau8 3c2ce0e  947c 0051  sub.w   #0x51,%d2, the <ea>=#imm form
+        bge.s   .Lrtc_century                   | sau8 3c2ce12  6c04
+        .short  0xd47c; .short 0x0064           | sau8 3c2ce14  d47c 0064  add.w   #0x64,%d2, the <ea>=#imm form
+.Lrtc_century:
+        move.b  (11,%a0),%d1                    | sau8 3c2ce18  1228 000b
+        bclr    #7,%d1                          | sau8 3c2ce1c  0881 0007  release SET
+        move.b  %d1,(11,%a0)                    | sau8 3c2ce20  1141 000b
+        move.w  %d2,%d1                         | sau8 3c2ce24  3202
+        mulu.w  #0x16d,%d1                      | sau8 3c2ce26  c2fc 016d
+        lsr.w   #2,%d2                          | sau8 3c2ce2a  e44a
+        add.w   %d1,%d2                         | sau8 3c2ce2c  d441
+        move.w  %d0,%d1                         | sau8 3c2ce2e  3200
+        mulu.w  #0x1e,%d1                       | sau8 3c2ce30  c2fc 001e
+        add.w   %d1,%d2                         | sau8 3c2ce34  d441
+        divu.w  #5,%d0                          | sau8 3c2ce36  80fc 0005
+        move.w  %d0,%d1                         | sau8 3c2ce3a  3200
+        mulu.w  #3,%d1                          | sau8 3c2ce3c  c2fc 0003
+        add.w   %d1,%d2                         | sau8 3c2ce40  d441
+        swap    %d0                             | sau8 3c2ce42  4840
+        addq.w  #1,%d0                          | sau8 3c2ce44  5240
+        lsr.w   #1,%d0                          | sau8 3c2ce46  e248
+        add.w   %d0,%d2                         | sau8 3c2ce48  d440
+        move.w  (0x8,%sp),%d1                   | sau8 3c2ce4a  322f 0008  the day
+        add.w   %d1,%d2                         | sau8 3c2ce4e  d441
+        .short  0xd47c; .short 0x003b           | sau8 3c2ce50  d47c 003b  add.w   #0x3b,%d2, the <ea>=#imm form
+        move.w  (0x4,%sp),%d0                   | sau8 3c2ce54  302f 0004  the hour
+        mulu.w  #0x3c,%d0                       | sau8 3c2ce58  c0fc 003c
+        add.w   (0x2,%sp),%d0                   | sau8 3c2ce5c  d06f 0002  the minute
+        mulu.w  #0x3c,%d0                       | sau8 3c2ce60  c0fc 003c
+        .short  0x322f; .short 0x0000           | sau8 3c2ce64  322f 0000  move.w  (0x0,%sp),%d1, kept with its zero displacement (gas would drop it)
+        ext.l   %d1                             | sau8 3c2ce68  48c1  the second
+        add.l   %d1,%d0                         | sau8 3c2ce6a  d081
+        asl.w   #1,%d2                          | sau8 3c2ce6c  e342
+        mulu.w  #0xA8C0,%d2                     | sau8 3c2ce6e  c4fc a8c0
+        add.l   %d2,%d0                         | sau8 3c2ce72  d082
+        movea.l (0x26,%sp),%a0                  | sau8 3c2ce74  206f 0026
+        move.l  %d0,(%a0)                       | sau8 3c2ce78  2080
+        movea.l (0x22,%sp),%a0                  | sau8 3c2ce7a  206f 0022
+        move.w  %d0,%d2                         | sau8 3c2ce7e  3400
+        mulu.w  #0xD090,%d2                     | sau8 3c2ce80  c4fc d090
+        move.w  %d2,(0x4,%a0)                   | sau8 3c2ce84  3142 0004
+        clr.w   %d2                             | sau8 3c2ce88  4242
+        swap    %d2                             | sau8 3c2ce8a  4842
+        move.w  %d0,%d1                         | sau8 3c2ce8c  3200
+        mulu.w  #3,%d1                          | sau8 3c2ce8e  c2fc 0003
+        add.l   %d1,%d2                         | sau8 3c2ce92  d481
+        swap    %d0                             | sau8 3c2ce94  4840
+        move.w  %d0,%d1                         | sau8 3c2ce96  3200
+        mulu.w  #0xD090,%d1                     | sau8 3c2ce98  c2fc d090
+        add.l   %d1,%d2                         | sau8 3c2ce9c  d481
+        move.l  %d2,(%a0)                       | sau8 3c2ce9e  2082
+        mulu.w  #3,%d0                          | sau8 3c2cea0  c0fc 0003
+        add.w   (%a0),%d0                       | sau8 3c2cea4  d050
+        move.w  %d0,(%a0)                       | sau8 3c2cea6  3080
+        lea     (0xe,%sp),%sp                   | sau8 3c2cea8  4fef 000e
+        movem.l (%sp)+,%d2/%d6-%d7/%a5          | sau8 3c2ceac  4cdf 20c4
+        rts                                     | sau8 3c2ceb0  4e75
+        .else
         movea.l (.Lcalendar:w,%pc),%a0          | e2ae02  207a 0162
         move.b  #1,(CAL_CTL,%a0)                | e2ae06  117c 0001 0020
         move.w  #0xc5,%d0                       | e2ae0c  303c 00c5
@@ -268,6 +374,7 @@ time_$read_cal_body:
         lea     (0x1a,%sp),%sp                  | e2af4a  4fef 001a
         movem.l (%sp)+,%d2/%d6-%d7/%a5          | e2af4e  4cdf 20c4
         rts                                     | e2af52  4e75
+        .endif
 time_$read_cal_delay_20:
         move.w  #0x14,%d1                       | e2af54  323c 0014
 time_$read_cal_delay:
@@ -433,6 +540,9 @@ TIME_$CURRENT_SKEW:                     | 0xE2B0FA
 TIME_$CURRENT_DELTA:                    | 0xE2B0FC
         .long   0
         .word   2                       | 0xE2B100: MCR countdown (TIME_$CURRENT_DELTA+4)
+        .if timer_int_pic
+        .word   0                       | sau8 0x3C2D060: the timer handler served a timer (TIME_$CURRENT_DELTA+6)
+        .endif
 TIME_$SET_VECTOR:
         lea     (TIME_$TIMER_HANDLER:w,%pc),%a0 | e2b102  41fa 002c
         move.l  %a0,(TIMER_VEC).l               | e2b106  23c8 0000 0078

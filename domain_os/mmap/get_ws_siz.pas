@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0C9E4  MMAP_$GET_WS_SIZ
+    sau8  0x03C0D910  MMAP_$GET_WS_SIZ
     sau9  0x3C40E94C  MMAP_$GET_WS_SIZ
 
   - The list's page count, its field at 0x14 and its maximum.

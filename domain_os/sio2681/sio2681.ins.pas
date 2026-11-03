@@ -176,7 +176,8 @@ type
   sio2681_$mask_t = set of 0..31;
 
   { SIO2681_$INIT's configuration words (7 words, TERM's data); it reads
-    the first and the third. }
+    the first and the third.  `univ' in SIO2681_$INIT's heading: with
+    `console_sio2681' TERM_$INIT passes the words from the fifth. }
   sio2681_$config_t = array[1..7] of integer;
 
 var
@@ -227,7 +228,7 @@ procedure sio2681_$init(in int_vec: integer; in chip_num: integer;
                         in chan_b_callback: univ_ptr;
                         in chan_b_params: sio_$params_t;
                         var chip: sio2681_$chip_t;
-                        in config: sio2681_$config_t); extern;
+                        in config: univ sio2681_$config_t); extern;
 
 { SIO2681_$INQ_LINE - report a channel's modem inputs. }
 procedure sio2681_$inq_line(in channel: sio2681_$channel_t;

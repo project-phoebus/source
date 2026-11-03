@@ -4,6 +4,7 @@
     sau2  0x00E75916  RING_$SENDP
     sau3  0x00E77116  RING_$SENDP
     sau5  0x00E7CBFA  RING_$SENDP
+    sau8  0x03C81F20  RING_$SENDP
     sau9  0x3C47DB12  RING_$SENDP
 
   - A first attempt polls for the transmit eventcount until RING_$CTL's

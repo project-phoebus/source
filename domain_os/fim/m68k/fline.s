@@ -31,6 +31,10 @@
  * starts 8 bytes earlier with FIM_$BUS_ERR's entry for an FPU access
  * fault (fim/sau9/bus_err.s), which saves the registers and joins
  * fim_fline_switch; those lines carry the SAU9 image's addresses.
+ * The SAU8 (`cpu_status_register') has the same entry for its
+ * FIM_$BUS_ERR (fim/sau8/bus_err.s) and clears the CPU status register
+ * (MMU) and the process's fault status word; those lines carry the SAU8
+ * image's addresses.
  */
 
         .include "base/config.inc"
@@ -48,9 +52,9 @@
         .extern FIM_$EXIT               /* fim/m68k/exit.s, map 0xE228BC */
         .extern FIM_$UII                /* fim/m68k/uii.s, map 0xE2146C */
 
-        .if parity_err_regs
-        /* sau9 3c424714: FIM_$BUS_ERR's entry for an FPU access fault,
-           ahead of FIM_$FLINE in its section (no map name) */
+        .if parity_err_regs + cpu_status_register /* either */
+        /* sau9 3c424714, sau8 3c23344: FIM_$BUS_ERR's entry for an FPU
+           access fault, ahead of FIM_$FLINE in its section (no map name) */
         .global fim_fline_fault_entry
 fim_fline_fault_entry:
         movem.l %d0-%d3/%a0-%a1,-(%sp)          /* sau9 3c424714  48e7 f0c0 */
@@ -68,6 +72,12 @@ FIM_$FLINE:
         bclr    #4,(MMU_CCR).l                  /* sau9 3c424728  08b9 0004 3ff9 f2d0 */
         movea.l (PROC1_$CURRENT_PCB).l,%a1      /* sau9 3c424730  2279 3c42 16c4 */
         clr.w   (0x5c,%a1)                      /* sau9 3c424736  4269 005c */
+        .elseif cpu_status_register
+        /* sau8: the CPU status register cleared, and the current
+           process's fault status word with it */
+        clr.w   (MMU).l                         /* sau8 3c23350  4279 03ff b400 */
+        movea.l (PROC1_$CURRENT_PCB).l,%a1      /* sau8 3c23356  2279 03c2 0300 */
+        clr.w   (0x5c,%a1)                      /* sau8 3c2335c  4269 005c */
         .endif
         move.l  (FP_$SAVEP:w,%pc),%d0           /* e21ad0  203a fdfe */
         beq.b   .Lfline_uii                     /* e21ad4  no FPU */

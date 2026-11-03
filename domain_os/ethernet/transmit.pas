@@ -1,6 +1,7 @@
 { ethernet_transmit - give the adapter a packet from a list of pieces.
 
   Image addresses:
+    sau8  0x03C8551E  ethernet_transmit
     sau9  0x3C48111E  ethernet_transmit
 
   - The memory control register's bit 8 is changed first.

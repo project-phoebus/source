@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E32BB8  sio_$init_drain_handler (module-local)
+    sau8  0x03C36584  sio_$init_drain_handler
     sau9  0x3C43958C  sio_$init_drain_handler (module-local)
 
   - The transmit buffer, TTY_$I_OUTPUT_BUFFER_DRAINED as the callback

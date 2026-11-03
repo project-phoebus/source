@@ -3,6 +3,7 @@
   Image addresses:
     sau3  0x00E19A72  IO_$ATTR_CNTL
     sau5  0x00E1AD22  IO_$ATTR_CNTL
+    sau8  0x03C1BB48  IO_$ATTR_CNTL
 
   - The slot's attributes go into old_attrs and are replaced by
     new_attrs (IO_$ALLOC_MAP reads io_$attr_wide_iomap).  With the PBU

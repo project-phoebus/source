@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E762CA  HDR_CHKSUM
+    sau8  0x03C82B9C  HDR_CHKSUM
     sau9  0x3C47E78E  HDR_CHKSUM
 
   - The header's bytes 13 .. len (from 1) are summed in 16 bits, each

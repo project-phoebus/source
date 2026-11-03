@@ -48,6 +48,40 @@ begin
   if ct_scsi_state = ct_scsi_present then
     ct_scsi_wait_op;
 end;
+%elseif ct_atbus_qic02 %then
+{ CT_$WAIT - wait for the outstanding tape operation to end.
+
+  Image addresses:
+    sau8  0x03C7B2DC  CT_$WAIT
+
+  - CT_WAIT waits, quit allowed, for the time-out in quarter ticks (a
+    negative time-out stands for 32000 ticks).  With the AT bus adapter
+    (`ct_atbus_qic02') the count is the commands DO_CTL_CMD gave
+    (ct_blocks).
+
+  Status stored:
+    ct_wait's result: the operation ended, or not
+    ct_check_unit's result: the unit may not be used ("operation in
+      progress" excepted)
+}
+
+procedure ct_$wait(in unit: integer; in timeout: integer;
+                   out count: integer; out status: status_$t);
+var
+  ticks: integer32;
+begin
+  status.all := ct_check_unit(unit);
+  if status.all = status_$ct_operation_in_progress then
+    status.all := 0
+  else if status.all <> 0 then
+    return;
+  if timeout < 0 then
+    ticks := 32000
+  else
+    ticks := integer32(timeout) * 4;
+  status.all := ct_wait(ticks, true);
+  count := ct_blocks;
+end;
 %else
 { CT_$WAIT - wait for the outstanding tape operation to end.
 

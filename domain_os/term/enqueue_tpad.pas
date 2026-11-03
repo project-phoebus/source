@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E72472  TERM_$ENQUEUE_TPAD
     sau3  0x00E73B5E  TERM_$ENQUEUE_TPAD
+    sau8  0x03C7CD56  TERM_$ENQUEUE_TPAD
     sau9  0x3C479E78  TERM_$ENQUEUE_TPAD
 
   - The deferred call KBD_$RCV and SUMA_$RCV queue: each sample from

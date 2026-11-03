@@ -8,6 +8,8 @@
     sau3  0x00E19574  int_ids_match (nested)
     sau5  0x00E1A870  IO_$ACQUIRE
     sau5  0x00E1A824  int_ids_match (nested)
+    sau8  0x03C1B6AC  IO_$ACQUIRE
+    sau8  0x03C1B660  int_ids_match (nested)
 
   - Under io_$exclusion, the first free slot of IO_$DCTES; the request
     must not share an interrupt id or a CSR page with an acquired unit

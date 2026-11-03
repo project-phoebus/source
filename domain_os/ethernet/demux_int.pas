@@ -2,6 +2,7 @@
   interrupt level.
 
   Image addresses:
+    sau8  0x03C8874C  ethernet_demux_int
     sau9  0x3C48434C  ethernet_demux_int
 
   Assume the packet is in the unit's header and data pages, its source

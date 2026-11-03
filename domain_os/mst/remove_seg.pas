@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0E0D6  MST_$REMOVE_SEG
+    sau8  0x03C0F10A  MST_$REMOVE_SEG
     sau9  0x3C4101E4  MST_$REMOVE_SEG
 
   - Under the AST lock the segment's ASTE, if any, releases its pages

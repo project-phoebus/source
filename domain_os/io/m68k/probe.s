@@ -13,6 +13,10 @@
  * (PROC1_$CURRENT_PCB + 0x5C) and pulses MMU_CCR bit 4 where the SAU2
  * clears the MMU status byte (TESTPAGE 0x74 bytes, `D 3C42C830 TESTPAGE
  * size = 74'); those lines carry the SAU9 image's addresses.
+ * The SAU8 (`cpu_status_register') clears the process's fault status
+ * word and the CPU status register (MMU) before the access, and the
+ * register again after it (`D 3C2B0D8 TESTPAGE size = 70'); those lines
+ * carry the SAU8 image's addresses.
  *
  * Byte gate (tools/asm_compare.py, `make check'): encodings identical
  * to the image (modulo the documented widenings); address operands
@@ -116,6 +120,12 @@ _io_$probe:
         clr.w   (0x5c,%a0)              /* sau9 0x3C42C85E                 */
         bset    #4, (MMU_CCR).l         /* sau9 0x3C42C862                 */
         bclr    #4, (MMU_CCR).l         /* sau9 0x3C42C86A                 */
+        .elseif cpu_status_register
+        /* sau8: the current process's fault status word and the CPU
+           status register cleared */
+        movea.l (PROC1_$CURRENT_PCB).l, %a0 /* sau8 0x3C2B100              */
+        clr.w   (0x5c,%a0)              /* sau8 0x3C2B106                  */
+        clr.w   (MMU).l                 /* sau8 0x3C2B10A  4279 03ff b400  */
         .else
         clr.b   MMU_STATUS_REG          /* 0x00E29160 fresh fault status   */
         .endif
@@ -150,6 +160,9 @@ _io_$probe:
 
 .Lexit:
         clr.l   (BUS_ERROR_SWITCH).l    /* 0x00E29184 disarm the recovery  */
+        .if cpu_status_register
+        clr.w   (MMU).l                 /* sau8 0x3C2B134: the CPU status  */
+        .endif
         move    %d3, %sr                /* 0x00E2918A restore SR/IPL       */
         movem.l (%sp)+, %d3/%a2/%a4     /* 0x00E2918C                      */
         rts                             /* 0x00E29190                      */

@@ -4,6 +4,7 @@
   Image addresses:
     sau2  0x00E2B89C  WIN_ data (WIRED_DATA, 0x78 bytes)
     sau5  0x00E2C9D8  WIN_ data (WIRED_DATA, 0x78 bytes)
+    sau8  0x03C2D830  WIN_ data (WIRED_DATA, 0x380 bytes)
 
   One compilation unit, `module win_, wired_proc, wired_data;': the
   map's WIN_ code segments in WIRED_PROC (the module-local routines,
@@ -25,6 +26,14 @@
   layout after +0x58, and four routines of its own (ecc_correct.pas,
   command.pas, restore.pas, retry_data_check.pas).
 
+  The SAU8's WIN_ (`win_atbus_ctlr') is the WIN8_ driver of a
+  controller on the AT bus: WIN_$SPIN_DOWN and WIN_$CINIT by their
+  names, the five WIN8_ globals, five module-local routines of its own
+  (wait_phase.pas, send_command.pas, check_status.pas,
+  read_mfg_badspots.pas and its arm of format_track.pas), WIN_ASM's
+  hand assembly (win/sau8/win_asm.s), and a block of its own (0x380
+  bytes); WIN8_DCTE is its DCTE.
+
   The routines live in one fragment file each (win/<name>.pas),
   included below in image order.
 
@@ -43,21 +52,7 @@ module win_, wired_proc, wired_data;
 %include 'time/time.ins.pas';
 %include 'mmu/mmu.ins.pas';
 %include 'dma/dma.ins.pas';
-%if parity_dma_pages %then
-
-{ TODO(pascal) the SAU2 PARITY_$CHK_IO heading of WIN_$DO_IO's calls
-
-  With `parity_dma_pages' PARITY_$CHK_IO takes a DMA channel
-  (parity/parity.ins.pas), where WIN_$DO_IO's calls (win/do_io.pas)
-  pass two page numbers, the SAU2's and SAU5's form; the SAU9's map has
-  no WIN_ module.  Until the module has a part of its own this module
-  declares the two-page heading and does not include
-  parity/parity.ins.pas. }
-function parity_$chk_io(ppn1: integer32; ppn2: integer32): integer;
-  options(extern, val_param);
-%else
 %include 'parity/parity.ins.pas';
-%endif
 %include 'misc/crash_system.ins.pas';
 %include 'io/io.ins.pas';
 %include 'disk/disk.ins.pas';
@@ -65,11 +60,12 @@ function parity_$chk_io(ppn1: integer32; ppn2: integer32): integer;
 
 { TODO(sau) the WIN_ drivers of the SAUs not translated
 
-  The SAU2's ANSI-command driver and the SAU5's descriptor-list driver
-  are written.  The SAU4's, SAU6's, SAU7's and SAU8's WIN_ code differs
-  from both (the catalog's families of WIN_$DO_IO, WIN_$INT and
-  WIN_$DINIT; WIN_ code segments of 0xFB0, 0x1C78, 0x2DD4 and 0xF40
-  bytes); those SAUs build the SAU2's arm until each has its part. }
+  The SAU2's ANSI-command driver, the SAU5's descriptor-list driver and
+  the SAU8's AT bus driver are written.  The SAU4's and SAU6's WIN_ code
+  differs from all three (the catalog's families of WIN_$DO_IO, WIN_$INT
+  and WIN_$DINIT; WIN_ code segments of 0xFB0 and 0x1C78 bytes); the
+  SAU7's holds the WIN7_ driver beside the AT bus one (0x2DD4 bytes).
+  Those SAUs build the SAU2's arm until each has its part. }
 
 { TODO(pascal) the block's three open longwords
 
@@ -143,6 +139,71 @@ define
 %include 'win/int.pas';                     { WIN_$INT                   }
 %include 'win/error_que.pas';               { WIN_$ERROR_QUE             }
 %include 'win/get_stats.pas';               { WIN_$GET_STATS             }
+
+{ ---- OS_INIT_PROC ---- }
+%include 'win/cinit.pas';                   { WIN_$CINIT                 }
+%elseif win_atbus_ctlr %then
+{ TODO(pascal) the AT bus block's 704 bytes at +0x30
+
+  Between the drives' statistics and the controllers' records the block
+  has 704 bytes no routine addresses (the SAU7's WIN_ block has the same
+  704 bytes between the same two objects, after its WIN7_ driver's
+  data).  704 is twice 352; what the object was is not known.  The
+  Pascal declares a stand-in, unused_030. }
+
+{ The AT bus controller's block (`win_atbus_ctlr'; the SAU8's WIN_ data
+  segment, 0x380 bytes), zero but for the jump table, the longword 1 at
+  +0x36C and the unit word at +0x370. }
+var
+  win_stats: array[0..1] of win_$stats_slot_t;   { +0x000, zero }
+  unused_030: array[1..176] of integer32;        { +0x030, zero: the TODO
+                                                   below }
+  win_units: array[0..1] of win_$unit_t;         { +0x2F0, zero }
+  win_jump_table: array[0..6] of univ_ptr :=     { +0x308 }
+    [addr(win_$spin_down), nil, addr(win8_$dinit), nil, addr(win8_$do_io),
+     addr(win8_$error_que), addr(win8_$get_stats)];
+  unused_324: integer32;                         { +0x324, zero }
+  win_unit_ec: array[0..1] of ec_$eventcount_t;  { +0x328, zero }
+
+define
+  win_$cnt;                                      { +0x340, zero }
+
+var
+  win_page_pmape: univ_ptr;                      { +0x358, zero }
+  win_hdr: univ_ptr;                             { +0x35C, zero }
+  win_buf: univ_ptr;                             { +0x360, zero }
+  win_cmd: win_$cmd_t;                           { +0x364, zero }
+  win_total_blocks: integer32 := 1;              { +0x36C: 1 }
+  win_unit_bits: integer := 16#2800;             { +0x370: members 13
+                                                   and 11 }
+  win_last_phase: integer;                       { +0x372, zero }
+  win_last_status: integer;                      { +0x374, zero }
+  win_sector_size: integer;                      { +0x376, zero }
+  win_max_count: integer;                        { +0x378, zero }
+  win_count: integer;                            { +0x37A, zero }
+  win_params_reported: boolean;                  { +0x37C, zero }
+
+define
+  win_$spin_down;
+  win8_$do_io;
+  win8_$dinit;
+  win8_$int;
+  win8_$error_que;
+  win8_$get_stats;
+  win_$cinit;
+
+{ ---- WIRED_PROC ---- }
+%include 'win/spin_down.pas';               { WIN_$SPIN_DOWN             }
+%include 'win/wait_phase.pas';              { win_$wait_phase            }
+%include 'win/send_command.pas';            { win_$send_command          }
+%include 'win/check_status.pas';            { win_$check_status          }
+%include 'win/format_track.pas';            { win_$format_track          }
+%include 'win/read_mfg_badspots.pas';       { win_$read_mfg_badspots     }
+%include 'win/win8_do_io.pas';              { WIN8_$DO_IO                }
+%include 'win/win8_dinit.pas';              { WIN8_$DINIT                }
+%include 'win/win8_int.pas';                { WIN8_$INT                  }
+%include 'win/win8_error_que.pas';          { WIN8_$ERROR_QUE            }
+%include 'win/win8_get_stats.pas';          { WIN8_$GET_STATS            }
 
 { ---- OS_INIT_PROC ---- }
 %include 'win/cinit.pas';                   { WIN_$CINIT                 }

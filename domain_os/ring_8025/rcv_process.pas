@@ -1,6 +1,7 @@
 { ring_8025_rcv_process - a unit's receive process.
 
   Image addresses:
+    sau8  0x03C8D460  ring_8025_rcv_process
     sau9  0x3C489170  ring_8025_rcv_process
 
   - Under the server lock, woken through the unit's rcv_wake_ec, it does
@@ -12,8 +13,8 @@
     error counters are read when they overflowed.  Then each complete
     receive list's frame is taken (ring_8025_receive_frame), the list
     handed back, and the adapter told to continue receiving.
-  - When the unit is off line it halts and closes the adapter,
-    interrupts it, disables and releases the device, unmaps the unit's
+  - When the unit is off line it halts and closes the adapter, stops
+    its DMA channel (`ring_8025_dma_channel'), interrupts it, disables and releases the device, unmaps the unit's
     second window page, leaves the unit configured only, advances
     rcv_exit_ec and unbinds itself.
 
@@ -24,6 +25,9 @@ procedure ring_8025_rcv_process(unit: pinteger); internal;
 var
   copy: ring_8025_$stats_t;
   buf: ring_8025_$stats_ptr_t;
+%if ring_8025_dma_channel %then
+  count: integer32;
+%endif
   st: status_$t;
   vals: ec_$waitn_vals_t;
   len: integer;
@@ -109,6 +113,9 @@ begin
   proc1_$clr_lock(ml_$server_lock);
   ring_8025_xmit_halt(u);
   ring_8025_close(u);
+%if ring_8025_dma_channel %then
+  dma_$stop(u^.dma_channel, count, st);
+%endif
   u^.regs^.sifcmd := r8025_sifcmd_interrupt;
   io_$disable_device(u^.io_unit, st);
   io_$release(u^.io_unit, st);

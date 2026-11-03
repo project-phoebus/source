@@ -43,9 +43,23 @@ All eight are compiled code.
 | ATBUS_$XLATE_IOVA | `xlate_iova.pas` |
 | ATBUS_$INIT | `init.pas` |
 
+The SAU7's and SAU8's form (`atbus_pics`) drives the AT bus's two
+interrupt controllers (PIC1 and PIC2 at its +0x100) itself: its segments
+are 0x23C bytes in WIRED_PROC (ATBUS_$INT first, then the eight in the
+same order), 0x84 in OS_INIT_PROC (ATBUS_$INIT) and a 0xA0-byte data
+segment of ATBUS_$INTLEV_VEC and ATBUS_$INT_VEC alone.
+
+| routine | fragment |
+|---------|----------|
+| ATBUS_$INT | `int.pas` (new) |
+| ATBUS_$UNDEF_INT, ATBUS_$XLATE_IOVA | the SAU9's code |
+| ATBUS_$DEFINE_INT .. ATBUS_$CLEAR_PENDING, ATBUS_$INIT | their fragments' arms |
+
 ## Insert files
 
-- `atbus.ins.pas` (new): the AT bus manager's status, the counts and
+- `atbus.ins.pas` (new): with `atbus_pics` the controllers' record,
+  PIC1, their command constants and ATBUS_$INT's heading; the AT bus
+  manager's status, the counts and
   limits, the level types, the handler and vector entry types, the two
   map variables and the headings.  The headings of the seven routines
   IO_$BUS_EPV's entry 3 holds are the types of the bus vector's fields
@@ -59,9 +73,9 @@ All eight are compiled code.
 
 ## Open items
 
-- TODO(sau): the SAU7's and SAU8's forms (`atbus.pas`): their own
-  ATBUS_$INT and an interrupt controller pair; only ATBUS_$XLATE_IOVA
-  and ATBUS_$UNDEF_INT are the SAU9's code there.
+- The SAU7's ATBUS_$INIT unmasks the slave's input 0 at the end
+  (16#FE) where the SAU8's masks all (16#FF): the bank's only
+  difference, for when the SAU7 is translated.
 - The two ATBUS_ units have the same module name: a SAU9 layout must
   place two `ATBUS_` segments in WIRED_PROC and two in WIRED_DATA, the
   system bus's first.

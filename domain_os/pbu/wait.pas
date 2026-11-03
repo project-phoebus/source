@@ -3,6 +3,7 @@
   Image addresses:
     sau3  0x00E89EE8  PBU_$WAIT
     sau5  0x00E922B2  PBU_$WAIT
+    sau8  0x03CA5B64  PBU_$WAIT
 
   - With a timeout of 0, the result is at once 0 when the unit's
     interrupt is pending, 1 when not.

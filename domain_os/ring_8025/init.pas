@@ -1,6 +1,7 @@
 { RING_8025_$INIT - initialize a token-ring controller.
 
   Image addresses:
+    sau8  0x03C8B4F6  RING_8025_$INIT
     sau9  0x3C4870FA  RING_8025_$INIT
 
   - The DCTE's unit must be 0 or 1 and its adapter answer at the CSR

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E2F630  NETBUF_$INIT
+    sau8  0x03C322F8  NETBUF_$INIT
 
   - The window's address is stored and its 192 slots linked into the
     free list (slot k holds k + 1, the last -1).

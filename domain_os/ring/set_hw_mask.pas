@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E767CC  ring_$set_hw_mask (module-local)
+    sau8  0x03C830B2  ring_$set_hw_mask (module-local)
 
   - A new mask is kept in the unit, which is running when the mask has
     any bit but 0 and 7; the unit is marked busy and an initialized

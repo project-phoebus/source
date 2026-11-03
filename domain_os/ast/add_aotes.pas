@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E01014  AST_$ADD_AOTES
+    sau8  0x03C013F6  AST_$ADD_AOTES
     sau9  0x3C4023F6  AST_$ADD_AOTES
 
   - A new pool size (AST_$SIZE_AOT plus count) outside 40..ast_$max_aotes is

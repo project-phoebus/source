@@ -2,6 +2,7 @@
 
   Image addresses:
     sau9  0x3C40C9FC  ATBUS_$XLATE_IOVA
+    sau8  0x03C0B9C4  ATBUS_$XLATE_IOVA
 
   - An address up to 16#400 is an I/O port: a page for each 8 ports,
     from page 16#100.  Above, a memory address: 1024 bytes to a page.

@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E7630C  ring_$find_pkt_type (module-local)
+    sau8  0x03C82BE2  ring_$find_pkt_type (module-local)
 
   - The index (from 1) of the first entry with low <= key <= high, or 0;
     the compares are unsigned.

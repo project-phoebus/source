@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E087BA  area_$remote_sync (nested)
     sau2  0x00E08816  area_$resize (module-local)
+    sau8  0x03C08D16  area_$remote_sync (nested)
+    sau8  0x03C08D72  area_$resize (module-local)
     sau9  0x3C409E32  area_$remote_sync (nested)
     sau9  0x3C409E8E  area_$resize (module-local)
 
@@ -64,6 +66,7 @@ var
 
     Image addresses:
       sau2  0x00E087BA  area_$remote_sync (nested)
+      sau8  0x03C08D16  area_$remote_sync (nested)
       sau9  0x3C409E32  area_$remote_sync (nested)
 
     - The partner's size is the virtual size plus one 1 KB block per

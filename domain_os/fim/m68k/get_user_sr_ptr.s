@@ -1,12 +1,14 @@
 /*
  * fim/m68k/get_user_sr_ptr.s - FIM_$GET_USER_SR_PTR (m68k/SAU2, SAU5,
- * SAU9)
+ * SAU8, SAU9)
  *
  * The SAU2, SAU3 and SAU5 images have the same code here; the address and
  * byte columns below are the SAU2 image's.  The SAU9's (0x3C4253CE,
  * 0xD6 bytes) tries no 68010 frames (format 8: only the SAUs that run
  * on an MC68010, `pft_mmu', base/config.ins.pas) and takes PROT
- * 0x3BFC0000 as the user limit (`large_address_space').
+ * 0x3BFC0000 as the user limit (`large_address_space').  The SAU8's
+ * (0x3C24074) is the SAU9's but for the limit, PROT itself, a fixup-table
+ * cell (`run_time_layout').
  *
  * Transcribed from the SAU2 image, 0x00E2277C..0x00E22865 (map
  * FIM_$GET_USER_SR_PTR to FIM_$DELIVER_TRACE_FAULT, 234 bytes: 118 of the
@@ -44,6 +46,10 @@
          * user/kernel VA limit. */
         .if large_address_space
         .equ    USER_VA_LIMIT, 0x3BFC0000       /* sau9: the map's PROT */
+        .elseif run_time_layout
+        /* sau8: PROT itself, a fixup-table cell (3c2412c), which COLD
+           moves with the MC68851's layout (svc/m68k/svc_macros.inc) */
+        .equ    USER_VA_LIMIT, PROT
         .else
         .equ    USER_VA_LIMIT, 0x00CC0000
         .endif

@@ -3,6 +3,7 @@
   Image addresses:
     sau3  0x00E58DD0  PBU_$DISSOC
     sau5  0x00E58F94  PBU_$DISSOC
+    sau8  0x03C6173E  PBU_$DISSOC
 
   - Undoes PBU2_$ASSOC: the memory's I/O map space is freed (a failure
     crashes the system) and its pages' MMU entries removed.
@@ -22,7 +23,11 @@ procedure pbu_$dissoc(in unit: integer; out status: status_$t);
 var
   dcte: pbu_$dcte_ptr_t;
   npages: integer32;
+%if large_vm %then
+  va: linteger;
+%else
   ppn: linteger;
+%endif
   i: integer32;
 begin
   dcte := pbu_check_unit(unit, status);
@@ -33,15 +38,24 @@ begin
     return;
   end;
   npages := (dcte^.assoc_length + 1023) div 1024;
+%if not large_vm %then
   ppn := dcte^.assoc_iova div 1024;
   if dcte^.unit_info.bus <> io_$bus_vme then
     if dcte^.assoc_iova < 16#80000 then
       ppn := ppn + 16#200
     else
       ppn := ppn + 16#C00;
+%endif
   io_$free(dcte^.unit_info.io_unit, dcte^.assoc_iova, status);
   if status.all <> status_$ok then
     crash_system(status);
+%if large_vm %then
+  va := dcte^.assoc_va;
+  for i := 1 to npages do begin
+    mst_$remove_ioppn(va);
+    va := va + 1024;
+  end;
+%else
   for i := 1 to npages do begin
     mmu_$remove(ppn);
     ppn := ppn + 1;
@@ -52,5 +66,6 @@ begin
 %endif
       ppn := 16#E00;
   end;
+%endif
   dcte^.assoc_length := 0;
 end;

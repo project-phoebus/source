@@ -4,6 +4,7 @@
     sau2  0x00E2C368  IO_ data (WIRED_DATA, 0x554 bytes)
     sau3  0x00E2AC4C  IO_ data (WIRED_DATA, 0x9BC bytes)
     sau5  0x00E2D4A4  IO_ data (WIRED_DATA, 0x684 bytes)
+    sau8  0x03C2E604  IO_ data (WIRED_DATA, 0x5B4 bytes)
     sau9  0x3C430840  IO_ data (WIRED_DATA, 0x5B4 bytes)
 
   One compilation unit, `module io_, wired_proc, wired_data;': the map's
@@ -26,6 +27,13 @@
   DCTE area's bounds at +0x9A8, IO_$DCTE_LIST at +0x9B0, the free
   list's head at +0x9B4, io_$config_flag at +0x9B8 and IO_$IN_INIT at
   +0x9BA.
+
+  On the SAU8: the SAU9's shape, bus 3's map at +0x18 and bus 4's at
+  +0x60, IO_$BUS_EPV at +0xA8 (the AT bus's routines, none of the
+  system bus's), IO_$DCTES at +0x160, PBU_$EXCLUSION_LOCK at +0x578
+  where the SAU9 has SCSI_$EXCLUSION_LOCK, IO_$WIRING_EXCLUSION at
+  +0x590, no region nodes, the DCTE area's bounds at +0x5A4, IO_$DCTE_LIST
+  at +0x5AC, io_$config_flag at +0x5B0 and IO_$IN_INIT at +0x5B2.
 
   The gaps are declared as fillers so dpc gives the image's offsets;
   most put an object of 8 bytes or more at a multiple of 8.  No SAU2

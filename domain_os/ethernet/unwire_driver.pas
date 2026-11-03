@@ -1,6 +1,7 @@
 { ethernet_unwire_driver - unwire the driver when its last unit goes.
 
   Image addresses:
+    sau8  0x03C84948  ethernet_unwire_driver
     sau9  0x3C480548  ethernet_unwire_driver
 
   - Under the I/O wiring lock.  When the last unit that keeps the

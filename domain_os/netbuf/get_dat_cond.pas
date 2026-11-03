@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0EF28  NETBUF_$GET_DAT_COND
+    sau8  0x03C10276  NETBUF_$GET_DAT_COND
     sau9  0x3C411386  NETBUF_$GET_DAT_COND
 
   - Under the spin lock, with a nonzero count, the head page leaves the

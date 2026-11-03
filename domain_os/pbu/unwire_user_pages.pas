@@ -3,6 +3,7 @@
   Image addresses:
     sau3  0x00E59B10  PBU_$UNWIRE_USER_PAGES
     sau5  0x00E59D7E  PBU_$UNWIRE_USER_PAGES
+    sau8  0x03C6223C  PBU_$UNWIRE_USER_PAGES
 
   - Only while the page owner table is in use (the Multibus present, or
     a VME unit set up).  For a unit above 15 every owned page is unwired

@@ -57,6 +57,58 @@ begin
   if (status.all = 0) and then (ct_scsi_state = ct_scsi_present) then
     ct_scsi_diag;
 end;
+%elseif ct_atbus_qic02 %then
+{ CT_$DIAG - return diagnostic information about the tape controller.
+
+  Image addresses:
+    sau8  0x03C7B128  CT_$DIAG
+
+  - The caller's buffer is cleared; by the mode (the ct_$diag_
+    constants) it gets the drive's status word, the AT bus adapter's
+    first two port words (`ct_atbus_qic02'), or CT_$DIAG's two counts.
+  - In the last case the counts are then cleared.
+
+  Status stored:
+    status_$ok: the information was returned
+    ct_check_unit's result: the unit may not be used
+    status_$ct_unrecognized_action_type: any other mode
+}
+
+procedure ct_$diag(in unit: integer; in mode: integer;
+                   out buf: univ ct_$diag_buf_t; in buf_len: integer;
+                   out ret_len: integer; out status: status_$t);
+var
+  i: integer;
+begin
+  if buf_len > 0 then
+    for i := 1 to buf_len div 2 do
+      buf[i] := 0;
+  ret_len := 0;
+  status.all := ct_check_unit(unit);
+  if status.all <> 0 then
+    return;
+  case mode of
+    ct_$diag_drive_status: begin
+        buf[1] := ct_drive_status.all;
+        ret_len := 2;
+      end;
+    ct_$diag_registers: begin
+        for i := 1 to 2 do
+          buf[i] := ct_regs^.words[i];
+        ret_len := 4;
+      end;
+    ct_$diag_counts: begin
+        buf[1] := ct_total_2c;
+        ct_total_2c := 0;
+        buf[2] := ct_total_2e;
+        ct_total_2e := 0;
+        ret_len := 4;
+      end;
+    otherwise begin
+      status.all := status_$ct_unrecognized_action_type;
+    end;
+  end;
+end;
 %else
 { CT_$DIAG - return diagnostic information about the tape controller.
 

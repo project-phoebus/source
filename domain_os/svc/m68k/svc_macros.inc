@@ -46,13 +46,18 @@
 | The dispatchers compare USP and each argument pointer against the map's
 | PROT, the first VA past the user's space: 0xCC0000 on the SAU2, SAU3
 | and SAU5, 0x3BFC0000 on the SAU7 and SAU9 (`large_address_space',
-| base/config.ins.pas).  The images hold it as a literal (the SAU2's
+| base/config.ins.pas).  Those images hold it as a literal (the SAU2's
 | fixup table lists none of these cells), so it is an equate here, not
 | a reference to the absolute symbol PROT (arch/m68k/<sau>/iodefs.s).
+| Where the segment layout is chosen at boot (`run_time_layout', the
+| SAU8: 0x39C0000) the cells are in the fixup table, which COLD applies
+| for the MC68851's layout, so they are references to PROT.
 
         .include "base/config.inc"
         .if large_address_space
         .equ    PROT_LITERAL, 0x3BFC0000
+        .elseif run_time_layout
+        .equ    PROT_LITERAL, PROT
         .else
         .equ    PROT_LITERAL, 0x00CC0000
         .endif

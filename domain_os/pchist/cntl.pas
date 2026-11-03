@@ -4,6 +4,7 @@
     sau2  0x00E5CDB6  PCHIST_$CNTL
     sau2  0x00E5CD02  pchist_$unwire_cleanup (nested)
     sau2  0x00E5CD66  pchist_$stop_profiling (nested)
+    sau8  0x03C66524  PCHIST_$CNTL
 
   - Commands 0 and 3 start a histogram: 256 bins over the range rounded
     up to a power of two (or the whole address space), and a process

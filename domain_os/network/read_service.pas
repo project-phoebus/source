@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E71D7C  NETWORK_$READ_SERVICE
+    sau8  0x03C7C630  NETWORK_$READ_SERVICE
 
   - While the network service is active the whole service record is
     returned; otherwise an empty service set with the remote pool's

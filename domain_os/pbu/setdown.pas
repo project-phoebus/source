@@ -3,6 +3,7 @@
   Image addresses:
     sau3  0x00E592E4  PBU_$SETDOWN
     sau5  0x00E594B4  PBU_$SETDOWN
+    sau8  0x03C61B1C  PBU_$SETDOWN
 
   - Under the exclusion lock, every set-up unit of the unit's bus that
     the same DDF unit set up is taken down: its device, user pages, map
@@ -50,6 +51,7 @@ begin
   end
   else
 %endif
+%if mbus_bus %then
   if not pbu_$mcb.present then begin
     status.all := status_$pbu_not_present;
     return;
@@ -58,9 +60,19 @@ begin
     first := 0;
     last := pbu_first_vme_unit - 1;
   end;
+%else
+  begin
+    first := 0;
+    last := pbu_$max_unit;
+  end;
+%endif
   if not dcte^.flags.kernel_driver and then (dcte^.csr_ppn <> 0) then
     for i := 1 to dcte^.csr_pages do begin
+%if large_vm %then
+      mst_$remove_ioppn(dcte^.csr_va);
+%else
       mmu_$remove(dcte^.csr_ppn);
+%endif
       dcte^.csr_ppn := dcte^.csr_ppn + 1;
       dcte^.csr_va := dcte^.csr_va + 1024;
     end;
@@ -88,6 +100,7 @@ begin
     sub_dcte^.owner := 0;
     pbu_$dctes[sub] := nil;
     sub_dcte^.unit := pbu_free_unit;
+%if mbus_bus %then
     if sub_dcte^.unit_info.bus <> io_$bus_vme then begin
       case sub of
         3: other := pbu_$dctes[7];
@@ -99,6 +112,7 @@ begin
         if other^.owner <> 0 then
           next;
     end;
+%endif
     io_$release(sub_dcte^.unit_info.io_unit, status);
   end;
   pbu_$mcb.setups := pbu_$mcb.setups - 1;

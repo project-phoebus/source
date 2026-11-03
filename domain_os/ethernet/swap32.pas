@@ -1,6 +1,7 @@
 { ethernet_swap32 - reverse the byte order of a longword.
 
   Image addresses:
+    sau8  0x03C84804  ethernet_swap32
     sau9  0x3C480404  ethernet_swap32
 
   - The adapter keeps its longwords low byte first (an 80186 board).

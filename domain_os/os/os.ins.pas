@@ -249,14 +249,21 @@ type
     mother node (+0x00), the paging file's UID (+0x04) and two more UIDs
     (+0x0C, +0x14). }
   os_$diskless_info_t = record
-    mother_node: linteger;                { 0x00: linteger, merged
+    case integer of
+      1: (mother_node: linteger;          { 0x00: linteger, merged
                                             unmasked into the location
                                             descriptor's 20-bit node
                                             (OS_$INIT) }
-    paging_file_uid: uid_$t;              { 0x04 }
-    root_uid: uid_$t;                     { 0x0C }
-    node_uid: uid_$t;                     { 0x14 }
-    reserved: array[1..5] of integer32;   { 0x1C..0x2F }
+          paging_file_uid: uid_$t;        { 0x04 }
+          root_uid: uid_$t;               { 0x0C }
+          node_uid: uid_$t;               { 0x14 }
+          reserved: array[1..5] of integer32);
+                                          { 0x1C..0x2F }
+      { With `boot_flags_diskless', on a disked boot from the network
+        (boot flag 8), the first two words are NET_IO_$BOOT_DEVICE's
+        arguments. }
+      2: (net_boot_device: integer;       { 0x00 }
+          net_boot_unit: integer);        { 0x02 }
   end;
 
 var

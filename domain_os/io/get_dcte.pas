@@ -4,6 +4,7 @@
     sau2  0x00E1A448  IO_$GET_DCTE
     sau3  0x00E194E0  IO_$GET_DCTE
     sau5  0x00E1A790  IO_$GET_DCTE
+    sau8  0x03C1B5CC  IO_$GET_DCTE
 
   - IO_$DCTE_LIST's entries of the type and number are walked; each
     match gives the result, and one with status ok ends the walk.  The

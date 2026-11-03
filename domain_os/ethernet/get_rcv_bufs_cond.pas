@@ -2,6 +2,7 @@
   receive into, at interrupt level.
 
   Image addresses:
+    sau8  0x03C888B6  ethernet_get_rcv_bufs_cond
     sau9  0x3C4844B6  ethernet_get_rcv_bufs_cond
 
   - ethernet_get_rcv_bufs without waiting: the pages are taken only if

@@ -96,6 +96,26 @@ const
                                           global device" }
   status_$pbu_unit_is_public = 16#001E003B;
                                         { "unit is publicly owned" }
+%if pbu_atbus_units %then
+  status_$pbu_illegal_dma_channel = 16#001E0033;
+                                        { "illegal dma channel number" }
+  status_$pbu_bad_dma_direction = 16#001E0034;
+                                        { "bad dma direction specified" }
+  status_$pbu_dma_channel_in_use = 16#001E0035;
+                                        { "requested dma channel in use" }
+  status_$pbu_dma_channel_not_in_use = 16#001E0036;
+                                        { "requested dma channel not in
+                                          use" }
+  status_$pbu_dma_not_at_end = 16#001E0037;
+                                        { "dma channel not at end of
+                                          range" }
+  status_$pbu_buffer_not_contiguous = 16#001E003C;
+                                        { "buffer pages not physically
+                                          contiguous" }
+  status_$pbu_contiguous_not_aligned = 16#001E003D;
+                                        { "contiguous buffer not page
+                                          aligned" }
+%endif
 
   { The PBU units, 0..15 (0..7 with `pbu_8_units'): the index of
     PBU_$DCTES.  With the VME bus (`vme_bus') the units 0..7 are the
@@ -109,6 +129,14 @@ const
 
   { A free DCTE's unit (PBU_$SETDOWN's mark): one past the last unit. }
   pbu_free_unit = pbu_$max_unit + 1;
+
+  { The last of PBU_$DCTE_TABLE's DCTEs: 16 in PBU_ASM with the AT bus's
+    units (`pbu_atbus_units'), 8 otherwise. }
+%if pbu_atbus_units %then
+  pbu_dcte_table_last = 15;
+%else
+  pbu_dcte_table_last = 7;
+%endif
 
   { The last of a DDF's handlers: a DDF has 16 on every SAU, whatever
     its number of units (PBU_$ACQUIRE_INT fills them all). }
@@ -134,6 +162,37 @@ const
   pbu_ptr_diag = 3;                     { past the CSR pages }
   pbu_ptr_dcte = 4;                     { the DCTE itself }
 
+  { A unit's CSR pages as PBU_$SETUP checks them: the pages' size (the
+    CSR address's alignment, and with csr_pages their extent).  On the
+    AT bus (`pbu_atbus_units') a CSR page is a group of 8 of the bus's
+    I/O ports, 16#100..16#3FF, each group mapped at a page of its own
+    from pbu_atbus_io_ppn on. }
+%if pbu_atbus_units %then
+  pbu_csr_page_size = 8;
+  pbu_atbus_csr_first = 16#100;
+  pbu_atbus_csr_end = 16#400;
+  pbu_atbus_io_ppn = 16#100;
+
+  { The unit PBU_$SHUTDOWN leaves set up. }
+  pbu_shutdown_kept_unit = 3;
+%else
+  pbu_csr_page_size = 1024;
+%endif
+
+  { PBU_$GET_INFO's second and third words. }
+%if pbu_atbus_units %then
+  pbu_info_2 = 8;
+%else
+  pbu_info_2 = 2;
+%endif
+%if not io_regions %then
+  pbu_info_3 = 0;
+%elseif pbu_atbus_units %then
+  pbu_info_3 = 2;
+%else
+  pbu_info_3 = 1;
+%endif
+
   { The SM_ controller's PBU unit, which PBU_$SETUP leaves out of
     PBU_$WIRE_PBU and PBU_$FREE_ASID out of its sweep while its DCTE
     exists (sm/sm.ins.pas's sm_pbu_unit). }
@@ -142,12 +201,20 @@ const
   { The PBU page's wired pages: PBU_$WIRE_PBU's page list's length. }
   pbu_max_wired_pages = 21;
 
-  { The last element of PBU_$PPN_OWNERS: the map's PBU_TABLES segment is
-    0x1C00 bytes on the SAU5, a word per physical page from 16#200, and
-    0xE00 bytes on the SAU3, a byte per page (`pbu_8_units').
+  { The first and last elements of PBU_$PPN_OWNERS: the map's PBU_TABLES
+    segment is 0x1C00 bytes on the SAU5, a word per physical page from
+    16#200, and 0xE00 bytes on the SAU3, a byte per page
+    (`pbu_8_units'); 0x4000 bytes on the SAU8, a word per page from
+    16#400 (`mmap_ppns_400').
     TODO(sau) the SAU4's and SAU7's PBU_TABLES sizes differ (0x3E00,
     0x18000); a part's constant when they are translated. }
+%if mmap_ppns_400 %then
+  pbu_ppn_owners_first = 16#400;
+  pbu_ppn_owners_last = 16#23FF;
+%else
+  pbu_ppn_owners_first = 16#200;
   pbu_ppn_owners_last = 16#FFF;
+%endif
 
 type
   pbu_$byte_t = [byte] 0..255;
@@ -208,7 +275,9 @@ type
     kernel_driver, any_address and global are the DDF's; faulted, set by
     PBU_$GET_DIAG_PTR, read by PBU_$FAULTED_UNITS; dma_bus, set for the
     buses 2 and 3.  cleared_8_7 and cleared_0 PBU_$SETUP clears, and
-    nothing in the PBU or PBU_MAP reads. }
+    nothing in the PBU or PBU_MAP reads; with the AT bus's units
+    (`pbu_atbus_units') bit 8 is attr_set, set by PBU_$DMA_START when it
+    gives the unit attribute 0 (IO_$ATTR_CNTL). }
   pbu_$dcte_flags_t = packed record
     int_pending: boolean;                 { bit 15 }
     unused_14: boolean;                   { bit 14 }
@@ -217,7 +286,12 @@ type
     kernel_driver: boolean;               { bit 11 }
     any_address: boolean;                 { bit 10 }
     global: boolean;                      { bit 9 }
+%if pbu_atbus_units %then
+    attr_set: boolean;                    { bit 8 }
+    cleared_7: boolean;                   { bit 7 }
+%else
     cleared_8_7: 0..3;                    { bits 8..7 }
+%endif
     faulted: boolean;                     { bit 6 }
     unused_5: boolean;                    { bit 5 }
     dma_bus: boolean;                     { bit 4 }
@@ -336,13 +410,31 @@ type
   end;
 
   { PBU2_$WIRE_SPECIAL's options: member 0, the pages must be wired for
-    the unit already; member 1, refused.  The answer list: one physical
-    address per page. }
+    the unit already; member 1, refused (with the AT bus's units,
+    `pbu_atbus_units': a physically contiguous buffer).  The answer
+    list: one physical address per page. }
   pbu_$wire_options_t = set of 0..15;
   pbu_$pa_list_t = array[1..1] of integer32;
 
   { PBU_$CONTROL's request and answer words (pbu_$ctl_t's fields). }
   pbu_$ctl_word_t = set of 0..15;
+
+const
+  { A CSR access's kind (TESTPAGE's): a byte or a word read or written.
+    A byte is the high half of the data word. }
+  pbu_csr_read_byte = 0;
+  pbu_csr_read_word = 1;
+  pbu_csr_write_byte = 2;
+  pbu_csr_write_word = 3;
+
+type
+  { pbu_access_csr's data word. }
+  pbu_$csr_data_t = record
+    case integer of
+      1: (word: integer);                 { 0x00 }
+      2: (high: char;                     { 0x00 }
+          low: char);                     { 0x01 }
+  end;
 
   { A user buffer passed by address, whose address the routines use. }
   pbu_$buffer_t = char;
@@ -353,9 +445,17 @@ var
     address. }
   pbu_$dctes: extern array[0..pbu_$max_unit] of pbu_$dcte_ptr_t;
 
-  { PBU_$DCTE_TABLE (map symbol in PBU_ASM): the addresses of the 8
-    DCTEs PBU_$SETUP hands out. }
-  pbu_$dcte_table: extern array[0..7] of pbu_$dcte_ptr_t;
+  { PBU_$DCTE_TABLE (map symbol in PBU_ASM): the addresses of the DCTEs
+    PBU_$SETUP hands out. }
+  pbu_$dcte_table: extern array[0..pbu_dcte_table_last] of
+    pbu_$dcte_ptr_t;
+
+%if pbu_atbus_units %then
+  { PBU_$NONSYS_DEVICE (map symbol, PBU's data block +0x56): a set of
+    units, all of them initially; PBU_$RELEASE_INT adds the unit it sets
+    down.  Nothing in the PBU's code tests it.  Defined in pbu/pbu.pas. }
+  pbu_$nonsys_device: extern pbu_$unit_set_t;
+%endif
 
   { PBU_$PPN_OWNERS (map symbol, the one of the map's PBU_TABLES data
     segment, a fixed address in the low region): for each physical page
@@ -363,7 +463,8 @@ var
     pages that cover MMAP_$LPPN..MMAP_$HPPN.  Packed: a byte per page
     with `pbu_8_units' (the SAU3's PBU_TABLES, 0xE00 bytes for the
     0xE00 pages), a word per page otherwise. }
-  pbu_$ppn_owners: extern packed array[16#200..pbu_ppn_owners_last] of
+  pbu_$ppn_owners: extern packed array[pbu_ppn_owners_first..
+                                       pbu_ppn_owners_last] of
     pbu_$unit_set_t;
 
   { PBU_$PAGE_START (map symbol, PBU_ASM's first byte): with
@@ -617,31 +718,49 @@ procedure pbu_$write_csr(in unit: integer; in csr: univ pbu_$buffer_t;
   order.  PBU_$TRAP6's table holds PBU2_$MAP, PBU2_$UNMAP and the DMA
   entries, the system call table PBU_$DMA_START, PBU_$DMA_STATUS,
   PBU2_$DMA_START, PBU2_$DMA_STOP and PBU_$WAIT: the default convention
-  (PBU_$TRAP6 copies the user's argument addresses).  The DMA entries'
-  arguments are not read but the status. ---- }
+  (PBU_$TRAP6 copies the user's argument addresses).  Where the DMA
+  entries are stubs their arguments are not read but the status; their
+  names and types are the AT bus's bodies' (`pbu_atbus_units'). ---- }
+
+type
+  { PBU_$DMA_START's options: member 0, 1 or 2 selects the channel's
+    mode (1, 2 or 4; 0 for none), member 2 also takes the transfer to
+    the unit's own memory (no buffer), member 3 a buffer in bus memory;
+    members 4..15 are refused. }
+  pbu_$dma_options_t = set of 0..15;
+
+  { A longword as its two words (PBU2_$DMA_START's length). }
+  pbu_$long_words_t = record
+    high: integer;                        { 0x00 }
+    low: pinteger;                        { 0x02 }
+  end;
 
 { PBU_$DMA_START - start a PBU unit's DMA transfer.
   PBU_$DMA_STOP - stop a PBU unit's DMA transfer.
   PBU_$DMA_STATUS - a PBU unit's DMA transfer's status.
   PBU2_$DMA_START - start a PBU unit's DMA transfer.
   PBU2_$DMA_STOP - stop a PBU unit's DMA transfer. }
-procedure pbu_$dma_start(in unit: integer; in arg_2: integer32;
-                         in arg_3: integer32; in arg_4: integer32;
-                         in arg_5: integer32; in arg_6: integer32;
+procedure pbu_$dma_start(in unit: integer; in channel: integer;
+                         in direction: integer;
+                         in buffer: univ pbu_$buffer_t;
+                         in length: pinteger;
+                         in options: pbu_$dma_options_t;
                          out status: status_$t);
   extern;
-function pbu_$dma_stop(in unit: integer; in arg_2: integer32;
+function pbu_$dma_stop(in unit: integer; in channel: integer;
                        out status: status_$t): integer32;
   extern;
-procedure pbu_$dma_status(in unit: integer; in arg_2: integer32;
+procedure pbu_$dma_status(in unit: integer; in channel: integer;
                           out status: status_$t);
   extern;
-procedure pbu2_$dma_start(in unit: integer; in arg_2: integer32;
-                          in arg_3: integer32; in arg_4: integer32;
-                          in arg_5: integer32; in arg_6: integer32;
-                          in arg_7: integer32; out status: status_$t);
+procedure pbu2_$dma_start(in unit: integer; in channel: integer;
+                          in direction: integer;
+                          in buffer: univ pbu_$buffer_t;
+                          in unused_5: integer32; in length: integer32;
+                          in options: pbu_$dma_options_t;
+                          out status: status_$t);
   extern;
-function pbu2_$dma_stop(in unit: integer; in arg_2: integer32;
+function pbu2_$dma_stop(in unit: integer; in channel: integer;
                         out status: status_$t): integer32;
   extern;
 

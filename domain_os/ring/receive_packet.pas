@@ -2,7 +2,9 @@
 
   Image addresses:
     sau2  0x00E7649E  ring_$receive_packet (module-local)
+    sau8  0x03C82D8C  ring_$receive_packet (module-local)
     sau2  0x00E76470  ring_$discard_packet (nested)
+    sau8  0x03C82D5E  ring_$discard_packet (nested)
 
   - A packet without the ring's own flag goes to NET_IO_$PUT_IN_SOCK.
     Else its type's channel gets it: a channel the system opened through

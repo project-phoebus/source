@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E7667C  ring_$wire_driver (module-local)
+    sau8  0x03C82F6A  ring_$wire_driver (module-local)
 
   - Under the I/O wiring lock, when nothing is wired yet, the driver's
     code section (RING_PROC) and then its data section (RING_DATA) are

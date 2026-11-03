@@ -1,6 +1,7 @@
 { ETHERNET_$OPEN_OS - open a system channel for MAC_OS.
 
   Image addresses:
+    sau8  0x03C881CA  ETHERNET_$OPEN_OS
     sau9  0x3C483DCA  ETHERNET_$OPEN_OS
 
   - The driver record's open_os entry.  MAC_OS's packet-type ranges

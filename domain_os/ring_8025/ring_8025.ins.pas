@@ -576,12 +576,16 @@ type
     two units' pairs of window pages (first mapped to the unit
     record's page), a page mapped at the start, and the two units'
     control areas and route caches.  The driver wires the control area's
-    six pages and the route cache's eight from the area's start. }
+    six pages and the route cache's eight from the area's start.  With
+    `ring_8025_dma_channel' there is no map page (0x7C00 bytes, the
+    route caches from 0x4000). }
   ring_8025_$page_t = array[0..1023] of char;
   ring_8025_$aux_t = record
     windows: array[0..r8025_max_unit, 1..2] of ring_8025_$page_t;  { 0x0000 }
     ctl: array[0..r8025_max_unit] of ring_8025_$ctl_area_t;   { 0x1000 }
+%if not ring_8025_dma_channel %then
     map_page: ring_8025_$page_t;                 { 0x4000 }
+%endif
     routes: array[0..r8025_max_unit] of ring_8025_$route_cache_t;  { 0x4400 }
   end;
 
@@ -817,8 +821,10 @@ type
                                           { 0x224: the open channels }
     ranges: ring_8025_$range_list_t;      { 0x288: the channels' types }
     range_count: pinteger;                { 0x408 }
-    word_40a: integer;                    { 0x40A: 6 for unit 0, 5 for
-                                            unit 1 }
+    dma_channel: integer;                 { 0x40A: the unit's DMA
+                                            channel, 6 for unit 0, 5 for
+                                            unit 1 (used with
+                                            `ring_8025_dma_channel') }
     rcv_ssb: ring_8025_$ssb_t;            { 0x40C: the status block of the
                                             last receive status }
     cmd_ssb: ring_8025_$ssb_t;            { 0x414: of the last command }

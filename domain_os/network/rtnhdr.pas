@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0F414  NETWORK_$RTNHDR
+    sau8  0x03C1074C  NETWORK_$RTNHDR
 
   - The module's own header page is given back by releasing the network
     transmit lock; any other page is unmapped (NETBUF_$RTNVA) and its

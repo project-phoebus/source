@@ -1,6 +1,7 @@
 { RING_8025_$OPEN_OS - open a system channel for MAC_OS.
 
   Image addresses:
+    sau8  0x03C8CF96  RING_8025_$OPEN_OS
     sau9  0x3C488B9A  RING_8025_$OPEN_OS
 
   - The driver record's open_os entry.  MAC_OS's packet-type ranges

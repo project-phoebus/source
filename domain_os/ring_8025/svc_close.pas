@@ -1,6 +1,7 @@
 { RING_8025_$SVC_CLOSE - close a user channel.
 
   Image addresses:
+    sau8  0x03C8BDB6  RING_8025_$SVC_CLOSE
     sau9  0x3C4879BA  RING_8025_$SVC_CLOSE
 
   - The driver record's svc_close entry.  Under the channel lock the

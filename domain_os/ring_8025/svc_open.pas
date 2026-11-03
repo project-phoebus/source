@@ -1,6 +1,7 @@
 { RING_8025_$SVC_OPEN - open a user channel.
 
   Image addresses:
+    sau8  0x03C8BD86  RING_8025_$SVC_OPEN
     sau9  0x3C48798A  RING_8025_$SVC_OPEN
 
   - The driver record's svc_open entry: ring_8025_open_channel for a

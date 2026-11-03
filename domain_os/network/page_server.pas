@@ -2,10 +2,13 @@
 
   Image addresses:
     sau2  0x00E11548  NETWORK_$PAGE_SERVER
+    sau8  0x03C1281E  NETWORK_$PAGE_SERVER
     sau9  0x3C413932  NETWORK_$PAGE_SERVER
     sau2  0x00E10510  network_$ps_send_reply (nested)
+    sau8  0x03C11824  network_$ps_send_reply (nested)
     sau9  0x3C412938  network_$ps_send_reply (nested)
     sau2  0x00E10628  network_$process_paging_request (nested)
+    sau8  0x03C1193C  network_$process_paging_request (nested)
     sau9  0x3C412A50  network_$process_paging_request (nested)
 
   - Start-up: the remote page pool grows by 34 pages, a zero page is

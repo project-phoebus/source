@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E30DA8  MST_$DISKLESS_INIT
+    sau8  0x03C340CC  MST_$DISKLESS_INIT
     sau9  0x3C436E70  MST_$DISKLESS_INIT
 
   - The message is formatted once, at boot, into MST_$DISKLESS_MSG with

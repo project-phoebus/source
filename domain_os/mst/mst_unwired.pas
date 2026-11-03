@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E7CF0C  MST_UNWIRED data (.DATA, 0x48 bytes)
     sau2  0x00E85710  MST_UNWIRED data (DATA$, 4 bytes)
+    sau8  0x03C923CC  MST_UNWIRED data (.DATA, 0x3670 bytes)
+    sau8  0x03C9E3B8  MST_UNWIRED data (DATA$, 4 bytes)
     sau9  0x3C48E1D0  MST_UNWIRED data (.DATA, 0x74D8 bytes)
     sau9  0x3C49E080  MST_UNWIRED data (DATA$, 4 bytes)
 
@@ -40,6 +42,19 @@
     +0x74C2  mst_$rar_pages         6       zero (read by nothing)
     +0x74C8  prot_rights            0x10    mst_$lookup_object's static
 
+  With the layout chosen at boot (`run_time_layout'), 0x3670 bytes:
+
+    +0x0000  page_avail_bitmap      0x68    all ones
+    +0x0068  mst_$segs_mapped       0x3490  zero, 116 words per ASID
+    +0x34F8  mst_$bst_pages         0xE8    zero, a longword per ASID
+    +0x35E0  rars_asid_base         0x74    zero (MST_$PRE_INIT)
+    +0x3654  mst_$rar_pages         4       zero
+    +0x3658  page_alloc_hint        2       zero
+    +0x365A  mst_$mst_pages_limit   2       zero
+    +0x365C  mst_$mst_pages_wired   2       zero
+    +0x365E  unused_365e            2       zero (read by nothing)
+    +0x3660  prot_rights            0x10    mst_$lookup_object's static
+
   Build: dpc -I domain_os domain_os/mst/mst_unwired.pas.  Check:
   tools/pascal_check.sh.
 }
@@ -53,49 +68,7 @@ module mst_unwired;
 %include 'uid/uid.ins.pas';
 %include 'anon/anon.ins.pas';
 %include 'proc1/proc1.ins.pas';
-%if large_vm %then
-
-{ TODO(pascal) MMU's large-VM headings belong in mmu/mmu.ins.pas
-
-  With the large VM layout MMU_$REMOVE takes a virtual address and a
-  word (mst_$unwire_page passes 0), where mmu/mmu.ins.pas declares the
-  SAU2's one-argument form, which its other callers use under every
-  configuration.  As win_scsi and ethernet do (the same TODO in
-  win_scsi/win_scsi.ins.pas), this module declares the MMU headings and
-  variable it uses here, as mmu/mmu.ins.pas has them but MMU_$REMOVE,
-  and does not include that file, until MMU's other form has a part of
-  its own there. }
-
-{ MMU_$INSTALL (hand-written): the page number and the virtual address,
-  longwords, then the ASID and the protection, all by value. }
-procedure mmu_$install(ppn: integer32; va: univ_ptr; asid: integer;
-                       prot: integer);
-  options(extern, val_param);
-
-{ MMU_$REMOVE (hand-written): a page's mapping removed; the address and
-  a word, by value. }
-procedure mmu_$remove(va: univ_ptr; flags: integer);
-  options(extern, val_param);
-
-{ MMU_$VTOP (hand-written): the virtual address by value; the page
-  number in D0. }
-function mmu_$vtop(va: integer32; out status: status_$t): integer32;
-  options(extern, val_param);
-
-{ MMU_$PURGE (hand assembly): flush the address translation cache and
-  the virtual cache. }
-procedure mmu_$purge; extern;
-
-%if large_address_space %then
-var
-  { MMU_$RARS_PHADDR (map symbol in the hand-written MMU_ASM's data):
-    each ASID's RARS page's physical address, longwords indexed by
-    ASID. }
-  mmu_$rars_phaddr: extern array[0..57] of integer32;
-%endif
-%else
 %include 'mmu/mmu.ins.pas';
-%endif
 %include 'mmap/mmap.ins.pas';
 %include 'vfmt/vfmt.ins.pas';
 %include 'wp/wp.ins.pas';
@@ -152,6 +125,8 @@ const
     the large address space (MST_$INIT's last index). }
 %if large_address_space %then
   mst_pages_percent = 15;
+%elseif run_time_layout %then
+  mst_pages_percent = 10;
 %else
   mst_pages_percent = 10;
 %endif
@@ -159,7 +134,28 @@ const
                   mst_pages_percent div 100;
   mst_bitmap_last = (mst_pages_max + 1) div 32;
 
-%if large_address_space %then
+%if run_time_layout %then
+var
+  page_avail_bitmap: array[0..mst_bitmap_last] of mst_page_set_t :=
+    [* of [0..31]];                       { +0x0000: ffff x 52 }
+
+define
+  mst_$segs_mapped;                       { +0x0068 }
+  mst_$bst_pages;                         { +0x34F8 }
+  rars_asid_base;                         { +0x35E0 }
+  mst_$rar_pages;                         { +0x3654 }
+
+var
+  page_alloc_hint: pinteger;              { +0x3658 }
+
+define
+  mst_$mst_pages_limit;                   { +0x365A }
+  mst_$mst_pages_wired;                   { +0x365C }
+
+var
+  unused_365e: integer;                   { +0x365E: 0000, stand-in }
+  { +0x3660: prot_rights, mst_$lookup_object's static. }
+%elseif large_address_space %then
 var
   page_avail_bitmap: array[0..mst_bitmap_last] of mst_page_set_t :=
     [* of [0..31]];                       { +0x0000: ffff x 616 }
@@ -224,7 +220,7 @@ define
   mst_$get_uid_asid;
   mst_$get_va_info;
   mst_$invalidate;
-%if large_address_space %then
+%if vm_regions %then
   mst_$map_special;
 %endif
   mst_$priv_set_touch_ahead_cnt;
@@ -395,7 +391,7 @@ procedure mst_$va_to_pte(asid: integer; va: integer32;
                          out status: status_$t);
   forward; internal;
 
-%if large_address_space %then
+%if vm_regions %then
 { mst_$free_region (module-local, no map symbol, PROC2_DELETE_PRO):
   free an active region of an ASID's private segments.  MST_$UNMAP_PRIVI
   calls it before its body; the region, the MST segment group and the
@@ -446,7 +442,7 @@ procedure mst_$free_region(region: mst_region_t; group: pinteger;
 %include 'mst/get_va_info.pas';           { MST_$GET_VA_INFO }
 %include 'mst/va_to_pte.pas';             { mst_$va_to_pte }
 %include 'mst/invalidate.pas';            { MST_$INVALIDATE }
-%if large_address_space %then
+%if vm_regions %then
 %include 'mst/map_special.pas';           { MST_$MAP_SPECIAL }
 %endif
 %include 'mst/priv_set_touch_ahead_cnt.pas';
@@ -467,7 +463,7 @@ procedure mst_$free_region(region: mst_region_t; group: pinteger;
 { ---- PROC2_DELETE_PRO ---- }
 %include 'mst/unwire_page.pas';           { mst_$unwire_page }
 %include 'mst/unwire_asid_pages.pas';     { mst_$unwire_asid_pages }
-%if large_address_space %then
+%if vm_regions %then
 %include 'mst/free_region.pas';           { mst_$free_region }
 %endif
 %include 'mst/free_asid.pas';             { MST_$FREE_ASID }

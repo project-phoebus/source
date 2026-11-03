@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E2F7F2  NETWORK_$LOAD
+    sau8  0x03C324BA  NETWORK_$LOAD
 
   - When port 0 is active and its driver has an entry at +0x1C, the
     entry is called for port 0's socket with a zero service record and

@@ -1,6 +1,7 @@
 { ETHERNET_$RCV0 - unit 0's receive process.
 
   Image addresses:
+    sau8  0x03C88E26  ETHERNET_$RCV0
     sau9  0x3C484A4C  ETHERNET_$RCV0
 
   - A process entry point of the driver's receive-process table:

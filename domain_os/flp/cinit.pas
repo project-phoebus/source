@@ -2,8 +2,11 @@
 
   Image addresses:
     sau2  0x00E3E002  FLP_$CINIT
+    sau8  0x03C460CA  FLP_$CINIT
 
   - The driver is registered with DISK only after SPECIFY succeeded.
+  - The AT bus form maps the controller's ports first and resets the
+    controller through the digital output, with no probe and no drain.
 
   Returns:
     status_$ok: the controller is initialized
@@ -11,9 +14,51 @@
     status_$disk_controller_error: the controller is not drained in 200
       tries
     SHAKE's result: SPECIFY fails
+    IO_$MAP_CSR's status: the AT bus form's ports not mapped
 
   Status stored: none.
 }
+
+%if floppy_atbus %then
+function flp_$cinit(var dcte: flp_$dcte_t): integer32;
+var
+  status: status_$t;
+  ctlr: pinteger;
+  delay: integer;
+  i: integer;
+begin
+  io_$map_csr(dcte.req, status);
+  if status.all = status_$ok then begin
+    ctlr := dcte.cnum;
+    flp_hw_addr := flp_$regs_ptr_t(dcte.req.csr.va);
+    flp_ctlr_table[ctlr].dcte := addr(dcte);
+    flp_ctlr_table[ctlr].hw_addr := flp_hw_addr;
+    ec_$init(flp_$ec);
+
+    { the controller reset }
+    with flp_hw_addr^ do begin
+      status.all := status_$ok;
+      flp_b_1f2 := false;
+      flp_$motor_on := false;
+      dor := 8;
+      for i := 1 to 100 do
+        delay := delay + 1;
+      dor := 16#0C;
+      dig_in := 0;
+      reg_06 := 2;
+    end;
+
+    { SPECIFY, then the registration }
+    if status.all = status_$ok then begin
+      status.all := shake(flp_specify_cmd, 3, 1);
+      if status.all = status_$ok then
+        discard(disk_$register(1, ctlr, flp_unit_count, dcte.lock,
+                               addr(flp_jump_table)));
+    end;
+  end;
+  flp_$cinit := status.all;
+end;
+%else
 
 function flp_$cinit(var dcte: dcte_t): integer32;
 var
@@ -66,3 +111,4 @@ begin
 
   flp_$cinit := status;
 end;
+%endif

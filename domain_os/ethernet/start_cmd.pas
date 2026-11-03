@@ -2,6 +2,7 @@
   reply.
 
   Image addresses:
+    sau8  0x03C84C02  ethernet_start_cmd
     sau9  0x3C480802  ethernet_start_cmd
 
   - The reply's command code and the block it is to be copied into (the

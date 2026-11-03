@@ -3,11 +3,13 @@
   Image addresses:
     sau2  0x00E19BC0  WIN_$SPIN_DOWN
     sau5  0x00E1A0A4  WIN_$SPIN_DOWN
+    sau8  0x03C1A010  WIN_$SPIN_DOWN
 
   - The ANSI form issues SPIN CONTROL (16#55) with 0; the result is 20
     when it succeeded, else 0.
   - The descriptor-list form restores drive 0 unless WIN_$DT is set; the
     result is 3.
+  - The AT bus form only returns 3.
 
   Status stored: none.
 }
@@ -17,6 +19,11 @@ function win_$spin_down(in unit: pinteger): integer;
 begin
   if win_$dt = 0 then
     discard(restore(unit, 0));
+  win_$spin_down := 3;
+end;
+%elseif win_atbus_ctlr %then
+function win_$spin_down(in unit: pinteger): integer;
+begin
   win_$spin_down := 3;
 end;
 %else

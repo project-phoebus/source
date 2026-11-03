@@ -1,6 +1,7 @@
 { RING_8025_$SEND_OS - send a MAC_OS packet on a system channel.
 
   Image addresses:
+    sau8  0x03C8D05E  RING_8025_$SEND_OS
     sau9  0x3C488C62  RING_8025_$SEND_OS
 
   - The driver record's send_os entry.  The packet goes out as the

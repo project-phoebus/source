@@ -3,8 +3,10 @@
 # tools/rfc_decode.py - decode the SAU2 domain_os RFC image the way the
 # loader (sysboot) and COLD_START see it, and write tools/rfc_segments.json
 # (the oracle of tools/check_rfc.py); or the
-# SAU5's (--sau 5, tools/rfc_segments_sau5.json), with the addresses of its
-# COLD from tools/check_rfc.py's tables keyed by SAU
+# SAU5's (--sau 5, tools/rfc_segments_sau5.json), the SAU3's and the SAU8's
+# likewise, with the addresses of its COLD and the image's layout (the
+# SAU8's load address 0x101C00, COLD 0xC00, DUMP 0x800) from
+# tools/check_rfc.py's tables keyed by SAU
 #
 # IODEFS_GUARD follows the bss 'loaded at' rule, not VA.
 #
@@ -65,7 +67,13 @@ def select_sau(sau):
     """Point the COLD addresses above at the SAU's (check_rfc's tables)."""
     global OP_PAGE_END, OP_LO_BYTES, OP_MMAP_VA, OP_PTTX_VA, OP_STACK
     global OP_ENTRY, MAP_TABLE, MAP_LO_COUNT, MAP_HI_COUNT_PPN, WINDOWS
+    global LOAD, MOVE_TO_PPN, OP_RELOC_VA, OP_KERNEL_VA, OP_KERNEL_LOW
+    global OP_SPLIT_LOW
     c = check_rfc
+    c.select_sau(sau)
+    LOAD, MOVE_TO_PPN = c.LOAD, c.MOVE_TO_PPN
+    OP_RELOC_VA, OP_KERNEL_VA = c.OP_RELOC_VA, c.OP_KERNEL_VA
+    OP_KERNEL_LOW, OP_SPLIT_LOW = c.OP_KERNEL_LOW, c.OP_SPLIT_LOW
     OP_PAGE_END, OP_LO_BYTES = c.OP_PAGE_END[sau], c.OP_LO_BYTES[sau]
     OP_MMAP_VA, OP_PTTX_VA = c.OP_MMAP_VA[sau], c.OP_PTTX_VA[sau]
     OP_STACK, OP_ENTRY = c.OP_STACK[sau], c.OP_ENTRY[sau]
@@ -104,9 +112,9 @@ def main():
     # is 0 in every sau2 file (00 02 00 00)
     hdr = dict(load=be32(d, LOAD), start=be32(d, LOAD + 4),
                machine=be16(d, LOAD + 8), header_word_10=be16(d, LOAD + 10))
-    info = dict(kernel_offset=be32(d, 0x10140C), data_va=be32(d, 0x101410),
-                kernel_va=be32(d, 0x101414), magic=be32(d, 0x101418),
-                split_ppn=be32(d, 0x10141C), move_to_ppn=be32(d, MOVE_TO_PPN))
+    info = dict(kernel_offset=be32(d, LOAD + 0xC), data_va=be32(d, LOAD + 0x10),
+                kernel_va=be32(d, LOAD + 0x14), magic=be32(d, LOAD + 0x18),
+                split_ppn=be32(d, LOAD + 0x1C), move_to_ppn=be32(d, MOVE_TO_PPN))
     assert hdr['load'] == LOAD and (info['magic'] >> 16) == 0xFEED
 
     reloc_va = be32(d, OP_RELOC_VA)
@@ -163,10 +171,13 @@ def main():
     regions = [
         dict(name='RFC header', low=hex(LOAD), size=hex(12)),
         dict(name='info block', low=hex(LOAD + 12), size=hex(24)),
-        dict(name='COLD code+data', low=hex(LOAD + 0x24), end=hex(LOAD + 0x800),
-             note='map: D22 COLD size 7FC; 0x101BFC..0x101C00 is the stack top pad'),
-        dict(name='DUMP', low=hex(LOAD + 0x800), va='0xE00400', size='0x400',
-             phys_runtime='0x100C00 (copied by COLD 0x10154E)'),
+        dict(name='COLD code+data', low=hex(LOAD + 0x24),
+             end=hex(LOAD + check_rfc.COLD_SIZE),
+             note='map: COLD size 0x%X; the last 4 bytes are the stack top pad'
+             % (check_rfc.COLD_SIZE - 4)),
+        dict(name='DUMP', low=hex(LOAD + check_rfc.COLD_SIZE),
+             va=hex(check_rfc.DUMP_VA), size=hex(check_rfc.DUMP_SIZE),
+             phys_runtime='0x100C00 (copied by COLD)'),
         dict(name='kernel', low=hex(klow), end=hex(reloc_va - delta),
              va=hex(kva), va_end=hex(reloc_va), va_minus_low=hex(delta)),
         dict(name='RELOC', low=hex(t), end=hex(end_low), entries=n,
@@ -219,7 +230,8 @@ def main():
                                    kernel_low=hex(klow), split_low=hex(split),
                                    move_to_phys=hex(move), os_page_end=hex(page_end),
                                    mmap_va=hex(be32(d, OP_MMAP_VA)),
-                                   pttx_va=hex(be32(d, OP_PTTX_VA)),
+                                   **({} if OP_PTTX_VA is None else
+                                      dict(pttx_va=hex(be32(d, OP_PTTX_VA)))),
                                    initial_sp=hex(be32(d, OP_STACK)),
                                    entry=hex(be32(d, OP_ENTRY))),
                file_regions=regions, mmu_map_table=entries,

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E2F000  AST_$INIT
+    sau8  0x03C31C00  AST_$INIT
     sau9  0x3C434C00  AST_$INIT
 
   - Per 512-page unit of real memory: 80 ASTEs (plus 640) and 40 AOTEs

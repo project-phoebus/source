@@ -291,6 +291,12 @@ ring_$setup_rx_dma are not.
 - RING_$RCV_FROM_UNIT_PRIV and RINGLOG_$STOP_LOGGING are names with the
   global form; the map has no symbol for either (module-local and
   nested).
+- The SAU8 (and SAU7) RING_$GET_ID probes a node id PROM in the page of
+  PIC1 (TESTPAGE, a byte read) and takes the id from its first four
+  words' high bytes when it answers and its first word is zero, from
+  RING2's first four words otherwise; the PROM has no map symbol
+  (`node_id_prom` in `ring_driver.ins.pas`).  The SAU8's other RING
+  routines are the SAU9's but for ring_$setup_tx's PARITY_ calls.
 
 ### TODO(pascal)
 

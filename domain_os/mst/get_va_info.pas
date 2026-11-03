@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E4404E  MST_$GET_VA_INFO
+    sau8  0x03C4C484  MST_$GET_VA_INFO
     sau9  0x3C44B61A  MST_$GET_VA_INFO
 
   - The address's MSTE is copied out under the ASID lock; its UID, the

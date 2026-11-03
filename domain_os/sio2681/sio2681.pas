@@ -6,6 +6,8 @@
     sau2  0x00E351EC  SIO_IO data (OS_INIT_DATA, 0x8 bytes)
     sau3  0x00E2CA24  SIO_IO data (WIRED_DATA, 0xC8 bytes)
     sau3  0x00E335EC  SIO_IO data (OS_INIT_DATA, 0x8 bytes)
+    sau8  0x03C30158  SIO_IO data (WIRED_DATA, 0xA8 bytes)
+    sau8  0x03C39670  SIO_IO data (OS_INIT_DATA, 0x8 bytes)
 
   One compilation unit: the map's SIO_IO code segments in WIRED_PROC
   (0x69C bytes, SIO2681_$INT .. SIO2681_$XMIT, SIO6509_$RCV,
@@ -20,6 +22,10 @@
   segments after the 2681's, their fragments included here.  With
   `sio16550_lines' (base/config.ins.pas) the map's SIO_IO module is the
   16550's (sio16550/sio16550.pas) and this body is left out.
+
+  With `console_sio2681' there is no SIO6509: its routines and its table at
+  +0xA8 are left out (the WIRED_DATA block is then 0xA8 bytes); with
+  `kbd_tone' SIO2681_$TONE is (the keyboard sounds the tone).
 
   The heading: `module sio_io, wired_proc, wired_data;'.  SIO2681_$INIT
   is headed `[section(os_init_proc, os_init_data)]' (the OS_INIT_DATA
@@ -73,22 +79,33 @@ module sio_io, wired_proc, wired_data;
 %include 'sio2681/sio2681.ins.pas';
 %include 'sio6509/sio6509.ins.pas';
 %include 'pchist/pchist.ins.pas';
+%if sio2681_pbu_int %then
+%include 'pbu/pbu.ins.pas';
+%endif
 
 { The global routines this module defines (ref 7.3.4, Method 2), in map
   order. }
 define
   sio2681_$int;
   sio2681_$set_break;
+%if not kbd_tone %then
   sio2681_$tone;
+%endif
   sio2681_$set_line;
   sio2681_$xmit;
+%if not console_sio2681 %then
   sio6509_$rcv;
   sio6509_$xmit;
+%endif
   sio2681_$init;
+%if not console_sio2681 %then
   sio6509_$init;
+%endif
   sio2681_$inq_line;
+%if not console_sio2681 %then
   sio6509_$set_line;
   sio6509_$inq_line;
+%endif
 
 { The module's own types, used by SIO2681_$SET_LINE and
   sio2681_set_baud_rate only. }
@@ -156,25 +173,35 @@ var
   baud_codes: array[0..16] of 0..15 :=    { +0x84 }
     [0, 0, 1, 2, 3, 4, 5, 6, 7, 0, 8, 0, 9, 10, 11, 12, 13];
   pad_a6: integer;                        { +0xA6, 0: stand-in }
+%if not console_sio2681 %then
   sio6509_rcv_flags: array[0..7] of integer32 :=  { +0xA8 }
     [0, 2, 4, 6, 1, 5, 3, 0];
+%endif
 
 { ---- WIRED_PROC ---- }
 %include 'sio2681/int.pas';                 { SIO2681_$INT          }
 %include 'sio2681/set_break.pas';           { SIO2681_$SET_BREAK    }
+%if not kbd_tone %then
 %include 'sio2681/tone.pas';                { SIO2681_$TONE         }
+%endif
 %include 'sio2681/set_baud_rate.pas';       { sio2681_set_baud_rate }
 %include 'sio2681/set_line.pas';            { SIO2681_$SET_LINE     }
 %include 'sio2681/xmit.pas';                { SIO2681_$XMIT         }
+%if not console_sio2681 %then
 %include 'sio6509/rcv.pas';                 { SIO6509_$RCV          }
 %include 'sio6509/xmit.pas';                { SIO6509_$XMIT         }
+%endif
 
 { ---- OS_INIT_PROC ---- }
 %include 'sio2681/init.pas';                { SIO2681_$INIT         }
+%if not console_sio2681 %then
 %include 'sio6509/init.pas';                { SIO6509_$INIT         }
+%endif
 
 { ---- PROCEDURE$ ---- }
 %include 'sio2681/inq_line.pas';            { SIO2681_$INQ_LINE     }
+%if not console_sio2681 %then
 %include 'sio6509/set_line.pas';            { SIO6509_$SET_LINE     }
 %include 'sio6509/inq_line.pas';            { SIO6509_$INQ_LINE     }
+%endif
 %endif

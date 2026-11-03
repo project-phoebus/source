@@ -5,6 +5,8 @@
     sau3  0x00E19AB8  fits (nested)
     sau5  0x00E1AE0A  io_$alloc_region
     sau5  0x00E1AD68  fits (nested)
+    sau8  0x03C1BC32  io_$alloc_region
+    sau8  0x03C1BB8E  fits (nested)
 
   - Under io_$exclusion: with fixed the range starts at iova; without,
     the first candidate that fits among lo and the addresses just

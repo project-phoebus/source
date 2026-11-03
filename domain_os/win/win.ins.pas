@@ -135,6 +135,179 @@ type
     pad_2d8: array[1..20] of integer;     { 0x2D8 }
     config: pinteger;                     { 0x300 }
   end;
+%elseif win_atbus_ctlr %then
+{ ---- The AT bus controller (`win_atbus_ctlr', base/config.ins.pas; the
+  WIN8_ driver).  The controller takes a 6-byte command block through
+  its data port, one byte at a time, when its status port shows the
+  command phase; the data of a transfer passes through the controller's
+  sector buffer by program (WIN_ASM), and the completion byte and the
+  sense bytes come back through the same port.  The status port's
+  value, less 16#C0, is the phase win_wait waits for. ---- }
+
+const
+  { 16#80027 "ecc error in sector id field" (stcode.db.10.2), a sense
+    code win_$check_status maps; its other statuses are disk/disk.ins.pas's
+    and this file's. }
+  status_$ecc_error_in_sector_id = 16#00080027;
+
+  { The controller's commands, the command block's first byte. }
+  win_cmd_test_ready = 16#00;
+  win_cmd_sense = 16#03;
+  win_cmd_format_track = 16#06;
+  win_cmd_init_drive = 16#0C;
+  win_cmd_read_buffer = 16#0E;
+  win_cmd_write_buffer = 16#0F;
+  win_cmd_read = 16#1E;
+  win_cmd_write = 16#1F;
+  win_cmd_read_badspots = 16#37;
+  win_cmd_drive_params = 16#EC;
+
+  { The phases win_wait waits for: the status port's low bits. }
+  win_phase_idle = 0;
+  win_phase_data_out = 9;
+  win_phase_data_in = 11;
+  win_phase_command = 13;
+  win_phase_status = 15;
+
+  { The status port's value with a completion byte waiting (the status
+    phase with both high bits), and the mask that finds it. }
+  win_status_completion = 16#CF;
+
+  { The control port's values: the controller's interrupt on and off. }
+  win_ctl_int_on = 2;
+  win_ctl_int_off = 0;
+
+type
+  { The controller's ports, through the unit record's pointer.
+    `[device]': each access is a port access, in the order written, and
+    a constant is stored as a constant (ref 3.15.3).  The fields:
+    - 0x00 data: the command block's bytes out, the completion byte in,
+      the sense and parameter words in and out as a word (data_w);
+    - 0x01 status: the phase in the low bits, 16#C0 set; bit 5 the
+      controller's interrupt;
+    - 0x02 select: written 0 before a command block; the drive type in
+      its low four bits;
+    - 0x03 ctl: the interrupt's enable (win_ctl_int_on, _off). }
+  win_$regs_t = [device] record
+    case integer of
+      1: (data: win_$byte_t;              { 0x00 }
+          status: win_$byte_t;            { 0x01 }
+          select: win_$byte_t;            { 0x02 }
+          ctl: win_$byte_t);              { 0x03 }
+      2: (data_w: integer);               { 0x00 }
+  end;
+
+  { The command block, 6 bytes, sent byte by byte (bytes):
+    - byte 0 op: the command (win_cmd_...);
+    - byte 1: cyl_10, set for a cylinder of 1024 and up; the drive (unit);
+      the head;
+    - bytes 2..3: the cylinder, stored whole (cyl) and shifted left 6
+      with its low byte kept, which leaves its bits 9..8 in cyl_98; the
+      sector in byte 2's low six bits;
+    - byte 4: the count of sectors (count), or a format's interleave in
+      two halves;
+    - byte 5 ctl: the control byte: 0 for win_cmd_read_buffer, else
+      step 1; ctl_7 and ctl_6 cleared by WIN8_$DINIT. }
+  win_$cmd_t = packed record
+    case integer of
+      1: (op: win_$byte_t;                { 0x00 }
+          cyl_10: boolean;                { 0x01 bit 7 }
+          unit: 0..3;                     { 0x01 bits 6..5 }
+          head: 0..31;                    { 0x01 bits 4..0 }
+          cyl: integer;                   { 0x02 }
+          count: win_$byte_t;             { 0x04 }
+          ctl: win_$byte_t);              { 0x05 }
+      2: (pad_00: integer;                { 0x00 }
+          cyl_98: 0..3;                   { 0x02 bits 7..6 }
+          sector: 0..63;                  { 0x02 bits 5..0 }
+          cyl_lo: win_$byte_t;            { 0x03 }
+          interleave_hi: 0..15;           { 0x04 bits 7..4 }
+          interleave_lo: 0..15;           { 0x04 bits 3..0 }
+          ctl_7: boolean;                 { 0x05 bit 7 }
+          ctl_6: boolean;                 { 0x05 bit 6 }
+          ctl_53: 0..7;                   { 0x05 bits 5..3 }
+          step: 0..7);                    { 0x05 bits 2..0 }
+      3: (bytes: array[0..5] of win_$byte_t);
+  end;
+
+  { The sense bytes win_cmd_sense returns, 4 bytes read as two words:
+    valid, set when the sector is the failing one's; the error code;
+    then the command block's bytes 1..3 for the failing sector. }
+  win_$sense_t = packed record
+    case integer of
+      1: (valid: 0..1;                    { 0x00 bit 7 }
+          unused_06: 0..1;                { 0x00 bit 6 }
+          code: 0..63;                    { 0x00 bits 5..0 }
+          b1: win_$byte_t;                { 0x01 }
+          cyl_98: 0..3;                   { 0x02 bits 7..6 }
+          sector: 0..63;                  { 0x02 bits 5..0 }
+          cyl_lo: win_$byte_t);           { 0x03 }
+      2: (w: array[1..2] of integer);
+  end;
+
+  { A drive's parameters, 10 bytes: the block win_cmd_init_drive takes
+    (8 bytes: the cylinders, the heads, the reduced write current and the
+    write precompensation cylinders, the ECC burst length), and the five
+    words win_cmd_drive_params returns over the same bytes (the
+    cylinders, heads and sectors less one in bytes 0..3; a sector size
+    flag, the sign of the word at 4; bit 1 of byte 5; bytes 6..9 the
+    label information's). }
+  win_$params_t = packed record
+    case integer of
+      1: (cyls: integer;                  { 0x00 }
+          heads: win_$byte_t;             { 0x02 }
+          rwc: 0..65535;                  { 0x03 }
+          precomp: 0..65535;              { 0x05 }
+          ecc: win_$byte_t;               { 0x07 }
+          w_08: integer);                 { 0x08 }
+      2: (w: array[1..5] of integer);     { 0x00 }
+      3: (w_00: integer;                  { 0x00 }
+          w_02: integer;                  { 0x02 }
+          w_04: integer);                 { 0x04 }
+      4: (b: array[0..9] of win_$byte_t); { 0x00 }
+  end;
+
+  { The label information WIN8_$DINIT returns, 10 bytes: one longword or
+    two words, then the precompensation word, a word nothing writes, and
+    a word 1 for drive type 12. }
+  win_$pvlabel_t = record
+    case integer of
+      1: (l_00: integer32;                { 0x00 }
+          w_04: pinteger;                 { 0x04 }
+          w_06: pinteger;                 { 0x06 }
+          w_08: pinteger);                { 0x08 }
+      2: (w_00: pinteger;                 { 0x00 }
+          w_02: pinteger);                { 0x02 }
+  end;
+
+  { A request's buffer address as a page number and the offset in the
+    page (PARITY_$SET_STATE's and PARITY_$CHK_IO's first page). }
+  win_$phys_addr_t = packed record
+    ppn: 0..16#3FFFFF;                    { bits 31..10 }
+    offset: 0..1023;                      { bits 9..0 }
+  end;
+
+  { The controller's kind-3 DCTE (io/dctes.pas WIN8_DCTE) as this form
+    reads it: the controller number, the unit's request (IO_$MAP_CSR's,
+    IO_$ACQUIRE's; the ports' address its CSR page's) and the high word
+    of the disk error queue longword at 0x48, the ML lock of WIN8_$DINIT
+    and WIN8_$DO_IO and DISK_$REGISTER's `flags'. }
+  win_$dcte_t = record
+    kind: pinteger;                       { 0x00 }
+    length: pinteger;                     { 0x02 }
+    ctype: pinteger;                      { 0x04 }
+    cnum: pinteger;                       { 0x06 }
+    nextp: univ_ptr;                      { 0x08 }
+    csrsytr: univ_ptr;                    { 0x0C }
+    cstatus: status_$t;                   { 0x10 }
+    name: array[1..8] of char;            { 0x14 }
+    reserved_1c: array[1..12] of char;    { 0x1C }
+    req: io_$acquire_rec_t;               { 0x28 }
+    unused_46: integer;                   { 0x46 }
+    lock: integer;                        { 0x48 }
+    unused_4a: integer;                   { 0x4A }
+  end;
+  win_$dcte_ptr_t = ^win_$dcte_t;
 %else
 
   { The drive's register block, through the unit record's pointer.
@@ -182,6 +355,57 @@ type
 %endif
   win_$regs_ptr_t = ^win_$regs_t;
 
+%if win_atbus_ctlr %then
+  { A controller's record, 12 bytes (WIN_$CINIT, WIN8_$DINIT index them
+    by the controller number with a stride of 12): its DCTE and its
+    ports, which WIN_$CINIT stores.  The last 4 bytes are addressed by
+    nothing (the other forms' lock and unit words). }
+  win_$unit_t = record
+    dcte: win_$dcte_ptr_t;                { 0x00 }
+    regs: win_$regs_ptr_t;                { 0x04 }
+    unused_08: integer32;                 { 0x08 }
+  end;
+
+  { A drive's statistics, 22 bytes (WIN8_$GET_STATS copies five
+    longwords and a word).  The counters, by the routines that change
+    them:
+    - 0x00 reads, 0x04 writes: the sectors read and written (WIN8_$DO_IO
+      adds a run's count, or one a sector, and takes one off for each
+      request of a failed chain);
+    - 0x0A timeouts: a transfer's interrupt not in time (WIN8_$DO_IO);
+    - 0x0C seek_errors, 0x0E equip_checks, 0x10 not_ready, 0x12
+      data_checks: the sense codes win_check_status maps (WIN8_$DINIT
+      takes back a not-ready of drive 1); data_checks also counts a
+      completion byte with an error bit but bit 1;
+    - 0x14 late_completions: a completion byte found waiting after the
+      chain (WIN8_$DO_IO);
+    - 0x08: a word no routine addresses. }
+  win_$stats_t = record
+    reads: integer32;                     { 0x00 }
+    writes: integer32;                    { 0x04 }
+    w_08: pinteger;                       { 0x08 }
+    timeouts: pinteger;                   { 0x0A }
+    seek_errors: pinteger;                { 0x0C }
+    equip_checks: pinteger;               { 0x0E }
+    not_ready: pinteger;                  { 0x10 }
+    data_checks: pinteger;                { 0x12 }
+    late_completions: pinteger;           { 0x14 }
+  end;
+
+  { TODO(pascal) the statistics array's 24-byte elements
+
+    The drives' statistics are 24 bytes apart while a drive's record is
+    22 (WIN8_$GET_STATS copies 22 bytes of it): the array pads each
+    element to a multiple of 4, which the reference does not describe
+    and dpc does not do (it lays the elements 22 bytes apart).  The
+    element here is a record of the 22 bytes and a word nothing
+    addresses, so the layout and the copy are the image's; whether the
+    original declared the array of the 22-byte record alone is open. }
+  win_$stats_slot_t = record
+    stats: win_$stats_t;                  { 0x00 }
+    unused_16: integer;                   { 0x16 }
+  end;
+%else
   { The unit record at the module block's start, 12 bytes (DISK_INIT
     indexes the units with a stride of 12).  WIN_$CINIT fills it from
     the DCTE (the DCTE's address, its register block's address, its
@@ -198,6 +422,7 @@ type
       1: (unit_bits: set of 0..15);       { 0x0A }
       2: (units: integer);                { 0x0A }
   end;
+%endif
 
   { The statistics block WIN_$CNT, 22 bytes (WIN_$GET_STATS copies five
     longwords and a word).  The counters, by the routines that bump
@@ -270,6 +495,17 @@ function seek(in ctlr: pinteger; in dev_unit: pinteger;
 function retry_data_check(in ctlr: pinteger; in dev_unit: pinteger;
                           in retry: integer): integer32;
   extern;
+%elseif win_atbus_ctlr %then
+var
+  { WIN_$CNT (map symbol inside the map's WIN_ data segment, WIRED_DATA,
+    0x380 bytes, at +0x340), defined in win/win.pas: a statistics record
+    no routine addresses. }
+  win_$cnt: extern win_$stats_t;
+
+  { WIN_PAGE (map symbol, in the BUFFER_PAGES region): the page a
+    sector's data is mapped at for WIN_ASM. }
+  win_page: extern array[0..1023] of char;
+
 %else
   { The drive's general status as WIN_$CHECK_DISK_STATUS keeps it, 2
     bytes: the byte the drive reports (from REPORT GENERAL STATUS or the
@@ -333,6 +569,60 @@ function seek(unit: pinteger; dev_unit: pinteger; in req: disk_$io_req_t;
   options(extern, val_param);
 %endif
 
+%if win_atbus_ctlr %then
+{ Routine headings, in map order: the map's WIN_ code segment in
+  WIRED_PROC (WIN_$SPIN_DOWN, then the module-local routines, whose
+  headings are in their fragments, then WIN8_$DO_IO .. WIN8_$GET_STATS),
+  WIN_ASM, and WIN_ in OS_INIT_PROC (WIN_$CINIT). }
+
+{ WIN_$SPIN_DOWN - stop the drive's spindle. }
+function win_$spin_down(in unit: pinteger): integer;
+  extern;
+
+{ WIN8_$DO_IO - the driver's I/O entry: format a track, read the
+  manufacturer's bad spots, or run a chain of read and write requests. }
+procedure win8_$do_io(in vol: disk_$volume_t; var req: disk_$io_req_t;
+                      in param_3: univ integer32; out result: boolean);
+  extern;
+
+{ WIN8_$DINIT - the unit initialization entry. }
+function win8_$dinit(unit: pinteger; ctlr: pinteger;
+                     var num_blocks: integer32;
+                     out sec_per_track: pinteger; out num_heads: pinteger;
+                     out pvlabel_info: win_$pvlabel_t;
+                     out flags: pinteger): integer32;
+  options(extern, val_param);
+
+{ WIN8_$INT - the controller's interrupt routine. }
+function win8_$int(in dcte: win_$dcte_t): boolean;
+  extern;
+
+{ WIN8_$ERROR_QUE - the error queue entry: the driver has none. }
+procedure win8_$error_que(in vol: disk_$volume_t; is_timeout: integer;
+                          out result: boolean);
+  options(extern, val_param);
+
+{ WIN8_$GET_STATS - the statistics entry. }
+procedure win8_$get_stats(cnum: integer; unit: pinteger;
+                          out stats: win_$stats_t);
+  options(extern, val_param);
+
+{ WIN_$FILL_CTL_BUF and WIN_$EMPTY_CTL_BUF (WIN_ASM, hand assembly,
+  win/sau8/win_asm.s): move a sector's header (16 words) and data (512
+  words) to and from the controller's data port.  Each argument is a
+  pointer, by address: the header's, the data's and the ports' for
+  FILL; the ports', the header's and the data's for EMPTY. }
+procedure win_$fill_ctl_buf(in hdr: univ_ptr; in data: univ_ptr;
+                            in regs: win_$regs_ptr_t);
+  extern;
+procedure win_$empty_ctl_buf(in regs: win_$regs_ptr_t; in hdr: univ_ptr;
+                             in data: univ_ptr);
+  extern;
+
+{ WIN_$CINIT - the Winchester controller's initialization. }
+function win_$cinit(var dcte: win_$dcte_t): integer32;
+  extern;
+%else
 { WIN_$DO_IO - the driver's I/O entry: format a track, or run a chain of
   read and write requests. }
 procedure win_$do_io(in vol: disk_$volume_t; var req: disk_$io_req_t;
@@ -388,3 +678,4 @@ procedure win_$get_stats(cnum: integer; unit: integer;
 { WIN_$CINIT - the Winchester controller's initialization. }
 function win_$cinit(var dcte: dcte_t): integer32;
   extern;
+%endif

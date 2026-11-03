@@ -1,6 +1,7 @@
 { ring_8025_vtop - the physical address of a virtual address.
 
   Image addresses:
+    sau8  0x03C89338  ring_8025_vtop
     sau9  0x3C484F38  ring_8025_vtop
 
   - The page's frame from MMU_$VTOP, which must succeed (the system

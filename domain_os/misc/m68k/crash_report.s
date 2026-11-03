@@ -42,7 +42,7 @@
 |
 | Not on the other SAUs whose crash may restart the node (`crash_reboot',
 | base/config.ins.pas): their report holds the restart cells and
-| SERVER_$FLAG (the SAU9's misc/sau9/crash_system.s).
+| SERVER_$FLAG (the SAU9's misc/m68k/crash_system_restart.s).
 |
         .include "base/config.inc"
         .if     !(crash_reboot && !crash_prom_restart)

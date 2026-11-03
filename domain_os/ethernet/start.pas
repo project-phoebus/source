@@ -1,6 +1,7 @@
 { ETHERNET_$START - start a unit.
 
   Image addresses:
+    sau8  0x03C865D2  ETHERNET_$START
     sau9  0x3C4821D2  ETHERNET_$START
 
   - The driver is wired for the unit first.  Under the unit's lock: the

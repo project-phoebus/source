@@ -169,6 +169,11 @@ The parts (`base/config.ins.pas`) that change MMAP_:
 The rest of the SAU9's MMAP_ code is the SAU2's source compiled for the
 68020 (scaled indexes, bit-field instructions for the 22-bit links).
 
+- `mmap_ppns_400` (SAU8): MMAP spans 16#400..16#23FF (8192 pages), so
+  the links stay words; the table is 128 pages, the boot maximum 16384,
+  the MMAP_$LPPN seed 16#3FFF.  With `pmmu_page_maps` the SAU8's MMAP_
+  is the source as it stands: no routine has a sau8 arm.
+
 ## Open items
 
 Facts of the image's form:

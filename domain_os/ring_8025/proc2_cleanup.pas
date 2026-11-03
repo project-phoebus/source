@@ -1,6 +1,7 @@
 { RING_8025_$PROC2_CLEANUP - close every channel an address space holds.
 
   Image addresses:
+    sau8  0x03C8CE78  RING_8025_$PROC2_CLEANUP
     sau9  0x3C488A7C  RING_8025_$PROC2_CLEANUP
 
   - The driver record's proc2_cleanup entry.  On a unit on line, under

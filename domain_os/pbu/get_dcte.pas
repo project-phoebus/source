@@ -3,6 +3,7 @@
   Image addresses:
     sau3  0x00E5902A  PBU_$GET_DCTE
     sau5  0x00E591F8  PBU_$GET_DCTE
+    sau8  0x03C61856  PBU_$GET_DCTE
 
   - The DCTE's first max bytes, at most its 0x54, go to buf, and len is
     their number.  No ownership check: any process may read any unit's

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E71DA4  NETWORK_$ADD_PAGE_SERVERS
+    sau8  0x03C7C658  NETWORK_$ADD_PAGE_SERVERS
 
   - Page servers are started until there are count of them, a creation
     fails, or, on a really diskless node, there is one.  The result is

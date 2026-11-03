@@ -1,12 +1,20 @@
 # The RING_8025 module in Domain Pascal
 
-The IEEE 802.5 token-ring driver for the AT-bus adapter of the SAU9
-(DN2500): an adapter built on a TMS380-family ring controller, which the
-host drives through the controller's system interface (the SIF
+The IEEE 802.5 token-ring driver for the AT-bus adapter of the SAU7,
+SAU8 and SAU9: an adapter built on a TMS380-family ring controller, which
+the host drives through the controller's system interface (the SIF
 registers) and through the system command and status blocks in the
 host's memory.  Only the SAU7, SAU8 and SAU9 maps have the module (the
 part `ring_8025_driver`, `base/config.ins.pas`); on the other SAUs the
 module file compiles to nothing.
+
+On the SAU7 and SAU8 (`ring_8025_dma_channel`) the adapter makes its
+transfers itself through the unit's DMA channel in cascade mode, which
+the driver starts at each initialization and stops before each reset
+and when the unit goes off line; the SAU9's interrupt routine makes the
+transfers the adapter asks for, through a map page of the auxiliary
+area that the other two do not have.  The SAU8's adapter is initialized
+with other options (`ring_8025_no_data_bursts`).
 
 ## Layout
 
@@ -15,10 +23,10 @@ ring8025_data;` (the driver's block is module variables, through A5).
 
 | section | contents |
 |---------|----------|
-| RING8025_PROC | the RING_8025 code segment: SAU9 0x4814 bytes (module-local routines and the 21 map routines RING_8025_$NULLSAP_HELPER .. RING_8025_$RCV1) |
-| RING8025_DATA | SAU9 0x168 bytes: the largest-frame sizes, the wired pages, the driver record, the wiring counts (`ring_8025.pas` tables them) |
-| RING8025_UCB | SAU9 0x868 bytes: the two units' records (`ring_8025_$unit_t`, 0x434 bytes each), an overlay section |
-| RING8025_$AUX_DA | SAU9 0x8000 bytes: the units' window pages, a map page, the units' control areas (six contiguous pages each: the transmit and receive lists, the system status and command blocks, the open parameters, the receive frame buffer) and route caches (64 buckets of three routes each), an overlay section |
+| RING8025_PROC | the RING_8025 code segment: SAU9 0x4814 bytes, SAU8 0x471C (module-local routines and the 21 map routines RING_8025_$NULLSAP_HELPER .. RING_8025_$RCV1); on the SAU8 then RING_8025_ASM, 0x38 bytes: RING_8025_$$MOVB2B, hand assembly (`sau8/ring_8025_asm.s`) |
+| RING8025_DATA | SAU9 0x168 bytes, SAU8 0x164 (no map page's page table entry): the largest-frame sizes, the wired pages, the driver record, the wiring counts (`ring_8025.pas` tables them) |
+| RING8025_UCB | SAU9 and SAU8 0x868 bytes: the two units' records (`ring_8025_$unit_t`, 0x434 bytes each), an overlay section |
+| RING8025_$AUX_DA | SAU9 0x8000 bytes, SAU8 0x7C00 (no map page): the units' window pages, a map page, the units' control areas (six contiguous pages each: the transmit and receive lists, the system status and command blocks, the open parameters, the receive frame buffer) and route caches (64 buckets of three routes each), an overlay section |
 
 The driver's declarations are `ring_8025.ins.pas` (statuses, registers,
 the initialization parameters, the command block, the unit and driver
@@ -87,15 +95,18 @@ RING_8025 segment at all, so there is no stub.
 | ring_8025_rcv_process | `rcv_process.pas` |
 | RING_8025_$RCV0 | `rcv0.pas` |
 | RING_8025_$RCV1 | `rcv1.pas` |
+| RING_8025_$$MOVB2B | none: hand assembly, `sau8/ring_8025_asm.s` (SAU8; nothing calls it) |
 
 ## Open items
 
-- The SAU7 and SAU8 have the driver too (0x49A4 and 0x471C bytes);
-  `tools/sau_catalog.py` puts the SAU8 and SAU9 forms of most map
-  routines in one family.  RING_8025_$NULLSAP_HELPER, _$INT,
-  _$SVC_IOCTL, _$RCV0 and _$RCV1 are the SAU9's own; the SAU7 and SAU8
-  segments end with RING_8025_ASM (RING_8025_$$MOVB2B), which the SAU9's
-  lacks.
+- The SAU7 has the driver too (0x49A4 bytes), with a unit record 4
+  bytes longer and an I/O map region (IO_$ALLOC_MAP); it is not
+  translated.  Of the SAU8's routines only ring_8025_initialize,
+  ring_8025_start_unit, RING_8025_$INT and ring_8025_rcv_process have
+  source of their own (`ring_8025_dma_channel`,
+  `ring_8025_no_data_bursts`); the others differ from the SAU9's only
+  by the data block's and the auxiliary area's offsets and by the
+  addresses of their callees.
 - TODO(pascal): the size of a range of the unit's frame-type table
   (12 bytes apart, 10 copied by RING_8025_$SVC_CLOSE,
   RING_8025_$SVC_IOCTL and RING_8025_$PROC2_CLEANUP;
@@ -106,10 +117,10 @@ RING_8025 segment at all, so there is no stub.
 - The module does not include `mmu/mmu.ins.pas`: the SAU9's
   MMU_$REMOVE takes a second argument, and `ring_8025.ins.pas` declares
   the six MMU routines the driver calls (as ETHERNET and WIN_SCSI do).
-- The interrupt routine makes the transfers the adapter asks for itself
-  (the data word at 0, the byte at 2), a page at a time through the
-  auxiliary area's map page; it hands the ring status and the adapter
-  check to the receive process through the unit's flags 7..10.
+- The SAU9's interrupt routine makes the transfers the adapter asks for
+  itself (the data word at 0, the byte at 2), a page at a time through
+  the auxiliary area's map page; it hands the ring status and the
+  adapter check to the receive process through the unit's flags 7..10.
 - The adapter is reset through the control byte at 6 and polled for
   its bring-up diagnostics (ring_8025_reset); the eleven words of the
   initialization parameters go to the controller's memory at 0x0A00

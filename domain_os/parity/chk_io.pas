@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E0B174  PARITY_$CHK_IO
+    sau8  0x03C0C0B4  PARITY_$CHK_IO
     sau9  0x3C40D05C  PARITY_$CHK_IO
 
   - Returns 1 or 2 for the one of ppn1 and ppn2 that is a latched DMA
@@ -10,6 +11,9 @@
   - With `parity_dma_pages' it takes the driver's DMA channel instead:
     2 when PARITY_$CHK flagged the channel, else 0, and the channel's
     pages are forgotten either way.
+  - With `parity_dma_page_pairs' it takes the channel and its two
+    pages, and returns 2 or 1 for the page PARITY_$CHK flagged (the
+    second first), else 0; the channel is cleared either way.
 
   Status stored: none.
 }
@@ -27,6 +31,27 @@ begin
       result := 0;
     npages := 0;
     took_error := false;
+  end;
+  parity_$chk_io := result;
+end;
+%elseif parity_dma_page_pairs %then
+function parity_$chk_io(channel: integer; ppn1: integer32;
+                        ppn2: integer32): integer;
+  options(val_param);
+var
+  result: integer;
+begin
+  with parity_$dma_table[channel] do begin
+    if took_error[2] then
+      result := 2
+    else if took_error[1] then
+      result := 1
+    else
+      result := 0;
+    ppn[1] := 0;
+    ppn[2] := 0;
+    took_error[1] := false;
+    took_error[2] := false;
   end;
   parity_$chk_io := result;
 end;

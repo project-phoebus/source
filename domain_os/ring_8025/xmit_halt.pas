@@ -1,6 +1,7 @@
 { ring_8025_xmit_halt - stop the adapter's transmitter.
 
   Image addresses:
+    sau8  0x03C899CE  ring_8025_xmit_halt
     sau9  0x3C4855B2  ring_8025_xmit_halt
 
   - Passes the transmit halt command with a word of the frame as its

@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E0238C  AST_$LOAD_AOTE
+    sau8  0x03C0271E  AST_$LOAD_AOTE
     sau9  0x3C40372A  AST_$LOAD_AOTE
 
   - Under the AST lock, a found AOTE gets the caller's attribute record,

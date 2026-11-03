@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E44AAE  MST_$GET_PRIVATE_SIZE
+    sau8  0x03C4D0AC  MST_$GET_PRIVATE_SIZE
     sau9  0x3C44C21C  MST_$GET_PRIVATE_SIZE
 
   - Under the ASID lock the address space's private A MST words are
@@ -25,6 +26,8 @@ const
   { private A's MST words }
 %if large_address_space %then
   private_a_words = mst_$private_a_size div 64;
+%elseif run_time_layout %then
+  private_a_words = 25;
 %else
   private_a_words = 4;
 %endif

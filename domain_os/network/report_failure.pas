@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E103FA  NETWORK_$REPORT_FAILURE
+    sau8  0x03C1170E  NETWORK_$REPORT_FAILURE
     sau9  0x3C412822  NETWORK_$REPORT_FAILURE
 
   - NETWORK_$FAILURE_REC gets the clock's high longword, true, this node

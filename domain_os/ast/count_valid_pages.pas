@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E0305C  ast_$count_valid_pages (nested)
+    sau8  0x03C033A4  ast_$count_valid_pages (nested)
     sau9  0x3C4043B0  ast_$count_valid_pages (nested)
 
   - When AST_$TOUCH's flags have member 1 (only pages that exist), the

@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E447D0  MST_$UNMAP_AND_FREE_AREA
+    sau8  0x03C4CD68  MST_$UNMAP_AND_FREE_AREA
     sau9  0x3C44BEF0  MST_$UNMAP_AND_FREE_AREA
 
   - One call of MST_$UNMAP_PRIVI, the UID's slot pushed as it is.

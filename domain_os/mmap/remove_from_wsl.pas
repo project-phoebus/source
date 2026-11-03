@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0C6E2  mmap_$remove_from_wsl (module-local)
+    sau8  0x03C0D62A  mmap_$remove_from_wsl (module-local)
     sau9  0x3C40E644  mmap_$remove_from_wsl (module-local)
 
   - The page's neighbors are linked to each other (the head moving to

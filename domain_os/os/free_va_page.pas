@@ -4,6 +4,7 @@
     sau2  0x00E6D240  os_$free_va_page (module-local)
     sau3  0x00E6D7EC  os_$free_va_page (module-local)
     sau5  0x00E6E91C  os_$free_va_page (module-local)
+    sau8  0x03C7658A  os_$free_va_page
     sau9  0x3C473DFE  os_$free_va_page (module-local)
 
   - With `pft_mmu' the page is freed through os_$free_ppn.  Without it

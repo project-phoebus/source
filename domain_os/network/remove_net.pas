@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0F27C  NETWORK_$REMOVE_NET
+    sau8  0x03C105C8  NETWORK_$REMOVE_NET
 
   - An address with index 0 (this node's network) needs nothing.
     Otherwise the entry's reference count is lowered, and the entry

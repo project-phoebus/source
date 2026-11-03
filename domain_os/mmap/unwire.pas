@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0CD1C  MMAP_$UNWIRE
+    sau8  0x03C0DC3C  MMAP_$UNWIRE
     sau9  0x3C40EC78  MMAP_$UNWIRE
 
   - A wire count of 0 crashes the system ("bad avail"); otherwise it

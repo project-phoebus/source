@@ -3,11 +3,13 @@
   Image addresses:
     sau3  0x00E89DE0  PBU2_$UNMAP
     sau5  0x00E921AA  PBU2_$UNMAP
+    sau8  0x03CA5B56  PBU2_$UNMAP
 
   - At interrupt level (PBU_$TRAP6); no lock.  The buffer's entries
     lose their valid bit (bit 15) when the first page's entry holds the
     buffer's first page (14 bits, 12 of a word entry).
   - Only the first page's entry is compared.
+  - Without the I/O map space (`io_regions') nothing is unmapped.
 
   Status stored:
     pbu_map_check_unit's status: the buffer was unmapped, or the unit is
@@ -17,8 +19,10 @@
       length after it
     status_$pbu_buffer_not_mapped: the first page's entry is another
       page's
+    status_$ok: always, without `io_regions'
 }
 
+%if io_regions %then
 procedure pbu2_$unmap(in unit: integer; in buffer: univ pbu_$buffer_t;
                       in length: linteger; in iova: linteger;
                       out status: status_$t);
@@ -67,3 +71,11 @@ begin
     iomap[k].entry := iomap[k].entry & 16#7FFF;
 %endif
 end;
+%else
+procedure pbu2_$unmap(in unit: integer; in buffer: univ pbu_$buffer_t;
+                      in length: linteger; in iova: linteger;
+                      out status: status_$t);
+begin
+  status.all := status_$ok;
+end;
+%endif

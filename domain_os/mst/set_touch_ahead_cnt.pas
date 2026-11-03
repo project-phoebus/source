@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E446FC  MST_$SET_TOUCH_AHEAD_CNT
+    sau8  0x03C4CC94  MST_$SET_TOUCH_AHEAD_CNT
     sau9  0x3C44BE1C  MST_$SET_TOUCH_AHEAD_CNT
 
   - One call of MST_$PRIV_SET_TOUCH_AHEAD_CNT, not privileged, with the

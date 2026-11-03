@@ -34,11 +34,14 @@ convention, `out`/`in` as the image reads and writes).
 
 Shared insert files:
 - `mmu/mmu.ins.pas`: the extern M68020 (a boolean byte of the
-  hand-written MMU's data).
+  hand-written MMU's data), and with `run_time_layout` (the SAU8)
+  MMU_$HAVE_PMMU, AS_$INIT's test there: the layout it moves to is the
+  MC68851 PMMU's (`as.ins.pas`'s constants), and the AS_ASM block's
+  values the default layout's (`m68k/as_asm.s`).
 - `mst/mst.ins.pas`: the six MST_ segment words AS_$GET_ADDR reads
   (pinteger, extern); with `large_address_space` (the SAU7, SAU9)
   constants, and private B is 128 segments (AS_$GET_ADDR's
-  `as_private_b_size`).
+  `as_private_b_size`), or 64 with `run_time_layout`.
 
 No conformance unit of `../domain-pascal/tests/conformance/` covers this
 module.

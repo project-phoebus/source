@@ -1,6 +1,7 @@
 { ETHERNET_$SEND - send a Domain packet.
 
   Image addresses:
+    sau8  0x03C868C0  ETHERNET_$SEND
     sau9  0x3C4824C0  ETHERNET_$SEND
 
   - The driver record's sendp entry.  The packet goes out as an Ethernet

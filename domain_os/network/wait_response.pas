@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0F746  network_$wait_response (module-local)
+    sau8  0x03C10A7C  network_$wait_response (module-local)
 
   - The wait is on the socket's eventcount and the clock (to the time
     out past now); the clock ends it with false.

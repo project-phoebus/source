@@ -97,6 +97,34 @@ the same; then:
 There the serial driver (SIO16550_$INIT, sio16550/) calls SIO_$INIT for
 each of its four ports; TERM_$INIT only calls SUMA_$INIT.
 
+With `console_sio2681` (the SAU8) the WIRED_DATA segment is 0xFD4
+bytes and the OS_INIT_DATA segment 0x34 (TERM_$INIT's SIO2681 vtable
+and seven configuration words).  The first 0xC4 bytes are the same;
+then:
+
+| offset | variable | type |
+|--------|----------|------|
+| +0x00C4 | `unused_0c4`, a stand-in | 0x64 bytes |
+| +0x0128 | `tty_descs` | array[1..2] of tty_$desc_t |
+| +0x0AE0 | `sio_descs` | array[1..2] of sio_$desc_t |
+| +0x0BD0 | `term_$console_drain` | array[1..1] of dtty_tstart_t |
+| +0x0BDC | `unused_bdc`, a stand-in | integer32 |
+| +0x0BE0 | `kbd_descs` | array[1..1] of kbd_$desc_t (0x2A4 bytes) |
+| +0x0E84 | `unused_e84`, a stand-in | integer32 |
+| +0x0E88 | `term_$sio2681_chip` | sio2681_$chip_t |
+| +0x0E94 | `unused_e94`, a stand-in | integer32 |
+| +0x0E98 | `tone_$channel` | sio2681_$channel_t (channel A, the console's) |
+| +0x0EB4 | `term_$serial_chan_b` | sio2681_$channel_t |
+| +0x0ED0 | DTTE | array[0..3] of dtte_t |
+| +0x0FB0 | `unused_1380`, a stand-in | integer32 |
+| +0x0FB4 | `term_$console_chan_ptr` | sio2681_$channel_ptr_t (TERM_$INIT stores it) |
+| +0x0FB8 | TTY_$SPIN_LOCK | integer32 |
+| +0x0FBC | TERM_$MAX_DTTE | pinteger |
+| +0x0FC0 | `kbd_$reset_bytes` .. `tone_$on_string` | as above, from +0xFC0 |
+
+TERM_$INIT sets up the console on the SIO2681's channel A and one
+serial line on channel B (no SIO6509).
+
 The two module files include the other subsystems' fragments of these
 segments (tty/i_get_desc.pas, kbd/get_desc.pas, kbd/reset.pas,
 tone/enable.pas, sio/i_get_desc.pas, os/term_init.pas, sio/init_*.pas,

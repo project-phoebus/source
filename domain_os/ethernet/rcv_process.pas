@@ -1,6 +1,7 @@
 { ethernet_rcv_process - a unit's receive process.
 
   Image addresses:
+    sau8  0x03C88C12  ethernet_rcv_process
     sau9  0x3C484838  ethernet_rcv_process
 
   - Under the server lock, woken through the unit's rcv_wake_ec, it does

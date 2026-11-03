@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0118C  AST_$ADD_ASTES
+    sau8  0x03C0156C  AST_$ADD_ASTES
     sau9  0x3C40256C  AST_$ADD_ASTES
 
   - As AST_$ADD_AOTES, for ASTEs, with sizes 80..ast_$max_astes.  Each

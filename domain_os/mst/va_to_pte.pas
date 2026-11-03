@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E4411C  mst_$va_to_pte (module-local)
+    sau8  0x03C4C552  mst_$va_to_pte (module-local)
     sau9  0x3C44B6E8  mst_$va_to_pte (module-local)
 
   - MST_$VA_TO_SEGNO gives the address's table and segment; the MST word

@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E71E0C  NETWORK_$ADD_REQUEST_SERVERS
     sau5  0x00E78F80  NETWORK_$ADD_REQUEST_SERVERS
+    sau8  0x03C7C6C0  NETWORK_$ADD_REQUEST_SERVERS
 
   - As NETWORK_$ADD_PAGE_SERVERS, for the request servers, with the
     count limited to network_$max_request_servers (3, or 2 on the SAU5).

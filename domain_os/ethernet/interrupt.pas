@@ -1,6 +1,7 @@
 { ETHERNET_$INTERRUPT - a unit's interrupt routine.
 
   Image addresses:
+    sau8  0x03C88A4E  ETHERNET_$INTERRUPT
     sau9  0x3C48464E  ETHERNET_$INTERRUPT
 
   - The routine IO_$ACQUIRE registers with the unit's DCTE.  A byte in
@@ -10,7 +11,8 @@
     receive command (the packet read, then the deferred work queued); the
     reply a command waits for (copied to the waiter's block and the
     waiter woken); the program's replies to its two commands.
-  - The command register's interrupt is off while it works.
+  - The command register's interrupt is off while it works (not with
+    `ethernet_int_unmasked').
   - No byte in the command register counts in the ninth statistic, as
     does an unknown block; a failed read in the seventh (the receive
     process woken), a transmit reply of the program in the tenth.
@@ -37,10 +39,12 @@ begin
     ethernet_$interrupt := true;
     return;
   end;
+%if not ethernet_int_unmasked %then
   with regs^ do begin
     control := control ! eth_hcr_tcen;
     control := control & ~eth_hcr_cmde;
   end;
+%endif
   cmd := regs^.command;
 
   { the program's notice: a packet waits, its length in the block }
@@ -111,9 +115,11 @@ begin
       stats.counts[9] := stats.counts[9] + 1;
   end;
 
+%if not ethernet_int_unmasked %then
   with u^.regs^ do begin
     control := control ! eth_hcr_cmde;
     control := control & ~eth_hcr_tcen;
   end;
+%endif
   ethernet_$interrupt := true;
 end;

@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E77C60  RING_$SEND_OS
     sau3  0x00E79450  RING_$SEND_OS
+    sau8  0x03C8452E  RING_$SEND_OS
 
   - The ring header goes in front of the caller's, in a fresh header
     page unless the caller's header starts at page offset 0x1C.

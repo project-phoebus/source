@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0D914  MMAP_$RECLAIM
+    sau8  0x03C0E91E  MMAP_$RECLAIM
     sau9  0x3C40F9F8  MMAP_$RECLAIM
 
   - The list is the wired pool (5) when asked, else the current address

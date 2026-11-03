@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E1763E  LOG_$ADD
+    sau8  0x03C185AE  LOG_$ADD
 
   - Nothing is done before LOG_$INIT maps the page, nor for an entry
     over log_$max_entry_words words.

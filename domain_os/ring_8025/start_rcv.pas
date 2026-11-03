@@ -1,6 +1,7 @@
 { ring_8025_start_rcv - start the adapter's receiver.
 
   Image addresses:
+    sau8  0x03C8992C  ring_8025_start_rcv
     sau9  0x3C485510  ring_8025_start_rcv
 
   - Points the unit at its first receive list, marks the two lists

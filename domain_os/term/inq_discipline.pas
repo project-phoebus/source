@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E1AC9E  TERM_$INQ_DISCIPLINE
     sau3  0x00E1A2F0  TERM_$INQ_DISCIPLINE
+    sau8  0x03C1C282  TERM_$INQ_DISCIPLINE
     sau9  0x3C41D81A  TERM_$INQ_DISCIPLINE
 
   - The real line's DTTE discipline, when the line maps.

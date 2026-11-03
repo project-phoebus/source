@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0D78E  MMAP_$ALLOC_PURE
+    sau8  0x03C0E648  MMAP_$ALLOC_PURE
     sau9  0x3C40F71A  MMAP_$ALLOC_PURE
 
   - Pages are taken from pool 1 and then pool 2, up to the count still

@@ -6,11 +6,15 @@
     sau3  0x00E5A1B2  PBU_$INIT
     sau5  0x00E5A5AE  map_owner_pages (nested)
     sau5  0x00E5A65E  PBU_$INIT
+    sau8  0x03C62A96  map_owner_pages (nested)
+    sau8  0x03C62B3E  PBU_$INIT
 
   - An empty procedure where the PBU support is configured out (the
     SAU2).
   - With the driver (`pbu_driver'): init_lock initializes the exclusion
     lock (IO_$INIT's call).
+  - present and high_ok are the Multibus's (`mbus_bus'); without it
+    the PBU is present.
   - With the VME bus (`vme_bus') and without the Multibus, high_ok is
     whether the memory ends at or below 16#380000; otherwise
     PBU_$PPN_OWNERS' pages are mapped and cleared.
@@ -61,8 +65,12 @@ var
 begin
   if init_lock then
     ml_$exclusion_init(pbu_$exclusion_lock);
+%if mbus_bus %then
   pbu_$mcb.present := mbus_$present;
   pbu_$mcb.high_ok := mbus_$high_ok;
+%else
+  pbu_$mcb.present := true;
+%endif
 %if vme_bus %then
   if not pbu_$mcb.present then
     pbu_$mcb.high_ok := mmap_$hppn * 1024 <= 16#380000

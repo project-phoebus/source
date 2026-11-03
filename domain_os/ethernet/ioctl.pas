@@ -1,6 +1,7 @@
 { ETHERNET_$IOCTL - a unit's control request.
 
   Image addresses:
+    sau8  0x03C86BD8  ETHERNET_$IOCTL
     sau9  0x3C4827D8  ETHERNET_$IOCTL
 
   - The driver record's ioctl entry: no request is implemented.

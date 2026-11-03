@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E76422  ring_$find_overlapping_pkt_type (module-local)
+    sau8  0x03C82D0A  ring_$find_overlapping_pkt_type (module-local)
 
   - As ring_$pkt_type_overlaps, giving the entry's index (from 1) or 0.
 

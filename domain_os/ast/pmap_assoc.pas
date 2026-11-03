@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E042B0  AST_$PMAP_ASSOC
+    sau8  0x03C045C8  AST_$PMAP_ASSOC
     sau9  0x3C4055D4  AST_$PMAP_ASSOC
 
   - The page-map entry is waited out of any transition; an installed

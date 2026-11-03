@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0567A  AST_$PURIFY
+    sau8  0x03C05918  AST_$PURIFY
     sau9  0x3C406924  AST_$PURIFY
 
   - Inhibited and under the AST lock, each ASTE flags select (all, one

@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E76352  ring_$pkt_type_overlaps (module-local)
+    sau8  0x03C82C32  ring_$pkt_type_overlaps (module-local)
 
   - True when one of the count entries has lo <= its high and hi >= its
     low; the compares are unsigned.

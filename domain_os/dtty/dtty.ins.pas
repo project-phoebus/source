@@ -85,3 +85,8 @@ procedure dtty_$init(in mode: integer; in ctrl: integer); extern;
   saved registers: by address.  DTTY_$WRITE_STRING pushes the
   character's address. }
 procedure dtty_$putc(in ch: char); extern;
+
+{ RELOAD_FONT (map symbol, without `$'): the PROM's font reloaded into
+  the display; no arguments (D0 is cleared, read by no caller).  The
+  SAU8's COLOR4_$COPY_FONT_MD_HDM calls it. }
+procedure reload_font; extern;

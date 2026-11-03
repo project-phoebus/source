@@ -9,9 +9,9 @@ segments' name), in three code sections:
 
 | section | code | routines | attribute |
 |---------|------|----------|-----------|
-| WIRED_PROC | 0x5D0 bytes (SAU3 0xB9C, SAU5 0xBB8) | CHK (misc/), IO_$GET_DCTE, the module-local io_$check_unit, IO_$ACQUIRE (with the nested int_ids_match) .. IO_$ALLOC | none (the heading's) |
-| OS_INIT_PROC | 0x22C bytes (SAU3 0x278, SAU5 0x270, SAU9 0x4D0) | io_$build_dcte_list (module-local), io_$match_device (module-local, `prom_config_record`), IO_$INIT, IO_$LOG_SELF_TESTS (`prom_config_record`) | `[section(os_init_proc, os_init_data)]` |
-| PROCEDURE$ | 0x8C bytes (SAU3 0xA4, SAU5 0xB8) | IO_$GET_CONFIG | `[section(procedure$, data$)]` |
+| WIRED_PROC | 0x5D0 bytes (SAU3 0xB9C, SAU5 0xBB8, SAU8 0x9F0) | CHK (misc/), IO_$GET_DCTE, the module-local io_$check_unit, IO_$ACQUIRE (with the nested int_ids_match) .. IO_$ALLOC | none (the heading's) |
+| OS_INIT_PROC | 0x22C bytes (SAU3 0x278, SAU5 0x270, SAU8 0x23C, SAU9 0x4D0) | io_$build_dcte_list (module-local), io_$match_device (module-local, `prom_config_record`), IO_$INIT, IO_$LOG_SELF_TESTS (`prom_config_record`) | `[section(os_init_proc, os_init_data)]` |
+| PROCEDURE$ | 0x8C bytes (SAU3 0xA4, SAU5 0xB8, SAU8 0xC8) | IO_$GET_CONFIG | `[section(procedure$, data$)]` |
 
 Data: the map's IO_ data segment, 0x554 bytes in WIRED_DATA (0x684 on
 the SAU5, with PBU_$EXCLUSION_LOCK a sixth map symbol), with five
@@ -121,6 +121,25 @@ form, declared in `io.pas` for those SAUs); IO_$GET_CONFIG adds the
 Ethernet's member (`ethernet_driver`) and config3 := [3]
 (`atbus_routines`).  The other unit routines are the SAU2's source.
 
+On the SAU8 the block has the SAU9's shape with PBU_$EXCLUSION_LOCK in
+SCSI_$EXCLUSION_LOCK's place (`pbu_driver` without `scsi_driver`), and
+the routines are the SAU9's and the SAU5's sources but for these arms
+(`base/config.ins.pas`):
+
+- `io_regions` (not on the SAU8): IO_$ALLOC_MAP, IO_$FREE_MAP and
+  IO_$FREE_MAP_REGION are stubs, status_$pbu_not_supported (and a 0
+  result); IO_$RELEASE still calls IO_$FREE_MAP for a unit with regions
+  (its test is under `pbu_driver`);
+- `pbu_alloc_atbus_windows`: IO_$ALLOC refuses a range that is not fixed
+  and puts an AT bus unit's range in the window of 16#80000..16#100000 or
+  16#900000..16#1000000 that holds iova (`alloc.pas`);
+- `named_dctes` with `floppy_disk`, `winchester_ctlr` and `ct_qic02`:
+  FLP_DCTE and WIN8_DCTE of kind 3, whose request IO_$MAP_CSR maps, and
+  a kind-2 CTAPE_DCTE (`dctes.pas`); DEV_DCTES ends with the COLOR4_,
+  COLOR5_ and MONO_ drivers' DCTEs (`color4_driver`, `color5_driver`,
+  `mono_driver`); IO_DESC has the tape's, the floppy's and the
+  Winchester's descriptors too (`io_desc.pas`).
+
 None is called in the SAU2 image (Ghidra's xrefs and a byte search of
 the image file find no reference; the SVC tables do not name them).
 On the SR10.2 SAU3 the user-device manager calls them (PBU_$SETUP
@@ -190,7 +209,4 @@ ML_$EXCLUSION_INIT), `mmu/mmu.ins.pas` (MMU_$VTOP).
 
 - `get_config.pas`: IO_$GET_CONFIG's form on the SAU4.
 - `dctes.pas`: the DCTES blocks of the SAUs other than the SAU2, SAU3,
-  SAU5 and SAU9.
-- The SAU8's I/O map routines (IO_$ALLOC_MAP, IO_$FREE_MAP and
-  IO_$FREE_MAP_REGION without the region list) are not written: the
-  `pbu_driver` arms assume `io_regions`.
+  SAU5, SAU8 and SAU9.

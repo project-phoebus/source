@@ -57,6 +57,16 @@ label.
 | OS_$DATA_ZERO | in NETWORK_ASM; `network/m68k/data_zero.s` |
 | NULL_LOOP | code in the NULLPROC data segment; `m68k/nullproc.s` |
 
+On the SAU8 (`base/config.ins.pas`) OS_$INIT has seven arms of its
+own: `early_as_init` (AS_$INIT before COLD's segment goes),
+`boot_flags_diskless` and `boot_flags_server` (NETWORK_$DISKLESS and
+SERVER_$FLAG from the boot flags; the SAU7's too), `pbu_wire_at_boot`
+(PBU_$WIRE_PBU after the checksums; the SAU7's too), `atbus_int8_dummy`
+(AT bus interrupt 8 acquired for DUMMY_INTERRUPT_HANDLER),
+`parity_trap_vector_30` (FIM_$PARITY_TRAP on vector 30 too) and
+`vector_seg_prot` (MMU_$SET_SEG_PROT for the vector page).  The other
+routines are the SAU9's source.
+
 ## Routines and their fragments
 
 | routine | fragment |

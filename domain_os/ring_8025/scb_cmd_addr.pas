@@ -2,6 +2,7 @@
   functional address.
 
   Image addresses:
+    sau8  0x03C896AC  ring_8025_scb_cmd_addr
     sau9  0x3C485290  ring_8025_scb_cmd_addr
 
   - The command and the address's last four bytes go to the unit's

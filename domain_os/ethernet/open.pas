@@ -1,6 +1,7 @@
 { ethernet_open - open a channel on a unit for a set of packet types.
 
   Image addresses:
+    sau8  0x03C86C2E  ethernet_open
     sau9  0x3C48282E  ethernet_open
 
   - The driver is wired and, under the unit's lock, the first user brings

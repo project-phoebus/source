@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E3E49E  SHAKE
+    sau8  0x03C4665C  SHAKE
 
   - dir 0 reads count bytes into the words, widened with zeros; dir 1
     writes the words' low bytes.
@@ -25,6 +26,12 @@ var
 begin
   with flp_hw_addr^ do
     for i := 0 to count - 1 do begin
+%if floppy_atbus %then
+      polls := 0;
+      repeat
+        polls := polls + 1;
+      until polls = 25;
+%endif
       polls := 2000;
       while not (7 in main_status_bits) do begin
         polls := polls - 1;

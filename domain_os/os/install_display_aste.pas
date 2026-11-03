@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E6D29A  OS_$INSTALL_DISPLAY_ASTE
+    sau8  0x03C7661A  OS_$INSTALL_DISPLAY_ASTE
     sau9  0x3C473E8E  OS_$INSTALL_DISPLAY_ASTE
 
   - Compiled only with `display_driver' (base/config.ins.pas).

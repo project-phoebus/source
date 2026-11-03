@@ -7,6 +7,10 @@
  * error lanes in the outgoing process's PCB and clears a pending error
  * with MMU_CCR bit 4 where the SAU2 clears the MMU status byte; those
  * lines carry the SAU9 image's addresses.
+ * The SAU8's (`cpu_status_register') ORs the CPU status register's
+ * word (MMU) into the outgoing process's fault status word, and clears
+ * the register where the SAU2 clears the MMU status; those lines carry
+ * the SAU8 image's addresses.
  *
  * Byte gate (tools/asm_compare.py, `make check'): encodings
  * identical to the image (modulo the documented widenings); address
@@ -155,6 +159,11 @@ _PROC1_$DISPATCH_INT3:
         move.b  (MMU_BESR).l, %d0       /* sau9 3c42365a  1039 3ff9 f804 */
         not.b   %d0                     /* sau9 3c423660 */
         or.b    %d0, 0x5D(%a4)          /* sau9 3c423662  812c 005d */
+        .elseif cpu_status_register
+        /* sau8 3c22296: the CPU status register's word into the outgoing
+           process's fault status word */
+        move.w  (MMU).l, %d0            /* sau8 3c22296  3039 03ff b400 */
+        or.w    %d0, 0x5C(%a4)          /* sau8 3c2229c  816c 005c */
         .endif
 
         /* Switch to new process */
@@ -180,6 +189,8 @@ _PROC1_$DISPATCH_INT3:
         .if parity_err_regs
         bset    #4, (MMU_CCR).l         /* sau9 3c423694: clear a pending */
         bclr    #4, (MMU_CCR).l         /* sau9 3c42369c  memory error    */
+        .elseif cpu_status_register
+        move.w  #0, (MMU).l             /* sau8 3c222ce  33fc 0000 03ff b400 */
         .else
         move.b  #0, MMU_STATUS_REG      /* 0x00FFB403 */
         .endif

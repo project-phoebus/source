@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E3E268  EXCS
+    sau8  0x03C46486  EXCS
 
   - While command retries remain, an error spends one and becomes
     flp_$retry; a DMA overrun has its own budget.
@@ -11,7 +12,8 @@
 
   Returns:
     SHAKE's or DMA_$CHECK's result: either fails
-    a parity error: the transfer had one
+    a parity error: the transfer had one (not the AT bus form, which
+      checks neither parity nor DMA here)
     the result registers' reading: otherwise (after SENSE DRIVE STATUS
       when ST0 shows an error)
 
@@ -26,7 +28,9 @@ var
   which: integer;
   unit: integer;
   st3: flp_$sreg_t;
+%if not floppy_atbus %then
   parity_err: boolean;
+%endif
 begin
   { the command }
   target := flp_$ec.value + 1;
@@ -41,6 +45,7 @@ begin
                     ec_$eventcount_ptr_t(addr(time_$clockh)),
                     addr(ec_$nil_ec), target, time_$clockh + 8, 0);
 
+%if not floppy_atbus %then
   { parity and DMA, not after a RECALIBRATE }
   excs := status_$ok;
   if (cmd[0] & 7) <> 7 then begin
@@ -66,6 +71,7 @@ begin
     end;
   end;
 
+%endif
   if which <> 0 then
     flp_$sregs[0].w := 16#10;
   if (flp_$sregs[0].w & 16#D8) = 0 then

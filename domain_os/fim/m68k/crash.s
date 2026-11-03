@@ -47,7 +47,7 @@
  * with a restart (`crash_prom_restart', misc/m68k/crash_system.s).  Not
  * on the other SAUs whose crash may restart the node (`crash_reboot',
  * base/config.ins.pas): their CRASH_SYSTEM module is another form, with
- * FIM_$CRASH in it (the SAU9's misc/sau9/crash_system.s).
+ * FIM_$CRASH in it (the SAU9's misc/m68k/crash_system_restart.s).
  */
 
         .include "base/config.inc"

@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E430D0  mst_$audit_map (nested)
     sau2  0x00E43182  mst_$alloc_segs (module-local)
+    sau8  0x03C4B2DC  mst_$audit_map (nested)
+    sau8  0x03C4B38E  mst_$alloc_segs (module-local)
     sau9  0x3C44A4E4  mst_$audit_map (nested)
     sau9  0x3C44A596  mst_$alloc_segs (module-local)
 
@@ -181,6 +183,8 @@ bad_length:
     else if b_space then begin
 %if large_address_space %then
       lo := mst_$seg_tn - mst_b_space_segs;
+%elseif run_time_layout %then
+      lo := mst_$private_a_size + mst_b_space_first;
 %else
       lo := mst_$private_a_size;
 %endif

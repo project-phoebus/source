@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E03FBC  ast_$flush_installed_pages (nested)
+    sau8  0x03C042E8  ast_$flush_installed_pages (nested)
     sau9  0x3C4052F4  ast_$flush_installed_pages (nested)
 
   - The gathered installed pages are removed from the MMU and given back

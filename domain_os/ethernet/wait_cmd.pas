@@ -1,6 +1,7 @@
 { ethernet_wait_cmd - wait for a command's reply.
 
   Image addresses:
+    sau8  0x03C84C48  ethernet_wait_cmd
     sau9  0x3C480848  ethernet_wait_cmd
 
   - The reply eventcount is waited for, eight clock ticks at most.

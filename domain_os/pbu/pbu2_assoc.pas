@@ -4,6 +4,7 @@
     sau3  0x00E58B78  PBU2_$ASSOC
     sau5  0x00E58B8E  window_free (nested)
     sau5  0x00E58C08  PBU2_$ASSOC
+    sau8  0x03C615F4  PBU2_$ASSOC
 
   - The memory's I/O map space is allocated at iova and its pages
     installed at va, with protection 6 and the owner's address space
@@ -14,6 +15,11 @@
     (16#380000..16#3FFFFF, its upper half free).
   - window_free (nested, with the VME bus) allocates and frees the space
     to see that it is free; with the Multibus off it counts as free.
+  - The space is allocated for a Multibus unit, or with the AT bus's
+    units (`pbu_atbus_units') an AT bus unit.
+  - With the large virtual memory (`large_vm') the pages are mapped as
+    I/O pages (MST_$INSTALL_IOPPN); a failure removes the pages mapped
+    so far and frees the space.
 
   Status stored:
     io_$alloc's status: the memory was mapped, or its space not
@@ -24,6 +30,7 @@
       too long for the window
     status_$pbu_invalid_iova: iova is outside the windows, or taken (VME
       units)
+    mst_$install_ioppn's status: a page could not be mapped (`large_vm')
 }
 
 procedure pbu2_$assoc(in unit: integer; in va: linteger; in iova: linteger;
@@ -37,6 +44,10 @@ var
   ppn: linteger;
   a: linteger;
   i: integer32;
+%if large_vm %then
+  install_status: status_$t;
+  j: integer32;
+%endif
 
 %if vme_bus %then
   function window_free(offset: linteger): boolean; options(val_param);
@@ -113,13 +124,44 @@ begin
                                   true, iova, status);
   end;
 %endif
+%if pbu_atbus_units %then
+  if dcte^.unit_info.bus = io_$bus_atbus then
+%else
   if dcte^.unit_info.bus = io_$bus_mbus then
+%endif
     dcte^.assoc_iova := io_$alloc(dcte^.unit_info.io_unit, npages * 1024,
                                   true, iova, status);
   if status.all <> status_$ok then
     return;
   addr_va := va;
   dcte^.assoc_va := addr_va;
+%if large_vm %then
+  dcte^.assoc_length := length;
+  ppn := iova div 1024;
+  if dcte^.unit_info.bus <> io_$bus_vme then
+%if mbus_bus %then
+    if iova < 16#80000 then
+      ppn := ppn + 16#200
+    else
+      ppn := ppn + 16#C00
+%endif
+    ;
+  for i := 1 to npages do begin
+    mst_$install_ioppn(ppn, addr_va, install_status);
+    if install_status.all <> status_$ok then begin
+      addr_va := dcte^.assoc_va;
+      for j := 1 to i - 1 do begin
+        mst_$remove_ioppn(addr_va);
+        addr_va := addr_va + 1024;
+      end;
+      status := install_status;
+      io_$free(dcte^.unit_info.io_unit, iova, install_status);
+      return;
+    end;
+    ppn := ppn + 1;
+    addr_va := addr_va + 1024;
+  end;
+%else
   if dcte^.flags.global then
     asid := 0
   else begin
@@ -144,4 +186,5 @@ begin
       ppn := 16#E00;
     addr_va := addr_va + 1024;
   end;
+%endif
 end;

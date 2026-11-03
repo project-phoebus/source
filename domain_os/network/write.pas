@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0FAE6  NETWORK_$WRITE
+    sau8  0x03C10E14  NETWORK_$WRITE
 
   - count pages from physical page ppn go as page-out requests of the
     node's packet size, each with the data's checksum when

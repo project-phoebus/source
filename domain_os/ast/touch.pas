@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E030C0  AST_$TOUCH
+    sau8  0x03C03408  AST_$TOUCH
     sau9  0x3C404414  AST_$TOUCH
 
   Assume we're called with the PMAP lock held.

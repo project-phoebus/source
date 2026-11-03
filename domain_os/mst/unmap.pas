@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E4472E  MST_$UNMAP
+    sau8  0x03C4CCC6  MST_$UNMAP
     sau9  0x3C44BE4E  MST_$UNMAP
 
   - One call of MST_$UNMAP_PRIVI, mode 2 (every segment must be mapped

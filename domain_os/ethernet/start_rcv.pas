@@ -1,6 +1,7 @@
 { ethernet_start_rcv - ask the adapter for the next received packet.
 
   Image addresses:
+    sau8  0x03C84D64  ethernet_start_rcv
     sau9  0x3C480964  ethernet_start_rcv
 
   - Under the unit's command lock.  The receive command is marked

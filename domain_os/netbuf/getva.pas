@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0EC78  NETBUF_$GETVA
+    sau8  0x03C0FFCA  NETBUF_$GETVA
 
   - The first free slot is taken off the list and keeps the physical
     address; the virtual address is the slot's page in NETWORK_$BUFPOOL

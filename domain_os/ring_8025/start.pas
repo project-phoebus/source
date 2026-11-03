@@ -1,6 +1,7 @@
 { RING_8025_$START - start a unit.
 
   Image addresses:
+    sau8  0x03C8B632  RING_8025_$START
     sau9  0x3C487236  RING_8025_$START
 
   - The driver is wired for the unit first.  Under the unit's lock: the

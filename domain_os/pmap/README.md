@@ -147,13 +147,14 @@ The parts (`base/config.ins.pas`) that change PMAP_:
 - `boot_time_lock` (SAU2, SAU5): the purifiers start by taking and
   giving back lock 1, which OS_$INIT holds while a node without a
   calendar fetches the time; the other SAUs have neither.
-- `mmap_ppns_10000` (SAU9): PMAP_$FLUSH's pageable range is
-  mmap_$first_ppn..mmap_$last_ppn.
+- `mmap_ppns_10000` (SAU9), `mmap_ppns_400` (SAU8): PMAP_$FLUSH's
+  pageable range is mmap_$first_ppn..mmap_$last_ppn, and the
+  purifiers reach MMAP's entries from that lower bound.
 
 The large-VM layouts (the 28-byte ASTE, the 21-bit disk address in
 MMAP's entries) come in through the types alone.  The rest of the
 SAU9's PMAP_ code, and its data block, is the SAU2's source compiled
-for the 68020.
+for the 68020; the SAU8's is the SAU9's with its own pageable range.
 
 ## Open items
 

@@ -3,19 +3,24 @@
   Image addresses:
     sau3  0x00E19F46  IO_$FREE_MAP
     sau5  0x00E1B210  IO_$FREE_MAP
+    sau8  0x03C1BF54  IO_$FREE_MAP
 
   - Each region of the unit's list, the head first, is freed (IO_$FREE;
     a failure crashes the system) and its node returned
     (io_$remove_region).  With the PBU only.
+  - Without the region list (`io_regions') nothing is freed: the status
+    is status_$pbu_not_supported.
 
   Status stored:
     io_$free's status: the regions were freed
     io_$check_unit's status: the unit is not good
     status_$pbu_iomap_not_allocated: the unit has no regions
+    status_$pbu_not_supported: without the region list
 }
 
 procedure io_$free_map(unit: io_$unit_num_t; out status: status_$t);
   options(val_param);
+%if io_regions %then
 var
   p: io_$region_ptr_t;
 begin
@@ -32,3 +37,8 @@ begin
           io_$remove_region(io_$dctes[unit], p);
         until regions = nil;
 end;
+%else
+begin
+  status.all := status_$pbu_not_supported;
+end;
+%endif

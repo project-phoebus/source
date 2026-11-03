@@ -1,6 +1,7 @@
 { ring_$copy_rx - copy a received packet out of the controller.
 
   Image addresses:
+    sau8  0x03C81D8A  ring_$copy_rx (module-local)
     sau9  0x3C47D97C  ring_$copy_rx (module-local)
 
   - The lengths come from the receive counters if the interrupt did not

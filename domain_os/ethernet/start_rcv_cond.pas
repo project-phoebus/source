@@ -2,6 +2,7 @@
   at interrupt level.
 
   Image addresses:
+    sau8  0x03C885EC  ethernet_start_rcv_cond
     sau9  0x3C4841EC  ethernet_start_rcv_cond
 
   - ethernet_start_rcv without waiting: only if the unit's command lock

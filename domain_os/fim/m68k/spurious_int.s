@@ -46,7 +46,12 @@
  * FIM_WIRED, so the distance from there is the SAU's layout: on the SAU9
  * (FIM_$NMI and MMU_$BUS_STATUS ahead of it, `fim_nmi') 0x6EC; on the
  * SAU3 (the PBU arms without the display window's 0x3E bytes,
- * `display_driver' in fim/m68k/bus_err.s) 0x6A8.
+ * `display_driver' in fim/m68k/bus_err.s) 0x6A8; on the SAU8
+ * (`cpu_status_register' with `parity_cpu_status': its own FIM_$BUS_ERR,
+ * fim/sau8/bus_err.s, and the FPU routines' longer enable) 0x73C.  Where
+ * the bus error status is the CPU status register (`cpu_status_register')
+ * the routine also clears it after the `lea', 12 bytes that put its cells
+ * 12 further on (.Lspur_pre).
  */
 
         .include "base/config.inc"
@@ -54,6 +59,15 @@
         .section ".text.FIM_$SPURIOUS_INT","ax",@progbits
         .even
 
+        .if cpu_status_register
+        .if parity_cpu_status
+        .set    .Lspur_dist, 0x73c      /* sau8: 0x3C2380C - 0x3C230D0 */
+        .else
+        .set    .Lspur_dist, 0xe40      /* sau7: 0x3C427174 - 0x3C426334 */
+        .endif
+        .set    .Lspur_pre, 12          /* the CPU status register cleared */
+        .else
+        .set    .Lspur_pre, 0
         .if pbu_driver
         .if display_driver
         .set    .Lspur_dist, 0x6e4      /* sau5: 0xE22C3C - 0xE22558 */
@@ -64,6 +78,7 @@
         .set    .Lspur_dist, 0x6ec      /* sau9: 0x3C424B8C - 0x3C4244A0 */
         .else
         .set    .Lspur_dist, 0x690      /* 0xE21F20 - 0xE21890 */
+        .endif
         .endif
         /* the cells' offsets in this routine: .Lspur_last_tick 0x5A,
          * FIM_$SPUR_CNT 0x5E, .Lspur_allowance 0x62 */
@@ -79,11 +94,17 @@ FIM_$SPURIOUS_INT:
         .set    .Lspur_a5, FIM_$SPURIOUS_INT - .Lspur_dist
         movem.l %d0/%a5,-(%sp)                  /* e21f20 */
         lea     (.Lspur_a5:w,%pc),%a5        /* e21f24  4bfa f96a: the FIM_WIRED base */
-        addq.l  #1,(.Lspur_dist+0x5e,%a5)       /* e21f28  (0x6ee,A5): FIM_$SPUR_CNT++ */
+        .if cpu_status_register
+        move.l  %a0,-(%sp)                      /* sau8 3c23814  2f08 */
+        lea     (MMU).l,%a0                     /* sau8 3c23816  41f9 03ff b400 */
+        clr.w   (%a0)                           /* sau8 3c2381c  4250  the CPU status */
+        movea.l (%sp)+,%a0                      /* sau8 3c2381e  205f */
+        .endif
+        addq.l  #1,(.Lspur_dist+.Lspur_pre+0x5e,%a5)       /* e21f28  (0x6ee,A5): FIM_$SPUR_CNT++ */
         move.l  (TIME_$CLOCKH).l,%d0            /* e21f2c  2039 00e2 b0d4 */
         cmp.l   (.Lspur_last_tick,%pc),%d0      /* e21f32  b0ba 0046 */
         bne.b   .Lspur_new_tick                 /* e21f36 */
-        subq.w  #1,(.Lspur_dist+0x62,%a5)       /* e21f38  (0x6f2,A5): allowance-- */
+        subq.w  #1,(.Lspur_dist+.Lspur_pre+0x62,%a5)       /* e21f38  (0x6f2,A5): allowance-- */
         bne.b   .Lspur_exit                     /* e21f3c */
         movem.l (%sp)+,%d0/%a5                  /* e21f3e */
         movem.l %d0-%d7/%a0-%a7,-(%sp)          /* e21f42 */
@@ -98,8 +119,8 @@ FIM_$SPURIOUS_INT:
 .Lspur_status:
         .long   0x00120033                      /* e21f64  "spurious interrupt" */
 .Lspur_new_tick:
-        move.w  #1000,(.Lspur_dist+0x62,%a5)    /* e21f68  3b7c 03e8 06f2 */
-        move.l  %d0,(.Lspur_dist+0x5a,%a5)      /* e21f6e  2b40 06ea */
+        move.w  #1000,(.Lspur_dist+.Lspur_pre+0x62,%a5)    /* e21f68  3b7c 03e8 06f2 */
+        move.l  %d0,(.Lspur_dist+.Lspur_pre+0x5a,%a5)      /* e21f6e  2b40 06ea */
 .Lspur_exit:
         movem.l (%sp)+,%d0/%a5                  /* e21f72 */
         jmp     (FIM_$EXIT:w,%pc)               /* e21f76  4efa 0944 */

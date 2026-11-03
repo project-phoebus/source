@@ -2,7 +2,9 @@
   list.
 
   Image addresses:
+    sau8  0x03C8AD3C  copy_data (nested)
     sau9  0x3C486940  copy_data (nested)
+    sau8  0x03C8AE24  ring_8025_receive_frame
     sau9  0x3C486A28  ring_8025_receive_frame
 
   - A frame with a routing field of an odd length, shorter than 2 or

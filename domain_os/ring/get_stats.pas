@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E76950  RING_$GET_STATS
     sau3  0x00E78140  RING_$GET_STATS
+    sau8  0x03C83236  RING_$GET_STATS
 
   Status stored:
     status_$ok: unit 0 or 1, initialized: its 60-byte statistics record

@@ -2,8 +2,11 @@
 
   Image addresses:
     sau2  0x00E3151C  AS_$INIT
+    sau8  0x03C348C8  AS_$INIT
 
   - On a 68010 it does nothing: the hand-written block's defaults stand.
+  - With the layout chosen at boot the test is MMU_$HAVE_PMMU, and the
+    layout the PMMU's (MST_$PRE_INIT).
   - The field moved at +0x44 is l_44; the map's AS_$STACK_OFFSET, at
     +0x40, is not touched (as/as.ins.pas).
 
@@ -21,7 +24,11 @@ procedure as_$init;
 var
   unused_8: array[1..2] of integer32;     { the stand-in (TODO) }
 begin
+%if run_time_layout %then
+  if mmu_$have_pmmu then begin
+%else
   if m68020 then begin
+%endif
     as_$info.global_a.base := m68020_global_a_base;
     as_$info.global_a.size := m68020_global_a_size;
     as_$info.global_a_m68020 := as_$info.global_a;

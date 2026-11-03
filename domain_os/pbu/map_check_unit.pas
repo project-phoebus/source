@@ -2,9 +2,10 @@
 
   Image addresses:
     sau3  0x00E89BA4  pbu_map_check_unit (module-local)
-    sau5  0x00E91F70  pbu_map_check_unit (module-local; the map's
-                      PBU_$PAGE_END marks its address)
+    sau5  0x00E91F70  pbu_map_check_unit (module-local)
+    sau8  0x03CA5664  pbu_map_check_unit (module-local)
 
+  - The map's PBU_$PAGE_END marks its address.
   - No ownership test: a user handler runs for the unit's owner.  The
     result is the unit's DCTE, unset for an invalid unit number.
 

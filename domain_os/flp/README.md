@@ -47,10 +47,39 @@ routines' code.
 | SHAKE | `shake.pas` |
 | (data) | the variables in `flp.pas` |
 
+The SAU8's form (`floppy_atbus`, the floppy controller on the AT bus)
+has the same module and sections, a block of its own (the map's FLP_
+data segment, 0x1FC bytes in .DATA: the SAU2's objects in their order
+with the overrun record, the motor's timer element, spin lock, time and
+flags, the overrun page's addresses and the interrupt unit among them),
+and four routines more, in its image order:
+
+| routine | fragment |
+|---------|----------|
+| FLP_$INT | `int.pas` (the arm) |
+| FLP_$REVALIDATE | `revalidate.pas` (the arm) |
+| FLP_$SHUT_DOWN_MOTOR | `shut_down_motor.pas` (new) |
+| SET_FLP_TIMER | `set_flp_timer.pas` (new) |
+| FLP_$TURN_MOTOR_ON | `turn_motor_on.pas` (new) |
+| FLP_$MOTOR_CALLBACK | `motor_callback.pas` (new) |
+| flp_format_track | `format_track.pas` (the arm) |
+| FLP_DO_IO | `flp_do_io.pas` (the arm: locked a boolean) |
+| FLP_$DO_IO | `do_io.pas` (false for locked) |
+| FLP_$CINIT | `cinit.pas` (the arm: the kind-3 DCTE's view) |
+| FLP_$DINIT | `dinit.pas` (the arm) |
+| FLP_$SHUTDOWN | `shutdown.pas` (the arm) |
+| EXCS | `excs.pas` (without the parity and DMA checks) |
+| SHAKE | `shake.pas` (a pause before each byte) |
+
+`flp.ins.pas` has the form's ports (the same names for the main status
+and the data register, which the shared bodies use), the kind-3 DCTE's
+view, the controller slot, the overrun record, the map variables and
+the four headings under the part.
+
 ## Insert files
 
-- `flp.ins.pas` (new): the driver's two status values (bad disk format,
-  flp_$retry), the register block (`[device]`, the main status as a byte
+- `flp.ins.pas` (new): the driver's status values (flp_$retry, and the
+  AT bus form's crash status; bad disk format is disk/disk.ins.pas's), the register block (`[device]`, the main status as a byte
   and as a set; the status and data fields are named main_status and
   data_reg, which do not collide with locals and parameters inside
   `with` statements), the result register word, the command block, the

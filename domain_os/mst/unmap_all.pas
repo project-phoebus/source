@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E4483C  MST_$UNMAP_ALL
+    sau8  0x03C4CDD4  MST_$UNMAP_ALL
     sau9  0x3C44BF5C  MST_$UNMAP_ALL
 
   - One call of MST_$UNMAP_PRIVI, mode 1, UID_$NIL, from segment 1 for

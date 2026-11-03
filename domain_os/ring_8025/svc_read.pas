@@ -1,6 +1,7 @@
 { RING_8025_$SVC_READ - receive a frame on a user channel.
 
   Image addresses:
+    sau8  0x03C8BF78  RING_8025_$SVC_READ
     sau9  0x3C487B7C  RING_8025_$SVC_READ
 
   - The driver record's svc_read entry.  Under a cleanup handler the

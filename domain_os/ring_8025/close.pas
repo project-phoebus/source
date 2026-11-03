@@ -1,6 +1,7 @@
 { ring_8025_close - take a unit's adapter off the ring.
 
   Image addresses:
+    sau8  0x03C8985E  ring_8025_close
     sau9  0x3C485442  ring_8025_close
 
   - Passes the close command with a word of the frame as its block and

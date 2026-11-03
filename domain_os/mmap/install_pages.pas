@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E0CDF0  MMAP_$INSTALL_PAGES
+    sau8  0x03C0DD08  MMAP_$INSTALL_PAGES
     sau9  0x3C40ED44  MMAP_$INSTALL_PAGES
 
   - As MMAP_$INSTALL_LIST with the address space's list,

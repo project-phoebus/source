@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E43C04  MST_$MAP_AREA_AT
+    sau8  0x03C4BE08  MST_$MAP_AREA_AT
     sau9  0x3C44AFC6  MST_$MAP_AREA_AT
 
   - MST_$MAP_AREA with the caller's address as the hint, and no result.

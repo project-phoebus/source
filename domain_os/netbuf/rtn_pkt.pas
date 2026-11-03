@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E0F0C6  NETBUF_$RTN_PKT
+    sau8  0x03C1040E  NETBUF_$RTN_PKT
 
   - A nonzero header address goes to NETBUF_$RTN_HDR, a nonzero window
     address to NETBUF_$RTNVA; then one data page per 1024 bytes of

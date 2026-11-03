@@ -1,6 +1,7 @@
 { RING_8025_$GET_STATS - return a unit's statistics.
 
   Image addresses:
+    sau8  0x03C8B97E  RING_8025_$GET_STATS
     sau9  0x3C487582  RING_8025_$GET_STATS
 
   - The driver record's get_stats entry: for a unit that takes Domain

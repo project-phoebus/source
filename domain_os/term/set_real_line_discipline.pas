@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E1AB62  TERM_$SET_REAL_LINE_DISCIPLINE
     sau3  0x00E1A1CA  TERM_$SET_REAL_LINE_DISCIPLINE
+    sau8  0x03C1C14C  TERM_$SET_REAL_LINE_DISCIPLINE
     sau9  0x3C41D6E4  TERM_$SET_REAL_LINE_DISCIPLINE
 
   - Under the TTY spin lock, disciplines 0 and 3 re-point the line's SIO

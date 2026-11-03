@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E1039A  NETWORK_$RING_INFO
+    sau8  0x03C116AC  NETWORK_$RING_INFO
 
   - Request 16#0E (the op only, 2 bytes) goes to the node; when it
     succeeds, the 122-byte token-ring record at the reply's +6 is

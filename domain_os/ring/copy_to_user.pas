@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E77382  ring_$copy_to_user (module-local)
+    sau8  0x03C83C46  ring_$copy_to_user (module-local)
 
   - ring_$copy_data's code, the copy's direction reversed.
   - offset := n when the request ends inside an element, as in

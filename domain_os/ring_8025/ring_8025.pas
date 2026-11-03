@@ -2,12 +2,13 @@
   token-ring driver.
 
   Image addresses:
+    sau8  0x03CA2804  RING_8025 data (RING8025_DATA, 0x164 bytes)
     sau9  0x3C4A2404  RING_8025 data (RING8025_DATA, 0x168 bytes)
 
   One compilation unit, one code segment: the map's RING_8025 code
-  segment in RING8025_PROC (0x4814 bytes on the SAU9: module-local
-  routines and the 21 map routines RING_8025_$NULLSAP_HELPER ..
-  RING_8025_$RCV1), and its data segment in RING8025_DATA (0x168
+  segment in RING8025_PROC (0x4814 bytes on the SAU9, 0x471C on the
+  SAU8: module-local routines and the 21 map routines
+  RING_8025_$NULLSAP_HELPER .. RING_8025_$RCV1), and its data segment in RING8025_DATA (0x168
   bytes, below).  Two more sections hold the driver's objects:
   RING8025_UCB (0x868 bytes, the two units' records) and
   RING8025_$AUX_DA (0x8000 bytes, the units' receive and transmit
@@ -35,6 +36,10 @@
     +0x160  ring_8025_map_pmape    the map page's page table entry
     +0x164  ring_8025_wire_users   the units that keep the driver wired
     +0x166  ring_8025_wire_cnt     the driver's wired pages' count
+
+  With `ring_8025_dma_channel' (base/config.ins.pas) the block has no
+  ring_8025_map_pmape (0x164 bytes, the two counts from +0x160), and the
+  auxiliary area no map page (0x7C00 bytes).
 
   The routines live in one fragment file each (ring_8025/<name>.pas),
   included below in image order (ring_8025/README.md has the table).
@@ -69,6 +74,9 @@ module ring_8025, ring8025_proc, ring8025_data;
 %include 'os/os.ins.pas';
 %include 'fim/fim.ins.pas';
 %include 'network/network.ins.pas';
+%if ring_8025_dma_channel %then
+%include 'dma/dma.ins.pas';
+%endif
 %include 'ring_8025/ring_8025.ins.pas';
 
 { The two units' records (the map's RING8025_UCB, a load section with
@@ -105,7 +113,9 @@ var
     open_os := addr(ring_8025_$open_os),
     close_os := addr(ring_8025_$close_os),
     send_os := addr(ring_8025_$send_os)];           { +0x110 }
+%if not ring_8025_dma_channel %then
   ring_8025_map_pmape: univ_ptr;                    { +0x160 }
+%endif
   ring_8025_wire_users: integer;                    { +0x164 }
   ring_8025_wire_cnt: integer;                      { +0x166 }
 

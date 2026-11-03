@@ -2,6 +2,7 @@
   address.
 
   Image addresses:
+    sau8  0x03C0F458  MST_$ASSOC
     sau9  0x3C410544  MST_$ASSOC
 
   - The address's segment is activated and wired (mst_$va_to_aste), the

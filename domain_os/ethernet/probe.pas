@@ -1,6 +1,7 @@
 { ethernet_probe - check that an adapter answers at a register address.
 
   Image addresses:
+    sau8  0x03C849C8  ethernet_probe
     sau9  0x3C4805C8  ethernet_probe
 
   - Ten times: the HCR's DIR bit is cleared and set, and the ASR's DIR

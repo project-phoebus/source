@@ -5,6 +5,7 @@
     sau2  0x00E2C8BC  DCTES data (WIRED_DATA, 0xD0 bytes)
     sau3  0x00E2B608  DCTES data (WIRED_DATA, 0xD0 bytes)
     sau5  0x00E2DB28  DCTES data (WIRED_DATA, 0x158 bytes)
+    sau8  0x03C2ED18  DCTES data (WIRED_DATA, 0x2A4 bytes)
     sau9  0x3C430FB4  DCTES data (WIRED_DATA, 0x774 bytes)
 
   A map module of data only, `module dctes, , wired_data;': the DCTES
@@ -27,6 +28,18 @@
   against the PROM's configuration record; and, for the units with
   one, its I/O descriptor (io/io_desc.pas) in disk_dinit.
 
+  The SAU8's (`named_dctes' too) are 17: two 802.5 rings, two
+  Ethernets and two rings of kind 2, named, as the SAU9's; FLP_DCTE
+  (`floppy_disk') and WIN8_DCTE (`winchester_ctlr') of kind 3, 76
+  bytes, unnamed, whose bytes from 0x28 are the request their units'
+  initialization routines give IO_$MAP_CSR (io/io.ins.pas's
+  io_$acquire_rec_t: the interrupt, the CSR page, the AT bus), then the
+  disk error queue's word; CTAPE_DCTE (`ct_qic02') of kind 2, unnamed,
+  with its I/O descriptor.  DEV_DCTES lists them from WIN8_DCTE, then
+  FLP_DCTE and CTAPE_DCTE, then the others from the last to the first,
+  and after them the display drivers' DCTEs, which their own data
+  segments hold (`color4_driver', `color5_driver', `mono_driver').
+
   RING_DCTE's vector is 16#1B on the SAU2 and SAU3 (SYSBUS_$INIT
   installs it), 0 on the SAU5.  The DCTEs are static_dcte_t, dcte_t with a univ_ptr init
   routine: dpc refuses the routines' `addr' as dcte_t's routine pointer.
@@ -36,13 +49,14 @@
 
 { TODO(sau) the DCTES blocks of the SAUs not translated
 
-  Only the SAU2's, SAU3's, SAU5's and SAU9's blocks are written.  The
-  others differ beyond the parts used here: the SAU4's and SAU6's RING_DCTE vectors
-  (16#90, 16#88), the SAU4's FLP_DCTE (0x50 bytes) and its WIN_DCTE's
-  register page, the SAU6's Ethernet and second Winchester and tape
-  DCTEs, the SAU7's kind-2 and kind-3 DCTEs (0x3A4 bytes).
-  io_$dev_dctes_last (io/io.ins.pas) is chosen for the written lists
-  only. }
+  Only the SAU2's, SAU3's, SAU5's, SAU8's and SAU9's blocks are written.
+  The others differ beyond the parts used here: the SAU4's and SAU6's
+  RING_DCTE vectors (16#90, 16#88), the SAU4's FLP_DCTE (0x50 bytes)
+  and its WIN_DCTE's register page, the SAU6's Ethernet and second
+  Winchester and tape DCTEs, the SAU7's kind-2 and kind-3 DCTEs (0x3A4
+  bytes: the SAU8's forms, with WIN7_DCTE_1, WIN7_DCTE_0 and SCSI7_DCTE
+  more).  io_$dev_dctes_last (io/io.ins.pas) is chosen for the written
+  lists only. }
 module dctes, , wired_data;
 
 %include 'base/base.ins.pas';
@@ -105,6 +119,37 @@ type
   end;
 
 %if named_dctes %then
+  { A kind-3 static DCTE, 0x4C bytes: static_dcte_t's first 0x28 bytes,
+    then the unit's request (io/io.ins.pas's io_$acquire_rec_t, its CSR
+    page's address a univ_ptr for the initializer's `addr'), then the
+    disk error queue's word, which the floppy's initialization routine
+    passes to DISK_$REGISTER as it passes the kind-1 DCTE's at 0x3C. }
+  static_dcte3_t = record
+    kind: pinteger;                       { 0x00 }
+    length: pinteger;                     { 0x02 }
+    ctype: pinteger;                      { 0x04 }
+    cnum: pinteger;                       { 0x06 }
+    nextp: dcte_ptr_t;                    { 0x08 }
+    csrsytr: univ_ptr;                    { 0x0C }
+    cstatus: status_$t;                   { 0x10 }
+    name: array[1..8] of char;            { 0x14 }
+    reserved_1c: array[1..12] of char;    { 0x1C }
+    unused_28: integer32;                 { 0x28: the request's 0x00 }
+    int: io_$int_info_t;                  { 0x2C }
+    csr_va: univ_ptr;                     { 0x34 }
+    csr_pa: linteger;                     { 0x38 }
+    csr_pages: integer;                   { 0x3C }
+    has_csr: boolean;                     { 0x3E }
+    unused_3f: char;                      { 0x3F }
+    tag: integer;                         { 0x40 }
+    bus: integer;                         { 0x42 }
+    attrs: io_$attr_t;                    { 0x44 }
+    unused_46: integer;                   { 0x46 }
+    disk_error_que: integer32;            { 0x48 }
+  end;
+
+%endif
+%if named_dctes %then
 { Three of the SAU9 DCTEs' initialization routines, declared here as
   their headers do (ring_8025/ring_8025.ins.pas, win_scsi/win_scsi.ins.pas,
   sio16550/sio16550.ins.pas): those headers need their own modules'
@@ -137,6 +182,32 @@ var
 %endif
 %if sio16550_lines %then
   sio3_io_desc, sio2_io_desc, sio1_io_desc, sio0_io_desc: extern char;
+%endif
+%if ct_qic02 %then
+  tape_io_desc: extern char;
+%endif
+
+  { The pages of the floppy's and the Winchester's registers (map
+    symbols of the I/O pages).  Only their addresses are used. }
+%if floppy_disk %then
+  flop: extern char;
+%endif
+%if winchester_ctlr %then
+  win: extern char;
+%endif
+
+  { The display drivers' DCTEs (map symbols of their own data segments,
+    COLOR4_DCTE, COLOR5_DCTE, MONO_DCTE), which DEV_DCTES lists.  Only
+    their addresses are used. }
+%if color4_driver %then
+  color4_$unit_2, color4_$unit_1: extern char;
+%endif
+%if color5_driver %then
+  color5_$dcte1, color5_$dcte2: extern char;
+%endif
+%if mono_driver %then
+  mono_$unit_big1, mono_$unit_small1, mono_$unit_small1a,
+    mono_$unit_small2: extern char;
 %endif
 
 { The module's objects, every one a map symbol defined here (ref 7.2.1,
@@ -196,6 +267,34 @@ var
                      ' ', chr(0), chr(0), chr(0), chr(0), chr(0)],
      disk_dinit := addr(ring1_io_desc),
      disk_error_que := 16#00180000];
+%endif
+%if floppy_disk %then
+  flp_dcte: define static_dcte3_t :=      { +0x180 on the SAU8 }
+    [kind := 3, length := 76, ctype := io_ctype_flp, cnum := 0,
+     nextp := nil, csrsytr := addr(flp_$cinit),
+     int := [id := [vector := 6], has_int := true],
+     csr_va := addr(flop), csr_pa := 16#3F0, csr_pages := 1,
+     has_csr := true, tag := 2, bus := io_$bus_atbus,
+     disk_error_que := 16#00160000];
+  pad_flp: integer32;                     { +0x1CC on the SAU8: zero,
+                                            addressed by nothing; the
+                                            next DCTE at a multiple of
+                                            8 from the block }
+%endif
+%if ct_qic02 %then
+  ctape_dcte: define static_dcte_t :=     { +0x1D0 on the SAU8 }
+    [kind := 2, length := 64, ctype := io_ctype_ctape, cnum := 0,
+     nextp := nil, csrsytr := addr(ct_$cinit),
+     disk_dinit := addr(tape_io_desc), disk_error_que := 16#00010000];
+%endif
+%if winchester_ctlr %then
+  win8_dcte: define static_dcte3_t :=     { +0x210 on the SAU8 }
+    [kind := 3, length := 76, ctype := io_ctype_win, cnum := 0,
+     nextp := nil, csrsytr := addr(win_$cinit),
+     int := [id := [vector := 16#E], has_int := true],
+     csr_va := addr(win), csr_pa := 16#1A0, csr_pages := 1,
+     has_csr := true, tag := 2, bus := io_$bus_atbus,
+     disk_error_que := 16#00170000];
 %endif
 %if ct_scsi %then
   scsi_ctape_dcte_7: define static_dcte_t := { +0x180 }
@@ -384,6 +483,15 @@ define
                 addr(scsi_ctape_dcte_6),
                 addr(scsi_ctape_dcte_7),
 %endif
+%if winchester_ctlr %then
+                addr(win8_dcte),
+%endif
+%if floppy_disk %then
+                addr(flp_dcte),
+%endif
+%if ct_qic02 %then
+                addr(ctape_dcte),
+%endif
 %if ring8_controller %then
                 addr(ring1_dcte),
                 addr(ring2_dcte),
@@ -396,8 +504,22 @@ define
                 addr(ring_8025_dcte_0),
                 addr(ring_8025_dcte_1),
 %endif
+%if color4_driver %then
+                addr(color4_$unit_1),
+                addr(color4_$unit_2),
+%endif
+%if color5_driver %then
+                addr(color5_$dcte1),
+                addr(color5_$dcte2),
+%endif
+%if mono_driver %then
+                addr(mono_$unit_small1),
+                addr(mono_$unit_big1),
+                addr(mono_$unit_small1a),
+                addr(mono_$unit_small2),
+%endif
                 nil];
-                                          { +0x700 }
+                                          { +0x700; +0x25C on the SAU8 }
 %else
 var
   { The I/O pages the DCTEs name (map symbols of IODEFS,

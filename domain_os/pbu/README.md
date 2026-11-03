@@ -3,7 +3,7 @@
 The processor bus unit support in Domain Pascal: configured out of the
 SR10.2 SAU2 and SAU9 kernels but for its eventcount pool, and the
 user-device manager with `pbu_driver` (`../base/config.ins.pas`: the
-SAU3..SAU8), translated from the SAU5 and SAU3 images.
+SAU3..SAU8), translated from the SAU5, SAU3 and SAU8 images.
 
 ## Layout
 
@@ -44,6 +44,21 @@ word (PBU_$CONTROL, PBU2_$WIRE_MAP, pbu_clear_iomap, PBU2_$MAP,
 PBU2_$UNMAP); without `pbu_wire_special` PBU_$WIRE_SPECIAL only refuses.
 The other routines are the SAU5's code.
 
+The SAU8's PBU (0x18F0 bytes of code, 0x58 of data; PBU_MAP 0x5F4) is
+the SAU5's source with its parts: the AT bus's units
+(`pbu_atbus_units`: PBU_$SETUP's CSR pages as groups of 8 I/O ports, 16
+DCTEs, PBU2_$ASSOC's AT bus unit, the CSR routines without TESTPAGE,
+PBU_$WIRE_SPECIAL's contiguous buffer and its nested release_pages,
+PBU_$SHUTDOWN's kept unit 3, PBU_$NONSYS_DEVICE, the PBU_MAP DMA entries
+on the AT bus's DMA channels and pbu_map_dma_error); the large virtual
+memory's I/O page mapping (`large_vm`); no Multibus (`mbus_bus`), no
+transfer control (`pbu_transfer_control`: PBU_$CONTROL a stub, no
+pbu_default_ctl), no I/O map space (`io_regions`: no pbu_clear_iomap,
+PBU2_$ALLOCATE_MAP, PBU_$FREE_MAP, PBU2_$WIRE_MAP, PBU2_$MAP and
+PBU2_$UNMAP stubs), no storage module (`smd_disk`), the PBU page wired
+by OS_$INIT (`pbu_wire_at_boot`), PBU_$PPN_OWNERS from page 16#400
+(`mmap_ppns_400`).
+
 ## Routines and their fragments
 
 | routine | fragment |
@@ -76,6 +91,7 @@ The other routines are the SAU5's code.
 | PBU_$SAVE_PPN | `save_ppn.pas` |
 | PBU2_$WIRE | `pbu2_wire.pas` |
 | PBU2_$WIRE_MAP | `pbu2_wire_map.pas` |
+| release_pages (nested in PBU_$WIRE_SPECIAL, SAU8) | `wire_special.pas` |
 | PBU_$WIRE_SPECIAL | `wire_special.pas` |
 | PBU_$WIRE_PBU | `wire_pbu.pas` |
 | pbu_access_csr (module-local) | `access_csr.pas` |
@@ -88,6 +104,7 @@ The other routines are the SAU5's code.
 | PBU_$ADVANCE_EC_INT | `advance_ec_int.pas` (module EC2_PBU; the SAU5's the same code) |
 | pbu_map_check_unit (module-local, at the map's PBU_$PAGE_END) | `map_check_unit.pas` (module PBU_MAP) |
 | pbu_map_owned_ppn (module-local) | `map_owned_ppn.pas` |
+| pbu_map_dma_error (module-local, SAU8) | `map_dma_error.pas` |
 | PBU_$DMA_START | `dma_start.pas` |
 | PBU_$DMA_STOP | `dma_stop.pas` |
 | PBU_$DMA_STATUS | `dma_status.pas` |
@@ -97,6 +114,7 @@ The other routines are the SAU5's code.
 | PBU2_$UNMAP | `pbu2_unmap.pas` |
 | PBU_$WAIT | `wait.pas` |
 | (data) | PBU_$DCTE_INT_PTR, PBU_$VME_DISABLE_COUNT are `pbu_map.pas`'s defined variables |
+| (data) | PBU_$NONSYS_DEVICE (SAU8) is `pbu.pas`'s defined variable |
 | PBU_$PAGE_START, SM_$CB, SM_$CNT, PBU_$MCB | none: hand assembly, `sau5/pbu_asm.s` |
 | PBU_$INT_COM, PBU_$ADVANCE_ONLY, PBU_$IGNORE_INT, PBU_$USER_SPACE_DRIVER | none: hand assembly, `sau5/pbu_asm.s` |
 | PBU_$TRAP6, PBU_$GET_DIAG_PTR, PBU_$INT_FAULT_COM | none: hand assembly, `sau5/pbu_asm.s` |

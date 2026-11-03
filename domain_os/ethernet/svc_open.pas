@@ -1,6 +1,7 @@
 { ETHERNET_$SVC_OPEN - open a user channel.
 
   Image addresses:
+    sau8  0x03C86F50  ETHERNET_$SVC_OPEN
     sau9  0x3C482B50  ETHERNET_$SVC_OPEN
 
   - The driver record's svc_open entry: ethernet_open for a user, its

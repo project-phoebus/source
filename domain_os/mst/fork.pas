@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E739F8  MST_$FORK
+    sau8  0x03C7E278  MST_$FORK
     sau9  0x3C47B358  MST_$FORK
 
   - Under the ASID lock each parent MST word naming a page of MSTEs gets
@@ -12,6 +13,9 @@
   - With the large address space each page's segment map entries are
     copied too, made invalid for the child's MST_$TOUCH to fill.
   - The child's MST_$SEGS_MAPPED counts the entries copied.
+  - With the layout chosen at boot the child's first entry, the OS wired
+    segment's, counted already, is counted once less and its segment
+    map entry made valid again.
   - new_handle is not written before the first AREA_$COPY.
 
   Status stored:
@@ -36,7 +40,7 @@ var
   st: status_$t;
   unused_20: integer32;                   { stand-in }
   parent_base: pinteger;
-%if large_address_space %then
+%if vm_regions %then
   seg: pinteger;
 %endif
 begin
@@ -55,7 +59,7 @@ begin
   last_handle := area_$handle_t(integer32(0));
   for page := 0 to rshft(mst_$seg_tn, 6) - 1 do
     if mst[parent_base + page] <> 0 then begin
-%if large_address_space %then
+%if vm_regions %then
       seg := lshft(page, 6);
       for e := 0 to 63 do begin
         smaps[seg + e + smap_asid_base[asid]] :=
@@ -87,13 +91,17 @@ begin
                 dst.uid.low := new_handle;
                 dst.flags.aste_idx := 0;
               end;
-%if large_address_space %then
+%if vm_regions %then
             mst_$segs_mapped[asid][seg div mst_region_segs] :=
               mst_$segs_mapped[asid][seg div mst_region_segs] + 1;
 %endif
           end;
         end;
     end;
+%if run_time_layout %then
+  mst_$segs_mapped[asid][0] := mst_$segs_mapped[asid][0] - 1;
+  smaps[smap_asid_base[asid]].ctl.dt := mst_smap_valid;
+%endif
   ml_$unlock(ml_$mst_asid_lock);
   status.all := status_$ok;
 end;

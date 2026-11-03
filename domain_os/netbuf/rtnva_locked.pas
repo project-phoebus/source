@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0E8C4  netbuf_rtnva_locked (module-local)
+    sau8  0x03C0FC3C  netbuf_rtnva_locked (module-local)
     sau9  0x3C410D28  netbuf_rtnva_locked (module-local)
 
   Assume we're called with the netbuf spin lock held.

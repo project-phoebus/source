@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E43F40  mst_$alloc_table_page (module-local)
+    sau8  0x03C4C22C  mst_$alloc_table_page (module-local)
     sau9  0x3C44B3F6  mst_$alloc_table_page (module-local)
 
   - For an ASID other than 0 and an MST word still 0, the first free
@@ -13,6 +14,9 @@
     of the segment is made active (its segment map page installed and
     put in RARS, the event logged).
   - Then the segment's BST page is installed if the ASID lacks it.
+  - With the layout chosen at boot two regions share a page of segment
+    map entries: a region whose partner is active takes the partner's
+    page, the odd one of the pair the page's second half.
 
   Returns:
     status_$ok: a page was installed, or none was needed
@@ -31,9 +35,15 @@ var
   group: pinteger;
   region: mst_region_t;
   page: 0..127;
+%elseif run_time_layout %then
+  group: pinteger;
+  region: mst_region_t;
+  other: mst_region_t;
+  ppn: linteger;
+  page: 0..31;
 %endif
 begin
-%if large_address_space %then
+%if vm_regions %then
   if asid <> 0 then begin
     if entry = 0 then begin
 %else
@@ -59,8 +69,10 @@ begin
     discard(mst_$init_table_page(
       linteger(addr(mste_pages[word_index]))));
     mst_$mst_pages_wired := mst_$mst_pages_wired + 1;
-%if large_address_space %then
+%if vm_regions %then
     end;
+%endif
+%if large_address_space %then
     group := seg div mst_region_segs;
     if group >= mst_private_a_regions then
       region := group + mst_global_a_regions
@@ -72,6 +84,38 @@ begin
         mst_$init_table_page(linteger(addr(
           smaps[lshft(group, 7) + smap_asid_base[asid]]))) * 1024 +
         mst_rars_valid;
+      if netlog_$ok_to_log then
+        netlog_$log_it(mst_region_netlog_kind, uid_$nil, 0, 0, 1, region,
+                       0, 0);
+    end;
+    page := seg div 256;
+    if not (page in mst_$bst_pages[asid]) then begin
+      discard(mst_$init_table_page(linteger(
+        addr(bst[lshft(page, 8) + bst_asid_base[asid]]))));
+      mst_$bst_pages[asid] := mst_$bst_pages[asid] + [page];
+    end;
+%elseif run_time_layout %then
+    group := seg div mst_region_segs;
+    if group >= region_$private_a_size then
+      region := group + (region_$private_b - region_$private_a_size)
+    else
+      region := group;
+    if not (region in mst_$regions_active[asid]) then begin
+      mst_$set(mst_$regions_active[asid], mst_region_members, region);
+      { the pair's other region: its page, or a new one }
+      other := xor(group, 1);
+      if other >= region_$private_a_size then
+        other := other + (region_$private_b - region_$private_a_size);
+      if other in mst_$regions_active[asid] then
+        ppn := rshft(rars[rars_asid_base[asid] + other].all, 10)
+      else
+        ppn := mst_$init_table_page(linteger(addr(
+          smaps[lshft(group, 6) + smap_asid_base[asid]])));
+      rars[rars_asid_base[asid] + region].all := ppn * 1024 +
+                                                 mst_rars_valid;
+      if odd(group) then
+        rars[rars_asid_base[asid] + region].all :=
+          rars[rars_asid_base[asid] + region].all + 512;
       if netlog_$ok_to_log then
         netlog_$log_it(mst_region_netlog_kind, uid_$nil, 0, 0, 1, region,
                        0, 0);

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E42D3A  MST_$ALLOC_ASID
+    sau8  0x03C4AD92  MST_$ALLOC_ASID
     sau9  0x3C44A0C6  MST_$ALLOC_ASID
 
   - Under the ASID lock the first ASID not in MST_$ASID_LIST is taken
@@ -12,6 +13,11 @@
   - With the large address space no MSTE page is taken: an ASID other
     than 1 gets a RARS page, a copy of ASID 0's, and the global regions
     (the first two statuses only).
+  - With the layout chosen at boot an ASID other than 1 gets its root
+    entries in a page of RARS (installed if MST_$RAR_PAGES lacks it),
+    a copy of ASID 0's, and the global regions; then every ASID gets
+    its page of MSTEs as without, and a filled OS wired entry also gets
+    ASID 0's spare segment map entry and counts in its region.
 
   Status stored:
     status_$ok: allocated
@@ -28,6 +34,12 @@ var
   asid: 0..mst_max_asid;
 %if large_address_space %then
   i: integer;
+%elseif run_time_layout %then
+  i: integer;
+  base: pinteger;
+  ppn: integer32;
+  rp: ^mst_rars_t;
+  page: 0..31;
 %else
   base: pinteger;
 %endif
@@ -52,6 +64,49 @@ found:
                                  mst_global_regions;
   end;
   st.all := status_$ok;
+%elseif run_time_layout %then
+  { the ASID's root entries, a copy of ASID 0's (ASID 1's are
+    MST_$INIT's), and the global regions active }
+  if asid <> 1 then begin
+    rp := addr(rars[rars_asid_base[asid]]);
+    page := rshft(integer32(rp) - integer32(addr(rars)), 10);
+    if page in mst_$rar_pages then begin
+      ppn := mmu_$vtop(integer32(rp), st);
+      if st.all <> status_$ok then
+        crash_system(st);
+    end
+    else begin
+      mst_$rar_pages := mst_$rar_pages + [page];
+      ppn := mst_$init_table_page(linteger(rp));
+    end;
+    mmu_$rars_phaddr[asid] := ppn * 1024 +
+      (integer32(addr(rars[rars_asid_base[asid]])) & 16#3FF);
+    for i := 0 to region_$tn - 1 do
+      rars[rars_asid_base[asid] + i] := rars[rars_asid_base[0] + i];
+    mst_$regions_active[asid] := mst_$regions_active[asid] +
+      [region_$global_b .. region_$global_b + region_$global_b_size - 1,
+       region_$global_a .. region_$global_a + region_$global_a_size - 1];
+  end;
+  base := mst_asid_base[asid];
+  st := mst_$alloc_table_page(asid, 0, mst[base]);
+  if st.all = status_$ok then begin
+    with mste_pages[mst[base]][0] do begin
+      if uid <> os_wired_$uid then begin
+        if uid_high <> 0 then begin
+          st.all := status_$mst_no_space_available;
+          goto done;
+        end;
+        uid := os_wired_$uid;
+        area_id := 0;
+        flags.bits := [];
+        smaps[smap_asid_base[asid]] :=
+          smaps[smap_asid_base[0] + mst_$global_a_size +
+                mst_$global_b_size];
+        mst_$segs_mapped[asid][0] := mst_$segs_mapped[asid][0] + 1;
+      end;
+    end;
+    st.all := status_$ok;
+  end;
 %else
   base := mst_asid_base[asid];
   st := mst_$alloc_table_page(asid, 0, mst[base]);
@@ -88,3 +143,11 @@ end;
   rars_asid_base[0] once before the copy and adds the global regions
   from a constant set in the code, where dpc
   sets each member in place. }
+
+{ TODO(pascal) MST_$ALLOC_ASID's global regions with the layout chosen
+  at boot
+
+  The set constructor of the global regions has run-time ranges, which
+  dpc does not compile yet; the image builds it in a 16-byte frame
+  temporary and ORs it in.  The image clears the OS wired entry's
+  segment and flag word with one longword store. }

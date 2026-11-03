@@ -3,6 +3,7 @@
   Image addresses:
     sau3  0x00E5A054  PBU_$READ_CSR
     sau5  0x00E5A500  PBU_$READ_CSR
+    sau8  0x03C629E8  PBU_$READ_CSR
 
   - The CSR is passed by address, and its address is the one read: a
     word with word_access, else a byte (moved down from the data word's
@@ -19,9 +20,9 @@ var
   kind: integer;
 begin
   if word_access then
-    kind := 1
+    kind := pbu_csr_read_word
   else
-    kind := 0;
+    kind := pbu_csr_read_byte;
   pbu_access_csr(unit, linteger(addr(csr)), data, kind, status);
   if not word_access then
     data := data div 256;

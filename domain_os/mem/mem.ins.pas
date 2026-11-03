@@ -19,9 +19,17 @@ type
     form of suma/suma.ins.pas's suma_$byte_t. }
   mem_$byte_t = [byte] 0..255;
 
+  { A physical address's low 24 bits apart from its high byte, a packed
+    record of 32 bits (ref 3.10.7, fields from the most significant
+    bit). }
+  mem_$addr_bits_t = packed record
+    bits_31_24: 0..255;                   { bits 31..24 }
+    bits_23_0: 0..16#FFFFFF;              { bits 23..0 }
+  end;
+
   { A physical address as MEM_$PARITY_LOG reads it: the whole longword
-    (`all', unsigned), and its second byte, whose six low bits are
-    address bits 21..16.  A record with two variants (ref 3.10.3), so
+    (`all', unsigned), its second byte, whose six low bits are address
+    bits 21..16, and its low 24 bits.  A record with two variants (ref 3.10.3), so
     that byte can be read alone.  4 bytes, so `val_param' passes it by
     value (ref 5.5.7, "all arguments four bytes or less").  `all' is
     base.ins.pas's name for status_$t's longword. }
@@ -32,6 +40,7 @@ type
           byte_1: mem_$byte_t;            { 0x01: bits 21..16 in its
                                             low six bits }
           bytes_2_3: pinteger);           { 0x02..0x03 }
+      3: (bits: mem_$addr_bits_t);        { 0x00..0x03 }
   end;
 
   { One per-page parity-error record, 18 bytes: addr at 0, count at 4;
@@ -46,7 +55,8 @@ type
     - w_00: a word nothing in the image addresses but the copy (its
       initial value differs by SAU, mem/mem.pas).
     - n_boards: the number of memory boards, 2 in the image; with the
-      `mem_ccr_board_size' part MEM_$INIT computes it.
+      `mem_ccr_board_size' or `mem_board_jumpers' part MEM_$INIT
+      computes it (0 in the image with `mem_board_jumpers').
     - board_errors, from +0x04: the parity errors counted by board, from
       0.  The SAU2's MEM_$PARITY_LOG counts boards 1 (below 3MB) and 2,
       the SAU9's from 0 by the board size; the five words fill the

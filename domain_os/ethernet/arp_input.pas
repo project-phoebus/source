@@ -2,6 +2,7 @@
   answer ARP requests for this node.
 
   Image addresses:
+    sau8  0x03C85B90  ethernet_arp_input
     sau9  0x3C481790  ethernet_arp_input
 
   Assume the packet is in the unit's header page (hdr), its source and

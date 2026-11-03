@@ -3,10 +3,13 @@
   Image addresses:
     sau3  0x00E59288  PBU_$RELEASE_INT
     sau5  0x00E59458  PBU_$RELEASE_INT
+    sau8  0x03C61AB2  PBU_$RELEASE_INT
 
   - Undoes PBU_$ACQUIRE_INT: a unit the caller may use, or a publicly
     owned one with mode pbu_public, gets the current process as its
     owner and is set down (PBU_$SETDOWN).
+  - With the AT bus's units (`pbu_atbus_units') the unit then joins
+    PBU_$NONSYS_DEVICE.
 
   Status stored:
     pbu_$setdown's status: the unit was set down, or not
@@ -25,6 +28,9 @@ begin
       (mode = pbu_public)) then begin
     dcte^.owner := proc1_$current;
     pbu_$setdown(unit, nil, status);
+%if pbu_atbus_units %then
+    pbu_$nonsys_device := pbu_$nonsys_device + [unit];
+%endif
   end
   else
     status := check_status;

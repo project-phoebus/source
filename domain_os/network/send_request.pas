@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0F5F4  network_$send_request (module-local)
+    sau8  0x03C1092A  network_$send_request (module-local)
 
   - Each pass takes a header page, builds the internet header for the
     request and sends it with the data page; on a failed send it waits

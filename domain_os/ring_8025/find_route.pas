@@ -2,6 +2,7 @@
   destination.
 
   Image addresses:
+    sau8  0x03C8A70A  ring_8025_find_route
     sau9  0x3C48630E  ring_8025_find_route
 
   - A group destination gets a single-route broadcast routing field.

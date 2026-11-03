@@ -1,6 +1,7 @@
 { ETHERNET_$SVC_READ - receive a packet on a user channel.
 
   Image addresses:
+    sau8  0x03C8719A  ETHERNET_$SVC_READ
     sau9  0x3C482D9A  ETHERNET_$SVC_READ
 
   - The driver record's svc_read entry.  Under a cleanup handler the

@@ -1,6 +1,7 @@
 { AST_$PTOV - the virtual address that maps a physical page.
 
   Image addresses:
+    sau8  0x03C076C4  AST_$PTOV
     sau9  0x3C4086D0  AST_$PTOV
 
   - Nothing is found while the AST lock is held, or for a page outside

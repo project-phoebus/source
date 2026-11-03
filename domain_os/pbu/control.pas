@@ -3,6 +3,7 @@
   Image addresses:
     sau3  0x00E58CE2  PBU_$CONTROL
     sau5  0x00E58E8E  PBU_$CONTROL
+    sau8  0x03C61726  PBU_$CONTROL
 
   - The answer is [0] while the unit's control has wide clear (with
     `long_iomap'; narrow set without), [1] otherwise, plus member 2, 3
@@ -10,6 +11,8 @@
   - A nonempty request sets the control anew: member 0 without 1 clears
     wide (sets narrow), member 3 sets mode 1, member 4 (without 3) mode
     2.  The fourth argument is not read.
+  - Without the transfer control (`pbu_transfer_control') the answer is
+    [] and nothing else is read.
 
   Status stored:
     pbu_check_unit's status: the control was read or set, or the unit is
@@ -17,8 +20,10 @@
     status_$pbu_not_supported: the unit is on the VME bus (`vme_bus')
     status_$pbu_bad_parameter: member 0 with 1, 3 with 2 or 4, or 4 with
       2 (the control unchanged)
+    status_$pbu_not_supported: always, without `pbu_transfer_control'
 }
 
+%if pbu_transfer_control %then
 procedure pbu_$control(in unit: integer; in request: pbu_$ctl_word_t;
                        out answer: pbu_$ctl_word_t; in unused: integer;
                        out status: status_$t);
@@ -84,3 +89,12 @@ begin
   end;
   dcte^.ctl := new_ctl;
 end;
+%else
+procedure pbu_$control(in unit: integer; in request: pbu_$ctl_word_t;
+                       out answer: pbu_$ctl_word_t; in unused: integer;
+                       out status: status_$t);
+begin
+  answer := [];
+  status.all := status_$pbu_not_supported;
+end;
+%endif

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E06B1E  AST_$GET_SEG_MAP
+    sau8  0x03C06DA0  AST_$GET_SEG_MAP
     sau9  0x3C407DAC  AST_$GET_SEG_MAP
 
   - The output is eight longwords of bits, cleared first; each segment

@@ -1,6 +1,7 @@
 { RING_8025_$STOP - stop a unit.
 
   Image addresses:
+    sau8  0x03C8B6D0  RING_8025_$STOP
     sau9  0x3C4872D4  RING_8025_$STOP
 
   - Under the unit's lock: a user goes and the unit stops taking Domain

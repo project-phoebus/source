@@ -1,6 +1,7 @@
 { ring_8025_probe - find out whether a unit's adapter answers.
 
   Image addresses:
+    sau8  0x03C89372  ring_8025_probe
     sau9  0x3C484F72  ring_8025_probe
 
   - Maps the unit's CSR pages and resets the adapter, then reads ten

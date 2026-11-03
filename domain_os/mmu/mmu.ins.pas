@@ -114,12 +114,23 @@ var
     MMU_ASM's data; 0 in the image, set at boot): a boolean, its first
     byte's sign. }
   m68020: extern boolean;
-%if large_address_space %then
+%if vm_regions %then
   { MMU_$RARS_PHADDR (map symbol in the hand-written MMU_ASM's data):
-    the physical address of each ASID's RARS page, longwords indexed by
-    ASID (MST_$INIT and MST_$ALLOC_ASID store the page number times
-    1024; MMU_$INSTALL_ASID reads it). }
+    the physical address of each ASID's root entries in RARS, longwords
+    indexed by ASID (MST_$INIT and MST_$ALLOC_ASID store it;
+    MMU_$INSTALL_ASID reads it). }
   mmu_$rars_phaddr: extern array[0..57] of integer32;
+
+  { MMU_$OS_PMAPS_PHADDR (map symbol in the hand-written MMU_ASM's data):
+    the physical address of OS_PMAPS, the global segments' page maps
+    (OS_$COLD_START stores it). }
+  mmu_$os_pmaps_phaddr: extern integer32;
+%endif
+%if run_time_layout %then
+  { MMU_$HAVE_PMMU (map symbol in the hand-written MMU_ASM's data): a
+    boolean, its first byte's sign, true when the node has the MC68851
+    PMMU (MST_$PRE_INIT, AS_$INIT). }
+  mmu_$have_pmmu: extern boolean;
 %endif
 
 { MMU_$VTOP (hand-written, mmu/m68k/vtop.s): the virtual address by

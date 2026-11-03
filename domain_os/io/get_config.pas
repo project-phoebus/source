@@ -4,6 +4,7 @@
     sau2  0x00E72334  IO_$GET_CONFIG
     sau3  0x00E73A08  IO_$GET_CONFIG
     sau5  0x00E794A8  IO_$GET_CONFIG
+    sau8  0x03C7CBDC  IO_$GET_CONFIG
     sau9  0x3C479D0C  IO_$GET_CONFIG
 
   - By CHK: config1's members 0 (Winchester, `winchester_config'), 2

@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E6D6B8  OS_$GET_EC
     sau3  0x00E6DAC0  OS_$GET_EC
+    sau8  0x03C76AA8  OS_$GET_EC
 
   - param_1 is not read.
 

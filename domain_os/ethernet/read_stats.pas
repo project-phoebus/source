@@ -2,6 +2,7 @@
   counts and return them.
 
   Image addresses:
+    sau8  0x03C862CA  ethernet_read_stats
     sau9  0x3C481ECA  ethernet_read_stats
 
   - Under the unit's command lock: the network statistics command, then

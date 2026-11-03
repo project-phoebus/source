@@ -3,6 +3,7 @@
   Image addresses:
     sau3  0x00E59BB6  PBU_$SAVE_PPN
     sau5  0x00E59E20  PBU_$SAVE_PPN
+    sau8  0x03C622D0  PBU_$SAVE_PPN
 
   - The page at va is wired (MST_$WIRE), and its number is the result.
     A page the PBU has wired already keeps one wiring; else the unit

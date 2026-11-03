@@ -61,10 +61,6 @@ const
     FIM_$BUILD_DF compares the delivery frame's status with it. }
   status_$peb_interrupt = 16#00240002;
 
-  { The supervisor-stack bound of the data address FIM_$BUILD_DF accepts
-    for a supervisor fault, compared unsigned. }
-  fim_build_df_addr_limit = 16#00D00000;
-
 type
   { A byte read as an unsigned 8-bit integer (ref 3.15.5), the form of
     suma/suma.ins.pas's suma_$byte_t. }

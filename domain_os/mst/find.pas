@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E0E11E  MST_$FIND
+    sau8  0x03C0F55C  MST_$FIND
     sau9  0x3C410648  MST_$FIND
 
   - Flags bits 0 and 2 crash the system (a caller's error); bit 1 asks

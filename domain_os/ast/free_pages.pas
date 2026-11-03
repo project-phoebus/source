@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0400C  AST_$FREE_PAGES
+    sau8  0x03C0432C  AST_$FREE_PAGES
     sau9  0x3C405338  AST_$FREE_PAGES
 
   - The PMAP lock is held throughout, except around BAT_$FREE.

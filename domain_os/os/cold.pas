@@ -41,6 +41,8 @@ module os_cold, cold_proc, cold;
 
 %include 'base/base.ins.pas';
 %if cold_proc_tables %then
+%include 'mmu/mmu.ins.pas';                   { MMU_$RARS_PHADDR,
+                                                MMU_$OS_PMAPS_PHADDR }
 
 const
   { "cold start error" (OS / startup/shutdown, stcode.db.10.2) }
@@ -209,9 +211,8 @@ var
   os_pmaps: extern array[30720..32767] of os_cold_pmap_t;
   os_pmap_special: extern os_cold_pmap_t;
   smaps: extern os_cold_smaps_t;
-  { The cells that keep the tables' physical addresses (MMU_ASM's,
-    mmu/sau9/mmu_asm.s; DUMP's, dump/sau9/dump.s). }
-  mmu_$os_pmaps_phaddr, mmu_$rars_phaddr: extern integer32;
+  { The cells that keep the tables' physical addresses (DUMP's,
+    dump/sau9/dump.s; MMU_ASM's are mmu/mmu.ins.pas's). }
   dump_$smap_phaddr, dump_$rars_phaddr: extern integer32;
 
   { The boot map (the module's data block). }

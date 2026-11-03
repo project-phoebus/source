@@ -3,10 +3,14 @@
   Image addresses:
     sau2  0x00E196AA  win_$format_track (module-local)
     sau5  0x00E19A6C  win_$format_track
+    sau8  0x03C1A360  win_$format_track
 
   - Up to five tries: the ANSI form seeks to the cylinder, starts the
     format and checks the drive after the unit's eventcount or 40 ticks;
-    the descriptor-list form gives the format command (win_$command).
+    the descriptor-list form gives the format command (win_$command);
+    the AT bus form sends the format command with the interleave (1 for
+    a volume whose unit word is 1536 or more) and checks the drive after
+    the controller's eventcount or 80 ticks.
   - After five failures the requesting process's pending byte is
     cleared.
 
@@ -42,6 +46,46 @@ begin
   if status <> status_$ok then begin
     disk_bptbl[req.owner_op.owner].io_pending := false;
     req.status.all := status;
+  end;
+end;
+%elseif win_atbus_ctlr %then
+procedure win_$format_track(in vol: disk_$volume_t;
+                            var req: disk_$io_req_t);
+  internal;
+var
+  regs: win_$regs_ptr_t;
+  tries: integer;
+  wait_val: integer32;
+  status: integer32;
+begin
+  win_cmd.unit := vol.dev_unit;
+  if vol.unit_id >= 1536 then
+    win_cmd.interleave_hi := 1
+  else
+    win_cmd.interleave_hi := 0;
+  win_cmd.interleave_lo := 0;
+  regs := win_units[0].regs;
+
+  for tries := 1 to 5 do begin
+    wait_val := win_unit_ec[vol.dev_info^.controller].value + 1;
+    regs^.ctl := win_ctl_int_on;
+    status := win_$send_command(win_cmd_format_track, req.daddr.cyl,
+                                req.daddr.head, 0);
+    if status <> status_$ok then begin
+      regs^.ctl := win_ctl_int_off;
+      exit;
+    end;
+    discard(ec_$wait(addr(win_unit_ec[vol.dev_info^.controller]),
+                     ec_$eventcount_ptr_t(addr(time_$clockh)),
+                     addr(ec_$nil_ec), wait_val, time_$clockh + 80, 0));
+    status := win_$check_status(vol.dev_unit);
+    if status = status_$ok then
+      exit;
+  end;
+
+  if status <> status_$ok then begin
+    req.status.all := status;
+    disk_bptbl[req.owner_op.owner].io_pending := false;
   end;
 end;
 %else

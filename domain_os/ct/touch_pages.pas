@@ -3,6 +3,7 @@
   Image addresses:
     sau5  0x00E76EAC  ct_touch_pages (module-local, at CT_$PROC_START)
     sau9  0x3C4771F8  ct_touch_pages (module-local, at CT_$PROC_START)
+    sau8  0x03C7A068  ct_touch_pages (module-local, at CT_$PROC_START)
 
   - Each of the first npages buffers is touched so its page is present
     before it is wired: its first word written back when reading, read

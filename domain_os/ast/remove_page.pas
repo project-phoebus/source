@@ -1,6 +1,7 @@
 { AST_$REMOVE_PAGE - take a page out of its segment's page map.
 
   Image addresses:
+    sau8  0x03C07474  AST_$REMOVE_PAGE
     sau9  0x3C408480  AST_$REMOVE_PAGE
 
   Assume we're called with the PMAP lock held.

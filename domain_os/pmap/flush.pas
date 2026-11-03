@@ -5,6 +5,9 @@
     sau2  0x00E1376C  PMAP_$FLUSH
     sau2  0x00E1359C  pmap_$update_seg_map (nested)
     sau2  0x00E1360C  pmap_$flush_write_batch (nested)
+    sau8  0x03C14986  PMAP_$FLUSH
+    sau8  0x03C147B8  pmap_$update_seg_map (nested)
+    sau8  0x03C14828  pmap_$flush_write_batch (nested)
     sau9  0x3C415A9A  PMAP_$FLUSH
     sau9  0x3C4158CC  pmap_$update_seg_map (nested)
     sau9  0x3C41593C  pmap_$flush_write_batch (nested)

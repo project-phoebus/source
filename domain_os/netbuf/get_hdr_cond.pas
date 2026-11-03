@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0ED6C  NETBUF_$GET_HDR_COND
+    sau8  0x03C100BE  NETBUF_$GET_HDR_COND
 
   - Under the spin lock va gets the list's head; a nil head means none
     (false, phys not written).  Otherwise the head moves on and, after

@@ -3,7 +3,11 @@
 | interrupt (SAU2, SAU5)
 |
 | The SAU2, SAU3 and SAU5 images have the same code here; the address and
-| byte columns below are the SAU2 image's.
+| byte columns below are the SAU2 image's.  The SAU8's (`timer_int_pic',
+| base/config.ins.pas; TIME_$DI_RTE + 0x12, 0x3C2D090) is another form:
+| it acknowledges PIC1, serves every pending timer in a loop, flags each
+| in the word after the MCR countdown, and advances TIME_$CLOCKH_EC
+| itself; its lines carry the SAU8 image's addresses.
 |
 | Byte gate (tools/asm_compare.py, `make check-asm'): the image's
 | encodings, every address operand a relocation resolved against the
@@ -87,6 +91,116 @@
         .extern IN_VT_INT, IN_RT_INT, TIME_$DI_VT, TIME_$DI_RTE
 
 TIME_$TIMER_HANDLER:
+        .if timer_int_pic
+| The SAU8's form (`timer_int_pic'): acknowledge PIC1, then serve the
+| timers until none is pending, the word TIME_$CURRENT_DELTA+6 set by each
+| one served; none at all is a spurious interrupt.  The clock carry
+| advances TIME_$CLOCKH_EC without dispatching (the other form leaves
+| through PROC1_$INT_ADVANCE).
+        .extern PIC1                            | arch/m68k/sau8/iodefs.s
+        movem.l %d0-%d1/%a0-%a1,-(%sp)          | sau8 3c2d090  48e7 c0c0
+        jsr     (IO_$USE_INT_STACK).l           | sau8 3c2d094  4eb9 03c3 1426
+        clr.w   (TIME_$CURRENT_DELTA+0x6).l     | sau8 3c2d09a  4279 03c2 d060
+        move.b  #0x20,(PIC1).l                  | sau8 3c2d0a0  13fc 0020 03ff 9000
+.Lpoll:
+        lea     (TIMR).l,%a0                    | sau8 3c2d0a8  41f9 03ff ac00
+        move.w  (2,%a0),%d0                     | sau8 3c2d0ae  3028 0002
+        btst    #0,%d0                          | sau8 3c2d0b2  0800 0000
+        beq.w   .Lnot_tick                      | sau8 3c2d0b6  6700 00c6
+        tst.w   (4,%a0)                         | sau8 3c2d0ba  4a68 0004
+        movea.l (PROC1_$CURRENT_PCB).l,%a0      | sau8 3c2d0be  2079 03c2 0300
+        btst    #5,(0x10,%sp)                   | sau8 3c2d0c4  082f 0005 0010
+        beq.s   .Lsystem                        | sau8 3c2d0ca  6706
+        addq.l  #1,(0x60,%a0)                   | sau8 3c2d0cc  52a8 0060
+        bra.s   .Ltick                          | sau8 3c2d0d0  6004
+.Lsystem:
+        addq.l  #1,(0x64,%a0)                   | sau8 3c2d0d2  52a8 0064
+.Ltick:
+        clr.l   %d0                             | sau8 3c2d0d6  4280
+        move.w  (TIME_$CURRENT_TICK:w,%pc),%d0  | sau8 3c2d0d8  303a ff7c
+        add.w   %d0,(TIME_$CURRENT_CLOCKL).l    | sau8 3c2d0dc  d179 03c2 d046
+        bcc.s   .Lusec                          | sau8 3c2d0e2  6406
+        addq.l  #1,(TIME_$CURRENT_CLOCKH).l     | sau8 3c2d0e4  52b9 03c2 d042
+.Lusec:
+        lsl.l   #2,%d0                          | sau8 3c2d0ea  e588
+        add.l   (TIME_$CURRENT_TIME+0x4:w,%pc),%d0| sau8 3c2d0ec  d0ba ff64
+        .short  0xb0bc; .long 0x000f4240        | sau8 3c2d0f0  b0bc 000f 4240  cmp.l   #0xf4240,%d0, the <ea>=#imm form
+        bmi.s   .Lusec_store                    | sau8 3c2d0f6  6b0c
+        addq.l  #1,(TIME_$CURRENT_TIME).l       | sau8 3c2d0f8  52b9 03c2 d04e
+        .short  0x90bc; .long 0x000f4240        | sau8 3c2d0fe  90bc 000f 4240  sub.l   #0xf4240,%d0, the <ea>=#imm form
+.Lusec_store:
+        move.l  %d0,(TIME_$CURRENT_TIME+0x4).l  | sau8 3c2d104  23c0 03c2 d052
+        tst.l   (TIME_$CURRENT_DELTA).l         | sau8 3c2d10a  4ab9 03c2 d05a
+        beq.s   .Lskew_done                     | sau8 3c2d110  671e
+        move.w  (TIME_$CURRENT_SKEW:w,%pc),%d0  | sau8 3c2d112  303a ff44
+        ext.l   %d0                             | sau8 3c2d116  48c0
+        sub.l   %d0,(TIME_$CURRENT_DELTA).l     | sau8 3c2d118  91b9 03c2 d05a
+        bne.w   .Lskew_done                     | sau8 3c2d11e  6600 0010
+        clr.w   (TIME_$CURRENT_SKEW).l          | sau8 3c2d122  4279 03c2 d058
+        move.w  #0x1047,(TIME_$CURRENT_TICK).l  | sau8 3c2d128  33fc 1047 03c2 d056
+.Lskew_done:
+        pea     (TIME_$FAST_CLOCK_EC:w,%pc)     | sau8 3c2d130  487a fef4
+        jsr     (EC_$ADVANCE_WITHOUT_DISPATCH).l| sau8 3c2d134  4eb9 03c2 1f50
+        addq.l  #4,%sp                          | sau8 3c2d13a  588f
+        addi.w  #0x1047,(TIME_$CLOCKL).l        | sau8 3c2d13c  0679 1047 03c2 d03e
+        bcs.s   .Lclock_carry                   | sau8 3c2d144  650a
+        st      (TIME_$CURRENT_DELTA+0x6).l     | sau8 3c2d146  50f9 03c2 d060
+        bra.w   .Lpoll                          | sau8 3c2d14c  6000 ff5a
+.Lclock_carry:
+        lea     (TIME_$CURRENT_DELTA+0x4:w,%pc),%a0| sau8 3c2d150  41fa ff0c
+        subq.w  #1,(%a0)                        | sau8 3c2d154  5350
+        bne.s   .Lmcr_done                      | sau8 3c2d156  6610
+        move.w  #2,(%a0)                        | sau8 3c2d158  30bc 0002
+        move.w  #1,-(%sp)                       | sau8 3c2d15c  3f3c 0001
+        jsr     (MMU_$MCR_CHANGE).l             | sau8 3c2d160  4eb9 03c2 5e64
+        addq.l  #2,%sp                          | sau8 3c2d166  548f
+.Lmcr_done:
+        st      (TIME_$CURRENT_DELTA+0x6).l     | sau8 3c2d168  50f9 03c2 d060
+        pea     (TIME_$CLOCKH_EC:w,%pc)         | sau8 3c2d16e  487a fec2
+        jsr     (EC_$ADVANCE_WITHOUT_DISPATCH).l| sau8 3c2d172  4eb9 03c2 1f50
+        addq.l  #4,%sp                          | sau8 3c2d178  588f
+        bra.w   .Lpoll                          | sau8 3c2d17a  6000 ff2c
+.Lnot_tick:
+        btst    #1,%d0                          | sau8 3c2d17e  0800 0001
+        beq.s   .Lnot_vt                        | sau8 3c2d182  6736
+        moveq   #-1,%d1                         | sau8 3c2d184  72ff
+        movep.w %d1,(9,%a0)                     | sau8 3c2d186  0388 0009
+        tst.b   (IN_VT_INT).l                   | sau8 3c2d18a  4a39 03c2 cec8
+        bne.s   .Lvt_queued                     | sau8 3c2d190  661e
+        st      (IN_VT_INT).l                   | sau8 3c2d192  50f9 03c2 cec8
+        pea     (TIME_$DI_VT:w,%pc)             | sau8 3c2d198  487a fed4
+        clr.l   -(%sp)                          | sau8 3c2d19c  42a7
+        pea     (TIME_$VT_INT).l                | sau8 3c2d19e  4879 03c1 7304
+        jsr     (DI_$ENQ).l                     | sau8 3c2d1a4  4eb9 03c2 21e0
+        adda.l  #0xc,%sp                        | sau8 3c2d1aa  dffc 0000 000c
+.Lvt_queued:
+        st      (TIME_$CURRENT_DELTA+0x6).l     | sau8 3c2d1b0  50f9 03c2 d060
+        bra.w   .Lpoll                          | sau8 3c2d1b6  6000 fef0
+.Lnot_vt:
+        btst    #2,%d0                          | sau8 3c2d1ba  0800 0002
+        beq.s   .Lnone_left                     | sau8 3c2d1be  6736
+        moveq   #-1,%d1                         | sau8 3c2d1c0  72ff
+        movep.w %d1,(0xd,%a0)                   | sau8 3c2d1c2  0388 000d
+        tst.b   (IN_RT_INT).l                   | sau8 3c2d1c6  4a39 03c2 cec9
+        bne.s   .Lrt_queued                     | sau8 3c2d1cc  661e
+        st      (IN_RT_INT).l                   | sau8 3c2d1ce  50f9 03c2 cec9
+        pea     (TIME_$DI_RTE:w,%pc)            | sau8 3c2d1d4  487a fea8
+        clr.l   -(%sp)                          | sau8 3c2d1d8  42a7
+        pea     (TIME_$RTE_INT).l               | sau8 3c2d1da  4879 03c1 72c6
+        jsr     (DI_$ENQ).l                     | sau8 3c2d1e0  4eb9 03c2 21e0
+        adda.l  #0xc,%sp                        | sau8 3c2d1e6  dffc 0000 000c
+.Lrt_queued:
+        st      (TIME_$CURRENT_DELTA+0x6).l     | sau8 3c2d1ec  50f9 03c2 d060
+        bra.w   .Lpoll                          | sau8 3c2d1f2  6000 feb4
+.Lnone_left:
+        tst.b   (TIME_$CURRENT_DELTA+0x6).l     | sau8 3c2d1f6  4a39 03c2 d060
+        beq.s   .Lspurious                      | sau8 3c2d1fc  6706
+        jmp     (PROC1_$INT_EXIT).l             | sau8 3c2d1fe  4ef9 03c2 2136
+.Lspurious:
+        jsr     (IO_$COND_SWITCH_BACK).l        | sau8 3c2d204  4eb9 03c3 1446
+        movem.l (%sp)+,%d0-%d1/%a0-%a1          | sau8 3c2d20a  4cdf 0303
+        jmp     (FIM_$SPURIOUS_INT).l           | sau8 3c2d20e  4ef9 03c2 380c
+        .else
         movem.l %d0-%d1/%a0-%a1,-(%sp)          | e2b130  48e7 c0c0
         jsr     IO_$USE_INT_STACK               | e2b134  4eb9 00e2 e826
         lea     (TIMR).l,%a0                    | e2b13a  41f9 00ff ac00
@@ -176,5 +290,6 @@ TIME_$TIMER_HANDLER:
         jsr     IO_$COND_SWITCH_BACK            | e2b270  4eb9 00e2 e846
         movem.l (%sp)+,%d0-%d1/%a0-%a1          | e2b276  4cdf 0303
         jmp     FIM_$SPURIOUS_INT               | e2b27a  4ef9 00e2 1f20
+        .endif  /* timer_int_pic */
 
         .endif

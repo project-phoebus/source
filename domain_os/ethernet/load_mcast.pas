@@ -1,6 +1,7 @@
 { ethernet_load_mcast - load the unit's multicast list into the adapter.
 
   Image addresses:
+    sau8  0x03C86116  ethernet_load_mcast
     sau9  0x3C481D16  ethernet_load_mcast
 
   - The 82586 is configured with receive mode 1 (cfg_3 set) or 0 while

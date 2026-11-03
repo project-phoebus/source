@@ -1,6 +1,7 @@
 { ETHERNET_$SVC_CLOSE - close a user channel.
 
   Image addresses:
+    sau8  0x03C86F80  ETHERNET_$SVC_CLOSE
     sau9  0x3C482B80  ETHERNET_$SVC_CLOSE
 
   - The driver record's svc_close entry, and ETHERNET_$CLOSE_OS's.

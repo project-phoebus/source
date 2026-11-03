@@ -4,3 +4,4 @@
 __pycache__/
 domain_os/dist/
 tmp/
+.envrc

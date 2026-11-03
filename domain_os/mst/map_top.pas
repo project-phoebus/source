@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E438CC  MST_$MAP_TOP
+    sau8  0x03C4BAD2  MST_$MAP_TOP
     sau9  0x3C44AC94  MST_$MAP_TOP
 
   - A forwarding wrapper of mst_$alloc_segs, returning its pointer; it

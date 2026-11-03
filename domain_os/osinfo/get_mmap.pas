@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E5C694  OSINFO_$GET_MMAP
+    sau8  0x03C65E6C  OSINFO_$GET_MMAP
     sau9  0x3C4636E0  OSINFO_$GET_MMAP
 
   - Each request flag runs one block, in order: set_params, find_page,

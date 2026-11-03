@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0EFA4  NETBUF_$GET_DAT
+    sau8  0x03C102F0  NETBUF_$GET_DAT
 
   - As NETBUF_$GET_HDR: the network process (type 7) waits and retries;
     any other gets a new page from WP_$CALLOC (a bad status crashes the

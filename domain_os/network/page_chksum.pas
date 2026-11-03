@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0F312  GET_CHKSUM
+    sau8  0x03C1065A  GET_CHKSUM
     sau9  0x3C41176E  GET_CHKSUM
 
   - The page is mapped into the network buffer window (a failure

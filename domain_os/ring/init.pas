@@ -4,6 +4,7 @@
     sau2  0x00E2FAE0  RING_$INIT
     sau3  0x00E2E768  RING_$INIT
     sau5  0x00E31012  RING_$INIT
+    sau8  0x03C32A54  RING_$INIT
     sau9  0x3C43594C  RING_$INIT
 
   - The unit's eventcounts and locks are initialized and its channels

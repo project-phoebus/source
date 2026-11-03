@@ -1,6 +1,7 @@
 { ETHERNET_$LOAD - load the adapter's program.
 
   Image addresses:
+    sau8  0x03C86700  ETHERNET_$LOAD
     sau9  0x3C482300  ETHERNET_$LOAD
 
   - The driver record's detach entry, which NETWORK_$LOAD calls.  Unless

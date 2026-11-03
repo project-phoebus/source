@@ -196,6 +196,11 @@ The 28-byte ASTE and the 21-bit disk addresses come in through the
 types alone.  The rest of the SAU9's AREA_ code, and its data block, is
 the SAU2's source compiled for the 68020.
 
+The SAU8's AREA_ is the SAU9's code but for area_$resize's MST test in
+a shrink: its MST is 7168 words (`mst_7168_words`,
+`mst/mst_internal.ins.pas`), so the index is a word, and the SAU8 image
+forms it in 16 bits.
+
 ## Open items
 
 ### TODO(pascal)

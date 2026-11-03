@@ -1,6 +1,7 @@
 # The DMA subsystem in Domain Pascal
 
-The MC68450 DMA controller's set-up and completion check.
+The MC68450 DMA controller's set-up and completion check; with
+`atbus_dma` (the SAU8) the AT bus's two 8237 DMA controllers' driver.
 
 ## Layout
 
@@ -15,14 +16,28 @@ symbol, addressed by nothing (TODO in `dma.pas`, TAPE_BOOT's shape).  No
 routine loads A5.  The registers are the IODEFS page DMA, an extern
 array of four channel records in `dma.ins.pas`.
 
+With `atbus_dma` the heading names WIRED_PROC and WIRED_DATA (the
+module's variables): the map's DMA_ code segment in WIRED_PROC (0x428
+bytes: DMA_$START, DMA_$START_NCHECK, DMA_$STOP, DMA_$STATUS,
+DMA_$FREE_ASID), a DMA_ code segment in OS_INIT_PROC (0x98 bytes: the
+module-local dma_io_delay, an empty procedure, and DMA_$INIT), the data
+segment in WIRED_DATA (0x18 bytes: the channels' owners, the spin lock,
+the terminal counts seen).  The registers are the IODEFS page DMA as
+the controllers' ports (`dma.ins.pas`).
+
 ## Routines and their fragments
 
 | routine | fragment |
 |---------|----------|
 | dma_$init_m68450_channel | `init_m68450_channel.pas` (`internal`) |
-| DMA_$INIT | `init.pas` |
+| DMA_$INIT | `init.pas` (with `atbus_dma` in OS_INIT_PROC) |
 | DMA_$CHECK | `check.pas` (a `case` with a jump table; two constant cells) |
-| DMA_$FREE_ASID | `free_asid.pas` (an empty procedure, one word by value) |
+| DMA_$FREE_ASID | `free_asid.pas` (an empty procedure, one word by value; with `atbus_dma` the address space's channels freed) |
+| DMA_$START (`atbus_dma`) | `start.pas` |
+| DMA_$START_NCHECK (`atbus_dma`) | `start_ncheck.pas` |
+| DMA_$STOP (`atbus_dma`) | `stop.pas` |
+| DMA_$STATUS (`atbus_dma`) | `status.pas` |
+| dma_io_delay (`atbus_dma`, module-local, OS_INIT_PROC) | `io_delay.pas` (`internal`) |
 
 `dma.ins.pas`: the register values; the channel record
 `dma_$m68450_channel_t` (`[device]`, 0x40 bytes) and its pointer; the

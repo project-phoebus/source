@@ -4,6 +4,7 @@
   Image addresses:
     sau3  0x00E89BE0  pbu_map_owned_ppn (module-local)
     sau5  0x00E91FAC  pbu_map_owned_ppn (module-local)
+    sau8  0x03CA569C  pbu_map_owned_ppn (module-local)
 
   - 0 for a page not mapped, or for a page of MMAP_$LPPN..MMAP_$HPPN
     the unit does not own; a page outside that range is returned without

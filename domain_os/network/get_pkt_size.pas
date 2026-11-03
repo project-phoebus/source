@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0FA00  NETWORK_$GET_PKT_SIZE
+    sau8  0x03C10D34  NETWORK_$GET_PKT_SIZE
 
   - A size of 1024 is taken as it is, and a destination on another
     internet gets 1024.

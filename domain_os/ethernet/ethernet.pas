@@ -2,6 +2,7 @@
   driver.
 
   Image addresses:
+    sau8  0x03C9FC04  ETHERNET data (ETHER_DATA, 0xE0 bytes)
     sau9  0x3C49F804  ETHERNET data (ETHER_DATA, 0xE0 bytes)
 
   One compilation unit, one code segment.  Where the driver is
@@ -16,8 +17,8 @@
   local routines and two nested ones, ETHERNET_$INIT .. ETHERNET_$RCV1, 22 symbols) and its
   data segment in ETHER_DATA (0xE0 bytes, below); the ETHERNET_ASM
   segment (0x80 bytes, ETHERNET_$$PIO_READ and ETHERNET_$$PIO_WRITE) is
-  hand assembly (ethernet/sau9/ethernet_asm.s).  Two more sections hold the
-  driver's objects: ETHER_UCB (0x2570 bytes, the two units' records)
+  hand assembly (ethernet/m68k/ethernet_asm.s).  Two more sections hold
+  the driver's objects: ETHER_UCB (0x2570 bytes, the two units' records)
   and ETHERNET_$BUFFER (0x1000 bytes), overlay sections declared below.
 
   Not part of the module: ETHER_PROC_START and ETHER_PROC_END, the zero

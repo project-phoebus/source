@@ -9,7 +9,11 @@ forms:
   disk/tape controller, translated from the SAU5 image;
 - the SCSI tape driver (`ct_scsi`), a SCSI tape drive (target 0 of bus
   0) driven through the SCSI_ driver (`../scsi/`), translated from the
-  SAU9 image.
+  SAU9 image;
+- the QIC-02 driver of an AT bus adapter (`ct_qic02` with
+  `ct_atbus_qic02`): the adapter's ports, the drive's six status bytes,
+  a DMA_ channel and a PBU unit's interrupt, translated from the SAU8
+  image.
 
 ## Layout
 
@@ -19,6 +23,13 @@ One module, `ct.pas`, `module ct;` (the map segment's name):
 |---------|--------------|--------------|--------------|----------|-----------|
 | .TEXT (default) | CT, 4 bytes | CT, 0xDC0 bytes | CT, 0x130C bytes | SAU2: CT_$RELEASE (empty); SAU5: five module-local routines, CT_WAIT, RESET_DRIVE, DO_CTL_CMD, CT_$ACQUIRE, CT_$CONTROL, CT_$DIAG, CT_$READ, CT_$RELEASE, CT_$WAIT, CT_$WRITE, CT_$INT; SAU9: nine module-local routines, SCSI_WAIT, CT_$ACQUIRE .. CT_$WRITE (four with a nested routine) | none |
 | OS_INIT_PROC | none | CT, 0x74 bytes | CT, 0x10 bytes | CT_$CINIT | `[section(os_init_proc, os_init_data)]` |
+
+The SAU8's segments: CT in .TEXT, 0x136C bytes (six module-local
+routines, CT_WAIT, RESET_DRIVE, DO_CTL_CMD, ct_transfer, CT_$ACQUIRE ..
+CT_$INT); CT in OS_INIT_PROC, 0xC8 bytes (CT_$CINIT); CT data, 0xD44
+bytes.  The shared fragments hold its arms under `ct_atbus_qic02`
+(`%elseif` after the SCSI arm); ct_wait_ready, ct_status_cmd and
+ct_read_status are its own.
 | .DATA (default) | none | CT data, 0xD18 bytes | CT data, 0xD8C bytes | the driver's variables and the QIC-02 drive status table | module variables |
 
 The SAU2 build compiles the `%else` of `ct_driver` (CT_$RELEASE's empty
@@ -44,6 +55,9 @@ have fragments of their own, but for `touch_pages.pas`,
 | ct_unwire_pages | `unwire_pages.pas` |
 | ct_check_unit | `check_unit.pas` |
 | ct_decode_status (QIC-02) | `decode_status.pas` |
+| ct_wait_ready (AT bus adapter) | `wait_ready.pas` |
+| ct_status_cmd (AT bus adapter) | `status_cmd.pas` |
+| ct_read_status (AT bus adapter) | `read_status.pas` |
 | CT_WAIT (QIC-02) | `ct_wait.pas` |
 | RESET_DRIVE (QIC-02) | `reset_drive.pas` |
 | DO_CTL_CMD (QIC-02) | `do_ctl_cmd.pas` |

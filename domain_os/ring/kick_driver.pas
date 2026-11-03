@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E768A8  RING_$KICK_DRIVER
     sau3  0x00E78098  RING_$KICK_DRIVER
+    sau8  0x03C83190  RING_$KICK_DRIVER
 
   - Both units are marked busy and each initialized one's receive
     process woken.

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E42E3C  MST_$DEALLOCATE_ASID
+    sau8  0x03C4B012  MST_$DEALLOCATE_ASID
     sau9  0x3C44A1EC  MST_$DEALLOCATE_ASID
 
   - One call of MST_$FREE_ASID with the same two arguments.

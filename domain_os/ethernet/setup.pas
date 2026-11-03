@@ -2,6 +2,7 @@
   its multicast list and its receive mode.
 
   Image addresses:
+    sau8  0x03C84EA6  ethernet_setup
     sau9  0x3C480AA6  ethernet_setup
 
   - A unit without a station address gets Apollo's: the vendor block

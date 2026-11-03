@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E00F16  AST_$INVALIDATE_PAGE
+    sau8  0x03C012FC  AST_$INVALIDATE_PAGE
     sau9  0x3C4022FC  AST_$INVALIDATE_PAGE
 
   - A page mapped in the MMU is unmapped; the entry loses its installed member and takes the page's

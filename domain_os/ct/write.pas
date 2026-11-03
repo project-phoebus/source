@@ -28,6 +28,35 @@ begin
     end;
   end;
 end;
+%elseif ct_atbus_qic02 %then
+{ CT_$WRITE - write blocks to the cartridge tape.
+
+  Image addresses:
+    sau8  0x03C7B34A  CT_$WRITE
+
+  - With the direction set, ct_transfer moves up to npages 512-byte
+    blocks; with the AT bus adapter (`ct_atbus_qic02') a failure sets
+    ct_restart (the next transfer gives its command again), a success
+    clears it.
+
+  Status stored:
+    ct_transfer's status: in either case
+}
+
+procedure ct_$write(in unit: integer; in pages: univ ct_$page_list_t;
+                   in npages: integer; out nwritten: integer;
+                   out status: status_$t);
+var
+  st: status_$t;
+begin
+  ct_reading := false;
+  ct_transfer(unit, pages, npages, nwritten, st);
+  status := st;
+  if st.all <> 0 then
+    ct_restart := true
+  else
+    ct_restart := false;
+end;
 %else
 { CT_$WRITE - write blocks to the cartridge tape.
 

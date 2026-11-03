@@ -2,6 +2,7 @@
   space.
 
   Image addresses:
+    sau8  0x03C4C994  MST_$MAP_SPECIAL
     sau9  0x3C44BB18  MST_$MAP_SPECIAL
 
   - ASID 0 crashes the system.
@@ -33,7 +34,11 @@ begin
   if asid = 0 then
     crash_system(status_$mst_asid_0_illegal);
   ml_$lock(ml_$mst_asid_lock);
+%if large_address_space %then
   s := seg + (mst_$seg_global_b_offset - mst_special_segs);
+%elseif run_time_layout %then
+  s := mst_$private_a_size + seg + (mst_private_b_count - mst_special_segs);
+%endif
   for i := 0 to count - 1 do begin
     status_ret := mst_$alloc_table_page(asid, s,
                     mst[mst_asid_base[asid] + s div 64]);
@@ -53,8 +58,12 @@ begin
       end;
     s := s + 1;
   end;
+%if large_address_space %then
   mst_$map_special := univ_ptr(lshft(seg, 15) +
                         lshft(mst_$seg_global_b - mst_special_segs, 15));
+%elseif run_time_layout %then
+  mst_$map_special := univ_ptr(lshft(seg, 15) + special_$seg);
+%endif
 done:
   ml_$unlock(ml_$mst_asid_lock);
 end;

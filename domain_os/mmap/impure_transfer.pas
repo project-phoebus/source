@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0CBE8  MMAP_$IMPURE_TRANSFER
+    sau8  0x03C0DB08  MMAP_$IMPURE_TRANSFER
     sau9  0x3C40EB44  MMAP_$IMPURE_TRANSFER
 
   - A page on pool 3 or 4 (the dirty pools) is taken off it and added

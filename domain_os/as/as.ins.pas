@@ -11,10 +11,19 @@ const
   { The size of AS_$INFO in bytes (0x5C), the value of AS_$INFO_SIZE. }
   as_$info_bytes = 92;
 
-  { AS_$INIT's constants, immediates in its code. }
+  { AS_$INIT's constants, immediates in its code: the 68020's layout, or
+    with the layout chosen at boot the MC68851 PMMU's (global A at
+    segment 16#1CC0, 256 segments; the private regions 16#B40000 bytes
+    higher). }
+%if run_time_layout %then
+  m68020_global_a_base = 16#0E600000;
+  m68020_global_a_size = 16#00800000;
+  m68020_as_offset = 16#0B400000;
+%else
   m68020_global_a_base = 16#033C0000;
   m68020_global_a_size = 16#00700000;
   m68020_as_offset = 16#02A00000;
+%endif
 
 type
   { An address range, a base and a size, 8 bytes. }

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0EB26  NETBUF_$DEL_PAGES
+    sau8  0x03C0FE7C  NETBUF_$DEL_PAGES
     sau9  0x3C410F7C  NETBUF_$DEL_PAGES
 
   - The header pages to free are the excess over 176, or the request

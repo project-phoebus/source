@@ -4,6 +4,7 @@
   Image addresses:
     sau3  0x00E59D7E  PBU2_$WIRE_MAP
     sau5  0x00E59FDE  PBU2_$WIRE_MAP
+    sau8  0x03C62476  PBU2_$WIRE_MAP
 
   - Under the exclusion lock each page is wired for the unit
     (PBU_$SAVE_PPN) and its I/O map entry written: the page number plus
@@ -16,6 +17,8 @@
   - The fit test compares with the space's end address; the failed
     page's entry is written and no fail bit set; the undo loop's bounds
     are unsigned.
+  - Without the I/O map space (`io_regions') nothing is wired: the
+    result is 0.
 
   Status stored:
     pbu_$save_ppn's status: the buffer was wired and mapped, a page was
@@ -30,8 +33,10 @@
       address space
     status_$pbu_buffer_too_large: the buffer does not fit
     status_$pbu_too_many_wired_pages: no pages to spare
+    status_$pbu_not_supported: always, without `io_regions'
 }
 
+%if io_regions %then
 function pbu2_$wire_map(in unit: integer; in buffer: univ pbu_$buffer_t;
                         in length: linteger; in iova: linteger;
                         out status: status_$t): integer32;
@@ -112,3 +117,12 @@ begin
   ml_$exclusion_stop(pbu_$exclusion_lock);
   pbu2_$wire_map := page_offset + iova;
 end;
+%else
+function pbu2_$wire_map(in unit: integer; in buffer: univ pbu_$buffer_t;
+                        in length: linteger; in iova: linteger;
+                        out status: status_$t): integer32;
+begin
+  status.all := status_$pbu_not_supported;
+  pbu2_$wire_map := 0;
+end;
+%endif

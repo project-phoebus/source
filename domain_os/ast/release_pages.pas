@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E06F88  AST_$RELEASE_PAGES
+    sau8  0x03C071CE  AST_$RELEASE_PAGES
     sau9  0x3C4081DA  AST_$RELEASE_PAGES
 
   - Under the PMAP lock each of the segment's 32 installed and wired

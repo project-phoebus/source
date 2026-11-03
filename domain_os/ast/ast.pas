@@ -5,6 +5,8 @@
   Image addresses:
     sau2  0x00E1DC80  AST_ data (WIRED_DATA, 0x498 bytes)
     sau2  0x00E35000  AST_ data (OS_INIT_DATA, 4 bytes)
+    sau8  0x03C1F480  AST_ data (WIRED_DATA, 0x498 bytes)
+    sau8  0x03C39400  AST_ data (OS_INIT_DATA, 4 bytes)
     sau9  0x3C420880  AST_ data (WIRED_DATA, 0x498 bytes)
     sau9  0x3C43BC00  AST_ data (OS_INIT_DATA, 4 bytes)
 

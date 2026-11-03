@@ -5,6 +5,7 @@
     sau2  0x00E337F4  OS_$INIT
     sau3  0x00E31C3C  OS_$INIT
     sau5  0x00E357E8  OS_$INIT
+    sau8  0x03C37034  OS_$INIT
     sau9  0x3C439E2E  OS_$INIT
 
   - boot_info is the PROM's boot record, diskless the diskless reply,
@@ -52,6 +53,13 @@
     flag false.
   - `lpr_driver', `iic_driver': the line printer and the internet
     interface controller are started.
+  - `early_as_init': AS_$INIT before COLD's segment goes;
+    `boot_flags_diskless', `boot_flags_server': the diskless and server
+    settings from the boot flags; `pbu_wire_at_boot',
+    `atbus_int8_dummy': the PBU page wired and AT bus interrupt 8
+    claimed after the checksum passes; `parity_trap_vector_30',
+    `vector_seg_prot': the parity trap on vector 30 too, and the vector
+    page protected by its segment.
 
   Status stored: none.
 }
@@ -62,15 +70,14 @@
   compares the index with 44), where the two parts' cells give 45: not
   looked at. }
 
-{ TODO(sau) the forms of the SAU4, SAU6..SAU8 not compared
+{ TODO(sau) the forms of the SAU4, SAU6 and SAU7 not compared
 
   The arms of `pft_mmu', `large_vm', `crash_reboot', `ring_node_id',
   `smd_display_memory', `calendar_service_mode' and `pmmu_page_maps'
-  follow the SAU9's code, their banks the other SAUs' maps and calls.
-  Not compared there: TIME_$INIT's argument without the calendar probe
-  on the SAU4, SAU6..SAU8 (the SAU9's and the SAU3's `true'),
-  CAL_$VERIFY's two literals (the SAU9's), the SAU8's page-descriptor
-  and vector forms. }
+  follow the SAU9's and the SAU8's code, their banks the other SAUs'
+  maps and calls.  Not compared there: TIME_$INIT's argument without
+  the calendar probe on the SAU4, SAU6 and SAU7 (the SAU9's, SAU8's and
+  SAU3's `true'), CAL_$VERIFY's two literals (the SAU9's and SAU8's). }
 
 { TODO(pascal) OS_$INIT's frame
 
@@ -92,6 +99,10 @@
   puts the copies there under dpc's rule.  The var section keeps the
   grouping by part; the image's order is the evidence for the compiler's
   rule.
+
+  The SAU8's frame is 0x218 bytes, with the SAU2's order at the top
+  (boot, then the diskless copy right below it, the boot_info copy
+  among the locals), not compared slot by slot.
 
   The SAU3's frame is 20 bytes smaller than the SAU2's (0x1E8 bytes):
   it has no slots for probe_result (`display_driver') and for
@@ -315,6 +326,10 @@ var
   server_reboot: boolean;                 { the node check shuts a server
                                             down without asking }
 %endif
+%if atbus_int8_dummy %then
+  int8_req: io_$acquire_rec_t;            { AT bus interrupt 8's request }
+  int8_unit: io_$unit_num_t;
+%endif
 begin
   { the parameters' copies, then the working
     copy }
@@ -335,6 +350,9 @@ begin
   mmu_$remove(ppn);
   mmu_$remove(ppn + 1);
 %else
+%if early_as_init %then
+  as_$init;
+%endif
   { COLD's segment removed, its pages' descriptors with it, and its
     region's root entry cleared }
   mmu_$remove_special_seg(addr(cold), 0, true);
@@ -399,6 +417,20 @@ begin
   { diskless or not }
 %if prom_config_record %then
   network_$diskless := 7 in boot.flags;
+%elseif boot_flags_diskless %then
+  { boot flag 7 a diskless boot, 8 a disked one from the network device
+    the diskless reply names; else the boot device says }
+  if 7 in boot.flags then begin
+    network_$diskless := true;
+    discard(net_io_$boot_device(boot.device, boot.ctlr));
+  end
+  else if 8 in boot.flags then begin
+    network_$diskless := false;
+    discard(net_io_$boot_device(diskless.net_boot_device,
+                                diskless.net_boot_unit));
+  end
+  else
+    network_$diskless := net_io_$boot_device(boot.device, boot.ctlr);
 %else
   network_$diskless := net_io_$boot_device(boot.device, boot.ctlr);
 %endif
@@ -574,6 +606,18 @@ begin
   if 4 in boot.flags then
     term_ctrl := 2;
 %if display_driver %then
+%if boot_flags_server %then
+  { boot flag 1 with flag 0 also makes the node a server }
+  if 0 in boot.flags then begin
+    if 1 in boot.flags then
+      term_mode := 1
+    else begin
+      term_mode := 2;
+      term_ctrl := 1;
+    end;
+    server_$flag := 1 in boot.flags;
+  end
+%else
   if 0 in boot.flags then
     if 1 in boot.flags then
       term_mode := 1
@@ -581,6 +625,7 @@ begin
       term_mode := 2;
       term_ctrl := 1;
     end
+%endif
   else begin
     term_mode := 0;
     term_ctrl := 1;
@@ -626,6 +671,9 @@ begin
     then the object managers; the disk only with a disk }
 %if not fim_nmi %then
   trap_page[31] := addr(fim_$parity_trap);
+%if parity_trap_vector_30 %then
+  trap_page[30] := addr(fim_$parity_trap);
+%endif
 %endif
   acl_$init;
   ast_$init;
@@ -843,6 +891,23 @@ begin
     disk_chksum_arg := true;
     os_$chksum(0, 0, 0, disk_chksum_arg, status);
   end;
+%if pbu_wire_at_boot %then
+  pbu_$wire_pbu;
+%endif
+%if atbus_int8_dummy %then
+
+  { AT bus interrupt 8 claimed for DUMMY_INTERRUPT_HANDLER, with no CSR
+    pages }
+  int8_req.tag := 1;
+  int8_req.bus := io_$bus_atbus;
+  int8_req.int.has_int := true;
+  int8_req.int.id.vector := 8;
+  int8_req.csr.has_csr := false;
+  io_$acquire(int8_req, addr(dummy_interrupt_handler), nil, int8_unit,
+              status);
+  if status.all <> status_$ok then
+    crash_system(status);
+%endif
 
 %if display_driver %then
 %if smd_display_memory %then
@@ -996,7 +1061,22 @@ begin
     va := unwired_proc;
     repeat
 %if pmmu_page_maps %then
+
+      { TODO(pascal) one expression for pmap_seg
+
+        Without the large address space the SAU8 image computes the
+        segment as rshft(va, 15) - MST_$SEG_GLOBAL_B + MST_$GLOBAL_A_SIZE,
+        the two words read from MST_WIRED; with it the SAU7 and SAU9
+        images subtract 30464, which is those two constants' difference
+        folded.  So the original is likely the one expression for both;
+        dpc compiles the constants' form as a subtraction and an
+        addition, so the large address space's arm keeps
+        mst_$seg_global_b_offset. }
+%if large_address_space %then
       pmap_seg := rshft(va, 15) - mst_$seg_global_b_offset;
+%else
+      pmap_seg := rshft(va, 15) - mst_$seg_global_b + mst_$global_a_size;
+%endif
 %endif
       { the segment's ASTE, A0 kept in A2 }
       aste := ast_$activate_aste_canned(network_$paging_file_uid, seg);
@@ -1197,6 +1277,8 @@ begin
     the zero longword }
 %if pft_mmu %then
   mmu_$set_prot(vtop_or_crash(0), 16#13);
+%elseif vector_seg_prot %then
+  mmu_$set_seg_prot(addr(trap_page), 16#13);
 %else
   mmu_$page_write_bit(addr(trap_page), 16#13);
 %endif

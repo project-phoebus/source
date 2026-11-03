@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0CE56  MMAP_$FREE_PAGES
+    sau8  0x03C0DD68  MMAP_$FREE_PAGES
     sau9  0x3C40EDA4  MMAP_$FREE_PAGES
 
   - Under the MMAP spin lock each page of the list is unlinked from its

@@ -4,6 +4,7 @@
   Image addresses:
     sau2  0x00E72450  TERM_$PCHIST_ENABLE
     sau3  0x00E73B3C  TERM_$PCHIST_ENABLE
+    sau8  0x03C7CD34  TERM_$PCHIST_ENABLE
     sau9  0x3C479E48  TERM_$PCHIST_ENABLE
 
   - The word goes into the flags of the second SIO2681 channel record,

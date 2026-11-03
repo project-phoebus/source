@@ -4,6 +4,7 @@
 
   Image addresses:
     sau2  0x00E248FC  NETWORK data (WIRED_DATA, 0x364 bytes)
+    sau8  0x03C269A4  NETWORK data (WIRED_DATA, 0x364 bytes)
 
   One compilation unit: the map's NETWORK code segments in WIRED_PROC
   (0x2DD0 bytes, network_$phys_copy .. NETWORK_$REQUEST_SERVER),

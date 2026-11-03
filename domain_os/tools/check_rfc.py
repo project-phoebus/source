@@ -27,6 +27,15 @@
 # segment of the kernel read through COLD's map equals the file's bytes at
 # the map's `loaded at').
 #
+# The SAU8 (make TARGET_SAU=sau8 check-rfc) has the same kind of image
+# (the SAU2's split and a fixup table at RELOC) at its own addresses: load
+# 0x101C00, COLD 0xC00 bytes, the DUMP page 0x800 bytes at file 0xC00
+# (VA 0x3C00400, copied to PPN 0x403), the kernel from file 0x1400 (VA
+# 0x3C00C00), and its COLD (cold/sau8/cold_start.s) builds the MC68851's
+# tables from a map table of the SAU2's form; its fixups move a cell by
+# windows of the PMMU's layout from PROT up, and it has no MMU_$PTTX.
+# The SAU-dependent scalars are set from the SAU tables by select_sau().
+#
 # The SAU3 (make TARGET_SAU=sau3 check-rfc) is laid out the same way, with
 # its own COLD (cold/sau3/cold_start.s: three additions and a 19-entry map
 # table, so everything after 0x101590 is further on), the SAU2's 68020
@@ -103,10 +112,21 @@ import rfc_elf  # noqa: E402
 # the instruction addresses in its comments, checked against the SAU5
 # image's bytes).  The scalar ones are the same in both.
 SAU = 2
-SAUS = (2, 3, 5, 9)
+SAUS = (2, 3, 5, 8, 9)
 
 # The RFC header's machine word: the SAU's number.
-MACHINE = {2: 2, 3: 3, 5: 5}
+MACHINE = {2: 2, 3: 3, 5: 5, 8: 8}
+
+# The image's layout, by SAU: the load address (file byte 0), COLD's
+# size, the DUMP page's size and VA, the kernel's file offset and VA,
+# OS_BEGIN, and the kernel bytes in the low piece (COLD's KERNEL_LO_BYTES).
+LOADS = {2: 0x101400, 3: 0x101400, 5: 0x101400, 8: 0x101C00}
+COLD_SIZES = {2: 0x800, 3: 0x800, 5: 0x800, 8: 0xC00}
+DUMP_SIZES = {2: 0x400, 3: 0x400, 5: 0x400, 8: 0x800}
+DUMP_VAS = {2: 0xE00400, 3: 0xE00400, 5: 0xE00400, 8: 0x3C00400}
+KERNEL_VAS = {2: 0xE00800, 3: 0xE00800, 5: 0xE00800, 8: 0x3C00C00}
+OS_BEGINS = {2: 0xE00000, 3: 0xE00000, 5: 0xE00000, 8: 0x3C00000}
+LO_BYTES = {2: 0x55C00, 3: 0x55C00, 5: 0x55C00, 8: 0x54C00}
 
 LOAD = 0x101400
 PAGE = 0x400
@@ -114,14 +134,21 @@ INFO = 0x10140C
 MOVE_TO_PPN = 0x101420
 # COLD's MMU map table and its two cells COLD fills in (the kernel's low
 # piece count; the high piece's count and PPN)
-MAP_TABLE = {2: 0x101850, 3: 0x101890, 5: 0x1018DC}  # cold_map_table
+MAP_TABLE = {2: 0x101850, 3: 0x101890, 5: 0x1018DC,
+             8: 0x102206}                       # cold_map_table
 MAP_LO_COUNT = {2: 0x1018E6, 3: 0x10193A,
-                5: 0x1019C2}                    # cold_map_kernel_lo_count
+                5: 0x1019C2, 8: 0x102238}       # cold_map_kernel_lo_count
 MAP_HI_COUNT_PPN = {2: 0x1018F0, 3: 0x101944,
-                    5: 0x1019CC}                # cold_map_kernel_hi_count_ppn
+                    5: 0x1019CC, 8: 0x102242}   # cold_map_kernel_hi_count_ppn
 DUMP_LOW = 0x101C00
 DUMP_PPN = 0x403
 KERNEL_FILE = 0xC00
+COLD_SIZE = 0x800
+DUMP_SIZE = 0x400
+DUMP_VA = 0xE00400
+KERNEL_VA = 0xE00800
+OS_BEGIN = 0xE00000
+KERNEL_LO_BYTES = 0x55C00
 
 # COLD operands (instruction + 2), the same in 10.2, 10.3 and ours; the
 # first five are at the same addresses in the SAU5's COLD, the others
@@ -130,18 +157,54 @@ KERNEL_FILE = 0xC00
 # movea.l #P1_STACK_BASE 0x10176E, movea.l #OS_$INIT 0x10177C, adda.l
 # #MMU_$PTTX 0x1017F4; the SAU3's 0x10159E, 0x1015AE, 0x1015B4, 0x1015F2,
 # 0x101728, 0x101736, 0x1017A8)
+# The SAU8's (cold/sau8/cold_start.s): movea.l #RELOC 0x101C98, suba.l
+# #OS_PROC 0x101C9E, adda.l #0x103000 0x101CA4, cmpa.l #0x157C00 0x101CAA,
+# move.l #OS_PAGE_END 0x101DFC, sub.l #OS_PROC 0x101E0C, cmp.l #0x54C00
+# 0x101E12, add.l #MMAP 0x101E50, movea.l #P1_STACK_BASE 0x101F60,
+# movea.l #OS_$INIT 0x101F6E; no OS_BEGIN window and no MMU_$PTTX (None).
+OP_RELOC_VA_S = {2: 0x101496, 3: 0x101496, 5: 0x101496, 8: 0x101C9A}
+OP_KERNEL_VA_S = {2: 0x10149C, 3: 0x10149C, 5: 0x10149C, 8: 0x101CA0}
+OP_KERNEL_LOW_S = {2: 0x1014A2, 3: 0x1014A2, 5: 0x1014A2, 8: 0x101CA6}
+OP_SPLIT_LOW_S = {2: 0x1014A8, 3: 0x1014A8, 5: 0x1014A8, 8: 0x101CAC}
+OP_OS_BEGIN_S = {2: 0x1014E8, 3: 0x1014E8, 5: 0x1014E8, 8: None}
 OP_RELOC_VA = 0x101496
 OP_KERNEL_VA = 0x10149C
 OP_KERNEL_LOW = 0x1014A2
 OP_SPLIT_LOW = 0x1014A8
 OP_OS_BEGIN = 0x1014E8
-OP_PAGE_END = {2: 0x101592, 3: 0x1015A0, 5: 0x1015C6}
-OP_KERNEL_VA2 = {2: 0x1015A2, 3: 0x1015B0, 5: 0x1015D6}
-OP_LO_BYTES = {2: 0x1015A8, 3: 0x1015B6, 5: 0x1015DC}
-OP_MMAP_VA = {2: 0x1015E6, 3: 0x1015F4, 5: 0x10161A}
-OP_STACK = {2: 0x1016FA, 3: 0x10172A, 5: 0x101770}
-OP_ENTRY = {2: 0x101708, 3: 0x101738, 5: 0x10177E}
-OP_PTTX_VA = {2: 0x10176A, 3: 0x1017AA, 5: 0x1017F6}
+OP_PAGE_END = {2: 0x101592, 3: 0x1015A0, 5: 0x1015C6, 8: 0x101DFE}
+OP_KERNEL_VA2 = {2: 0x1015A2, 3: 0x1015B0, 5: 0x1015D6, 8: 0x101E0E}
+OP_LO_BYTES = {2: 0x1015A8, 3: 0x1015B6, 5: 0x1015DC, 8: 0x101E14}
+OP_MMAP_VA = {2: 0x1015E6, 3: 0x1015F4, 5: 0x10161A, 8: 0x101E52}
+OP_STACK = {2: 0x1016FA, 3: 0x10172A, 5: 0x101770, 8: 0x101F62}
+OP_ENTRY = {2: 0x101708, 3: 0x101738, 5: 0x10177E, 8: 0x101F70}
+OP_PTTX_VA = {2: 0x10176A, 3: 0x1017AA, 5: 0x1017F6, 8: None}
+
+
+def select_sau(sau):
+    """Set the SAU-dependent scalars from the tables."""
+    global SAU, LOAD, INFO, MOVE_TO_PPN, DUMP_LOW, KERNEL_FILE, COLD_SIZE
+    global DUMP_SIZE, DUMP_VA, KERNEL_VA, OS_BEGIN, KERNEL_LO_BYTES
+    global OP_RELOC_VA, OP_KERNEL_VA, OP_KERNEL_LOW, OP_SPLIT_LOW, OP_OS_BEGIN
+    SAU = sau
+    if sau not in LOADS:
+        return
+    LOAD = LOADS[sau]
+    INFO = LOAD + 0xC
+    MOVE_TO_PPN = LOAD + 0x20
+    COLD_SIZE = COLD_SIZES[sau]
+    DUMP_SIZE = DUMP_SIZES[sau]
+    DUMP_LOW = LOAD + COLD_SIZE
+    KERNEL_FILE = COLD_SIZE + DUMP_SIZE
+    DUMP_VA = DUMP_VAS[sau]
+    KERNEL_VA = KERNEL_VAS[sau]
+    OS_BEGIN = OS_BEGINS[sau]
+    KERNEL_LO_BYTES = LO_BYTES[sau]
+    OP_RELOC_VA = OP_RELOC_VA_S[sau]
+    OP_KERNEL_VA = OP_KERNEL_VA_S[sau]
+    OP_KERNEL_LOW = OP_KERNEL_LOW_S[sau]
+    OP_SPLIT_LOW = OP_SPLIT_LOW_S[sau]
+    OP_OS_BEGIN = OP_OS_BEGIN_S[sau]
 
 # The VM tables' run-time windows: map names and the
 # image's addresses (domain_os.10.2.map, VM_TABLES `D98 ED5000 size 7AC00';
@@ -157,19 +220,37 @@ VM_WINDOWS = {
     5: [('AREA_$RPMAP_CACHE', 0xEDD000), ('MST', 0xEDDC00),
         ('PIT_PAGES', 0xEDE800), ('MSTE_PAGES', 0xEEE800),
         ('VM_TABLES_END', 0xF48000)],
+    # the SAU8's from OS_PAGE_END (SMAPS + 0x3400, inside `D52 3CCC800
+    # OS_PMAPS'), as the SAU9's
+    8: [('OS_PAGE_END', 0x3CF6400), ('SMAPS_END', 0x3DAF800),
+        ('RARS_END', 0x3DB6C00), ('AST_PMAPS', 0x3DB7800),
+        ('AREA_$RPMAP_CACHE', 0x3DE7800), ('MST', 0x3E4DC00),
+        ('PIT_PAGES', 0x3E51400), ('MSTE_PAGES', 0x3E61400),
+        ('VM_TABLES_END', 0x3F2E000)],
 }
 # VAs COLD's map table maps to two physical pages, in the original: the
 # SAU5's DISP1 (0xFF9800, PPN 0x3C, then `the same VA, the next PPN' 0x3D,
 # cold/sau5/cold_start.s 0x101954 and 0x10195E).  The loader allows them
 # (the first PPN is the one it reads through).
-DOUBLE_MAPPED = {2: set(), 3: set(), 5: {0xFF9800}}
+DOUBLE_MAPPED = {2: set(), 3: set(), 5: {0xFF9800}, 8: {0x3C00400}}
+# The SAU8's: the first entry maps OS_BEGIN's two pages (PPN 0x400, 0x401)
+# and the next one DUMP's (PPN 0x403, 0x404) from OS_BEGIN + 0x400, so
+# 0x3C00400 is in both (cold/sau8/cold_start.s cold_map_table); COLD writes
+# the page descriptors in table order, so the last one is the page's, and
+# with the MC68851 the fixups move the first entry away.
+DOUBLE_MAPPED_LAST = {8}
+# Map symbols in the VM-table windows whose page COLD maps itself: the
+# SAU8's RARS, the root tables at physical 0x101400 (the map table's `1,
+# 0x405, MAP_WIRED + RARS').
+COLD_MAPPED_IN_WINDOWS = {8: ['RARS']}
 
 MST_MSTE_PAGES_MAX = 0x166      # mst/mst.h, MST_$INIT 0x00E30CF8
 # cold_start.s IO_WINDOW: from here the 68020 fixups treat a cell as I/O
-IO_FIXUP_WINDOW = {2: 0xFA0000, 3: 0xFA0000, 5: 0xF90000}
+IO_FIXUP_WINDOW = {2: 0xFA0000, 3: 0xFA0000, 5: 0xF90000,
+                   8: 0x3F80000}   # the SAU8's last window
 # IODEFS, arch/m68k/<sau>/iodefs.s: DISP1_MEM on the SAU2, KOLOR_CTL on the
 # SAU5, the start of the I/O space on the SAU3
-IODEFS = {2: 0xFC0000, 3: 0xFC0000, 5: 0xF90000}
+IODEFS = {2: 0xFC0000, 3: 0xFC0000, 5: 0xF90000, 8: 0x3FA0000}
 
 # The 68020 fixups' windows on the value (COLD 0x1014C4..; the SAU5's from
 # its IO_WINDOW and *_WINDOW_020 constants)
@@ -186,6 +267,14 @@ WINDOWS = {
         (0xF90000, 0x4000000, 'F90000..4000000 +3000000'),
         (0xCC0000, 0xE00000, 'CC0000..E00000 +2E00000'),
         (0x700000, 0x800000, '700000..800000 -300000')],
+    # the SAU8's (COLD 0x101CCA..0x101D48, with the MC68851 only): PROT,
+    # OS_PMAP0, SMAPS_END, RARS_END, MST and 0x3F80000 as the map's
+    8: [(0x39C0000, 0x3CF2800, '39C0000..3CF2800 +B600000'),
+        (0x3CF2800, 0x3DAF800, '3CF2800..3DAF800 +B60A000'),
+        (0x3DAF800, 0x3DB6C00, '3DAF800..3DB6C00 +B896800'),
+        (0x3DB6C00, 0x3E4DC00, '3DB6C00..3E4DC00 +B89C000'),
+        (0x3E4DC00, 0x3F80000, '3E4DC00..3F80000 +B9D5800'),
+        (0x3F80000, 0x4000000, '3F80000..4000000 +C000000')],
 }
 
 
@@ -254,15 +343,20 @@ def header_info(img, r):
 
 
 def cold_constants(img):
-    return dict(reloc_va=img.b32(OP_RELOC_VA), kernel_va=img.b32(OP_KERNEL_VA),
-                kernel_low=img.b32(OP_KERNEL_LOW),
-                split_low=img.b32(OP_SPLIT_LOW),
-                os_begin=img.b32(OP_OS_BEGIN),
-                os_page_end=img.b32(OP_PAGE_END[SAU]),
-                kernel_va2=img.b32(OP_KERNEL_VA2[SAU]),
-                lo_bytes=img.b32(OP_LO_BYTES[SAU]),
-                mmap_va=img.b32(OP_MMAP_VA[SAU]), pttx_va=img.b32(OP_PTTX_VA[SAU]),
-                initial_sp=img.b32(OP_STACK[SAU]), entry=img.b32(OP_ENTRY[SAU]))
+    cc = dict(reloc_va=img.b32(OP_RELOC_VA), kernel_va=img.b32(OP_KERNEL_VA),
+              kernel_low=img.b32(OP_KERNEL_LOW),
+              split_low=img.b32(OP_SPLIT_LOW),
+              os_page_end=img.b32(OP_PAGE_END[SAU]),
+              kernel_va2=img.b32(OP_KERNEL_VA2[SAU]),
+              lo_bytes=img.b32(OP_LO_BYTES[SAU]),
+              mmap_va=img.b32(OP_MMAP_VA[SAU]),
+              initial_sp=img.b32(OP_STACK[SAU]), entry=img.b32(OP_ENTRY[SAU]))
+    # operands a SAU's COLD does not have (the SAU8's: None)
+    if OP_OS_BEGIN is not None:
+        cc['os_begin'] = img.b32(OP_OS_BEGIN)
+    if OP_PTTX_VA[SAU] is not None:
+        cc['pttx_va'] = img.b32(OP_PTTX_VA[SAU])
+    return cc
 
 
 def fixup_table(img, reloc_low, r, exact_end):
@@ -320,22 +414,28 @@ class Loader:
             r.check(not 0x5F3 <= ppn < 0x600, 'file page 0x%X lands in '
                     'sysboot\'s own area (PPN 0x%X)' % (i, ppn))
             self.phys[ppn] = bytearray(img.d[i:i + PAGE].ljust(PAGE, b'\0'))
-        # COLD 0x10154E: DUMP to PPN 0x403
-        self.phys[DUMP_PPN] = bytearray(img.bytes(DUMP_LOW, PAGE))
+        # COLD 0x10154E: DUMP to PPN 0x403 (the SAU8's two pages, COLD
+        # 0x101D5A, to PPN 0x403 and 0x404)
+        for k in range(DUMP_SIZE // PAGE):
+            self.phys[DUMP_PPN + k] = bytearray(
+                img.bytes(DUMP_LOW + k * PAGE, PAGE))
         # COLD 0x101590..0x1015CC: the kernel page count
         kva, lo_bytes = cc['kernel_va2'], cc['lo_bytes']
         nbytes = ((cc['os_page_end'] + 0x3FF) & ~0x3FF) - kva
         self.kernel_pages = nbytes >> 10
-        cold = self.phys[0x406]          # 0x101800..0x101C00
+        # the page of COLD that holds the two cells (0x101800..0x101C00;
+        # the SAU8's 0x102000..0x102400)
+        cpage = MAP_LO_COUNT[SAU] & ~0x3FF
+        cold = self.phys[cpage >> 10]
         if nbytes <= lo_bytes:
-            struct.pack_into('>H', cold, MAP_LO_COUNT[SAU] - 0x101800,
+            struct.pack_into('>H', cold, MAP_LO_COUNT[SAU] - cpage,
                              nbytes >> 10)
             self.lo_pages, self.hi_pages = nbytes >> 10, 0
         else:
-            struct.pack_into('>I', cold, MAP_HI_COUNT_PPN[SAU] - 0x101800,
+            struct.pack_into('>I', cold, MAP_HI_COUNT_PPN[SAU] - cpage,
                              ((nbytes - lo_bytes) >> 10) << 16 | move)
             self.lo_pages = struct.unpack_from(
-                '>H', cold, MAP_LO_COUNT[SAU] - 0x101800)[0]
+                '>H', cold, MAP_LO_COUNT[SAU] - cpage)[0]
             self.hi_pages = (nbytes - lo_bytes) >> 10
         # cold_map_pages: the table, page by page
         self.entries = []
@@ -354,12 +454,14 @@ class Loader:
             for k in range(cnt):
                 v = (va >> 10) + k
                 if v in self.vmap and (v << 10) in DOUBLE_MAPPED[SAU]:
-                    continue
-                r.check(v not in self.vmap, 'VA 0x%X mapped twice'
-                        % (v << 10))
+                    if SAU not in DOUBLE_MAPPED_LAST:
+                        continue
+                else:
+                    r.check(v not in self.vmap, 'VA 0x%X mapped twice'
+                            % (v << 10))
                 self.vmap[v] = ppn + k
             at += 10
-            if at >= 0x101BFC:
+            if at >= LOAD + COLD_SIZE - 4:
                 r.check(False, 'map table not terminated')
                 break
 
@@ -390,7 +492,8 @@ class Loader:
         return a0, a0 - cc['split_low'] + (info['move_to_ppn'] << 10)
 
 
-def check_vm_windows(r, ld, wins, os_page_end, iodefs, sections=()):
+def check_vm_windows(r, ld, wins, os_page_end, iodefs, sections=(),
+                     cold_mapped=()):
     """Item 8: the run-time windows `wins' [(name, va)] (the last is
     VM_TABLES_END) against COLD's map `ld' and the allocated `sections'
     [(name, lo, hi)] that must not overlap them."""
@@ -407,7 +510,8 @@ def check_vm_windows(r, ld, wins, os_page_end, iodefs, sections=()):
             'a VM-table window does not start a page')
     r.check(lo >= os_page_end, 'the VM-table windows start at 0x%X, below '
             'OS_PAGE_END 0x%X' % (lo, os_page_end))
-    mapped = [p << 10 for p in range(lo >> 10, hi >> 10) if p in ld.vmap]
+    mapped = [p << 10 for p in range(lo >> 10, hi >> 10) if p in ld.vmap
+              and (p << 10) not in cold_mapped]
     r.check(not mapped, '%d page(s) of the VM-table windows 0x%X..0x%X are '
             'mapped by COLD (first 0x%X): the kernel installs fresh pages '
             'there' % (len(mapped), lo, hi, mapped[0] if mapped else 0))
@@ -445,17 +549,17 @@ def check_ours(a, orig_cells_low):
             'start is not cold_start_entry')
     r.check(info['data_va'] == sym('OS_DATA'),
             'info +4 0x%X is not OS_DATA' % info['data_va'])
-    r.check(info['kernel_va'] == sym('OS_PROC') == 0xE00800,
+    r.check(info['kernel_va'] == sym('OS_PROC') == KERNEL_VA,
             'info +8 0x%X / OS_PROC' % info['kernel_va'])
 
     # 4. sections, LMAs, bytes
     loaded = sorted((s for s in elf.sections if s.loaded),
                     key=lambda s: s.lma)
-    delta = 0xE00800 - (LOAD + KERNEL_FILE)
+    delta = KERNEL_VA - (LOAD + KERNEL_FILE)
     pos = LOAD
     for s in loaded:
         if s.name == '.cold':
-            r.check(s.addr == s.lma == LOAD and s.size == 0x800,
+            r.check(s.addr == s.lma == LOAD and s.size == COLD_SIZE,
                     '.cold at VMA 0x%X LMA 0x%X size 0x%X'
                     % (s.addr, s.lma, s.size))
         else:
@@ -472,12 +576,14 @@ def check_ours(a, orig_cells_low):
                 'non-zero hole before %s' % s.name)
         pos = s.lma + s.size
     dump, text = elf.section('.dump'), elf.section('.text')
-    r.check(dump is not None and dump.lma == LOAD + 0x800 and
-            dump.addr == 0xE00400 and dump.size == 0x400,
-            '.dump is not 0x400 bytes at file 0x800 / VMA 0xE00400')
+    r.check(dump is not None and dump.lma == DUMP_LOW and
+            dump.addr == DUMP_VA and dump.size == DUMP_SIZE,
+            '.dump is not 0x%X bytes at file 0x%X / VMA 0x%X'
+            % (DUMP_SIZE, COLD_SIZE, DUMP_VA))
     r.check(text is not None and text.lma == LOAD + KERNEL_FILE and
             text.addr == sym('OS_PROC') and not text.addr & 0x3FF,
-            '.text does not start the kernel at file 0xC00 on a page')
+            '.text does not start the kernel at file 0x%X on a page'
+            % KERNEL_FILE)
     reloc = sym('RELOC')
     reloc_low = pos
     r.check(reloc - delta == reloc_low, 'RELOC 0x%X is not the end of the '
@@ -533,12 +639,14 @@ def check_ours(a, orig_cells_low):
                   mmap_va=sym('MMAP'), pttx_va=sym('MMU_$PTTX'),
                   initial_sp=sym('P1_STACK_BASE'),
                   entry=sym('OS_$INIT'), kernel_low=LOAD + KERNEL_FILE,
-                  split_low=0x157C00, lo_bytes=0x55C00)
+                  split_low=0x157C00, lo_bytes=KERNEL_LO_BYTES)
     for k, v in expect.items():
+        if k not in cc:
+            continue     # an operand this SAU's COLD does not have
         r.check(cc[k] == v, 'COLD operand %s = 0x%X, expected 0x%X'
                 % (k, cc[k], v))
     hi = cc['kernel_va'] + cc['lo_bytes']
-    for k in ('mmap_va', 'pttx_va', 'initial_sp'):
+    for k in [k for k in ('mmap_va', 'pttx_va', 'initial_sp') if k in cc]:
         r.check(hi <= cc[k] < cc['os_page_end'], '%s 0x%X not in the high '
                 'piece 0x%X..0x%X' % (k, cc[k], hi, cc['os_page_end']))
     bss = elf.section('.bss')
@@ -565,7 +673,7 @@ def check_ours(a, orig_cells_low):
             ld.vmap.get(sym('LOG_$LAST_ENTRY') >> 10) == 0x400,
             'CRASH_$RECORD / LOG_$LAST_ENTRY not in the page COLD maps to '
             'PPN 0x400')
-    ppns = [p for e in ld.entries if e['va'] >= 0xE00000 or
+    ppns = [p for e in ld.entries if e['va'] >= OS_BEGIN or
             e['va'] == LOAD for p in range(e['ppn'], e['ppn'] + e['count'])]
     r.check(len(ppns) == len(set(ppns)), 'a physical page is mapped twice')
     a0, tphys = ld.table_phys(cc, info)
@@ -578,32 +686,36 @@ def check_ours(a, orig_cells_low):
     r.check(sym('IODEFS_GUARD') == sym('VM_TABLES_END'),
             'IODEFS_GUARD is not VM_TABLES_END')
     vmt = elf.section('.vm_tables')
-    r.check(vmt is not None and vmt.addr == sym('AREA_$RPMAP_CACHE') and
+    r.check(vmt is not None and vmt.addr == sym(VM_WINDOWS[SAU][0][0]) and
             vmt.addr + vmt.size == sym('VM_TABLES_END') and not vmt.loaded,
-            '.vm_tables is not the NOBITS AREA_$RPMAP_CACHE..VM_TABLES_END')
+            '.vm_tables is not the NOBITS %s..VM_TABLES_END'
+            % VM_WINDOWS[SAU][0][0])
     others = [(x.name, x.addr, x.addr + x.size) for x in elf.sections
               if x.alloc and x.size and x.name != '.vm_tables']
     check_vm_windows(r, ld, wins, cc['os_page_end'], sym('IODEFS'),
-                     others)
+                     others, [sym(n) for n in
+                              COLD_MAPPED_IN_WINDOWS.get(SAU, [])])
     top = 0
     for e in ld.entries:
-        if e['va'] >= 0xE00000:
+        if e['va'] >= OS_BEGIN:
             top = max(top, (e['ppn'] + e['count']) << 10)
-    r.note('file %d bytes (0x%X): header+COLD 0x800, DUMP 0x400, kernel '
+    r.note('file %d bytes (0x%X): header+COLD 0x%X, DUMP 0x%X, kernel '
            '0x%X (VA 0x%X..0x%X, low 0x%X..0x%X), fixup table %d entries'
-           % (len(img.d), len(img.d), reloc_low - (LOAD + KERNEL_FILE),
+           % (len(img.d), len(img.d), COLD_SIZE, DUMP_SIZE,
+              reloc_low - (LOAD + KERNEL_FILE),
               cc['kernel_va'], reloc, LOAD + KERNEL_FILE, reloc_low,
               len(cells)))
     r.note('info: 0x%X, OS_DATA 0x%X, OS_PROC 0x%X, 0x%08X, 0x%X, 0x%X'
            % (info['kernel_offset'], info['data_va'], info['kernel_va'],
               info['magic'], info['split_ppn'], info['move_to_ppn']))
     r.note('COLD: RELOC 0x%X (low 0x%X, phys 0x%X), OS_PAGE_END 0x%X: %d '
-           'kernel pages = 0x%X low at PPN 0x408 + 0x%X high at PPN 0x%X; '
+           'kernel pages = 0x%X low at PPN 0x%X + 0x%X high at PPN 0x%X; '
            'MMAP 0x%X, MMU_$PTTX 0x%X, P1_STACK_BASE 0x%X, OS_$INIT 0x%X; '
            'RAM needed through phys 0x%X'
            % (reloc, a0, tphys or 0, cc['os_page_end'], ld.kernel_pages,
-              ld.lo_pages, ld.hi_pages, info['move_to_ppn'], cc['mmap_va'],
-              cc['pttx_va'], cc['initial_sp'], cc['entry'], top))
+              ld.lo_pages, (LOAD + KERNEL_FILE) >> 10, ld.hi_pages,
+              info['move_to_ppn'], cc['mmap_va'], cc.get('pttx_va', 0),
+              cc['initial_sp'], cc['entry'], top))
     wc = window_counts(img, cells)
     r.note('fixup windows: %s' % ', '.join('%s %d' % kv for kv in
                                             sorted(wc.items())))
@@ -652,14 +764,17 @@ def check_orig(a):
                                  cc['os_page_end'] >> 10)
                 if p not in ld.vmap]
     r.check(not unmapped, '%d kernel pages not mapped' % len(unmapped))
-    check_vm_windows(r, ld, VM_WINDOWS[SAU], cc['os_page_end'], IODEFS[SAU])
+    check_vm_windows(r, ld, VM_WINDOWS[SAU], cc['os_page_end'], IODEFS[SAU],
+                     cold_mapped=[map_symbol(a.map, n) for n in
+                                  COLD_MAPPED_IN_WINDOWS.get(SAU, [])]
+                     if a.map else ())
     nruns = nok = 0
     for line in (open(a.ref) if a.ref else []):
         if line.startswith('#') or not line.strip():
             continue
         va_s, _, hx = line.split()
         va = int(va_s, 16)
-        if va < 0xE00000:
+        if va < OS_BEGIN:
             continue     # COLD's own runs: file bytes, checked by item 3
         nruns += 1
         b = bytes.fromhex(hx)
@@ -688,7 +803,7 @@ def check_orig(a):
         # is its low address) read through COLD's map is the file's bytes
         nseg = nbytes = 0
         for kind, va, size, low in map_file_segments(a.map):
-            if not 0xE00000 <= va < cc['reloc_va'] or not size or \
+            if not OS_BEGIN <= va < cc['reloc_va'] or not size or \
                     not LOAD <= low <= img.end - size:
                 continue    # not in the file (CRASH_RECORD, the bss)
             nseg += 1
@@ -979,7 +1094,7 @@ def main():
                     help='--sau 9: write the oracle json (the header and '
                     'the boot map) from --orig and --map, and stop')
     a = ap.parse_args()
-    SAU = a.sau
+    select_sau(a.sau)
     if SAU == 9 and a.write_segments:
         img = Image9(a.orig)
         hdr = header9(img)

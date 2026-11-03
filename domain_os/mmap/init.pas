@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E3193E  MMAP_$INIT
+    sau8  0x03C34CE6  MMAP_$INIT
     sau9  0x3C437A2A  MMAP_$INIT
 
   - Every working set list is reset (maximum mmap_$boot_ws_max);

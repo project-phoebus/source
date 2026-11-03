@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E24304  MST_WIRED data (WIRED_DATA, 0x164 bytes)
+    sau8  0x03C25EB0  MST_WIRED data (WIRED_DATA, 0x6E8 bytes)
     sau9  0x3C427298  MST_WIRED data (WIRED_DATA, 0xA58 bytes)
 
   One compilation unit: the map's MST_WIRED code segment in WIRED_PROC
@@ -57,7 +58,36 @@ module mst_wired, wired_proc, wired_data;
   variable goes among the module's own: see the TODO(pascal) in
   log/log.pas. }
 
-%if large_vm %then
+%if run_time_layout %then
+{ With the layout chosen at boot, 0x6E8 bytes, zero but for the layout's
+  words from +0x6B4 (the default layout's, in the define list below):
+
+    +0x000  mst_$diskless_msg       0x80
+    +0x080  mst_$asid_list          8
+    +0x088  mst_$regions_active     0x3A0  16 bytes per ASID
+    +0x428  bst_asid_base           0xE8   58 longwords
+    +0x510  smap_asid_base          0xE8   58 longwords
+    +0x5F8  mst_$map_alter_lock     0x12  (6 open bytes after it)
+    +0x610  mst_$asid_allocate_lock 0x12  (6 open bytes after it)
+    +0x628  mst_$asid_lock          0x12  (6 open bytes after it)
+    +0x640  mst_asid_base           0x74   58 words
+    +0x6B4  special_$seg            4
+    +0x6B8  mst_$touch_count        2
+    +0x6BA  region_$private_tn ..   2      8 region words
+            region_$tn
+    +0x6CA  mst_$global_b_size ..   2      14 segment words
+            mst_$seg_tn
+    +0x6E6  mst_$got_color          1
+    +0x6E7  (1 byte: the block's rounding) }
+
+define
+  mst_$diskless_msg;                      { +0x000, zero }
+  mst_$asid_list;                         { +0x080, zero }
+  mst_$regions_active;                    { +0x088, zero }
+  bst_asid_base;                          { +0x428, zero }
+  smap_asid_base;                         { +0x510, zero }
+  mst_$map_alter_lock;                    { +0x5F8, zero }
+%elseif large_vm %then
 { The large VM layout's block, 0xA58 bytes, zero (the SAU9 map's
   MST_WIRED data segment):
 
@@ -105,8 +135,34 @@ var
 
 define
   mst_asid_base;                          { +0x0D0, zero }
+%if run_time_layout %then
+  special_$seg := 16#03980000;            { +0x6B4 }
+%endif
   mst_$touch_count;                       { +0x144 }
-%if not large_address_space %then
+%if run_time_layout %then
+  region_$private_tn := 26;               { +0x6BA }
+  region_$private_a_size := 25;           { +0x6BC }
+  region_$global_a := 16#19;              { +0x6BE }
+  region_$global_a_size := 3;             { +0x6C0 }
+  region_$global_b := 16#1D;              { +0x6C2 }
+  region_$global_b_size := 3;             { +0x6C4 }
+  region_$private_b := 16#1C;             { +0x6C6 }
+  region_$tn := 32;                       { +0x6C8 }
+  mst_$global_b_size := 192;              { +0x6CA }
+  mst_$seg_mem_top := 16#800;             { +0x6CC }
+  mst_$seg_high := 16#7F0;                { +0x6CE }
+  mst_$seg_global_b_offset := 16#680;     { +0x6D0 }
+  mst_$seg_global_b := 16#740;            { +0x6D2 }
+  mst_$seg_private_b_offset := 16#C0;     { +0x6D4 }
+  mst_$seg_private_b_end := 16#73F;       { +0x6D6 }
+  mst_$seg_private_b := 16#700;           { +0x6D8 }
+  mst_$seg_private_a_end := 16#63F;       { +0x6DA }
+  mst_$private_a_size := 1600;            { +0x6DC }
+  mst_$seg_global_a_end := 16#6FF;        { +0x6DE }
+  mst_$seg_global_a := 16#640;            { +0x6E0 }
+  mst_$global_a_size := 192;              { +0x6E2 }
+  mst_$seg_tn := 1664;                    { +0x6E4 }
+%elseif not large_address_space %then
   mst_$global_b_size := 96;               { +0x146 }
   mst_$seg_mem_top := 16#200;             { +0x148 }
   mst_$seg_high := 16#1F8;                { +0x14A }

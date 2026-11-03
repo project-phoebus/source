@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0EEB4  NETBUF_$RTN_HDR
+    sau8  0x03C10202  NETBUF_$RTN_HDR
 
   - An address outside the window's 192 pages crashes the system;
     otherwise its page (the low ten bits cleared) is pushed on the

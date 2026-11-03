@@ -321,6 +321,9 @@ const
 %if vm_5760_astes %then
   ast_$max_astes = 5760;
   ast_$max_aotes = 1280;
+%elseif vm_1536_astes %then
+  ast_$max_astes = 1536;
+  ast_$max_aotes = 640;
 %else
   ast_$max_astes = 504;
   ast_$max_aotes = 280;

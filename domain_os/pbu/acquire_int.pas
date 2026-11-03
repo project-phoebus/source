@@ -3,11 +3,12 @@
   Image addresses:
     sau3  0x00E588B2  PBU_$ACQUIRE_INT
     sau5  0x00E588B2  PBU_$ACQUIRE_INT
+    sau8  0x03C613D6  PBU_$ACQUIRE_INT
 
   - The kernel drivers' PBU_$SETUP: a DDF for the one unit (the wide I/O
-    map, a kernel handler, any address, not global) with the CSR pages
-    and the handler as given; on success sharing goes into the unit's
-    DCTE.
+    map but on the AT bus, a kernel handler, any address, not global)
+    with the CSR pages and the handler as given; on success sharing goes
+    into the unit's DCTE.
 
   Status stored:
     pbu_$setup's status: the unit was set up, or not
@@ -28,7 +29,11 @@ begin
     ddf.handlers[i] := univ_ptr(pbu_no_handler);
   ddf.flags.version := pbu_ddf_version;
   ddf.unit := unit;
+%if pbu_atbus_units %then
+  ddf.flags.wide_iomap := false;
+%else
   ddf.flags.wide_iomap := true;
+%endif
   ddf.flags.kernel_driver := true;
   ddf.flags.any_address := true;
   ddf.flags.global := false;

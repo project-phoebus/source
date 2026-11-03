@@ -3,6 +3,7 @@
   Image addresses:
     sau3  0x00E89CA4  PBU2_$MAP
     sau5  0x00E92068  PBU2_$MAP
+    sau8  0x03CA5B46  PBU2_$MAP
 
   - At interrupt level, from a user handler (PBU_$TRAP6); no lock.
   - Each page's I/O map entry is the page number plus the unit's
@@ -12,6 +13,8 @@
   - The fit test compares an offset with the space's end address; the
     page found not wired keeps its entry (page 0 with the control's
     bits).
+  - Without the I/O map space (`io_regions') nothing is mapped: the
+    result is 0.
 
   Status stored:
     status_$ok: the buffer was mapped
@@ -23,8 +26,10 @@
       offset in its page
     status_$pbu_buffer_page_not_wired: a page is not wired for the unit
       (the entries before it invalidated)
+    status_$ok: always, without `io_regions'
 }
 
+%if io_regions %then
 function pbu2_$map(in unit: integer; in buffer: univ pbu_$buffer_t;
                    in length: linteger; in iova: linteger;
                    out status: status_$t): integer32;
@@ -83,3 +88,12 @@ begin
   end;
   pbu2_$map := page_offset + iova;
 end;
+%else
+function pbu2_$map(in unit: integer; in buffer: univ pbu_$buffer_t;
+                   in length: linteger; in iova: linteger;
+                   out status: status_$t): integer32;
+begin
+  status.all := status_$ok;
+  pbu2_$map := 0;
+end;
+%endif

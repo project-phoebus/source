@@ -77,6 +77,37 @@ const
     answered "tape at load point"), erase (22), retension (23) and the
     block spacing pair (27, 28) are guesses from the sequence and from
     the direction each sets. }
+%if ct_atbus_qic02 %then
+  { With the AT bus adapter (`ct_atbus_qic02') the commands are the
+    QIC-02 interface's command bytes, which the driver writes to the
+    data port: rewind, erase, retension, write, write filemark, read,
+    the read status command, and the block and file spacing pairs
+    (CT_$CONTROL's operations 1..4). }
+  ct_cmd_rewind = 16#21;
+  ct_cmd_erase = 16#22;
+  ct_cmd_retension = 16#24;
+  ct_cmd_write = 16#40;
+  ct_cmd_write_filemark = 16#60;
+  ct_cmd_read = 16#80;
+  ct_cmd_space_fwd = 16#81;
+  ct_cmd_space_rev = 16#89;
+  ct_cmd_file_fwd = 16#A0;
+  ct_cmd_file_rev = 16#A8;
+  ct_cmd_read_status = 16#C0;
+
+  { The adapter's control port values: the reset, the request (the
+    command or the status byte's handshake), the interrupt enable, the
+    interrupt and DMA enable. }
+  ct_ctl_reset = 16#80;
+  ct_ctl_request = 16#40;
+  ct_ctl_int_enable = 16#20;
+  ct_ctl_dma_enable = 16#30;
+
+  { CT_$CINIT's probe: the status the adapter shows after its reset,
+    then the one it settles to. }
+  ct_probe_reset = 16#F7;
+  ct_probe_ready = 16#57;
+%else
   ct_cmd_load = 20;
   ct_cmd_rewind = 21;
   ct_cmd_erase = 22;
@@ -89,6 +120,7 @@ const
   ct_cmd_file_fwd = 29;
   ct_cmd_file_rev = 30;
   ct_cmd_reset = 31;
+%endif
 
   { The transfer state (ct_state): none, a read
     under way, a write under way.  CT_$ACQUIRE's and CT_$CONTROL's case
@@ -172,6 +204,43 @@ type
           words_end: integer);            { 0x200 }
   end;
   ct_$regs_ptr_t = ^ct_$regs_t;
+
+%if ct_atbus_qic02 %then
+  { The AT bus adapter's status, the word at its first port read whole:
+    bits 7..0 are the status port's (the second byte). }
+  ct_$atbus_stat_t = packed record
+    data: 0..255;                         { bits 15..8: the data port }
+    unused_7: boolean;                    { bit 7 }
+    not_ready: boolean;                   { bit 6 }
+    no_exception: boolean;                { bit 5 }
+    dma_done: boolean;                    { bit 4 }
+    unused_3_0: 0..15;                    { bits 3..0 }
+  end;
+
+  { The AT bus adapter's ports (the DCTE's request's CSR page): the data
+    port (the command byte written, a status byte read), the control
+    port (read: the status), the DMA go and DMA reset ports. }
+  ct_$atbus_regs_t = [device] record
+    case integer of
+      1: (data: [byte] 0..255;            { 0x00 }
+          ctl: [byte] 0..255;             { 0x01 }
+          dma_go: [byte] 0..255;          { 0x02 }
+          dma_reset: [byte] 0..255);      { 0x03 }
+      2: (stat: ct_$atbus_stat_t;         { 0x00 }
+          unused_02: integer);            { 0x02 }
+      3: (words: array[1..2] of integer); { 0x00 }
+  end;
+  ct_$atbus_regs_ptr_t = ^ct_$atbus_regs_t;
+
+  { A word of the drive's status bytes, as the driver stores them one by
+    one. }
+  ct_$status_bytes_t = record
+    case integer of
+      1: (all: integer);
+      2: (hi: [byte] 0..255;              { 0x00 }
+          lo: [byte] 0..255);             { 0x01 }
+  end;
+%endif
 
   { A status word of the controller or the drive, as the driver keeps
     it: tested by bits and as a whole. }

@@ -2,7 +2,10 @@
  * sio2681/m68k/int_rte.s - SIO2681_$INT1_RTE / SIO2681_$INT2_RTE
  *
  * The SAU2, SAU3 and SAU5 images have the same code here; the address and
- * byte columns below are the SAU2 image's.
+ * byte columns below are the SAU2 image's.  The SAU8's (`D 3C30200
+ * SIO_INT size = 68', `atbus_pics') ends the interrupt at the AT bus's
+ * interrupt controllers (PIC2 for chip 2, then PIC1) before the common
+ * tail; those lines carry the SAU8 image's addresses.
  *
  * Byte gate (tools/asm_compare.py, `make check'): encodings
  * identical to the image (modulo the documented widenings); address
@@ -87,7 +90,16 @@ SIO2681_$INT2_RTE:
         lea     (SIO2681_$PTRS+0x10:w,%pc),%a0 /* 00e2dfb8: chip 2's entry */
         /* falls through */
 
+        .if     atbus_pics
+        /* sau8: the 2681's interrupt comes through the cascaded interrupt
+           controllers: a non-specific end of interrupt (0x20) to PIC2 for
+           chip 2, then to PIC1, where chip 1's entry joins */
+        move.b  #0x20,(PIC2).l          /* sau8 3c3023c  13fc 0020 03ff 9100 */
 Lsio2681_int_common:
+        move.b  #0x20,(PIC1).l          /* sau8 3c30244  13fc 0020 03ff 9000 */
+        .else
+Lsio2681_int_common:
+        .endif
         move.l  0x12(%sp),0xc(%a0)      /* 00e2dfbc: entry->saved_pc    */
         jsr     IO_$USE_INT_STACK       /* 00e2dfc2                     */
         move.l  %a0,-(%sp)              /* 00e2dfc8: the entry address  */

@@ -2,6 +2,7 @@
   interrupt.
 
   Image addresses:
+    sau8  0x03C8890C  ETHERNET_$INT_DEFERRED
     sau9  0x3C48450C  ETHERNET_$INT_DEFERRED
 
   - The routine ETHERNET_$INTERRUPT queues (DI_$ENQ) with the unit.  A

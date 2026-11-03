@@ -249,6 +249,15 @@ type
   ring_$nodeid_prom_t = [device] array[0..31] of ring_$byte_t;
 %endif
 
+%if nodeid_prom_probe %then
+  { The node id as the node id PROM and the first unit's controller
+    registers hold it: four words, each with one of the id's bytes in
+    its high half, most significant first.  `[device]': each word is
+    read whole. }
+  ring_$id_words_t = [device] array[0..3] of pinteger;
+  ring_$id_words_ptr_t = ^ring_$id_words_t;
+%endif
+
   { A node id read as a longword or as its two words: a variant record
     (ref 3.10.3). }
   ring_$node_t = record
@@ -528,16 +537,25 @@ var
 
 %endif
 
-  { RING_PROC_START, RING_PROC_END, RING_DATA_START and RING_DATA_END
-    (map markers of size 0): the bounds ring_$wire_driver wires.  Labels
-    the build places, of which only the address is used (io/io.ins.pas
-    dcte_start's form). }
 %if nodeid_prom %then
   { NODE_ID (map symbol of the I/O definitions, without `$'): the node
     id PROM. }
   node_id: extern ring_$nodeid_prom_t;
 %endif
+%if nodeid_prom_probe %then
+  { The node id PROM, in the I/O definitions' page of PIC1 at +0x200; no
+    map symbol names it, and RING_$GET_ID alone reads it. }
+  node_id_prom: extern ring_$id_words_t;
+  { RING2 (map symbol of the I/O definitions, without `$'): the first
+    unit's controller registers, whose first four words hold the node
+    id. }
+  ring2: extern ring_$id_words_t;
+%endif
 
+  { RING_PROC_START, RING_PROC_END, RING_DATA_START and RING_DATA_END
+    (map markers of size 0): the bounds ring_$wire_driver wires.  Labels
+    the build places, of which only the address is used (io/io.ins.pas
+    dcte_start's form). }
   ring_proc_start: extern char;
   ring_proc_end: extern char;
   ring_data_start: extern char;

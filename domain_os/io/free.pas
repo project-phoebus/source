@@ -3,6 +3,7 @@
   Image addresses:
     sau3  0x00E19DA6  IO_$FREE
     sau5  0x00E1B05E  IO_$FREE
+    sau8  0x03C1BEFC  IO_$FREE
 
   - The range of the bus's map starting at iova is freed
     (io_$free_region, which crashes the system for a start it does not

@@ -25,6 +25,12 @@ ASFLAGS := -mcpu=68020 -m68881
 ifeq ($(TARGET_SAU),sau9)
 ASFLAGS := -m68030 -m68881
 endif
+# The SAU8 (DN3000) is an MC68020 with an MC68851 PMMU: its hand assembly
+# has the 68851's instructions (pmove to and from CRP and PSR, ptestr,
+# ploadw, pflusha).
+ifeq ($(TARGET_SAU),sau8)
+ASFLAGS := -m68020 -m68851 -m68881
+endif
 PAS_ASFLAGS := -m68010
 NM := m68k-elf-nm
 LD := m68k-elf-ld
@@ -173,9 +179,9 @@ $(PAS_BUILD_DIR)/%.s: %.pas $(PAS_SRCS_ALL) $(DPC) Makefile
 # for reaching definitions (ref 6.4.24, p. 6-28, -opt 2; dpc
 # --substitute-constants).  Not the default: the SAU2's images keep such
 # stores and reloads in general, so it is given per SAU, per module, where
-# the image shows it (the SAU3's PBU_$SETUP and PBU_$SETDOWN).
+# the image shows it (the SAU3's and SAU8's PBU_$SETUP and PBU_$SETDOWN).
 SUBST_CONST_MODULES :=
-ifeq ($(TARGET_SAU),sau3)
+ifneq ($(filter sau3 sau8,$(TARGET_SAU)),)
 SUBST_CONST_MODULES := pbu/pbu
 endif
 $(patsubst %,$(PAS_BUILD_DIR)/%.s,$(SUBST_CONST_MODULES)): DPC_FLAGS += --substitute-constants
@@ -187,13 +193,16 @@ $(PAS_BUILD_DIR)/%.o: $(PAS_BUILD_DIR)/%.s
 pascal: $(PAS_OBJS)
 
 # Compile every module file, keep going, and list the ones dpc refuses with
-# their first error and error count (build/sau2/pascal/report.txt).
+# their first error and error count (build/sau2/pascal/report.txt).  The
+# .s files are the build's own, so a module gets its flags here too
+# (SUBST_CONST_MODULES).
 pascal-report:
 	@mkdir -p $(PAS_BUILD_DIR)
 	@ok=0; bad=0; : > $(PAS_BUILD_DIR)/report.txt; \
 	for m in $(PAS_MODULES); do \
 	  s=$(PAS_BUILD_DIR)/$${m%.pas}.s; mkdir -p $$(dirname $$s); \
-	  if $(DPC) $(DPC_FLAGS) -o $$s $$m > $$s.log 2>&1; then ok=$$((ok+1)); \
+	  f=; case " $(SUBST_CONST_MODULES) " in *" $${m%.pas} "*) f=--substitute-constants;; esac; \
+	  if $(DPC) $(DPC_FLAGS) $$f -o $$s $$m > $$s.log 2>&1; then ok=$$((ok+1)); \
 	  else bad=$$((bad+1)); rm -f $$s; \
 	    printf '%s: %s error(s); first: %s\n' $$m "$$(grep -c 'error:' $$s.log)" \
 	      "$$(grep -m1 'error:' $$s.log)" >> $(PAS_BUILD_DIR)/report.txt; fi; \

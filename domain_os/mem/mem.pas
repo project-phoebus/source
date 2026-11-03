@@ -2,17 +2,20 @@
 
   Image addresses:
     sau2  0x00E22930  MEM_ data (WIRED_DATA, 0x5C bytes)
+    sau8  0x03C24288  MEM_ data (WIRED_DATA, 0x5C bytes)
     sau9  0x3C4256C0  MEM_ data (WIRED_DATA, 0x5C bytes)
 
   One compilation unit, one code segment and one data segment: the map's
   MEM_ code segment in WIRED_PROC (0xB8 bytes, MEM_$PARITY_LOG; the
-  SAU9's 0x104 bytes, MEM_$INIT and MEM_$PARITY_LOG) and its
+  SAU9's 0x104 bytes and the SAU8's 0x250, MEM_$INIT and
+  MEM_$PARITY_LOG) and its
   MEM_ data segment in WIRED_DATA (0x5C bytes, MEM_$SIZE and
   MEM_$MEM_REC).  (The MEM_LITES code and data segments are another
   module, not this one.)
 
   The data, 0x5C bytes, zero but for MEM_$MEM_REC's first two words,
-  both 2 (the SAU9's first word 16#2B); PARITY's block follows:
+  both 2 (the SAU9's first word 16#2B; the SAU8's second 0); PARITY's
+  block follows:
 
     +0x00  MEM_$SIZE     4     the SAU9's MEM_$INIT reads it
     +0x04  MEM_$MEM_REC  0x56  MEM_$PARITY_LOG's; ASKNODE_$INTERNET_INFO
@@ -34,6 +37,23 @@ module mem_, wired_proc, wired_data;
 %if mem_ccr_board_size %then
 %include 'mmu/mmu.ins.pas';
 %endif
+%if mem_board_jumpers %then
+%include 'ml/ml.ins.pas';
+%include 'ec/ec.ins.pas';
+%include 'time/time.ins.pas';
+%include 'sio/sio.ins.pas';
+%include 'sio2681/sio2681.ins.pas';
+
+var
+  { SIO (map symbol of the I/O definitions, without `$'): the 2681
+    DUART, whose input port (IPR) holds the memory configuration's
+    bits. }
+  sio: extern sio2681_$regs_t;
+
+const
+  { The input port's bits that give the memory configuration. }
+  mem_config_mask = 16#74;
+%endif
 
 %if mem_ccr_board_size %then
 const
@@ -53,19 +73,21 @@ const
   uninitialized data is zero in the image (LOG_'s and BITPAD's blocks)
   and dpc emits zeros. }
 define
-%if mem_ccr_board_size %then
+%if mem_ccr_board_size or mem_board_jumpers %then
   mem_$init;
 %endif
   mem_$parity_log;
   mem_$size;
 %if mem_ccr_board_size %then
   mem_$mem_rec := [w_00 := 16#2B, n_boards := 2];
+%elseif mem_board_jumpers %then
+  mem_$mem_rec := [w_00 := 2];
 %else
   mem_$mem_rec := [w_00 := 2, n_boards := 2];
 %endif
 
 { ---- WIRED_PROC ---- }
-%if mem_ccr_board_size %then
+%if mem_ccr_board_size or mem_board_jumpers %then
 %include 'mem/init.pas';                    { MEM_$INIT }
 %endif
 %include 'mem/parity_log.pas';              { MEM_$PARITY_LOG }

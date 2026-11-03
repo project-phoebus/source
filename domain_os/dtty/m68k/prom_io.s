@@ -13,7 +13,7 @@
 |
 | Original addresses:
 |   DTTY_$PUTC:        0x00E2E018
-|   RELOAD_FONT:       0x00E2E032 (module-local)
+|   RELOAD_FONT:       0x00E2E032
 |   DTTY_$CLEAR_SCREEN: 0x00E2E048
 
         .include "base/config.inc"
@@ -62,15 +62,17 @@ DTTY_$PUTC:
 | RELOAD_FONT - Reload the PROM's display font
 |
 | Calls the PROM routine at the address stored in low memory location
-| 0x114, then returns 0 in D0.  Module-local (the map's symbol has no `$');
-| it follows DTTY_$PUTC in the map's DTTY_WIRED segment, so it shares
-| PUTC's section.
+| 0x114, then returns 0 in D0.  The map's symbol has no `$', but the
+| SAU8's display drivers (COLOR4_$COPY_FONT_MD_HDM, COLOR5's and MONO's)
+| call it from their own modules, so it is global; it follows DTTY_$PUTC
+| in the map's DTTY_WIRED segment, so it shares PUTC's section.
 |
 | Parameters:
 |   None
 |
 | Original address: 0x00E2E032
 |------------------------------------------------------------------------------
+        .globl  RELOAD_FONT
 RELOAD_FONT:
         movem.l %d2-%d7/%a2-%a4,-(%sp)  | Save registers
         .if trap_page_high

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E448B0  MST_$UNMAP_PRIVI
+    sau8  0x03C4CE48  MST_$UNMAP_PRIVI
     sau9  0x3C44BFC6  MST_$UNMAP_PRIVI
 
   - The range must lie in one address space (below private B unless the
@@ -32,14 +33,14 @@ procedure mst_$unmap_privi(mode: integer; want_uid: uid_$t;
 label
   illegal, not_mapped, next;
 var
-%if not large_address_space %then
+%if not vm_regions %then
   unused_80: array[1..32] of integer32;   { stand-in }
 %endif
   result: status_$t;
   va: linteger;
   end_va: linteger;
   seg: pinteger;
-%if large_address_space %then
+%if vm_regions %then
   region: mst_region_t;
 %endif
   segno: pinteger;
@@ -48,7 +49,7 @@ var
   end_segno: pinteger;
   base: integer;
   is_anon: boolean;
-%if large_address_space %then
+%if vm_regions %then
   group: pinteger;
 %endif
 begin
@@ -56,6 +57,11 @@ begin
 %if large_address_space %then
   if ((mode & mst_unmap_any_seg) = 0) and then
      (rshft(va, 15) >= mst_unmap_privi_first_refused) then
+    goto illegal;
+%elseif run_time_layout %then
+  if ((mode & mst_unmap_any_seg) = 0) and then
+     (rshft(va, 15) >= linteger(mst_$seg_private_b) + mst_b_space_first)
+  then
     goto illegal;
 %else
   if ((mode & mst_unmap_any_seg) = 0) and then
@@ -102,7 +108,7 @@ begin
         flags.aste_idx := 0;
         if (mode & mst_unmap_keep_entry) <> 0 then
           flags.bits := flags.bits + [14]
-%if large_address_space %then
+%if vm_regions %then
         else begin
           uid.high := 0;
           group := seg div mst_region_segs;
@@ -112,10 +118,18 @@ begin
             mst_$segs_mapped[segno][group] - 1;
           if (mst_$segs_mapped[segno][group] = 0) and then
              (segno <> 0) then begin
+%if run_time_layout %then
+            if group >= region_$private_a_size then
+              region := group + (region_$private_b -
+                                 region_$private_a_size)
+            else
+              region := group;
+%else
             if group >= mst_private_a_regions then
               region := group + mst_global_a_regions
             else
               region := group;
+%endif
             mst_$free_region(region, group, segno);
           end;
         end;

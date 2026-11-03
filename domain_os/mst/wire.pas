@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E0E1BC  MST_$WIRE
+    sau8  0x03C0F5A4  MST_$WIRE
     sau9  0x3C410690  MST_$WIRE
 
   - Under the PMAP lock a mapped address has its page wired and its

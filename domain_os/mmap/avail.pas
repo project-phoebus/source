@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0CC64  MMAP_$AVAIL
+    sau8  0x03C0DB84  MMAP_$AVAIL
     sau9  0x3C40EBC0  MMAP_$AVAIL
 
   - A list index above 69 in the page's entry crashes the system ("bad

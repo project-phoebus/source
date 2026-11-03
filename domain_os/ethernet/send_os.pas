@@ -1,6 +1,7 @@
 { ETHERNET_$SEND_OS - send a MAC_OS packet on a system channel.
 
   Image addresses:
+    sau8  0x03C8827A  ETHERNET_$SEND_OS
     sau9  0x3C483E7A  ETHERNET_$SEND_OS
 
   - The driver record's send_os entry.  The Ethernet header goes in the

@@ -7,6 +7,8 @@
     sau3  0x00E86800  RING data (RING_DATA, 0x5D0 bytes)
     sau5  0x00E37828  RING data (OS_INIT_DATA, 4 bytes)
     sau5  0x00E8EC00  RING data (RING_DATA, 0x5D0 bytes)
+    sau8  0x03C39428  RING data (OS_INIT_DATA, 0xB0 bytes)
+    sau8  0x03C9F000  RING data (RING_DATA, 0xAB0 bytes)
     sau9  0x3C43BC28  RING data (OS_INIT_DATA, 0xB0 bytes)
     sau9  0x3C49EC00  RING data (RING_DATA, 0xAB0 bytes)
 
@@ -67,8 +69,10 @@
   OS_INIT_PROC segment is 0x420 bytes and RING_PROC 0x33F0 (RING8_$INT
   in place of RING_$INT, and the module-local routines that drive the
   controller in place of the DMA ones; ring_$set_ccb, which
-  ring_$init_internal calls, has a `forward' heading below).
-  OS_INIT_DATA holds ring_$init_internal's tables (0xB0 bytes), and
+  ring_$init_internal calls, has a `forward' heading below); on the
+  SAU8 they are 0x458 and 0x33FC, its RING_$GET_ID probing the node id
+  PROM (`nodeid_prom_probe') and its ring_$setup_tx giving PARITY_ a
+  transfer's two pages (`parity_dma_page_pairs').  OS_INIT_DATA holds ring_$init_internal's tables (0xB0 bytes), and
   RING_DATA is 0xAB0 bytes:
 
     +0x000  RING_$CCB                 0x10   the units' command blocks

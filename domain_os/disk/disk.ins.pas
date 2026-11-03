@@ -21,6 +21,11 @@ const
     five are subsystem 0x08's. }
   status_$disk_equipment_check = 16#00080005;
   status_$floppy_is_not_2_sided = 16#00080006;
+
+  { 16#00080008, "bad disk format" (stcode.db.10.2): FLP's EXCS, the AT
+    bus WIN_'s win_$check_status and WIN_SCSI_'s sense mapping store
+    it. }
+  status_$bad_disk_format = 16#00080008;
   status_$bus_error_occurred_during_disk_dma_transfer = 16#00080017;
   status_$unknown_status_returned_by_hardware = 16#00080019;
   status_$dma_not_at_end_of_range = 16#0008001D;

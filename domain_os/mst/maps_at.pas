@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E42E54  MST_$MAPS_AT
+    sau8  0x03C4B02A  MST_$MAPS_AT
     sau9  0x3C44A204  MST_$MAPS_AT
 
   - The slots go on to mst_$alloc_segs with the global touch count and

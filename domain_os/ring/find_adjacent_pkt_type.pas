@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E7639E  ring_$find_adjacent_pkt_type (module-local)
+    sau8  0x03C82C82  ring_$find_adjacent_pkt_type (module-local)
 
   - From entry idx on, the first of the channel's entries whose range
     ends just below the given range or starts just above it gives its

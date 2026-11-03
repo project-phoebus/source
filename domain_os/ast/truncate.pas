@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E05C40  AST_$TRUNCATE
+    sau8  0x03C05ECA  AST_$TRUNCATE
     sau9  0x3C406ED6  AST_$TRUNCATE
 
   - Bit 0 of flags deletes (length 0), bit 1 forces.  Inhibited and

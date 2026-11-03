@@ -2,6 +2,7 @@
   control area and route cache, and its record.
 
   Image addresses:
+    sau8  0x03C89080  ring_8025_wire_driver
     sau9  0x3C484C80  ring_8025_wire_driver
 
   - Under the I/O wiring lock.  The first unit to come up wires the

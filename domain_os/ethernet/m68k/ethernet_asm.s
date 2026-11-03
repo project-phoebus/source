@@ -1,11 +1,14 @@
 |
-| ethernet/sau9/ethernet_asm.s - ETHERNET_ASM, ETHERNET_$$PIO_READ and
+| ethernet/m68k/ethernet_asm.s - ETHERNET_ASM, ETHERNET_$$PIO_READ and
 | ETHERNET_$$PIO_WRITE: move a packet's words between memory and the
 | 3C505's data register by program
 |
 | SAU9 map: "I 3C484A88 ETHERNET_ASM size = 80" (ETHER_PROC, after the
 | ETHERNET code segment), ETHERNET_$$PIO_READ at its start and
-| ETHERNET_$$PIO_WRITE at +0x40.
+| ETHERNET_$$PIO_WRITE at +0x40; the SAU8's "I 3C88E60 ETHERNET_ASM size
+| = 80" is the same code but for the poll count (`ethernet_short_polls',
+| base/config.ins.pas: 7500 for 10000).  Only with the driver
+| (`ethernet_driver').
 |
 | Hand-written (an `_ASM' segment, no frame, the arguments read off SP).
 | The ETHERNET routines call them with four arguments by value but the
@@ -17,15 +20,21 @@
 |   (14,SP)  the address of the status
 |
 | For each word the data register's ready bit (HRDY, bit 7 of the
-| status register at 2) is polled 10001 times at most; then the word is
-| moved through the data register at 4.  The result in D0 is true (-1)
-| with the status 0, or false (0) with status_$eth_adapter_hardware_error
-| (16#002F0006) when a word's wait timed out.
+| status register at 2) is polled 10001 times at most (7501 with
+| `ethernet_short_polls'); then the word is moved through the data
+| register at 4.  The result in D0 is true (-1) with the status 0, or
+| false (0) with status_$eth_adapter_hardware_error (16#002F0006) when a
+| word's wait timed out.
 |
-| Byte check: assembled with `m68k-elf-as -m68030' and compared with the
-| image's 0x80 bytes; the build has no SAU9 target yet.  The address and
-| byte columns are the SAU9 image's.
+| Byte check: assembled with `m68k-elf-as -m68030' (SAU9) and
+| `-m68020 -m68881' (SAU8) and compared with each image's 0x80 bytes;
+| the build has no SAU8 target yet.  The address and byte columns are
+| the SAU9 image's; the SAU8's routines are at 0x3C88E60 and 0x3C88EA0,
+| their count words `323c 1d4c'.
 |
+        .include "base/config.inc"
+        .if     ethernet_driver
+
         .section ".text.ETHERNET_ASM.ETHER_PROC","ax",@progbits
         .even
 
@@ -38,7 +47,11 @@ ETHERNET_$$PIO_READ:                    | 0x3C484A88
         move.w  (12,%sp),%d0            | 3c484a90  302f 000c
         asr.w   #1,%d0                  | 3c484a94  e240
         bra.s   3f                      | 3c484a96  6022
+        .if     ethernet_short_polls
+1:      move.w  #7500,%d1               |           323c 1d4c
+        .else
 1:      move.w  #10000,%d1              | 3c484a98  323c 2710
+        .endif
 2:      btst    #7,(2,%a1)              | 3c484a9c  0829 0007 0002
         bne.s   2f                      | 3c484aa2  6612
         dbf     %d1,2b                  | 3c484aa4  51c9 fff6
@@ -59,7 +72,11 @@ ETHERNET_$$PIO_WRITE:                   | 0x3C484AC8
         move.w  (12,%sp),%d0            | 3c484ad0  302f 000c
         asr.w   #1,%d0                  | 3c484ad4  e240
         bra.s   3f                      | 3c484ad6  6022
+        .if     ethernet_short_polls
+1:      move.w  #7500,%d1               |           323c 1d4c
+        .else
 1:      move.w  #10000,%d1              | 3c484ad8  323c 2710
+        .endif
 2:      btst    #7,(2,%a1)              | 3c484adc  0829 0007 0002
         bne.s   2f                      | 3c484ae2  6612
         dbf     %d1,2b                  | 3c484ae4  51c9 fff6
@@ -73,3 +90,5 @@ ETHERNET_$$PIO_WRITE:                   | 0x3C484AC8
         clr.l   (%a0)                   | 3c484b02  4290
         moveq   #-1,%d0                 | 3c484b04  70ff
 4:      rts                             | 3c484b06  4e75
+
+        .endif

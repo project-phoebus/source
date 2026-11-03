@@ -1,6 +1,7 @@
 { ring_$setup_tx - copy a packet into the controller's transmit area.
 
   Image addresses:
+    sau8  0x03C81BDE  ring_$setup_tx (module-local)
     sau9  0x3C47D7DE  ring_$setup_tx (module-local)
 
   Assume we're called with the unit's buffer lock held.
@@ -10,6 +11,9 @@
   - Without data_va each data page is mapped for its copy
     (NETBUF_$GETVA); with it the pages follow data_va in memory.
   - The transmit counters get the header's and the packet's word counts.
+  - With `parity_dma_page_pairs' each transfer's page goes to PARITY_ as
+    one of the channel's two: the header's as the first, a data page as
+    the second.
 
   Returns:
     0: the packet is in the controller
@@ -46,10 +50,18 @@ begin
 
   { the header }
   ppn := rshft(hdr_pa, 10);
+%if parity_dma_page_pairs %then
+  parity_$set_state(1, ppn, 0);
+%else
   parity_$set_state(1, ppn, 1);
+%endif
   ring_$rb_to(hw, ctlr_addr, hdr, hdr_words);
   ctlr_addr := ctlr_addr + hdr_words;
+%if parity_dma_page_pairs %then
+  parity_err := parity_$chk_io(1, ppn, 0) <> 0;
+%else
   parity_err := parity_$chk_io(1) <> 0;
+%endif
   if parity_err then begin
     ring_$setup_tx := status_$network_memory_parity_error_during_transmit;
     return;
@@ -68,7 +80,11 @@ begin
       end;
     end;
     ppn := rshft(data_pages[i], 10);
+%if parity_dma_page_pairs %then
+    parity_$set_state(1, 0, ppn);
+%else
     parity_$set_state(1, ppn, 1);
+%endif
     if left > 512 then
       n := 512
     else
@@ -78,7 +94,11 @@ begin
       discard(netbuf_$rtnva(page_va))
     else
       page_va := page_va + 1024;
+%if parity_dma_page_pairs %then
+    parity_err := parity_$chk_io(1, 0, ppn) <> 0;
+%else
     parity_err := parity_$chk_io(1) <> 0;
+%endif
     if parity_err then begin
       ring_$setup_tx := status_$network_memory_parity_error_during_transmit;
       return;

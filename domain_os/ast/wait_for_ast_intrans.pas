@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E00C54  AST_$WAIT_FOR_AST_INTRANS
+    sau8  0x03C01034  AST_$WAIT_FOR_AST_INTRANS
     sau9  0x3C402034  AST_$WAIT_FOR_AST_INTRANS
 
   Assume we're called with the AST lock held.

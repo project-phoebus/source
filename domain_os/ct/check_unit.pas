@@ -3,6 +3,7 @@
   Image addresses:
     sau5  0x00E76F72  ct_check_unit (module-local)
     sau9  0x3C477C40  ct_check_unit (module-local)
+    sau8  0x03C7A12E  ct_check_unit (module-local)
 
   Returns:
     0: the request may use the unit

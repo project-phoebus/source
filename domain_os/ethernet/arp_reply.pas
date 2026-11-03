@@ -1,6 +1,7 @@
 { ethernet_arp_reply - answer a node's ARP request.
 
   Image addresses:
+    sau8  0x03C85A3E  ethernet_arp_reply
     sau9  0x3C48163E  ethernet_arp_reply
 
   - An ARP reply to the node at hw, with this unit's address and node

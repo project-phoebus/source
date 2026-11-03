@@ -1,6 +1,7 @@
 { ring_8025_transmit - send a frame from a list of pieces.
 
   Image addresses:
+    sau8  0x03C8A00E  ring_8025_transmit
     sau9  0x3C485C12  ring_8025_transmit
 
   - The memory control register's bit 8 is changed first.

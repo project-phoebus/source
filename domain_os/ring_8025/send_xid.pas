@@ -1,6 +1,7 @@
 { ring_8025_send_xid - send an XID frame.
 
   Image addresses:
+    sau8  0x03C8A368  ring_8025_send_xid
     sau9  0x3C485F6C  ring_8025_send_xid
 
   - Builds the frame in a header page: to dest_addr from this node's

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E245A8  NETBUF_ data (WIRED_DATA, 0x338 bytes)
+    sau8  0x03C26650  NETBUF_ data (WIRED_DATA, 0x338 bytes)
     sau9  0x3C427DA8  NETBUF_ data (WIRED_DATA, 0x338 bytes)
 
   One compilation unit: the map's NETBUF_ code segments in WIRED_PROC

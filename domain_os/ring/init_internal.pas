@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E2FA86  ring_$init_internal (module-local)
     sau5  0x00E30FA6  ring_$init_internal (module-local)
+    sau8  0x03C32780  ring_$init_internal (module-local)
     sau9  0x3C435678  ring_$init_internal (module-local)
 
   - The unit takes the DCTE's register block, which TESTPAGE probes.

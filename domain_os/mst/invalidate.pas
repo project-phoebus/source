@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E441CA  MST_$INVALIDATE
+    sau8  0x03C4C648  MST_$INVALIDATE
     sau9  0x3C44B7E4  MST_$INVALIDATE
 
   - Under the ASID lock every segment of the range must map the
@@ -81,6 +82,10 @@ begin
   end;
 %if large_address_space %then
   if lshft(linteger(mst_unmap_privi_first_refused), 15) <= end_va then
+    goto illegal;
+%elseif run_time_layout %then
+  if lshft(linteger(mst_$seg_private_b) + mst_b_space_first, 15) <= end_va
+  then
     goto illegal;
 %else
   if lshft(linteger(mst_$seg_private_b), 15) <= end_va then

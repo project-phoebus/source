@@ -4,10 +4,11 @@
     sau2  0x00E590F8  PBU_$FREE_ASID
     sau3  0x00E5A25C  PBU_$FREE_ASID
     sau5  0x00E5A73E  PBU_$FREE_ASID
+    sau8  0x03C62BBC  PBU_$FREE_ASID
 
   - With the driver (`pbu_driver'), every unit is set down
-    (PBU_$SETDOWN's statuses ignored) but the SM_ controller's unit
-    while its DCTE exists.  Where the PBU support is configured out (the
+    (PBU_$SETDOWN's statuses ignored) but, with the storage module
+    (`smd_disk'), the SM_ controller's unit while its DCTE exists.  Where the PBU support is configured out (the
     SAU2), nothing.  Neither body reads asid.
 
   Status stored: none.
@@ -21,11 +22,13 @@ var
   status: status_$t;
 begin
   for unit := 0 to pbu_$max_unit do begin
+%if smd_disk %then
     if unit = pbu_sm_unit then begin
       discard(io_$get_dcte(io_ctype_smd, 0, status));
       if status.all = status_$ok then
         next;
     end;
+%endif
     setdown_unit := unit;
     pbu_$setdown(setdown_unit, nil, status);
   end;

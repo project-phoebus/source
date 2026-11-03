@@ -15,6 +15,12 @@ also the module file of `sio6509/`'s fragments, included in image order
 | OS_INIT_PROC | SIO_IO, 0x194 bytes | SIO2681_$INIT; SIO6509_$INIT | `[section(os_init_proc, os_init_data)]` |
 | PROCEDURE$ | SIO_IO, 0xE0 bytes | SIO2681_$INQ_LINE; SIO6509_$SET_LINE, _$INQ_LINE | `[section(procedure$, data$)]` |
 
+On the SAU8 (`console_sio2681`, `kbd_tone`) the module has neither
+SIO2681_$TONE nor the 6509's routines and table: WIRED_PROC 0x588 bytes,
+OS_INIT_PROC 0x154, PROCEDURE$ 0xA8 and WIRED_DATA 0xA8; with
+`sio2681_pbu_int` SIO2681_$INIT also acquires the chip's interrupt
+through PBU_$ACQUIRE_INT.  The other routines are the SAU2's code.
+
 Data: the map's SIO_IO data segment in WIRED_DATA (0xC8 bytes) is the
 module's variables, read through A5 by the WIRED_PROC routines
 (`sio2681.pas` lists every object, its value and its readers):

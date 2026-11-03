@@ -3,6 +3,7 @@
 
   Image addresses:
     sau9  0x3C4255C8  ATBUS_ data (WIRED_DATA, 0xF8 bytes)
+    sau8  0x03C241E8  ATBUS_ data (WIRED_DATA, 0xA0 bytes)
 
   One compilation unit, named ATBUS_ like the system bus's
   (sysbus/atbus_.pas), whose segments follow that unit's in the SAU9's
@@ -15,7 +16,11 @@
 
   Present on the SAUs whose map has the ATBUS_$ routines, the part
   atbus_routines (base/config.ins.pas: SAU7..SAU9), empty elsewhere.
-  Only the SAU9's form is written (the TODO(sau) below).
+
+  With `atbus_pics' (the SAU7's and SAU8's form) the module drives the
+  AT bus's two interrupt controllers itself, ATBUS_$INT dispatching
+  their vectors; its block holds only ATBUS_$INTLEV_VEC and
+  ATBUS_$INT_VEC.  The SAU9's form is described here.
 
   On the SAU9 an AT bus interrupt (0..15) reaches the system bus on one
   of its levels 1..3 (vectors 16#A1..16#A3, sysbus/sysbus.ins.pas), the
@@ -51,19 +56,39 @@ module atbus_, wired_proc, wired_data;
 
 %if atbus_routines %then
 
-{ TODO(sau) the SAU7's and SAU8's ATBUS_ module
+%if atbus_pics %then
+{ The controller-pair form (`atbus_pics'; the SAU7's and SAU8's ATBUS_
+  segments: 0x23C bytes in WIRED_PROC, ATBUS_$INT first, 0x84 in
+  OS_INIT_PROC, and a 0xA0-byte data segment of the two map variables
+  alone). }
+define
+  atbus_$int;
+  atbus_$undef_int;
+  atbus_$define_int;
+  atbus_$enable_device;
+  atbus_$disable_device;
+  atbus_$device_interrupting;
+  atbus_$clear_pending;
+  atbus_$xlate_iova;
+  atbus_$init;
+  atbus_$intlev_vec := [0, 1, 3, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+                                          { +0x00 }
+  atbus_$int_vec := [16 of [handler := addr(atbus_$undef_int)]];
+                                          { +0x20 }
 
-  The SAU7's and SAU8's ATBUS_ segments (0x23C bytes in WIRED_PROC,
-  0x84 in OS_INIT_PROC, data 0xA0: ATBUS_$INTLEV_VEC and ATBUS_$INT_VEC
-  only) drive the AT bus's two interrupt controllers themselves: an
-  ATBUS_$INT routine that ATBUS_$INIT traps the vectors 16#A0..16#AF
-  to, ATBUS_$INTLEV_VEC mapping an interrupt to its entry of
-  ATBUS_$INT_VEC, and ATBUS_$DEFINE_INT .. ATBUS_$CLEAR_PENDING of
-  their own.  Only
-  ATBUS_$XLATE_IOVA and ATBUS_$UNDEF_INT are the SAU9's code there.  To
-  be written, with the part that tells the two forms apart, when those
-  SAUs are translated. }
+{ ---- WIRED_PROC ---- }
+%include 'atbus/int.pas';                 { ATBUS_$INT                 }
+%include 'atbus/undef_int.pas';           { ATBUS_$UNDEF_INT           }
+%include 'atbus/define_int.pas';          { ATBUS_$DEFINE_INT          }
+%include 'atbus/enable_device.pas';       { ATBUS_$ENABLE_DEVICE       }
+%include 'atbus/disable_device.pas';      { ATBUS_$DISABLE_DEVICE      }
+%include 'atbus/device_interrupting.pas'; { ATBUS_$DEVICE_INTERRUPTING }
+%include 'atbus/clear_pending.pas';       { ATBUS_$CLEAR_PENDING       }
+%include 'atbus/xlate_iova.pas';          { ATBUS_$XLATE_IOVA          }
 
+{ ---- OS_INIT_PROC ---- }
+%include 'atbus/init.pas';                { ATBUS_$INIT                }
+%else
 var
   atbus_sysbus_ids: array[1..atbus_$n_levels] of io_$int_id_t :=
     [[vector := 16#A1], [vector := 16#A2], [vector := 16#A3]];
@@ -108,4 +133,5 @@ var
 { ---- OS_INIT_PROC ---- }
 %include 'atbus/init.pas';                { ATBUS_$INIT                }
 
+%endif
 %endif

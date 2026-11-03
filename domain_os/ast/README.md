@@ -199,6 +199,26 @@ and 0x370 (OS_INIT_PROC); the data blocks are the SAU2's sizes.
   SAU9 routines is hand assembly; MMU_$PURGE and MMU_$PURGE_TB, which
   they call, are the SAU9's MMU_ASM (`mmu/mmu.ins.pas`, no `.s` yet).
 
+## The SAU8
+
+The SAU8 (DN3000 family) builds the large layout of the SAU9 with
+`large_vm`, `pmap_threads` and `pmmu_page_maps`, but neither
+`pmap_cache_inhibit` nor `vm_5760_astes` nor `mmap_ppns_10000`:
+
+- The tables hold 1536 ASTEs and 640 AOTEs (`vm_1536_astes`); the map's
+  AST (0xA800 bytes, 28 bytes each) and AST_PMAPS (0x30000 bytes, 128
+  each) agree.
+- The pageable pages are 16#400..16#23FF (`mmap_ppns_400`,
+  `mmap/mmap.ins.pas`).
+- The page maps' pages are not cache-inhibited: AST_$ADD_ASTES does not
+  call MMU_$CACHE_INHIBIT_VA, AST_$ASSOC_IOPPN's descriptor has no
+  cache-inhibit bit, and AST_$CACHE_INHIBIT_PPN and
+  AST_$CACHE_ENABLE_PPN are not in the map.
+
+Its AST_ segments are 0x68C4 bytes (WIRED_PROC) and 0x370
+(OS_INIT_PROC), the data blocks the SAU2's sizes.  Every other routine
+is the SAU9's code with these constants; none is hand assembly.
+
 ## Insert files
 
 - `ast.ins.pas`: the common attribute record and its views, the AOTE

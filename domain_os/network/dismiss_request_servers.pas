@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E71E78  NETWORK_$DISMISS_REQUEST_SERVERS
+    sau8  0x03C7C72C  NETWORK_$DISMISS_REQUEST_SERVERS
 
   - The quit eventcount is advanced, and the request servers' done
     eventcount waited for until it reaches the number of servers, or for

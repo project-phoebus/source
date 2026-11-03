@@ -2,6 +2,7 @@
   diagnostics.
 
   Image addresses:
+    sau8  0x03C89498  ring_8025_reset
     sau9  0x3C485098  ring_8025_reset
 
   - Up to three resets, each polled three times a tick apart: the

@@ -184,6 +184,12 @@ const
   mmap_$table_pages = 1024;
   mmap_$boot_ws_max = 65536;
   mmap_$lppn_seed = 16#FFFF;
+%elseif mmap_ppns_400 %then
+  mmap_$first_ppn = 16#400;
+  mmap_$last_ppn = 16#23FF;
+  mmap_$table_pages = 128;
+  mmap_$boot_ws_max = 16384;
+  mmap_$lppn_seed = 16#3FFF;
 %else
   mmap_$first_ppn = 16#200;
   mmap_$last_ppn = 16#FFF;
@@ -205,9 +211,10 @@ var
     reads its fields with the lower bound folded in (-0x2000 + offset
     for 16#200).  The upper bound: on the SAU2 MMU_$PTTX follows 0xE000
     bytes later, 3584 entries, 16#200..16#FFF; on the SAU9 OS_PMAPS
-    follows 0x100000 bytes later, 65536 entries, 16#10000..16#1FFFF.  Not
-    the MMAP_ module's: OS_PMAPS has no code segment, and MMAP_$INIT
-    fills it. }
+    follows 0x100000 bytes later, 65536 entries, 16#10000..16#1FFFF; on
+    the SAU8 OS_PMAPS follows 0x20000 bytes later, 8192 entries,
+    16#400..16#23FF.  Not the MMAP_ module's: OS_PMAPS has no code
+    segment, and MMAP_$INIT fills it. }
   mmap: extern array[mmap_$first_ppn..mmap_$last_ppn] of mmap_$mmape_t;
 
   { The map symbols of the MMAP_ block, defined by mmap/mmap.pas (at

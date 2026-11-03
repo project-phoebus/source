@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E30048  LOG_$INIT
     sau2  0x00E2FF7C  log_$check_op_status (nested)
+    sau8  0x03C32FB8  LOG_$INIT
 
   - `node_data/system_logs/sys_error_log is resolved (created if need
     be), mapped, locked and wired, an empty page given head 0 and tail

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0D8F0  MMAP_$ALLOC_CONTIG
+    sau8  0x03C0E7A2  MMAP_$ALLOC_CONTIG
     sau9  0x3C40F876  MMAP_$ALLOC_CONTIG
 
   Assume we're called with the PMAP lock held.

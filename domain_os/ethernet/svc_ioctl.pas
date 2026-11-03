@@ -1,7 +1,9 @@
 { ETHERNET_$SVC_IOCTL - a user channel's control request.
 
   Image addresses:
+    sau8  0x03C87846  set_station (nested)
     sau9  0x3C483446  set_station (nested)
+    sau8  0x03C878A6  ETHERNET_$SVC_IOCTL
     sau9  0x3C4834A6  ETHERNET_$SVC_IOCTL
 
   - The driver record's svc_ioctl entry.  The requests (eth_ioctl_*):

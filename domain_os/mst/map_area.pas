@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E43B3A  MST_$MAP_AREA
+    sau8  0x03C4BD3E  MST_$MAP_AREA
     sau9  0x3C44AEFC  MST_$MAP_AREA
 
   - AREA_$CREATE makes the area; its handle becomes an anonymous

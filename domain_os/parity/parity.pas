@@ -2,12 +2,14 @@
 
   Image addresses:
     sau2  0x00E2298C  PARITY data (WIRED_DATA, 4 bytes)
+    sau8  0x03C242E4  PARITY data (WIRED_DATA, 0x24 bytes)
     sau9  0x3C42571C  PARITY data (WIRED_DATA, 0x18C bytes)
 
   One compilation unit, one code segment and one data segment: the
   map's PARITY code segment in WIRED_PROC (0x354 bytes, PARITY_$CHK and
-  PARITY_$CHK_IO; the SAU9's 0x3EC bytes, with PARITY_$SET_STATE after
-  them) and its PARITY data segment in WIRED_DATA.
+  PARITY_$CHK_IO; the SAU9's 0x3EC bytes and the SAU8's 0x320, with
+  PARITY_$SET_STATE after them) and its PARITY data segment in
+  WIRED_DATA.
 
   The data, zero in the image:
 
@@ -21,6 +23,14 @@
                                       PARITY_$SET_STATE fills one,
                                       PARITY_$CHK flags it,
                                       PARITY_$CHK_IO clears it
+
+  With `parity_dma_page_pairs' (the SAU8's 0x24 bytes):
+
+    +0x00  PARITY_$DMA_TABLE   0x24   three channels of 0x0C bytes, two
+                                      pages each: PARITY_$SET_STATE
+                                      fills one, PARITY_$CHK flags a
+                                      page, PARITY_$CHK_IO reports and
+                                      clears it
 
   The one object is a map symbol, so it is the module's defined
   variable (ref 7.2.2, Method 2), extern in parity/parity.ins.pas, as
@@ -66,6 +76,7 @@ procedure mmu_$install(ppn: integer32; va: univ_ptr; asid: integer;
                        prot: integer);
   options(extern, val_param);
 
+%if parity_err_regs %then
 type
   { The MMU control register's first byte at MMU_CCR
     (mmu/mmu.ins.pas). }
@@ -81,6 +92,7 @@ var
   { MMU_CCR (map symbol of the I/O definitions, without `$'). }
   mmu_ccr: extern mmu_$ccr_reg_t;
 %endif
+%endif
 %include 'cache/cache.ins.pas';
 %include 'time/time.ins.pas';
 %include 'log/log.ins.pas';
@@ -88,6 +100,46 @@ var
 %include 'file/file.ins.pas';
 %include 'ast/ast.ins.pas';
 %include 'parity/parity.ins.pas';
+%if parity_cpu_status %then
+type
+  { The CPU control register's word, and MMU_$PID_PRIV, the copy of it
+    the hand-written MMU routines keep and write to it: the address
+    space id in the high byte, the privilege byte below it.  PARITY_$CHK
+    clears bit 0 of the privilege byte while the failing page is read
+    and sets it after, each time writing the byte to the register. }
+  mmu_$pid_priv_t = packed record
+    case integer of
+      1: (pid: 0..255;                    { bits 15..8 }
+          priv: 0..255);                  { bits 7..0 }
+      2: (bits_15_1: 0..32767;            { bits 15..1 }
+          bit_0: boolean);                { bit 0 }
+  end;
+
+  { MMU's page as PARITY_$CHK reaches it: the CPU status register's
+    word at +0 and the CPU control register's at +0x100 (the Technical
+    Reference's two registers, a page apart). }
+  mmu_$cpu_regs_t = [device] record
+    status: parity_$cpu_status_t;         { 0x000 }
+    unused_002: array[1..127] of integer; { 0x002 }
+    control: mmu_$pid_priv_t;             { 0x100 }
+  end;
+
+  { The latch-page-on-parity-error register's word. }
+  mmu_$parity_ppn_reg_t = [device] pinteger;
+
+var
+  { MMU (map symbol of the I/O definitions, without `$'). }
+  mmu: extern mmu_$cpu_regs_t;
+
+  { MMU_$PID_PRIV (map symbol, the first word of the hand-written
+    MMU_ASM's data). }
+  mmu_$pid_priv: extern mmu_$pid_priv_t;
+
+  { MMU_$PARITY_PPN (map symbol of the I/O definitions): the Technical
+    Reference's latch-page-on-parity-error register, the failing page's
+    number in its low 14 bits. }
+  mmu_$parity_ppn: extern mmu_$parity_ppn_reg_t;
+%endif
 
 { The global routines and variable this module defines (ref 7.3.4 and
   7.2.2, Method 2), in map order.  The variable is uninitialized, zero
@@ -95,7 +147,7 @@ var
 define
   parity_$chk;
   parity_$chk_io;
-%if parity_dma_pages %then
+%if parity_dma_pages or parity_dma_page_pairs %then
   parity_$set_state;
   parity_$dma_table;
 %else
@@ -105,6 +157,6 @@ define
 { ---- WIRED_PROC ---- }
 %include 'parity/chk.pas';                  { PARITY_$CHK }
 %include 'parity/chk_io.pas';               { PARITY_$CHK_IO }
-%if parity_dma_pages %then
+%if parity_dma_pages or parity_dma_page_pairs %then
 %include 'parity/set_state.pas';            { PARITY_$SET_STATE }
 %endif

@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E74A74  mst_$unwire_page (module-local)
+    sau8  0x03C7F320  mst_$unwire_page (module-local)
     sau9  0x3C47C3DC  mst_$unwire_page (module-local)
 
   - MMU_$VTOP finds the physical page, which MMU_$REMOVE unmaps and

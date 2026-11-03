@@ -3,6 +3,7 @@
   Image addresses:
     sau3  0x00E19C92  io_$free_region
     sau5  0x00E1AF42  io_$free_region
+    sau8  0x03C1BD68  io_$free_region
 
   - Under io_$exclusion the range starting at iova is removed and the
     later ones moved down; a start no range has crashes the system

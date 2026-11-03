@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0D158  MMAP_$FREE_WSL
+    sau8  0x03C0E06E  MMAP_$FREE_WSL
     sau9  0x3C40F0BE  MMAP_$FREE_WSL
 
   - An address space above 64 crashes the system ("illegal pid").  Its

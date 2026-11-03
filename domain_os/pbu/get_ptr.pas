@@ -3,6 +3,7 @@
   Image addresses:
     sau3  0x00E59134  PBU_$GET_PTR
     sau5  0x00E59304  PBU_$GET_PTR
+    sau8  0x03C61960  PBU_$GET_PTR
 
   - which selects the unit's user stack area (pbu_ptr_stack), its
     controller memory's address and length (pbu_ptr_assoc), or its CSR

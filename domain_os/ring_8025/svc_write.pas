@@ -1,6 +1,7 @@
 { RING_8025_$SVC_WRITE - send a frame on a user channel.
 
   Image addresses:
+    sau8  0x03C8C274  RING_8025_$SVC_WRITE
     sau9  0x3C487E78  RING_8025_$SVC_WRITE
 
   - The driver record's svc_write entry.  Under a cleanup handler the

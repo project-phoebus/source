@@ -1,6 +1,7 @@
 { RING_8025_$IOCTL - a unit's control request.
 
   Image addresses:
+    sau8  0x03C8BA90  RING_8025_$IOCTL
     sau9  0x3C487694  RING_8025_$IOCTL
 
   - The driver record's ioctl entry: no request is implemented.

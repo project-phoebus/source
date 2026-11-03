@@ -15,8 +15,8 @@ One module, `ethernet.pas`, `module ethernet, ether_proc, ether_data;`
 
 | section | contents |
 |---------|----------|
-| ETHER_PROC | the ETHERNET code segment: SAU2 0x10 bytes (ETHERNET_$INIT); SAU9 0x4684 bytes (43 module-local routines, two nested routines and the 22 map routines ETHERNET_$INIT .. ETHERNET_$RCV1) |
-| ETHER_PROC (ETHERNET_ASM) | SAU9 0x80 bytes: ETHERNET_$$PIO_READ, ETHERNET_$$PIO_WRITE, hand assembly (`sau9/ethernet_asm.s`) |
+| ETHER_PROC | the ETHERNET code segment: SAU2 0x10 bytes (ETHERNET_$INIT); SAU9 0x4684 bytes, SAU8 0x465C (43 module-local routines, two nested routines and the 22 map routines ETHERNET_$INIT .. ETHERNET_$RCV1) |
+| ETHER_PROC (ETHERNET_ASM) | SAU9 and SAU8 0x80 bytes: ETHERNET_$$PIO_READ, ETHERNET_$$PIO_WRITE, hand assembly (`m68k/ethernet_asm.s`) |
 | ETHER_DATA | SAU2 empty; SAU9 0xE0 bytes: the wired pages, the driver record, the ports, the wiring counts, the receive processes' table (`ethernet.pas` tables them) |
 | ETHER_UCB | SAU9 0x2570 bytes: the two units' records (`ethernet_$unit_t`, 0x12B8 bytes each), an overlay section |
 | ETHERNET_$BUFFER | SAU9 0x1000 bytes, an overlay section |
@@ -94,8 +94,8 @@ registers, command blocks, the unit and driver records, the headings);
 | ethernet_rcv_process | `rcv_process.pas` |
 | ETHERNET_$RCV0 | `rcv0.pas` |
 | ETHERNET_$RCV1 | `rcv1.pas` |
-| ETHERNET_$$PIO_READ | none: hand assembly, `sau9/ethernet_asm.s` |
-| ETHERNET_$$PIO_WRITE | none: hand assembly, `sau9/ethernet_asm.s` |
+| ETHERNET_$$PIO_READ | none: hand assembly, `m68k/ethernet_asm.s` |
+| ETHERNET_$$PIO_WRITE | none: hand assembly, `m68k/ethernet_asm.s` |
 
 The receive path: ETHERNET_$INTERRUPT reads the adapter's block and
 queues ETHERNET_$INT_DEFERRED (DI_$ENQ), which reads and delivers the
@@ -108,8 +108,15 @@ woken through the eventcount ETHERNET_$INT_DEFERRED returns.
 
 - SAU6, SAU7 and SAU8 have the driver too (0x48BC, 0x4660, 0x465C
   bytes); `tools/sau_catalog.py` puts the SAU7, SAU8 and SAU9 forms of
-  most routines in one family, the SAU6's apart.  The SAU7 and SAU8
-  segments have one routine more, after ethernet_wire_driver.
+  most routines in one family, the SAU6's apart.  The SAU7, SAU8 and
+  SAU9 segments hold the same 67 routines in the same order.  The
+  SAU8's differ from the SAU9's in ETHERNET_$INTERRUPT, which leaves the
+  command interrupt alone (`ethernet_int_unmasked`, the SAU7's too),
+  and in the polling loops' counts (`ethernet_short_polls`: the reset,
+  the program's start, a command block's bytes and answer, a reply's
+  bytes, and ETHERNET_ASM's waits); the SAU7's counts are larger again
+  (7500000, 87500, 50000 and 312500, 17500), not translated.  The
+  rest is the SAU9's code but for addresses.
 - TODO(pascal): the unit record's undecoded places
   (`ethernet_3c505.ins.pas`); the configure-memory command's 12-byte
   constant (`setup.pas`); the stand-in locals of ethernet_rtn_bufs,

@@ -3,16 +3,20 @@
   Image addresses:
     sau3  0x00E58F8C  PBU_$FREE_MAP
     sau5  0x00E5915A  PBU_$FREE_MAP
+    sau8  0x03C61848  PBU_$FREE_MAP
 
   - Undoes PBU2_$ALLOCATE_MAP: IO_$FREE_MAP (a failure crashes the
     system), and the space's I/O map entries cleared.
+  - Without the I/O map space (`io_regions') nothing is freed.
 
   Status stored:
     status_$ok: the space was freed
     pbu_check_unit's status: the unit is not the caller's
     status_$pbu_iomap_not_allocated: the unit has no map space
+    status_$ok: always, without `io_regions'
 }
 
+%if io_regions %then
 procedure pbu_$free_map(in unit: integer; out status: status_$t);
 var
   dcte: pbu_$dcte_ptr_t;
@@ -32,3 +36,9 @@ begin
   npages := (dcte^.map_end + 1023 - dcte^.map_start) div 1024;
   pbu_clear_iomap(dcte^.unit_info.bus, dcte^.map_start, npages);
 end;
+%else
+procedure pbu_$free_map(in unit: integer; out status: status_$t);
+begin
+  status.all := status_$ok;
+end;
+%endif

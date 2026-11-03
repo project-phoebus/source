@@ -1,6 +1,7 @@
 { mst_$va_to_aste - activate and wire the segment of a virtual address.
 
   Image addresses:
+    sau8  0x03C0F31C  mst_$va_to_aste (module-local)
     sau9  0x3C4103F8  mst_$va_to_aste (module-local)
 
   - The address's MST entry is activated (AST_$MSTE_ACTIVATE_AND_WIRE,
@@ -40,11 +41,13 @@ begin
       if ctl.dt = mst_smap_invalid then begin
         table := (table & 15) + aste^.pmap_pa;
         lim.limit := 31;
+        if asid = 0 then flags := flags + [9];
+%if not smap_shared_global %then
         { the bit set for a global segment is cleared at once, as in
           MST_$TOUCH }
-        if asid = 0 then flags := flags + [9];
         flags := flags - [9];
         flags := flags + [10..15];
+%endif
         ctl.dt := mst_smap_valid;
         bst[seg_index + bst_asid_base[asid]] :=
           mst_$pmap_link_t(aste^.pmap_link);

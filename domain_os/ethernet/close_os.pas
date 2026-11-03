@@ -1,6 +1,7 @@
 { ETHERNET_$CLOSE_OS - close a system channel MAC_OS opened.
 
   Image addresses:
+    sau8  0x03C8823E  ETHERNET_$CLOSE_OS
     sau9  0x3C483E3E  ETHERNET_$CLOSE_OS
 
   - The driver record's close_os entry: ETHERNET_$SVC_CLOSE on a copy

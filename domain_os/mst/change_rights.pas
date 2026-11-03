@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E42FB0  MST_$CHANGE_RIGHTS
+    sau8  0x03C4B1BE  MST_$CHANGE_RIGHTS
     sau9  0x3C44A3C6  MST_$CHANGE_RIGHTS
 
   - The address's MSTE gives the object, its offset, the wired flag and

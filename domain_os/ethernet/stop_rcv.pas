@@ -1,6 +1,7 @@
 { ethernet_stop_rcv - take a unit off line and stop its receive process.
 
   Image addresses:
+    sau8  0x03C85200  ethernet_stop_rcv
     sau9  0x3C480E00  ethernet_stop_rcv
 
   - A running receive process is woken and waited for until it

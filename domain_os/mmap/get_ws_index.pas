@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0CA3A  MMAP_$GET_WS_INDEX
+    sau8  0x03C0D966  MMAP_$GET_WS_INDEX
     sau9  0x3C40E9A2  MMAP_$GET_WS_INDEX
 
   - The address space's entry of MMAP_$WS_OWNER.

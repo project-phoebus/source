@@ -1,6 +1,7 @@
 { io/io_desc.pas - the IO_DESC module, the units' I/O descriptors.
 
   Image addresses:
+    sau8  0x03C2EBB8  IO_DESC data (WIRED_DATA, 0x160 bytes)
     sau9  0x3C430DF4  IO_DESC data (WIRED_DATA, 0x1C0 bytes)
 
   A map module of data only, `module io_desc, , wired_data;': the IO_DESC
@@ -19,9 +20,13 @@
   (`ring_8025_driver'), the two Ethernets (`ethernet_driver') and the two
   rings (`ring8_controller').  The CSR VAs are the IODEFS pages
   (arch/m68k/sau9/iodefs.s); RING2_IO_DESC holds RING1's two pages and
-  RING1_IO_DESC RING2's, as in the image.  With the part io_descriptors,
-  empty elsewhere (the SAU7's and SAU8's IO_DESC, 0x1A0 and 0x160 bytes,
-  not compared).
+  RING1_IO_DESC RING2's, as in the image.
+
+  The SAU8's: the two 802.5 rings, the cartridge tape (`ct_qic02'), the
+  two Ethernets, the two rings, the floppy (`floppy_disk') and the
+  Winchester controller (`winchester_ctlr'), all on the AT bus.  With
+  the part io_descriptors, empty elsewhere (the SAU7's IO_DESC, 0x1A0
+  bytes, not compared).
 
   Check: tools/pascal_check.sh (which finds this file by its module
   heading).
@@ -67,11 +72,20 @@ var
 %if ring_8025_driver %then
   ring_8025_1, ring_8025_2: extern char;
 %endif
+%if ct_qic02 %then
+  tape: extern char;
+%endif
 %if ethernet_driver %then
   ethernet1, ethernet2: extern char;
 %endif
 %if ring8_controller %then
   ring1, ring1a, ring2, ring2a: extern char;
+%endif
+%if floppy_disk %then
+  flop: extern char;
+%endif
+%if winchester_ctlr %then
+  win: extern char;
 %endif
 
 { The module's objects (ref 7.2.2, Method 2): declared here, defined
@@ -93,6 +107,9 @@ var
   ring_8025_2_io_desc: extern io_desc_t;
   ring_8025_1_io_desc: extern io_desc_t;
 %endif
+%if ct_qic02 %then
+  tape_io_desc: extern io_desc_t;
+%endif
 %if ethernet_driver %then
   ethernet2_io_desc: extern io_desc_t;
   ethernet1_io_desc: extern io_desc_t;
@@ -102,6 +119,12 @@ var
   ring2_io_desc_b: extern io_desc_t;
   ring1_io_desc: extern io_desc_t;
   ring1_io_desc_b: extern io_desc_t;
+%endif
+%if floppy_disk %then
+  flp_io_desc: extern io_desc_t;
+%endif
+%if winchester_ctlr %then
+  win_io_desc: extern io_desc_t;
 %endif
 
 define
@@ -152,6 +175,14 @@ define
              has_csr := true],
      tag := 2, bus := 3, attrs := [0]];
 %endif
+%if ct_qic02 %then
+  tape_io_desc :=  { +0x040 on the SAU8 }
+    [next := nil,
+     int := [id := [vector := 16#05], has_int := true],
+     csr := [va := addr(tape), pa := 16#200, pages := 1,
+             has_csr := true],
+     tag := 2, bus := 3];
+%endif
 %if ethernet_driver %then
   ethernet2_io_desc :=  { +0x100 }
     [next := nil,
@@ -187,6 +218,22 @@ define
   ring1_io_desc_b :=  { +0x1A0 }
     [next := nil,
      csr := [va := addr(ring2a), pa := 16#320, pages := 4,
+             has_csr := true],
+     tag := 2, bus := 3];
+%endif
+%if floppy_disk %then
+  flp_io_desc :=  { +0x120 on the SAU8 }
+    [next := nil,
+     int := [id := [vector := 16#06], has_int := true],
+     csr := [va := addr(flop), pa := 16#3F0, pages := 1,
+             has_csr := true],
+     tag := 2, bus := 3];
+%endif
+%if winchester_ctlr %then
+  win_io_desc :=  { +0x140 on the SAU8 }
+    [next := nil,
+     int := [id := [vector := 16#0E], has_int := true],
+     csr := [va := addr(win), pa := 16#1A0, pages := 1,
              has_csr := true],
      tag := 2, bus := 3];
 %endif

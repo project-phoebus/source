@@ -3,6 +3,7 @@
   Image addresses:
     sau3  0x00E82448  PBU data (.DATA, 0x5C bytes)
     sau5  0x00E88048  PBU data (.DATA, 0x5C bytes)
+    sau8  0x03C9986C  PBU data (.DATA, 0x58 bytes)
 
   Configured out of the SAU2 and SAU9 kernels: there one compilation
   unit, one code segment, no data: the map's PBU code segment in .TEXT
@@ -23,6 +24,14 @@
   (no `long_iomap') and PBU_$WIRE_SPECIAL without its body (no
   `pbu_wire_special').
 
+  On the SAU8 0x18F0 bytes of code: three module-local routines and a
+  nested one (PBU_$WIRE_SPECIAL's release_pages), 16 units on the AT bus
+  (`pbu_atbus_units'), the large virtual memory's I/O page mapping
+  (`large_vm': MST_$INSTALL_IOPPN and MST_$REMOVE_IOPPN), no Multibus
+  (`mbus_bus'), no transfer control (`pbu_transfer_control') and no I/O
+  map space (`io_regions': pbu_clear_iomap is not there, and the map
+  routines are stubs).
+
   Not part of the module (pbu_driver):
 
   - PBU_ASM, the PBU page's hand-written data and routines (SM_$CB,
@@ -41,6 +50,13 @@
                             (16#80000000 without `long_iomap')
     +0x58  pbu_wired_count  the count of pbu_wired_pages
     (the block's last two bytes are the compiler's padding)
+
+  Without `pbu_transfer_control' (the SAU8) the block is 0x58 bytes:
+
+    +0x00  pbu_wired_pages     the PBU page's wired pages, 21
+    +0x54  pbu_wired_count     the count of pbu_wired_pages
+    +0x56  PBU_$NONSYS_DEVICE  a defined variable, 16#FFFF
+                               (`pbu_atbus_units')
 
   The routines live in one fragment file each (pbu/<name>.pas), in image
   order; the nested routines are in their parents' files.
@@ -61,6 +77,11 @@ module pbu;
 %include 'as/as.ins.pas';
 %include 'proc1/proc1.ins.pas';
 %include 'proc2/proc2.ins.pas';
+%if pbu_atbus_units %then
+%include 'file/file.ins.pas';
+%include 'ast/ast.ins.pas';
+%include 'time/time.ins.pas';
+%endif
 %endif
 %include 'pbu/pbu.ins.pas';
 %if pbu_driver %then
@@ -69,17 +90,21 @@ module pbu;
 %endif
 
 %if pbu_driver %then
-{ TODO(sau) the SAU4 and SAU6..SAU8 PBU code
+{ TODO(sau) the SAU4, SAU6 and SAU7 PBU code
 
-  The module's code below is the SAU5's and the SAU3's.  27 of the 32
-  PBU routines differ between the SAUs with the driver
+  The module's code below is the SAU5's, the SAU3's and the SAU8's.  27
+  of the 32 PBU routines differ between the SAUs with the driver
   (tools/sau_catalog.py), and the code segments differ in size (0x1ADC
   on the SAU3, 0x1938 on the SAU4, 0x1FC0 on the SAU5, 0x1F7C on the
-  SAU6): the other SAUs need their own forms, with their own parts,
-  when they are translated. }
+  SAU6, 0x1CAC on the SAU7, 0x18F0 on the SAU8): the other SAUs need
+  their own forms, with their own parts, when they are translated.  The
+  SAU7's is the SAU8's but for its I/O map space (`io_regions'), its
+  cache-inhibited pages (`pmap_cache_inhibit') and PBU_$SETUP's DMA
+  mapping records (PBU_$MAPPED_INFO). }
 
 var
   pbu_wired_pages: array[1..pbu_max_wired_pages] of integer32;  { +0x00 }
+%if pbu_transfer_control %then
 %if long_iomap %then
   pbu_default_ctl: pbu_$ctl_t := [wide := true, bit_15 := true];
                                                 { +0x54: 16#48000 }
@@ -88,12 +113,18 @@ var
                                                 { +0x54: 16#80000000 }
 %endif
   pbu_wired_count: integer;                     { +0x58 }
+%else
+  pbu_wired_count: integer;                     { +0x54 }
+%endif
 %endif
 
 { The global routines this module defines (ref 7.3.4, Method 2), in map
   order. }
 define
 %if pbu_driver %then
+%if pbu_atbus_units %then
+  pbu_$nonsys_device := [0..pbu_$max_unit];     { +0x56: 16#FFFF }
+%endif
   pbu_$acquire_int;
   pbu_$alloc;
   pbu_$advance_ec;
@@ -143,7 +174,9 @@ define
 %include 'pbu/pbu2_assoc.pas';              { PBU2_$ASSOC }
 %include 'pbu/control.pas';                 { PBU_$CONTROL }
 %include 'pbu/dissoc.pas';                  { PBU_$DISSOC }
+%if io_regions %then
 %include 'pbu/clear_iomap.pas';             { pbu_clear_iomap }
+%endif
 %include 'pbu/free.pas';                    { PBU_$FREE }
 %include 'pbu/free_map.pas';                { PBU_$FREE_MAP }
 %include 'pbu/get_dcte.pas';                { PBU_$GET_DCTE }

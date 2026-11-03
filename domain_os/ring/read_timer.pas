@@ -1,6 +1,7 @@
 { ring_$read_timer - how far one of the controller's counters has counted.
 
   Image addresses:
+    sau8  0x03C814CC  ring_$read_timer (module-local)
     sau9  0x3C47D0CC  ring_$read_timer (module-local)
 
   - The counter's chip is given the read-back command for it, and its

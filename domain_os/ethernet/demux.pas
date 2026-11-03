@@ -2,6 +2,7 @@
   socket.
 
   Image addresses:
+    sau8  0x03C85E66  ethernet_demux
     sau9  0x3C481A66  ethernet_demux
 
   Assume the packet is in the unit's header and data pages, its source

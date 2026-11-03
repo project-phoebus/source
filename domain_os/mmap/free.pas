@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0CAC2  MMAP_$FREE
+    sau8  0x03C0D9E4  MMAP_$FREE
     sau9  0x3C40EA20  MMAP_$FREE
 
   - Under the MMAP spin lock the page's flags2_7 bit is cleared and the

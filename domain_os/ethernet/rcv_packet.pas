@@ -2,7 +2,9 @@
   unit's header and data pages.
 
   Image addresses:
+    sau8  0x03C8571A  drain (nested)
     sau9  0x3C48131A  drain (nested)
+    sau8  0x03C85794  ethernet_rcv_packet
     sau9  0x3C481394  ethernet_rcv_packet
 
   - The packet's bytes come through the data register (HCR DIR set

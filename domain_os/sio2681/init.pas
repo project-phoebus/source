@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E333DC  SIO2681_$INIT
     sau3  0x00E3192C  SIO2681_$INIT
+    sau8  0x03C36C68  SIO2681_$INIT
 
   - The chip and both channels (A on the block's first half, B on its
     second; each the other's peer) are recorded in the chip's
@@ -12,6 +13,9 @@
   - The chip's interrupt stub is installed in the vector int_vec; the
     static int_vectors (OS_INIT_DATA's SIO_IO block) holds the two
     stubs' addresses.
+  - With `sio2681_pbu_int' the chip's interrupt is then acquired as PBU
+    unit 1, the stub's cell its handler, the chip's registers its CSR;
+    the acquisition's status is not looked at.
 
   Status stored: none.
 }
@@ -25,7 +29,7 @@ procedure sio2681_$init(in int_vec: integer; in chip_num: integer;
                         in chan_b_callback: univ_ptr;
                         in chan_b_params: sio_$params_t;
                         var chip: sio2681_$chip_t;
-                        in config: sio2681_$config_t);
+                        in config: univ sio2681_$config_t);
 var
   int_vectors: static array[1..sio2681_max_chips] of univ_ptr :=
     [addr(sio2681_$int1_rte),
@@ -71,5 +75,9 @@ begin
   sio2681_$set_line(chan_b, chan_b_params, [0..13], line_status);
 
   sio_vec[int_vec] := int_vectors[chip_num];
+%if sio2681_pbu_int %then
+  pbu_$acquire_int(1, addr(int_vectors[chip_num]), nil, chip.regs, -1, 1,
+                   -1, line_status);
+%endif
   chip.regs^.isr_imr := chip.imr_shadow.c;
 end;

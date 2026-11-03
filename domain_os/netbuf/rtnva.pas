@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0ED26  NETBUF_$RTNVA
+    sau8  0x03C10078  NETBUF_$RTNVA
 
   - Under the spin lock, netbuf_rtnva_locked's result: the page's
     physical address.

@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E03A30  AST_$COPY_AREA
+    sau8  0x03C03D7A  AST_$COPY_AREA
     sau9  0x3C404D86  AST_$COPY_AREA
 
   - The source segment's 32 pages are walked under the PMAP lock, each

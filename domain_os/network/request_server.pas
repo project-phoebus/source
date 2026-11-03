@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E118DC  NETWORK_$REQUEST_SERVER
+    sau8  0x03C12BB0  NETWORK_$REQUEST_SERVER
     sau9  0x3C413CC4  NETWORK_$REQUEST_SERVER
 
   - Start-up: the remote page pool grows by one page, sockets 2 (files),

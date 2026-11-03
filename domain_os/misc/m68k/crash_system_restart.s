@@ -1,7 +1,7 @@
 /*
- * misc/sau9/crash_system.s - the CRASH_SYSTEM module: CRASH_SYSTEM, the
- * restart through the PROM, the crash console, FIM_$CRASH and the crash
- * report (SAU9)
+ * misc/m68k/crash_system_restart.s - the CRASH_SYSTEM module: CRASH_SYSTEM,
+ * the restart through the PROM, the crash console, FIM_$CRASH and the
+ * crash report (SAU8, SAU9)
  *
  * SAU9 map: "D 3C421300 CRASH_SYSTEM size = 3C4" (WIRED_DATA),
  * 0x3C421300..0x3C4216C3, hand-written code and data:
@@ -40,10 +40,37 @@
  * written directly, `trap #15'.  The Apollo assembler's <ea>=#imm forms
  * (cmp/add #imm,Dn), which gas spells cmpi/addi, are written as `.short'.
  *
- * Byte gate (tools/asm_compare.py, `make TARGET_SAU=sau9 check-asm'):
- * encodings identical to the image; address operands resolve to our
- * objects.  The address and byte columns are the SAU9 image's.
+ * The SAU8's module (`D 3C1FF00 CRASH_SYSTEM size = 3E8') is the SAU9's
+ * with these differences, `.if' arms below:
+ *   trap_page_high  the SAU9's PROM cells are TRAP_PAGE + their offsets,
+ *                   absolute longs; the SAU8's trap page is at 0, and
+ *                   the cells are absolute words (dtty/m68k/prom_io.s);
+ *                   the DUMP page is where COLD put it: physical
+ *                   0x04001400 on the SAU9, 0x00100C00 on the SAU8 (the
+ *                   SAU2's PPN 0x403);
+ *   crash_remap_cold_display
+ *                   REMAP_DISPLAY maps the display COLD found: its
+ *                   REMAP_CSR_CNT control pages from REMAP_CSR_PPN at
+ *                   DISP1, then its REMAP_FRM_CNT frame-buffer pages from
+ *                   REMAP_FRM_PPN at DISP1_MEM, where the SAU9's maps the
+ *                   128 pages from PPN 0x4000 at DISP1_MEM.  It is 0x2A
+ *                   bytes longer, so every cell after it is too.
+ * The address and byte columns are the SAU9 image's, except in the `.if'
+ * arms, which carry the SAU8 image's (CRASH_SYSTEM 0x3C1FF00, REMAP_DISPLAY
+ * 0x3C200BA, FIM_$CRASH 0x3C2011E, CRASH_REPORT 0x3C20224).
+ *
+ * Not on the SAUs whose crash does not restart the node, or restarts it
+ * through the PROM's cell 0x128 from the SAU2's code (misc/m68k/
+ * crash_system.s: `crash_reboot', `crash_prom_restart').
+ *
+ * Byte gate (tools/asm_compare.py, `make TARGET_SAU=sau9 check-asm',
+ * `make TARGET_SAU=sau8 check-asm'): encodings identical to the image;
+ * address operands resolve to our objects.
  */
+
+        .include "base/config.inc"
+        /* (not `a || b': `|' starts a comment in m68k gas) */
+        .if     crash_reboot && !crash_prom_restart
 
         .section ".text.CRASH_SYSTEM","ax",@progbits
         .even
@@ -66,7 +93,9 @@
         .globl  CRASH_USP
         .globl  CRASH_$OK_TO_REBOOT
 
+        .if trap_page_high
         .extern TRAP_PAGE               /* the vector page, the PROM's cells at +0x100.. */
+        .endif
 
 /* The PROM's entry cells, offsets in the trap page (dtty/m68k/prom_io.s). */
         .equ    PROM_PUTC_CELL,         0x108   /* putc, D1 = the character */
@@ -76,8 +105,13 @@
 
 /* Where COLD put the DUMP page: physical 0x04001400 (it copies the file's
    DUMP page there; the kernel's VAs are their physical address +
-   0x38400000).  CRASH hands the PROM DUMP + 4. */
+   0x38400000); on the SAU8 0x00100C00, PPN 0x403, as on the SAU2.  CRASH
+   hands the PROM DUMP + 4. */
+        .if trap_page_high
         .equ    DUMP_PHYS,              0x04001400
+        .else
+        .equ    DUMP_PHYS,              0x00100C00
+        .endif
 
 /* The status a clean restart passes (OS_$SHUTDOWN): no report, and on a
    server or a node that may not restart, the PROM's monitor. */
@@ -176,7 +210,11 @@ CRASH_SYSTEM:
         tst.l   (CRASH_STATUS-CRASH_SYSTEM:w,%a5) | 3c4213e4  4aad 0312
         bne.b   .Lenter_debugger                | 3c4213e8  6608
         /* status 0: back to the PROM's monitor, through its cell */
+        .if trap_page_high
         movea.l (TRAP_PAGE+PROM_QUIET_RET_CELL).l,%a0 | 3c4213ea  2079 3c40 111c
+        .else
+        movea.l (PROM_QUIET_RET_CELL).w,%a0     | sau8 3c1ffea  2078 011c
+        .endif
         jmp     (%a0)                           | 3c4213f0  4ed0
 .Lenter_debugger:
         move.w  (0x40,%sp),(CRASH_SAVED_SR-CRASH_SYSTEM:w,%a5) | 3c4213f2  3b6f 0040 0120
@@ -211,7 +249,11 @@ CRASH:
 /* crash_call_prom_restart - 0x3C42142C: call the PROM's restart entry with
    the code word at 4(SP) and the address longword at 6(SP). */
 crash_call_prom_restart:
+        .if trap_page_high
         movea.l (TRAP_PAGE+PROM_RESTART_CELL).l,%a0 | 3c42142c  2079 3c40 1128
+        .else
+        movea.l (PROM_RESTART_CELL).w,%a0       | sau8 3c2002a  2078 0128
+        .endif
         move.l  (6,%sp),-(%sp)                  | 3c421432  2f2f 0006
         move.w  (8,%sp),-(%sp)                  | 3c421436  3f2f 0008
         jsr     (%a0)                           | 3c42143a  4e90
@@ -274,14 +316,22 @@ crash_puts_string:
 /* call_prom_putc - 0x3C42149A: D1 = the character. */
 call_prom_putc:
         movem.l %d0-%d2/%a0,-(%sp)              | 3c42149a  48e7 e080
+        .if trap_page_high
         movea.l (TRAP_PAGE+PROM_PUTC_CELL).l,%a0 | 3c42149e  2079 3c40 1108
+        .else
+        movea.l (PROM_PUTC_CELL).w,%a0          | sau8 3c2009a  2078 0108
+        .endif
         jsr     (%a0)                           | 3c4214a4  4e90
         movem.l (%sp)+,%d0-%d2/%a0              | 3c4214a6  4cdf 0107
         rts                                     | 3c4214aa  4e75
 
 /* call_prom_reload_font - 0x3C4214AC */
 call_prom_reload_font:
+        .if trap_page_high
         movea.l (TRAP_PAGE+PROM_RELOAD_FONT_CELL).l,%a1 | 3c4214ac  2279 3c40 1114
+        .else
+        movea.l (PROM_RELOAD_FONT_CELL).w,%a1   | sau8 3c200a6  2278 0114
+        .endif
         jmp     (%a1)                           | 3c4214b2  4ed1
         rts                                     | 3c4214b4  4e75  (not reached)
 
@@ -299,9 +349,44 @@ REMAP_FRM_CNT:                                  | 3c4214c0
  * REMAP_DISPLAY - 0x3C4214C2: map the 128 frame-buffer pages (PPN 0x4000
  * ..0x407F) at DISP1_MEM, global, so the console works whatever the
  * crashed process had mapped: MMU_$INSTALL(ppn, va, asid 0, prot 0x26)
- * per page, at IPL 7.
+ * per page, at IPL 7.  With `crash_remap_cold_display' (the SAU8's,
+ * 0x3C200BA) the display's REMAP_CSR_CNT control pages from REMAP_CSR_PPN
+ * at DISP1, then its REMAP_FRM_CNT frame-buffer pages from REMAP_FRM_PPN
+ * at DISP1_MEM, the cells COLD filled; the count is the argument block's
+ * last word.
  * ------------------------------------------------------------------------- */
 REMAP_DISPLAY:
+        .if crash_remap_cold_display
+        move.w  %sr,-(%sp)                      | sau8 3c200ba  40e7
+        ori.w   #0x700,%sr                      | sau8 3c200bc  007c 0700
+        move.w  (REMAP_CSR_CNT,%pc),-(%sp)      | sau8 3c200c0  3f3a fff4  the count
+        move.w  #0x26,-(%sp)                    | sau8 3c200c4  3f3c 0026  protection
+        clr.w   -(%sp)                          | sau8 3c200c8  4267  ASID 0
+        move.l  #DISP1,-(%sp)                   | sau8 3c200ca  2f3c 03ff 9400  the VA
+        move.l  (REMAP_CSR_PPN,%pc),-(%sp)      | sau8 3c200d0  2f3a ffdc  the PPN
+.Lremap_csr:
+        subq.w  #1,(0xc,%sp)                    | sau8 3c200d4  536f 000c
+        blt.s   .Lremap_frm                     | sau8 3c200d8  6d12
+        jsr     MMU_$INSTALL                    | sau8 3c200da  4eb9 03c2 59e0
+        addq.l  #1,(%sp)                        | sau8 3c200e0  5297
+        addi.l  #0x400,(4,%sp)                  | sau8 3c200e2  06af 0000 0400 0004
+        bra.s   .Lremap_csr                     | sau8 3c200ea  60e8
+.Lremap_frm:
+        move.l  #DISP1_MEM,(4,%sp)              | sau8 3c200ec  2f7c 03fa 0000 0004
+        move.l  (REMAP_FRM_PPN,%pc),(%sp)       | sau8 3c200f4  2eba ffbc
+        move.w  (REMAP_FRM_CNT,%pc),(0xc,%sp)   | sau8 3c200f8  3f7a ffbe 000c
+.Lremap_frm_next:
+        subq.w  #1,(0xc,%sp)                    | sau8 3c200fe  536f 000c
+        blt.s   .Lremap_end                     | sau8 3c20102  6d12
+        jsr     MMU_$INSTALL                    | sau8 3c20104  4eb9 03c2 59e0
+        addq.l  #1,(%sp)                        | sau8 3c2010a  5297
+        addi.l  #0x400,(4,%sp)                  | sau8 3c2010c  06af 0000 0400 0004
+        bra.s   .Lremap_frm_next                | sau8 3c20114  60e8
+.Lremap_end:
+        adda.w  #14,%sp                         | sau8 3c20116  defc 000e
+        move.w  (%sp)+,%sr                      | sau8 3c2011a  46df
+        rts                                     | sau8 3c2011c  4e75
+        .else
         move.w  %sr,-(%sp)                      | 3c4214c2  40e7
         ori.w   #0x700,%sr                      | 3c4214c4  007c 0700
         move.w  #0x26,-(%sp)                    | 3c4214c8  3f3c 0026  protection
@@ -319,6 +404,7 @@ REMAP_DISPLAY:
         adda.w  #12,%sp                         | 3c4214f4  defc 000c
         move.w  (%sp)+,%sr                      | 3c4214f8  46df
         rts                                     | 3c4214fa  4e75
+        .endif
 
 /* -------------------------------------------------------------------------
  * FIM_$CRASH(frame, regs, status) - 0x3C4214FC: the fatal-fault report.
@@ -492,3 +578,8 @@ crash_reboot_check:
 .Lrc_server:
         moveq   #-1,%d0                         | 3c4216c0  70ff
         bra.b   .Lrc_exit                       | 3c4216c2  60f2
+        .if crash_remap_cold_display
+        .short  0                               | sau8 3c202e6  to the segment's end (size 3E8)
+        .endif
+
+        .endif

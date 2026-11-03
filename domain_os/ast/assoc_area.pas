@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E04542  AST_$ASSOC_AREA
+    sau8  0x03C04832  AST_$ASSOC_AREA
     sau9  0x3C40583E  AST_$ASSOC_AREA
 
   - As AST_$PMAP_ASSOC, for an ASTE given by its index: the entry is

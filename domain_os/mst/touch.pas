@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0DD40  MST_$TOUCH
+    sau8  0x03C0ED44  MST_$TOUCH
     sau9  0x3C40FE10  MST_$TOUCH
 
   - The address's MST slot gives its MSTE.  The page comes in by
@@ -166,10 +167,12 @@ begin
     if smap^.ctl.dt = mst_smap_invalid then begin
       smap^.table := (smap^.table & 15) + aste^.pmap_pa;
       smap^.lim.limit := 31;
-      { the bit set for a global segment is cleared at once }
       if asid = 0 then smap^.flags := smap^.flags + [9];
+%if not smap_shared_global %then
+      { the bit set for a global segment is cleared at once }
       smap^.flags := smap^.flags - [9];
       smap^.flags := smap^.flags + [10..15];
+%endif
       smap^.ctl.dt := mst_smap_valid;
       bst[seg_index + bst_asid_base[asid]] :=
         mst_$pmap_link_t(aste^.pmap_link);

@@ -1,6 +1,7 @@
 { ring_8025_open - open a unit's adapter onto the ring.
 
   Image addresses:
+    sau8  0x03C89784  ring_8025_open
     sau9  0x3C485368  ring_8025_open
 
   - Fills the open parameters in the unit's control area (the station

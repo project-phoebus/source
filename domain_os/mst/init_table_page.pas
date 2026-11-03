@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E42CEC  mst_$init_table_page (module-local)
+    sau8  0x03C4AD44  mst_$init_table_page (module-local)
     sau9  0x3C44A078  mst_$init_table_page (module-local)
 
   - A wired page from WP_$CALLOC is installed at va's page (protection

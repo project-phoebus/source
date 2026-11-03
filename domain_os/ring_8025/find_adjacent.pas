@@ -2,6 +2,7 @@
   types that a range continues.
 
   Image addresses:
+    sau8  0x03C8A29C  ring_8025_find_adjacent
     sau9  0x3C485EA0  ring_8025_find_adjacent
 
   - From index idx to count: the first range of the unit's that belongs

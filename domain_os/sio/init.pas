@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E32BE0  SIO_$INIT
     sau3  0x00E31380  SIO_$INIT
+    sau8  0x03C365AC  SIO_$INIT
     sau9  0x3C4395B4  SIO_$INIT
 
   - Port 1, the console, gets its keyboard, TTY and SIO descriptors with

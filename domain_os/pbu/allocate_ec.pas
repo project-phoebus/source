@@ -3,6 +3,7 @@
   Image addresses:
     sau3  0x00E58A2E  PBU_$ALLOCATE_EC
     sau5  0x00E58A2E  PBU_$ALLOCATE_EC
+    sau8  0x03C6154E  PBU_$ALLOCATE_EC
 
   - Under the exclusion lock a level-1 eventcount (EC2_$ALLOCATE_EC1),
     whose record goes at the head of the unit's stack area's list with

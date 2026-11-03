@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E16340  TIMER_$INIT
+    sau8  0x03C17260  TIMER_$INIT
     sau9  0x3C418374  TIMER_$INIT
 
   - Installs the timer interrupt vector; the virtual and auxiliary

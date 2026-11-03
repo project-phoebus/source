@@ -2,6 +2,7 @@
   receive into.
 
   Image addresses:
+    sau8  0x03C84D26  ethernet_get_rcv_bufs
     sau9  0x3C480926  ethernet_get_rcv_bufs
 
   - The header page is a new one; the data page is the one kept back,

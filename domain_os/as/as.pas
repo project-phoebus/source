@@ -27,7 +27,7 @@ module as;
 { The global routines this module defines (ref 7.3.4, Method 2), in map
   order. }
 define
-%if pft_mmu %then
+%if pft_mmu or run_time_layout %then
   as_$init;
 %endif
   as_$get_info;
@@ -35,8 +35,8 @@ define
 
 { ---- OS_INIT_PROC ---- }
 { AS_$INIT only on the SAUs whose OS_$INIT calls it (`pft_mmu',
-  base/config.ins.pas): the SAU9's map has none. }
-%if pft_mmu %then
+  `run_time_layout', base/config.ins.pas): the SAU9's map has none. }
+%if pft_mmu or run_time_layout %then
 %include 'as/init.pas';                     { AS_$INIT     }
 %endif
 

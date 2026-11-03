@@ -4,6 +4,7 @@
     sau2  0x00E0A458  FIM_$BUILD_DF
     sau3  0x00E0A458  FIM_$BUILD_DF
     sau5  0x00E0A32C  FIM_$BUILD_DF
+    sau8  0x03C0B138  FIM_$BUILD_DF
     sau9  0x3C40BE38  FIM_$BUILD_DF
 
   - A supervisor-mode fault crashes the system unless it is an access
@@ -137,9 +138,9 @@ begin
   if 13 in sr_pc.sr then
 %if pbu_driver %then
   if pbu_mode then begin
-    { a PBU fault in supervisor mode: only an access above the limit
-      crashes }
-    if info.addr > fim_build_df_addr_limit then begin
+    { a PBU fault in supervisor mode: only an access above the OS
+      stack crashes }
+    if info.addr > linteger(addr(os_stack)) then begin
       fim_$crash(exception_frame^, regs^, status);
       return;
     end;
@@ -156,7 +157,7 @@ begin
       return;
     end;
     fim_$signal_first(status);
-    if info.addr > fim_build_df_addr_limit then begin
+    if info.addr > linteger(addr(os_stack)) then begin
       fim_$crash(exception_frame^, regs^, status);
       return;
     end;

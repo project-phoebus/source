@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E1760C  LOG_$UPDATE
+    sau8  0x03C1857C  LOG_$UPDATE
 
   - The result is the wired page's handle when the log is open and
     dirty (dirty_flag then cleared), else 0.

@@ -111,8 +111,22 @@
 # and nothing is checked.  With --extract, runs inside a window are read
 # from the file instead of from Ghidra.  The check mode does not care where
 # a line came from.
+#
+# --json FILE (check mode) also writes the result per section, in a
+# machine-readable form: {"sections": [{"object", "section", "status",
+# "image_size", "similarity"}], "summary", "errors"}.  The status is
+# `identical' (identical modulo relocations, no documented deviation),
+# `deviation' (the gate passes it over a KNOWN_DEVIATIONS entry) or
+# `failed'; image_size is the sum of the lengths of its runs with an image
+# address (ADDITIONS runs left out); the similarity is 1.0 for an
+# identical section, else difflib's SequenceMatcher ratio of our bytes
+# and the image's over those runs, our relocated fields zeroed on both
+# sides at the same offsets (section_similarity).  A structural error
+# (a section with no image address) writes only "errors".
 
 import argparse
+import difflib
+import json
 import bisect
 import os
 import re
@@ -127,7 +141,7 @@ import image_file  # noqa: E402  (Image: the image file by address)
 # Every address table below is keyed by SAU first: {2: {...}, 5: {...}};
 # an entry's address is that SAU's image address, with its evidence.
 SAU = 2
-SAUS = (2, 3, 5, 9)
+SAUS = (2, 3, 5, 8, 9)
 
 # Module data block names that the hand-written assembly references and
 # that are not map symbols, with their image addresses.  The Pascal tree
@@ -149,6 +163,10 @@ C_BLOCK_ADDRS = {
     9: {
         # the SAU9 map's PEB_$INFO
         'PEB_$INFO': 0x3C428478,
+    },
+    8: {
+        # the SAU8 map's PEB_$INFO
+        'PEB_$INFO': 0x03C26D20,
     },
 }
 
@@ -499,6 +517,82 @@ LOCAL_SYMBOLS = {
         # cells (FIM_$SPUR_CNT 0x3C424BEA + 6)
         'fim_$nmi_fault': 0x3C424BF0,
     },
+    8: {
+        # The SAU8's addresses of the SAU2's labels, each at the SAU2's
+        # (and the SAU9's) distance from the same map symbol (`SYMBOL +
+        # off'), the bytes there the same but for absolute addresses.
+        # fim/m68k/com.s, soft_fault.s, fp_exceptions.s: `D 3C22BE0
+        # FIM_UNWIRED size = 4F0', the SAU2's laid out the same
+        'FIM_COMMON_FAULT': 0x03C22BE0,         # segment start
+        'FIM_COM': 0x03C22BE4,                  # alias of FIM_$COM
+        'FIM_SOFT_FAULT_TAIL': 0x03C22C98,      # FIM_$SOFT_FAULT+0xC
+        'FIM_SOFT_FAULT_PUSH': 0x03C22CA2,      # FIM_$SOFT_FAULT+0x16
+        'fim_fp_frame_pc': 0x03C22D5E,          # FIM_$FP_SIG_NAN+0xE
+        # fim/m68k/bus_err.s: `jmp (BUS_ERROR_SWITCH).l' after the
+        # SAU8's CPU_B_PBU_SWITCH word (0x3C2310A), its operand the cell
+        # BUS_ERROR_SWITCH (0x3C2310E), as on the SAU5
+        'JMP_TO_BUS_ERR': 0x03C2310C,
+        # fim/m68k/fline.s: FIM_$BUS_ERR's FPU entry, 8 bytes ahead of
+        # FIM_$FLINE (0x3C2334C) in its section, as on the SAU9
+        'fim_fline_fault_entry': 0x03C23344,
+        # fp/m68k/fp_context.s: the FP context helpers after FIM_$FLINE's
+        # code (FIM_$FLINE + 0x54 .. FIM_$FP_ABORT 0x3C23428) and after
+        # FP_$GET_FP (+ 0x28)
+        'fp_$switch_owner': 0x03C233A0,
+        'fp_$switch_owner_d2': 0x03C233A6,
+        'fp_$restore_state': 0x03C233D8,
+        'fp_$save_state': 0x03C23404,
+        'fp_$check_owner': 0x03C2362E,
+        # io/m68k/trap.s: IO_$COND_SWITCH_BACK + 0x16, in `D 3C31400
+        # IO_$TBLS size = 480'
+        'io_$flih_dispatch': 0x03C3145C,
+        # time/m68k/time_asm.s, timer_handler.s: the calendar read's body
+        # at the start of `D 3C2CDAC TIME_ASM size = 468', and the tick
+        # interrupt after TIME_$DI_RTE (+ 0x12)
+        'time_$read_cal_body': 0x03C2CDAC,
+        'TIME_$TIMER_HANDLER': 0x03C2D090,
+        # misc/m68k/crash_system_restart.s: the report block after
+        # FIM_$CRASH's template in the SAU8's CRASH_SYSTEM (FIM_$CRASH +
+        # 0x106, as on the SAU9)
+        'CRASH_REPORT': 0x03C20224,
+        # PROC1_ASM (`D 3C20300 PROC1_ASM size = 24AC'): each label at
+        # the SAU2's distance from the map symbol before it
+        'proc1_$pcb_pool': 0x03C2040A,          # PROC1_$READY_COUNT + 2
+        'proc1_$ec_waitn': 0x03C21E92,          # EC_$WAITN + 0x1C
+        'proc1_$get_current_cpu_time': 0x03C22108,  # PROC1_$GET_CPU_USAGE + 0x26
+        'atomic_op_error': 0x03C22226,          # PROC1_$BEGIN_ATOMIC_OP + 8
+        'proc1_$set_lock_body': 0x03C2232A,     # PROC1_$SET_LOCK + 4
+        'set_lock_crash': 0x03C22398,           # ML_$LOCK + 0x44
+        'clr_lock_crash': 0x03C22398,
+        'proc1_$clr_lock_body': 0x03C223E0,     # PROC1_$CLR_LOCK + 0xC
+        'Illegal_lock_err': 0x03C22626,         # LOCK_$EVENT_LISTS + 0x200
+        'proc1_$release_tail': 0x03C226F8,      # PROC1_$INHIBIT_END + 0x14
+        # svc/m68k/svc_tables.s: the dispatch tables after the trap
+        # dispatchers in `D 3C90504 SVC_CATCHER size = E40' (the SAU2's
+        # distances from SVC_$TRAP8)
+        'SVC_$TRAP0_TABLE': 0x03C9079E,
+        'SVC_$TRAP1_TABLE': 0x03C9081E,
+        'SVC_$TRAP2_TABLE': 0x03C90926,
+        'SVC_$TRAP3_TABLE': 0x03C90B3A,
+        'SVC_$TRAP4_TABLE': 0x03C90DA6,
+        'SVC_$TRAP5_TABLE': 0x03C90FB2,
+        'SVC_$TRAP7_TABLE': 0x03C9113E,
+        'SVC_$TRAP8_TABLE': 0x03C9122A,
+        'SVC_$TRAP8_ARGCOUNT': 0x03C9130A,
+        # io/m68k/probe.s: `D 3C2B0D8 TESTPAGE size = 70'
+        'io_$probe': 0x03C2B0D8,
+        # `D 3C2E4A0 PCHIST size = 128' (PCHIST_$ADDR at +0x20)
+        'PCHIST_$CONTROL': 0x03C2E4A0,
+        # stop/m68k/watch.s: the SAU2's distances from STOP_$WATCH and
+        # STOP_$WATCH_TRACE
+        'STOP_$MEASURE_LOOP': 0x03C9A406,
+        'STOP_$NULL_PROC': 0x03C9A42E,
+        'STOP_$UNHOOK': 0x03C9A4D2,
+        'STOP_$HOOK': 0x03C9A4FA,
+        'STOP_$READ_CPUT': 0x03C9A644,
+        'STOP_$READ_CLOCK': 0x03C9A64C,
+        'stop_$watch_trace_exit': 0x03C9A662,
+    },
 }
 
 # Runs whose code is restructured relative to the image (not a matter of
@@ -514,6 +608,8 @@ KNOWN_DEVIATIONS = {
     5: {
     },
     9: {
+    },
+    8: {
     },
 }
 
@@ -577,6 +673,14 @@ REGISTER_BASES = {
         '.text.FIM_$CLEAR_TRACE_FAULT': {1: 0x3C4244A0},
         '.text.FIM_$EXIT': {5: 0x3C4244A0},
     },
+    8: {
+        # fim/m68k/deliver_trace_fault.s, clear_trace_fault.s, exit.s: the
+        # FIM_WIRED base FIM_$TRACE_BIT (0x3C230D0) in A1 / A5, as on the
+        # SAU2
+        '.text.FIM_$DELIVER_TRACE_FAULT': {1: 0x03C230D0},
+        '.text.FIM_$CLEAR_TRACE_FAULT': {1: 0x03C230D0},
+        '.text.FIM_$EXIT': {5: 0x03C230D0},
+    },
 }
 
 # Code in the hand-written files that is NOT image code: a run starting at
@@ -591,6 +695,8 @@ ADDITIONS = {
     5: {
     },
     9: {
+    },
+    8: {
     },
 }
 
@@ -694,6 +800,26 @@ IMAGE_ALIASES = {
         # TIME_ASM cells the map does not name
         'TIME_$CURRENT_USEC': 0x3C42E870,       # TIME_$CURRENT_TIME + 4
     },
+    8: {
+        # misc's report block (as LOCAL_SYMBOLS above)
+        'CRASH_REPORT': 0x03C20224,
+        # PROC1_ASM cells the map does not name, at the SAU2's distances
+        'PROC1_$ATOMIC_OP_DEPTH': 0x03C21E46,   # PROC1_$PID_TN + 2
+        'DAT_00e20606': 0x03C21E3E,             # DI_$Q_HEAD + 4
+        'Bad_atomic_operation_err': 0x03C2262A,  # LOCK_$EVENT_LISTS + 0x204
+        # the SVC dispatch tables (as LOCAL_SYMBOLS above)
+        'SVC_$TRAP0_TABLE': 0x03C9079E,
+        'SVC_$TRAP1_TABLE': 0x03C9081E,
+        'SVC_$TRAP2_TABLE': 0x03C90926,
+        'SVC_$TRAP3_TABLE': 0x03C90B3A,
+        'SVC_$TRAP4_TABLE': 0x03C90DA6,
+        'SVC_$TRAP5_TABLE': 0x03C90FB2,
+        'SVC_$TRAP7_TABLE': 0x03C9113E,
+        'SVC_$TRAP8_TABLE': 0x03C9122A,
+        'SVC_$TRAP8_ARGCOUNT': 0x03C9130A,
+        # TIME_ASM cells the map does not name
+        'TIME_$CURRENT_USEC': 0x03C2D052,       # TIME_$CURRENT_TIME + 4
+    },
 }
 
 # Sections whose module base register points at a different object in our
@@ -717,6 +843,8 @@ REBASES = {
         '.text.CRASH_SYSTEM': (5, 0x00E1F300, 'CRASH_REPORT'),
     },
     9: {
+    },
+    8: {
     },
 }
 
@@ -994,6 +1122,36 @@ class Alignment:
 
 def sext(v, bits):
     return v - (1 << bits) if v & (1 << (bits - 1)) else v
+
+
+def section_similarity(o, sec, runs, ref, ratio=True):
+    """(image size, ratio) of one section for --json: our bytes and the
+    image's over each run with an image address (an ADDITIONS run is not
+    image code), relocated fields zeroed on both sides at our offsets;
+    a run the reference bytes do not cover counts with no image bytes.
+    Without ratio (an identical section) the ratio is 1.0."""
+    rel = [(off, RELOC_SIZE.get(typ, 4)) for off, typ, sym, add in o.relocs.get(sec, [])]
+    ours, theirs, size = bytearray(), bytearray(), 0
+    for r_off, r_len, r_addr, r_name in runs:
+        if r_addr < 0:
+            continue
+        size += r_len
+        mine = bytearray(o.data[sec][r_off:r_off + r_len])
+        img = bytearray(ref_bytes(ref, r_addr, r_len) or b'')
+        for off, n in rel:
+            for k in range(off - r_off, off - r_off + n):
+                if 0 <= k < len(mine):
+                    mine[k] = 0
+                if 0 <= k < len(img):
+                    img[k] = 0
+        ours += mine
+        theirs += img
+    if not ratio:
+        return size, 1.0
+    if not ours and not theirs:
+        return size, 0.0
+    return size, round(difflib.SequenceMatcher(None, bytes(ours), bytes(theirs),
+                                               autojunk=False).ratio(), 4)
 
 
 # ALU op with an #imm source in its <ea> form (high nibble) -> the opcode
@@ -1291,6 +1449,9 @@ def main():
                     'and no --extract, append the missing runs to REF')
     ap.add_argument('--objdump', default='m68k-elf-objdump')
     ap.add_argument('-v', '--verbose', action='store_true')
+    ap.add_argument('--json', metavar='FILE',
+                    help='check mode: also write the per-section results '
+                    'to FILE')
     ap.add_argument('objects', nargs='+')
     args = ap.parse_args()
     global SAU
@@ -1334,6 +1495,9 @@ def main():
                 continue
             allruns[(o.path, sec)] = r
     if errors:
+        if args.json:
+            with open(args.json, 'w') as f:
+                json.dump({'sections': [], 'summary': None, 'errors': errors}, f)
         raise SystemExit('\n'.join('asm_compare: error: ' + e for e in errors))
 
     files = [ImageFile(spec) for spec in args.extract_file]
@@ -1514,11 +1678,13 @@ def main():
     unverified = []
     deviations = []
     used_devs = set()
+    status = {}             # (path, sec) -> --json status
     for o in objs:
         for sec in o.sections:
             nsec += 1
             res = results[(o.path, sec)]
             label = '%s %s' % (o.path, sec)
+            status[(o.path, sec)] = 'failed'
             if res.error:
                 failed += 1
                 errors.append('%s: %s' % (label, res.error))
@@ -1616,6 +1782,7 @@ def main():
             if bad:
                 failed += 1
                 continue
+            status[(o.path, sec)] = 'deviation' if res.deviations else 'identical'
             if args.verbose:
                 print('asm_compare: %s: identical modulo %d relocation(s)%s%s'
                       % (label, len(relocs),
@@ -1635,15 +1802,27 @@ def main():
         print('asm_compare: note: ' + g)
     for e in errors:
         print('asm_compare: FAIL ' + e, file=sys.stderr)
-    print('asm_compare: %d object(s), %d section(s): %d identical modulo '
-          'relocations, %d failed; %d relocation(s) and %d widened '
-          'operand(s) checked, %d resolved to the image operand, '
-          '%d unverified; %d PC-relative/base displacement(s) checked; '
-          '%d documented deviation(s); %d run boundary(ies) not contiguous '
-          'in the image; %d section tail(s) uncovered'
-          % (len(objs), nsec, nsec - failed, failed, nrel, nwide,
-             nverified, len(unverified), nbranch, len(deviations),
-             len(gaps), len(tails)))
+    summary = ('%d object(s), %d section(s): %d identical modulo '
+               'relocations, %d failed; %d relocation(s) and %d widened '
+               'operand(s) checked, %d resolved to the image operand, '
+               '%d unverified; %d PC-relative/base displacement(s) checked; '
+               '%d documented deviation(s); %d run boundary(ies) not contiguous '
+               'in the image; %d section tail(s) uncovered'
+               % (len(objs), nsec, nsec - failed, failed, nrel, nwide,
+                  nverified, len(unverified), nbranch, len(deviations),
+                  len(gaps), len(tails)))
+    print('asm_compare: ' + summary)
+    if args.json:
+        secs = []
+        for o in objs:
+            for sec in o.sections:
+                st = status[(o.path, sec)]
+                size, sim = section_similarity(o, sec, allruns[(o.path, sec)], ref,
+                                               st != 'identical')
+                secs.append({'object': o.path, 'section': sec, 'status': st,
+                             'image_size': size, 'similarity': sim})
+        with open(args.json, 'w') as f:
+            json.dump({'sections': secs, 'summary': summary, 'errors': errors}, f)
     if failed or errors:
         sys.exit(1)
 

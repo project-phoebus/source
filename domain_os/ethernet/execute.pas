@@ -1,12 +1,13 @@
 { ethernet_execute - start the program loaded into the adapter.
 
   Image addresses:
+    sau8  0x03C8540E  ethernet_execute
     sau9  0x3C48100E  ethernet_execute
 
   - With the device's interrupts disabled and under the unit's command
     lock: the execute command, at the given start; the adapter resets
-    (both status flags up, then down, 4200000 polls each), is set up
-    again and given the program's command 16#17; then its command
+    (both status flags up, then down, eth_reset_polls polls each), is
+    set up again and given the program's command 16#17; then its command
     interrupt and the device are enabled and the unit marked as running
     the program.  A step that fails leaves the device disabled.
 
@@ -34,7 +35,7 @@ begin
   io_$disable_device(u^.io_unit, status);
   ml_$exclusion_start(u^.cmd_lock);
   if ethernet_send_pcb(u, addr(pcb), status) then begin
-    cnt := 4200000;
+    cnt := eth_reset_polls;
     repeat
       if cnt = 0 then begin
         status.all := status_$eth_adapter_hardware_error;
@@ -43,7 +44,7 @@ begin
       cnt := cnt - 1;
       s := u^.regs^.status;
     until (eth_asr_asf1 in s) and then (eth_asr_asf2 in s);
-    cnt := 4200000;
+    cnt := eth_reset_polls;
     repeat
       if cnt = 0 then begin
         status.all := status_$eth_adapter_hardware_error;

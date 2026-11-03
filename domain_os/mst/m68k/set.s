@@ -2,9 +2,9 @@
 | mst/m68k/set.s - MST_$SET and MST_$SET_CLEAR, set and clear a bit of a
 | bit map
 |
-| The SAU2, SAU3, SAU5 and SAU9 images have the same code here; the address
-| and byte columns below are the SAU2 image's (the SAU9's MST_ASM is at
-| 0x3C41CCA4).
+| The SAU2, SAU3, SAU5, SAU8 and SAU9 images have the same code here; the
+| address and byte columns below are the SAU2 image's (the SAU8's MST_ASM
+| is at 0x3C1B2D8, the SAU9's at 0x3C41CCA4).
 |
 | Byte gate (tools/asm_compare.py, `make check-asm'): the
 | image's encodings; the Apollo assembler's `or.w #imm,Dn' <ea>=#imm form

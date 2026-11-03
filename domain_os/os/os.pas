@@ -9,6 +9,8 @@
     sau5  0x00E379F4  OS data (OS_INIT_DATA, 0x194 bytes)
     sau5  0x00E89A44  OS data (.DATA, 0x18 bytes)
     sau5  0x00E2F300  OS data (WIRED_DATA, 0x20 bytes)
+    sau8  0x03C39678  OS data (OS_INIT_DATA, 0x2A8 bytes)
+    sau8  0x03C9B218  OS data (.DATA, 0x18 bytes)
     sau9  0x3C43BE64  OS data (OS_INIT_DATA, 0x10B0 bytes)
     sau9  0x3C49AEAC  OS data (.DATA, 0x18 bytes)
 
@@ -48,6 +50,10 @@
   `crash_reboot' the .DATA block has restart_code at +0x0C and
   OS_$SHUTTING_DOWN_FLAG at +0x0E.  With `large_address_space'
   OS_INIT_PROC has os_$free_gap_pmaps before OS_$INIT.
+
+  On the SAU8 OS_INIT_DATA is 0x2A8 bytes (MMAP_$INIT's table of 128
+  longwords, the vector table's 40 cells from +0x200), and OS_$INIT
+  calls MMU_$SET_SEG_PROT (declared here with the other MMU headings).
 
   The heading: the define'd variables lie in the default .DATA section
   with the .TEXT routines' statics, so the unit names no sections, `module
@@ -144,6 +150,14 @@ procedure mmu_$remove_special_seg(va: univ_ptr; asid: integer;
   word, by value. }
 procedure mmu_$page_write_bit(va: univ_ptr; prot: integer);
   options(extern, val_param);
+
+%if vector_seg_prot %then
+{ MMU_$SET_SEG_PROT (map symbol; hand assembly): set the protection of
+  the segment at an address; the address and the protection word, by
+  value (OS_$INIT's pushes). }
+procedure mmu_$set_seg_prot(va: univ_ptr; prot: integer);
+  options(extern, val_param);
+%endif
 %endif
 %include 'mmap/mmap.ins.pas';
 %include 'mst/mst.ins.pas';

@@ -2,6 +2,7 @@
   reply.
 
   Image addresses:
+    sau8  0x03C84E3E  ethernet_do_cmd_polled
     sau9  0x3C480A3E  ethernet_do_cmd_polled
 
   - For the setup, before the adapter's interrupts are used: the

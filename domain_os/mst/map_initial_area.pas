@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E42E9E  MST_$MAP_INITIAL_AREA
+    sau8  0x03C4B074  MST_$MAP_INITIAL_AREA
     sau9  0x3C44A24E  MST_$MAP_INITIAL_AREA
 
   - The parent's anonymous area is moved to the new ASID at the
@@ -34,7 +35,7 @@ begin
     status.all := status_$mst_uid_not_vm_area
   else begin
     seg := rshft(code_desc, 15);
-%if large_address_space %then
+%if vm_regions %then
     if not (seg div 256 in mst_$bst_pages[asid]) then begin
       discard(mst_$init_table_page(linteger(
         addr(bst[lshft(seg div 256, 8) + bst_asid_base[asid]]))));

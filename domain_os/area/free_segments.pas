@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E082A8  area_$free_slot_segments (nested)
     sau2  0x00E085A6  area_$free_segments (module-local)
+    sau8  0x03C08828  area_$free_slot_segments (nested)
+    sau8  0x03C08B1E  area_$free_segments (module-local)
     sau9  0x3C409944  area_$free_slot_segments (nested)
     sau9  0x3C409C3A  area_$free_segments (module-local)
 
@@ -49,6 +51,7 @@ var
 
     Image addresses:
       sau2  0x00E082A8  area_$free_slot_segments (nested)
+      sau8  0x03C08828  area_$free_slot_segments (nested)
       sau9  0x3C409944  area_$free_slot_segments (nested)
 
     - Under the AST lock the cell is held in transition while each

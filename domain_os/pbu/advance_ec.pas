@@ -3,6 +3,7 @@
   Image addresses:
     sau3  0x00E589B2  PBU_$ADVANCE_EC
     sau5  0x00E589B2  PBU_$ADVANCE_EC
+    sau8  0x03C614D2  PBU_$ADVANCE_EC
 
   - PBU_$ADVANCE_EC_INT's test, under the exclusion lock, with a
     dispatch (EC_$ADVANCE).

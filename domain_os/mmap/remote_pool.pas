@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E59110  MMAP_$REMOTE_POOL
+    sau8  0x03C62C44  MMAP_$REMOTE_POOL
     sau9  0x3C4604B8  MMAP_$REMOTE_POOL
 
   - On the SAU2 the routine returns the longword it is given.

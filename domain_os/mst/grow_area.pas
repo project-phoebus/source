@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E4360C  MST_$GROW_AREA
+    sau8  0x03C4B812  MST_$GROW_AREA
     sau9  0x3C44A9D4  MST_$GROW_AREA
 
   - The address's MSTE must name a current anonymous area.  Growing

@@ -1,6 +1,7 @@
 { ring_8025_scb_cmd - pass the controller a command with an address.
 
   Image addresses:
+    sau8  0x03C8965E  ring_8025_scb_cmd
     sau9  0x3C485242  ring_8025_scb_cmd
 
   - The command and the physical address of buf go to the unit's

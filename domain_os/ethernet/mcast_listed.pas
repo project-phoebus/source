@@ -2,6 +2,7 @@
   list.
 
   Image addresses:
+    sau8  0x03C8601E  ethernet_mcast_listed
     sau9  0x3C481C1E  ethernet_mcast_listed
 
   - An address without the group bit is not.  The list's entries are

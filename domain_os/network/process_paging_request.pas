@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E10628  network_$process_paging_request (nested)
+    sau8  0x03C1193C  network_$process_paging_request (nested)
     sau9  0x3C412A50  network_$process_paging_request (nested)
 
   - The next packet is taken off socket 1 (an empty queue or a failure

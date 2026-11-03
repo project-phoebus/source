@@ -4,6 +4,7 @@
     sau2  0x00E1A83E  IO_$ENABLE_DEVICE
     sau3  0x00E198EC  IO_$ENABLE_DEVICE
     sau5  0x00E1AB9C  IO_$ENABLE_DEVICE
+    sau8  0x03C1B9D8  IO_$ENABLE_DEVICE
 
   - The bus's enable_device routine with the unit's interrupt id, when
     the bus has one (nil on every SAU2 bus).

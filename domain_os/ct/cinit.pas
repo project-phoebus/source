@@ -24,6 +24,64 @@ var
 begin
   ct_$cinit := status_$io_controller_not_in_system;
 end;
+%elseif ct_atbus_qic02 %then
+{ CT_$CINIT - initialize the cartridge tape controller.
+
+  Image addresses:
+    sau8  0x03C38FD0  CT_$CINIT
+
+  - With the AT bus adapter (`ct_atbus_qic02'): the driver's
+    eventcount is initialized and the DCTE's request's CSR page mapped
+    (IO_$MAP_CSR); the adapter's ports and PBU unit are noted.
+  - The adapter is reset, held for 3168 counts, and released; it is
+    there when its status shows ct_probe_reset within 3168 polls, then
+    ct_probe_ready within 132000000.
+
+  Returns:
+    0: the adapter answered
+    status_$io_controller_not_in_system: it did not
+
+  Status stored: none.
+}
+
+[section(os_init_proc, os_init_data)]
+function ct_$cinit(var dcte: dcte_t): integer32;
+type
+  req_ptr_t = ^io_$acquire_rec_t;
+var
+  req: req_ptr_t;
+  status: status_$t;
+  i: integer32;
+  regs: ct_$atbus_regs_ptr_t;
+  result: integer32;
+  found: boolean;
+begin
+  ec_$init(ct_ec);
+  req := req_ptr_t(dcte.disk_dinit);
+  io_$map_csr(req^, status);
+  ct_regs := ct_$atbus_regs_ptr_t(req^.csr.va);
+  ct_pbu_unit := req^.int.id.vector;
+  regs := ct_regs;
+  result := status_$io_controller_not_in_system;
+  regs^.dma_reset := 0;
+  regs^.ctl := ct_ctl_reset;
+  for i := 1 to 3168 do
+    ;
+  regs^.ctl := 0;
+  found := false;
+  for i := 1 to 3168 do
+    if regs^.ctl = ct_probe_reset then begin
+      found := true;
+      exit;
+    end;
+  if found then
+    for i := 1 to 132000000 do
+      if regs^.ctl = ct_probe_ready then begin
+        result := 0;
+        exit;
+      end;
+  ct_$cinit := result;
+end;
 %else
 { CT_$CINIT - the cartridge tape controller's initialization.
 

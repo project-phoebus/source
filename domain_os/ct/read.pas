@@ -28,6 +28,35 @@ begin
       ct_scsi_transfer(unit, pages, npages, scsi_$dir_in, nread, status);
   end;
 end;
+%elseif ct_atbus_qic02 %then
+{ CT_$READ - read blocks from the cartridge tape.
+
+  Image addresses:
+    sau8  0x03C7B1EA  CT_$READ
+
+  - With the direction set, ct_transfer moves up to npages 512-byte
+    blocks; with the AT bus adapter (`ct_atbus_qic02') a failure sets
+    ct_restart (the next transfer gives its command again), a success
+    clears it.
+
+  Status stored:
+    ct_transfer's status: in either case
+}
+
+procedure ct_$read(in unit: integer; in pages: univ ct_$page_list_t;
+                   in npages: integer; out nread: integer;
+                   out status: status_$t);
+var
+  st: status_$t;
+begin
+  ct_reading := true;
+  ct_transfer(unit, pages, npages, nread, st);
+  status := st;
+  if st.all <> 0 then
+    ct_restart := true
+  else
+    ct_restart := false;
+end;
 %else
 { CT_$READ - read blocks from the cartridge tape.
 

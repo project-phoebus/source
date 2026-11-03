@@ -2,6 +2,7 @@
   statistics and return them.
 
   Image addresses:
+    sau8  0x03C8B37C  ring_8025_read_stats
     sau9  0x3C486F80  ring_8025_read_stats
 
   - Under the unit's transmit lock: the read error log command, awaited

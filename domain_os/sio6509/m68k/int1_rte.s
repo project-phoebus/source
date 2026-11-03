@@ -26,11 +26,13 @@
  *
  * Not on the SAUs whose serial lines are the 16550's (`sio16550_lines',
  * base/config.ins.pas), as sio2681/sio2681.pas: the SAU9 map has no
- * SIO_INT segment.
+ * SIO_INT segment; nor on those whose console line is the SIO2681's
+ * (`console_sio2681'): the SAU8's SIO_INT (`D 3C30200 SIO_INT size =
+ * 68') holds the SIO2681 stubs only.
  */
 
         .include "base/config.inc"
-        .if     !sio16550_lines
+        .if     !sio16550_lines && !console_sio2681
 
         .section ".text.SIO6509_$PTRS","ax",@progbits
         .globl  SIO6509_$PTRS

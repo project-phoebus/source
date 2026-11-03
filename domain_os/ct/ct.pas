@@ -2,6 +2,7 @@
 
   Image addresses:
     sau5  0x00E8CFEC  CT data (.DATA, 0xD18 bytes)
+    sau8  0x03C9D43C  CT data (.DATA, 0xD44 bytes)
     sau9  0x3C49D0BC  CT data (.DATA, 0xD8C bytes)
 
   Configured out on the SAU2..SAU4: the map's CT code segment (.TEXT,
@@ -21,7 +22,17 @@
     controller is not in the system), and the data segment (0xD8C
     bytes).  Its globals act only on a drive CT_$ACQUIRE has set up.
 
-  See the TODO(sau) below for the SAU6..SAU8.
+  - The QIC-02 driver of the AT bus adapter (`ct_qic02' with
+    `ct_atbus_qic02'), on the SAU8: the CT code segment in .TEXT
+    (0x136C bytes: six module-local routines, CT_WAIT, RESET_DRIVE,
+    DO_CTL_CMD, a seventh module-local routine, ct_transfer, and
+    CT_$ACQUIRE .. CT_$INT), the one in OS_INIT_PROC (0xC8 bytes,
+    CT_$CINIT), and the data segment (0xD44 bytes, below).  It drives
+    the adapter's ports, reads the drive's status bytes after each
+    command (ct_read_status), moves each block through the DMA_
+    channel ct_dma_channel, and takes its interrupt through a PBU unit.
+
+  See the TODO(sau) below for the SAU6 and SAU7.
 
   The CT_END_ADDR segment (CT_$PROC_END) is hand assembly,
   ct/m68k/end_addr.s; CT_$PROC_START is a marker at the module's first
@@ -90,6 +101,34 @@
     +0xD14  ct_write_ok      the tape is where writing may begin (+0xD86)
     +0xD16  ct_busy          a command is outstanding (+0xD88)
 
+  With the AT bus adapter (the SAU8) the block is the QIC-02 one's to
+  +0xCF4, then:
+
+    +0xCF8  ct_residue       the count DMA_$STOP leaves
+    +0xCFC  ct_regs          the adapter's ports
+    +0xD00  ct_word_cfc      2, written 2 by CT_$ACQUIRE, which sets the
+                               PBU unit up while it is 2
+    +0xD02  ct_area_count .. ct_owner  as above, 4 bytes on
+    +0xD0E  ct_total_2e      the drive's underrun count's total
+    +0xD10  ct_total_2c      the drive's data error count's total
+    +0xD12  ct_dstat         the drive's status word, as decoded
+    +0xD14  ct_blocks        the commands DO_CTL_CMD gave
+    +0xD16  ct_underruns     status bytes 4 and 5
+    +0xD18  ct_errors        status bytes 2 and 3
+    +0xD1A  ct_dma_channel   the DMA_ channel, 1
+    +0xD1C  ct_dma_dir       its direction: 0 a read, 1 a write
+    +0xD1E  ct_drive_status  status bytes 0 and 1
+    +0xD20  ct_pbu_unit      the adapter's PBU unit
+    +0xD22  ct_reading .. ct_busy  as above
+    +0xD28  ct_eot_seen      the end of tape was reported once
+    +0xD2A  ct_dma_active    a transfer's DMA is started
+    +0xD2C  ct_exception     CT_$INT saw an exception
+    +0xD2E  ct_restart       the next transfer gives its command again
+                               (initially true)
+    +0xD30  ct_ignore_exception  ct_wait_ready waits for ready alone
+    +0xD34  ct_status_delay  ct_read_status's wait, 5 ticks
+    +0xD3C  unused_d3c       a clock of 2500 ticks nothing addresses
+
   The booleans are word aligned, as module variables are.  The SAU9's
   block keeps the QIC-02 driver's status table and initial ct_reading,
   which its code never reads.  The routines live in one fragment file
@@ -118,22 +157,25 @@ module ct;
 %if ct_scsi %then
 %include 'scsi/scsi.ins.pas';
 %endif
+%if ct_atbus_qic02 %then
+%include 'pbu/pbu.ins.pas';
+%include 'dma/dma.ins.pas';
+%endif
 %endif
 %include 'ct/ct.ins.pas';
 
 %if ct_driver %then
-{ TODO(sau) the SAU6..SAU8 CT code
+{ TODO(sau) the SAU6 and SAU7 CT code
 
   tools/sau_catalog.py finds every CT routine different on each of the
-  SAU5..SAU9.  The SAU6 and SAU8 have the QIC-02 driver's routines, in
-  forms of their own: the SAU6's adds a second controller (CT6_$CINIT,
-  CT6_$INT), the SAU8's CT_$RELEASE stops DMA_ and gives up a PBU_
-  interrupt.  The SAU7 has both forms: its globals test ct_scsi_state
-  first, run the SCSI driver's code (the SAU9's, at other data offsets)
-  for a drive that is set up, and the QIC-02 code (the SAU8's kind)
-  otherwise.  With both parts enabled this module compiles the SCSI
-  form alone, so the SAU7 needs that merge, and the SAU6 and SAU8 their
-  own arms. }
+  SAU5..SAU9.  The SAU6 has the QIC-02 driver's routines in a form of
+  its own: it adds a second controller (CT6_$CINIT, CT6_$INT).  The
+  SAU7 has both forms: its globals test ct_scsi_state first, run the
+  SCSI driver's code (the SAU9's, at other data offsets) for a drive
+  that is set up, and the AT bus adapter's QIC-02 code (the SAU8's,
+  `ct_atbus_qic02') otherwise.  With both parts enabled this module
+  compiles the SCSI form alone, so the SAU7 needs that merge, and the
+  SAU6 its own arms. }
 
 var
 %if ct_scsi %then
@@ -185,6 +227,10 @@ var
   ct_lun: integer;                              { +0xD66 }
   ct_max_kb: pinteger;                          { +0xD68 }
   ct_scsi_state: integer;                       { +0xD6A }
+%elseif ct_atbus_qic02 %then
+  ct_residue: integer32;                        { +0xCF8 }
+  ct_regs: ct_$atbus_regs_ptr_t;                { +0xCFC }
+  ct_word_cfc: integer := 2;                    { +0xD00 }
 %elseif ct_qic02 %then
   ct_regs: ct_$regs_ptr_t;                      { +0xCF8 }
   ct_word_cfc: integer := 2;                    { +0xCFC }
@@ -200,15 +246,35 @@ var
   ct_xfer_count: integer;                       { +0xD7E }
   ct_reset_pending: boolean;                    { +0xD80 }
   ct_clear_on_ok: boolean;                      { +0xD82 }
+%elseif ct_atbus_qic02 %then
+  ct_total_2e: integer;                         { +0xD0E }
+  ct_total_2c: integer;                         { +0xD10 }
+  ct_dstat: ct_$stat_t;                         { +0xD12 }
+  ct_blocks: integer;                           { +0xD14 }
+  ct_underruns: ct_$status_bytes_t;             { +0xD16 }
+  ct_errors: ct_$status_bytes_t;                { +0xD18 }
+  ct_dma_channel: integer := 1;                 { +0xD1A }
+  ct_dma_dir: integer;                          { +0xD1C }
+  ct_drive_status: ct_$status_bytes_t;          { +0xD1E }
+  ct_pbu_unit: integer;                         { +0xD20 }
 %elseif ct_qic02 %then
   ct_total_2e: integer;                         { +0xD0A }
   ct_total_2c: integer;                         { +0xD0C }
   ct_dstat: ct_$stat_t;                         { +0xD0E }
   ct_cstat: ct_$stat_t;                         { +0xD10 }
 %endif
-  ct_reading: boolean := true;                  { +0xD12; +0xD84 }
-  ct_write_ok: boolean;                         { +0xD14; +0xD86 }
-  ct_busy: boolean;                             { +0xD16; +0xD88 }
+  ct_reading: boolean := true;                  { +0xD12; +0xD84; +0xD22 }
+  ct_write_ok: boolean;                         { +0xD14; +0xD86; +0xD24 }
+  ct_busy: boolean;                             { +0xD16; +0xD88; +0xD26 }
+%if ct_atbus_qic02 and not ct_scsi %then
+  ct_eot_seen: boolean;                         { +0xD28 }
+  ct_dma_active: boolean;                       { +0xD2A }
+  ct_exception: boolean;                        { +0xD2C }
+  ct_restart: boolean := true;                  { +0xD2E }
+  ct_ignore_exception: boolean;                 { +0xD30 }
+  ct_status_delay: time_$clock_t := [high := 0, low := 5];  { +0xD34 }
+  unused_d3c: time_$clock_t := [high := 0, low := 2500];    { +0xD3C }
+%endif
 %endif
 
 { The global routines this module defines (ref 7.3.4, Method 2), in map
@@ -259,6 +325,29 @@ define
 %include 'ct/release.pas';                 { CT_$RELEASE }
 %include 'ct/wait.pas';                    { CT_$WAIT }
 %include 'ct/write.pas';                   { CT_$WRITE }
+
+{ ---- OS_INIT_PROC ---- }
+%include 'ct/cinit.pas';                   { CT_$CINIT }
+%elseif ct_atbus_qic02 %then
+{ ---- .TEXT ---- }
+%include 'ct/touch_pages.pas';             { ct_touch_pages }
+%include 'ct/unwire_pages.pas';            { ct_unwire_pages }
+%include 'ct/check_unit.pas';              { ct_check_unit }
+%include 'ct/wait_ready.pas';              { ct_wait_ready }
+%include 'ct/status_cmd.pas';              { ct_status_cmd }
+%include 'ct/read_status.pas';             { ct_read_status }
+%include 'ct/ct_wait.pas';                 { CT_WAIT }
+%include 'ct/reset_drive.pas';             { RESET_DRIVE }
+%include 'ct/do_ctl_cmd.pas';              { DO_CTL_CMD }
+%include 'ct/transfer.pas';                { ct_transfer }
+%include 'ct/acquire.pas';                 { CT_$ACQUIRE }
+%include 'ct/control.pas';                 { CT_$CONTROL }
+%include 'ct/diag.pas';                    { CT_$DIAG }
+%include 'ct/read.pas';                    { CT_$READ }
+%include 'ct/release.pas';                 { CT_$RELEASE }
+%include 'ct/wait.pas';                    { CT_$WAIT }
+%include 'ct/write.pas';                   { CT_$WRITE }
+%include 'ct/int.pas';                     { CT_$INT }
 
 { ---- OS_INIT_PROC ---- }
 %include 'ct/cinit.pas';                   { CT_$CINIT }

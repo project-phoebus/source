@@ -1,6 +1,7 @@
 { ring_8025_unwire_driver - unwire the driver when its last unit goes.
 
   Image addresses:
+    sau8  0x03C892B8  ring_8025_unwire_driver
     sau9  0x3C484EB8  ring_8025_unwire_driver
 
   - Under the I/O wiring lock.  The last unit's stop unwires every page

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0F45E  NETWORK_$SET_SERVICE
+    sau8  0x03C10796  NETWORK_$SET_SERVICE
 
   - Under the module's spin lock: operation 0 adds the value's services,
     1 removes them, 2 sets them; 3 sets the remote pool's size

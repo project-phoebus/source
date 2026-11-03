@@ -1,6 +1,7 @@
 { RING_8025_$SEND - send a Domain packet.
 
   Image addresses:
+    sau8  0x03C8B778  RING_8025_$SEND
     sau9  0x3C48737C  RING_8025_$SEND
 
   - The driver record's sendp entry.  The packet goes out as the unit's

@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E725B0  SIO2681_$INQ_LINE
     sau3  0x00E73BAC  SIO2681_$INQ_LINE
+    sau8  0x03C7CF0C  SIO2681_$INQ_LINE
 
   - When the mask asks for CTS (member 8) or DCD (member 7), the chip's
     input port is read: CTS and DCD are inputs 0 and 2 for channel A, 1

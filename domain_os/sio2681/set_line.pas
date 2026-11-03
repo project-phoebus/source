@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E1D250  SIO2681_$SET_LINE
     sau3  0x00E1C3C4  SIO2681_$SET_LINE
+    sau8  0x03C1E970  SIO2681_$SET_LINE
 
   - Under the driver's spin lock the channel is disabled and reset, then
     set by the change mask: members 0 or 1 the speed, 2, 3, 4 or 10 the

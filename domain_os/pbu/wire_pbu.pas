@@ -3,6 +3,7 @@
   Image addresses:
     sau3  0x00E59F7E  PBU_$WIRE_PBU
     sau5  0x00E5A42A  PBU_$WIRE_PBU
+    sau8  0x03C628EE  PBU_$WIRE_PBU
 
   - Once (PBU_$MCB.wired): the pages from PBU_$PAGE_START to
     PBU_$DATA_END, which interrupt-level code reaches, and their list

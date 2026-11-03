@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0EDD6  NETBUF_$GET_HDR
+    sau8  0x03C10128  NETBUF_$GET_HDR
     sau9  0x3C411228  NETBUF_$GET_HDR
 
   - While NETBUF_$GET_HDR_COND finds none, the network process (type 7)

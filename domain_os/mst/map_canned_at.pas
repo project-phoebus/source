@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E30FAA  MST_$MAP_CANNED_AT
+    sau8  0x03C342C2  MST_$MAP_CANNED_AT
     sau9  0x3C437052  MST_$MAP_CANNED_AT
 
   - The object's segments offset .. offset + size - 1 go to ASID 0's

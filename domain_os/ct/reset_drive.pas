@@ -1,3 +1,37 @@
+%if ct_atbus_qic02 %then
+{ RESET_DRIVE - reset the tape adapter.
+
+  Image addresses:
+    sau8  0x03C7A59E  RESET_DRIVE
+
+  - With the AT bus adapter (`ct_atbus_qic02'): its DMA is reset and
+    the reset held for 2 x 65536 clock ticks; then the interrupt is
+    enabled, the eventcount's next value taken, and the PBU unit's
+    interrupt enabled (PBU_$ENABLE_DEVICE).  The reset's end is
+    CT_WAIT's to see.
+
+  Status stored: none.
+}
+
+procedure reset_drive;
+var
+  regs: ct_$atbus_regs_ptr_t;
+  hold: time_$clock_t;
+  status: status_$t;
+begin
+  ct_cmd := 0;
+  regs := ct_regs;
+  regs^.dma_reset := 0;
+  regs^.ctl := ct_ctl_reset;
+  hold.high := 2;
+  hold.low := 0;
+  time_$wait(time_$relative, hold, status);
+  regs^.ctl := 0;
+  ct_wait_value := ct_ec.value + 1;
+  regs^.ctl := ct_ctl_int_enable;
+  pbu_$enable_device(ct_pbu_unit, status);
+end;
+%else
 { RESET_DRIVE - reset the tape controller, or crash.
 
   Image addresses:
@@ -30,3 +64,4 @@ begin
      and then (status.all <> status_$ct_controller_timeout) then
     crash_system(status);
 end;
+%endif

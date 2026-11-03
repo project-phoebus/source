@@ -2,6 +2,7 @@
   that a range continues.
 
   Image addresses:
+    sau8  0x03C85D6E  ethernet_find_adjacent
     sau9  0x3C48196E  ethernet_find_adjacent
 
   - From index idx to count: the first range of the unit's that belongs

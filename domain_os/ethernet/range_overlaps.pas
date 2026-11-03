@@ -2,6 +2,7 @@
   of a list's.
 
   Image addresses:
+    sau8  0x03C85D2C  ethernet_range_overlaps
     sau9  0x3C48192C  ethernet_range_overlaps
 
   - first..last against the first count ranges of the list.

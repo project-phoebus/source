@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0CD80  MMAP_$INSTALL_LIST
+    sau8  0x03C0DC9C  MMAP_$INSTALL_LIST
     sau9  0x3C40ECD8  MMAP_$INSTALL_LIST
 
   - The list is the wired pool (5) when asked, else the current address

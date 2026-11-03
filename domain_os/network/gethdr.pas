@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0F37A  NETWORK_$GETHDR
+    sau8  0x03C106B2  NETWORK_$GETHDR
 
   - A send that stays on this node (loopback on, or the destination this
     node) gets a wired page of its own, mapped into the network buffer

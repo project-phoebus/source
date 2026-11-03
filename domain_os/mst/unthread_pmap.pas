@@ -2,6 +2,7 @@
   thread.
 
   Image addresses:
+    sau8  0x03C0F20E  MST_$UNTHREAD_PMAP
     sau9  0x3C4102E6  MST_$UNTHREAD_PMAP
 
   Assume we're called with the AST lock held.

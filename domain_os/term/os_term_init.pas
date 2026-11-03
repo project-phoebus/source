@@ -6,6 +6,8 @@
     sau2  0x00E35154  OS_TERM_INIT data (OS_INIT_DATA, 0x5C bytes)
     sau3  0x00E2B73C  OS_TERM_INIT data (WIRED_DATA, 0x1228 bytes)
     sau3  0x00E33554  OS_TERM_INIT data (OS_INIT_DATA, 0x5C bytes)
+    sau8  0x03C2F020  OS_TERM_INIT data (WIRED_DATA, 0xFD4 bytes)
+    sau8  0x03C39600  OS_TERM_INIT data (OS_INIT_DATA, 0x34 bytes)
     sau9  0x3C43178C  OS_TERM_INIT data (WIRED_DATA, 0x1A8C bytes)
 
   One compilation unit, `module os_term_init, wired_proc, wired_data;':
@@ -24,6 +26,13 @@
   descriptors set up by SIO_$INIT as the serial driver starts its port,
   and the console's channel is the 16550's; the SIO6509 and SIO2681
   records are absent.
+
+  With `console_sio2681' (4052 bytes) the display console's keyboard
+  line is the SIO2681's channel A: two lines, the console and one
+  serial line, with two TTY and SIO descriptors (tty_descs +0x128,
+  sio_descs +0xAE0), no SIO6509 channel, the console's channel recorded
+  for KBD_$RESET after the DTTEs (DTTE +0xED0, TERM_$MAX_DTTE +0xFBC);
+  TERM_$INIT's statics are 52 bytes.
 
   Without `display_driver' (4648 bytes) there is no display console:
   no keyboard descriptor, console drain record or console handler
@@ -75,6 +84,8 @@ const
     first): TERM_$P2_CLEANUP's count. }
 %if sio16550_lines %then
   term_$n_lines = 4;
+%elseif console_sio2681 %then
+  term_$n_lines = 2;
 %else
   term_$n_lines = 3;
 %endif
@@ -131,6 +142,19 @@ var
   unused_16dc: integer32;                                 { +0x16DC, zero }
   kbd_descs: array[1..1] of kbd_$desc_t;                  { +0x16E0, zero }
   unused_1984: integer32;                                 { +0x1984, zero }
+%elseif console_sio2681 %then
+  unused_0c4: array[1..100] of char;                      { +0x00C4, zero }
+  tty_descs: array[1..term_$n_lines] of tty_$desc_t;      { +0x0128, zero }
+  sio_descs: array[1..term_$n_lines] of sio_$desc_t;      { +0x0AE0, zero }
+  term_$console_drain: array[1..1] of dtty_tstart_t;      { +0x0BD0, zero }
+  unused_bdc: integer32;                                  { +0x0BDC, zero }
+  kbd_descs: array[1..1] of kbd_$desc_t;                  { +0x0BE0, zero }
+  unused_e84: integer32;                                  { +0x0E84, zero }
+  term_$sio2681_chip: sio2681_$chip_t;                    { +0x0E88, zero }
+  unused_e94: integer32;                                  { +0x0E94, zero }
+  { The console's channel, A; the tone's too. }
+  tone_$channel: sio2681_$channel_t;                      { +0x0E98, zero }
+  term_$serial_chan_b: sio2681_$channel_t;                { +0x0EB4, zero }
 %else
 %if display_driver %then
   unused_0c4: array[1..148] of char;                      { +0x00C4, zero }
@@ -164,6 +188,12 @@ var
   { The console's 16550 channel: SIO_$INIT records it, KBD_$RESET writes
     the keyboard's reset bytes through it. }
   term_$console_chan_ptr: sio16550_$chan_ptr_t; {         (+0x1A6C), zero }
+%elseif console_sio2681 %then
+  { The console's SIO2681 channel: TERM_$INIT records it, KBD_$RESET
+    writes the keyboard's reset bytes through it. }
+  term_$console_chan_ptr: sio2681_$channel_ptr_t;
+                                                { +0xFB4 with
+                                                  `console_sio2681', zero }
 %endif
 
 define

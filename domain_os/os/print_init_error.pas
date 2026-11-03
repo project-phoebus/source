@@ -4,6 +4,7 @@
     sau2  0x00E6D1CC  os_$print_init_error (module-local)
     sau3  0x00E6D778  os_$print_init_error (module-local)
     sau5  0x00E6E8A8  os_$print_init_error (module-local)
+    sau8  0x03C76534  os_$print_init_error
 
   Status stored: none.
 }

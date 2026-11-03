@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0D870  MMAP_$ALLOC_FREE
+    sau8  0x03C0E722  MMAP_$ALLOC_FREE
     sau9  0x3C40F7F6  MMAP_$ALLOC_FREE
 
   - Under the MMAP spin lock as many pages as asked for, up to the free

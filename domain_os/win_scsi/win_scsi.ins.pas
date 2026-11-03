@@ -12,9 +12,8 @@
 const
   { The disk statuses disk/disk.ins.pas does not declare (the SR10.2
     status-code database, "OS / disk manager"; its texts in the
-    comments; the first four are also in flp/flp.ins.pas and
-    win/win.ins.pas, which this module does not include). }
-  status_$bad_disk_format = 16#00080008;          { bad disk format }
+    comments; the first three are also in win/win.ins.pas, which this
+    module does not include). }
   status_$disk_seek_error = 16#00080015;          { disk seek error }
   status_$unknown_error_status_from_drive = 16#00080023;
   status_$unrecognized_drive_id = 16#00080024;    { unrecognized drive id }

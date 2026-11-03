@@ -1,6 +1,7 @@
 { ring_8025_start_xmit - start the adapter's transmitter.
 
   Image addresses:
+    sau8  0x03C89896  ring_8025_start_xmit
     sau9  0x3C48547A  ring_8025_start_xmit
 
   - Points the unit at its first transmit list, clears the three lists'

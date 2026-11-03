@@ -1,6 +1,7 @@
 { ethernet_arp_find - find a node's entry in the ARP cache, or make one.
 
   Image addresses:
+    sau8  0x03C85B06  ethernet_arp_find
     sau9  0x3C481706  ethernet_arp_find
 
   - The node's row is that of its low six bits.  A node not in the row

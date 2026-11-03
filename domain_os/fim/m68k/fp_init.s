@@ -17,6 +17,9 @@
  * enabled and disabled with bit 7 of MMU_CCR where the SAU2 writes the
  * FPU owner register (0xFFB402); those lines carry the SAU9 image's
  * addresses.
+ * With `fpu_enable_cpu_control' (the SAU8) they set and clear bit 2 of
+ * the CPU control register (MMU + 0x101) and of its copy, MMU_$PID_PRIV's
+ * low byte, at IPL 7; those lines carry the SAU8 image's addresses.
  */
 
         .include "base/config.inc"
@@ -61,6 +64,14 @@ FIM_$FP_INIT:
         clr.w   (FP_$OWNER).l                   /* e21bd8  4279 00e2 18d4 */
         .if fpu_enable_ccr
         bset    #7,(MMU_CCR).l                  /* sau9 3c42484a  08f9 0007 3ff9 f2d0 */
+        .elseif fpu_enable_cpu_control
+        move.w  %sr,%d0                         /* sau8 3c23486  40c0 */
+        ori.w   #0x700,%sr                      /* sau8 3c23488  007c 0700 */
+        move.w  (MMU_$PID_PRIV).l,%d1           /* sau8 3c2348c  3239 03c2 56a4  the CPU control copy */
+        bset    #2,%d1                          /* sau8 3c23492  08c1 0002 */
+        move.w  %d1,(MMU_$PID_PRIV).l           /* sau8 3c23496  33c1 03c2 56a4 */
+        move.b  %d1,(MMU+0x101).l               /* sau8 3c2349c  13c1 03ff b501  the CPU control register */
+        move.w  %d0,%sr                         /* sau8 3c234a2  46c0 */
         .else
         move.b  #0,(FP_HW_OWNER).l              /* e21bde  13fc 0000 00ff b402 */
         .endif

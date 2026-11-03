@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E2F684  NETWORK_$INIT
+    sau8  0x03C3234C  NETWORK_$INIT
 
   - The network table is cleared, the allowed services set (paging,
     file, active and reserved_4 when port 0 is active, none otherwise)

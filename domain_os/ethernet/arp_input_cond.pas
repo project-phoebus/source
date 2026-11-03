@@ -2,6 +2,7 @@
   interrupt level.
 
   Image addresses:
+    sau8  0x03C88664  ethernet_arp_input_cond
     sau9  0x3C484264  ethernet_arp_input_cond
 
   Assume the packet is in the unit's header page (hdr), its source and

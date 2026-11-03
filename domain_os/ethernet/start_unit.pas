@@ -1,6 +1,7 @@
 { ethernet_start_unit - bring a configured unit on line.
 
   Image addresses:
+    sau8  0x03C85010  ethernet_start_unit
     sau9  0x3C480C10  ethernet_start_unit
 
   - The adapter is reset, the unit's locks, eventcounts and tables

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0A290  CHKSUM
+    sau8  0x03C0ACAC  CHKSUM
     sau9  0x3C40BDD0  CHKSUM
 
   - The page is mapped at a fixed scratch address, summed with

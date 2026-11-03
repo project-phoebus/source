@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E07276  AST_$REMOVE_CORRUPTED_PAGE
+    sau8  0x03C077A0  AST_$REMOVE_CORRUPTED_PAGE
     sau9  0x3C4087AC  AST_$REMOVE_CORRUPTED_PAGE
 
   - Called from the parity path.  A page clean in both the PFT and the

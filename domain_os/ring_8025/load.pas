@@ -1,6 +1,7 @@
 { RING_8025_$LOAD - the driver record's detach entry.
 
   Image addresses:
+    sau8  0x03C8B75E  RING_8025_$LOAD
     sau9  0x3C487362  RING_8025_$LOAD
 
   - The entry NETWORK_$LOAD calls: nothing is loaded into the adapter.

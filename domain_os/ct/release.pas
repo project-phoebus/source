@@ -56,6 +56,47 @@ begin
   if ct_scsi_state = ct_scsi_present then
     ct_scsi_release;
 end;
+%elseif ct_atbus_qic02 %then
+{ CT_$RELEASE - release the cartridge tape unit.
+
+  Image addresses:
+    sau8  0x03C7B23A  CT_$RELEASE
+
+  - With the AT bus adapter (`ct_atbus_qic02'): an operation in
+    progress is no error; with mode the adapter is reset (960 ticks'
+    wait with quit), and a successful reset marks a command outstanding.
+  - The DMA channel is stopped and the PBU unit given up
+    (PBU_$RELEASE_INT); the module's code and data are unwired unless a
+    command is outstanding, and the ownership given up.
+
+  Status stored:
+    pbu_$release_int's status: the unit was released, or the PBU unit
+      not given up
+    ct_check_unit's result: the unit may not be used
+}
+
+procedure ct_$release(in unit: integer; in mode: boolean;
+                      out status_ret: status_$t);
+var
+  dma_status: status_$t;
+begin
+  status_ret.all := ct_check_unit(unit);
+  if status_ret.all = status_$ct_operation_in_progress then begin
+    if mode then begin
+      reset_drive;
+      status_ret.all := ct_wait(960, true);
+      ct_busy := status_ret.all = 0;
+    end;
+    status_ret.all := 0;
+  end;
+  if status_ret.all = 0 then begin
+    dma_$stop(ct_dma_channel, ct_residue, dma_status);
+    pbu_$release_int(ct_pbu_unit, 3, status_ret);
+    if not ct_busy then
+      ct_unwire_pages(ct_area_pages, ct_area_flags, ct_area_count);
+    ct_owner := 0;
+  end;
+end;
 %elseif ct_qic02 %then
 { CT_$RELEASE - release the cartridge tape unit.
 

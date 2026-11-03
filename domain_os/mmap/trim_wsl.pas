@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E0C760  mmap_$trim_wsl (module-local)
+    sau8  0x03C0D69E  mmap_$trim_wsl (module-local)
     sau9  0x3C40E6C8  mmap_$trim_wsl (module-local)
 
   - From the head along prev_vpn, up to page_count pages are examined

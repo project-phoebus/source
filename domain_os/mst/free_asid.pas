@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E74B3C  MST_$FREE_ASID
+    sau8  0x03C7F550  MST_$FREE_ASID
     sau9  0x3C47C616  MST_$FREE_ASID
 
   - The private A and then the private B segments are unmapped; then
@@ -10,6 +11,8 @@
     MST words given back and the ASID cleared from MST_$ASID_LIST.
   - With the large address space the active private regions are freed
     instead (mst_$free_region), and the ASID's RARS page given back.
+  - With the layout chosen at boot the active regions but the global
+    ones are freed; the root entries' page stays.
   - A failed unmap crashes the system.
 
   Status stored:
@@ -20,9 +23,14 @@
 procedure mst_$free_asid(asid: integer; out status: status_$t);
 label
   crash;
-%if large_address_space %then
+%if vm_regions %then
 var
+%if run_time_layout %then
+  { a set of 256 regions: the image forms the difference in 32 bytes }
+  private: set of 0..255;
+%else
   private: mst_region_set_t;
+%endif
   region: mst_region_t;
   group: pinteger;
 %endif
@@ -56,6 +64,23 @@ begin
     end;
     mst_$unwire_page(addr(rars[rars_asid_base[asid]]));
     mmu_$rars_phaddr[asid] := 0;
+%elseif run_time_layout %then
+    private := mst_$regions_active[asid] -
+      [region_$global_b .. region_$global_b + region_$global_b_size - 1,
+       region_$global_a .. region_$global_a + region_$global_a_size - 1];
+    if private <> [] then begin
+      group := 0;
+      for region := 0 to region_$private_a_size - 1 do begin
+        if region in mst_$regions_active[asid] then
+          mst_$free_region(region, group, asid);
+        group := group + 1;
+      end;
+      for region := region_$private_b to region_$private_b do begin
+        if region in mst_$regions_active[asid] then
+          mst_$free_region(region, group, asid);
+        group := group + 1;
+      end;
+    end;
 %else
     mst_$unwire_asid_pages(mst_asid_base[asid],
                            rshft(mst_$seg_tn, 6) + mst_asid_base[asid]
@@ -77,3 +102,10 @@ end;
   places the local private at the top of a 36-byte frame.  Whether the
   set is a compiler temporary below the homes of region and group, or a
   local after stand-ins, is still to be settled against dpc's layout. }
+
+{ TODO(pascal) MST_$FREE_ASID's private regions with the layout chosen
+  at boot
+
+  dpc does not compile the set constructor with run-time ranges, nor
+  the assignment of the 16-byte difference to the 32-byte set; the
+  image forms both in 32-byte frame temporaries. }

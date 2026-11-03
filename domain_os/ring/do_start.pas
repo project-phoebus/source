@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E7671C  ring_$do_start (module-local)
+    sau8  0x03C83006  ring_$do_start (module-local)
 
   - The receive process (RING_$RCV0 or RING_$RCV1) is created and its
     first advance of the ready eventcount waited for, two clock ticks at

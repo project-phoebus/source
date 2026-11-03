@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E23284  MMAP_ data (WIRED_DATA, 0xAA8 bytes)
+    sau8  0x03C24BFC  MMAP_ data (WIRED_DATA, 0xAA8 bytes)
     sau9  0x3C42619C  MMAP_ data (WIRED_DATA, 0xAA8 bytes)
 
   One compilation unit: the map's MMAP_ code segment in WIRED_PROC

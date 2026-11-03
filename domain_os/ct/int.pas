@@ -1,3 +1,27 @@
+%if ct_atbus_qic02 %then
+{ CT_$INT - the cartridge tape's interrupt routine.
+
+  Image addresses:
+    sau8  0x03C7B39A  CT_$INT
+
+  - With the AT bus adapter (`ct_atbus_qic02'): the adapter's control
+    port is cleared, an exception noted from its status, the command no
+    longer outstanding, and the driver's eventcount advanced.  The
+    DCTE is not read.  The result is true: the interrupt was the
+    tape's.
+
+  Status stored: none.
+}
+
+function ct_$int(in dcte: dcte_t): boolean;
+begin
+  ct_regs^.ctl := 0;
+  ct_exception := not ct_regs^.stat.no_exception;
+  ct_busy := false;
+  ec_$advance_without_dispatch(ct_ec);
+  ct_$int := true;
+end;
+%else
 { CT_$INT - the cartridge tape controller's interrupt routine.
 
   Image addresses:
@@ -22,3 +46,4 @@ begin
   ec_$advance_without_dispatch(ct_ec);
   ct_$int := true;
 end;
+%endif

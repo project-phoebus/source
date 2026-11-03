@@ -2,6 +2,7 @@
   that holds a type.
 
   Image addresses:
+    sau8  0x03C8A20E  ring_8025_find_type
     sau9  0x3C485E12  ring_8025_find_type
 
   - t against the first count ranges of the list; the result is the

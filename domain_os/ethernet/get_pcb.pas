@@ -1,12 +1,14 @@
 { ethernet_get_pcb - take a command block from the adapter.
 
   Image addresses:
+    sau8  0x03C84A74  ethernet_get_pcb
     sau9  0x3C480674  ethernet_get_pcb
 
   - The bytes from `first' on are read from the command register as the
     adapter offers them (ACRF), until it marks the end (both status
     flags) or the block is full; the caller has read those before
-    `first'.  Each byte is waited for 50000 polls at most.
+    `first'.  Each byte is waited for eth_reply_byte_polls polls at
+    most.
   - The adapter sends the block's length as its last byte.  When that
     agrees with the block's own length byte and with the bytes read,
     the block is acknowledged (HSF1), else refused (HSF2).
@@ -28,7 +30,7 @@ var
 begin
   u^.regs^.control := u^.regs^.control & ~(eth_hcr_hsf1 ! eth_hcr_hsf2);
   for i := first to eth_pcb_max do begin
-    t := 50000;
+    t := eth_reply_byte_polls;
     repeat
       if t = 0 then begin
         status.all := status_$eth_adapter_hardware_error;

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E78004  ETHERNET_$INIT
+    sau8  0x03C8641C  ETHERNET_$INIT
     sau9  0x3C48201C  ETHERNET_$INIT
 
   - Conditional on the driver (`ethernet_driver', base/config.ins.pas).

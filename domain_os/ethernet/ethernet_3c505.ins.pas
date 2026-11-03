@@ -37,6 +37,23 @@ const
   status_$eth_pkt_type_not_in_use = 16#002F0013;    { packet type is not already in use }
   status_$eth_illegal_dest_address = 16#002F0014;   { illegal destination address }
 
+  { The turns of the driver's polling loops at most: the adapter's
+    reset and a downloaded program's start (ethernet_reset,
+    ethernet_execute), a reply byte (ethernet_get_pcb), a command byte
+    and the adapter's answer to a command block (ethernet_send_pcb).
+    Fewer with `ethernet_short_polls'. }
+%if ethernet_short_polls %then
+  eth_reset_polls = 3000000;
+  eth_reply_byte_polls = 35000;
+  eth_cmd_byte_polls = 20000;
+  eth_cmd_answer_polls = 125000;
+%else
+  eth_reset_polls = 4200000;
+  eth_reply_byte_polls = 50000;
+  eth_cmd_byte_polls = 30000;
+  eth_cmd_answer_polls = 200000;
+%endif
+
   { The host control register's bits (the HCR, a byte the host writes
     and reads back): attention and flush reset the adapter; HSF1 and
     HSF2 are the host's status flags, both set marking the last byte of
@@ -760,7 +777,7 @@ procedure ethernet_$rcv0; extern;
 procedure ethernet_$rcv1; extern;
 
 { ETHERNET_$$PIO_READ and ETHERNET_$$PIO_WRITE (ETHERNET_ASM, hand
-  assembly, ethernet/sau9/ethernet_asm.s: no frame, the arguments off
+  assembly, ethernet/m68k/ethernet_asm.s: no frame, the arguments off
   SP) - move len bytes, a word at a time, from the adapter's data
   register into buf, or from buf to it.  The registers, the buffer and
   the byte count (a word) by value, the status by address

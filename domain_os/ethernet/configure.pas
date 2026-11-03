@@ -1,6 +1,7 @@
 { ethernet_configure - set the 82586's receive mode.
 
   Image addresses:
+    sau8  0x03C84DC6  ethernet_configure
     sau9  0x3C4809C6  ethernet_configure
 
   - The adapter's Ethernet chip is configured with receive mode 3 when

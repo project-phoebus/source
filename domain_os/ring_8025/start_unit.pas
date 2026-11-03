@@ -2,12 +2,14 @@
   the ring.
 
   Image addresses:
+    sau8  0x03C89A06  ring_8025_start_unit
     sau9  0x3C4855EA  ring_8025_start_unit
 
   - Acquires the unit with RING_8025_$INT as its interrupt routine,
-    maps the map page and the unit's two window pages (at first onto
-    the unit record's page), initializes the controller, enables the
-    device and starts the unit's receive process.
+    maps the map page (not with `ring_8025_dma_channel') and the unit's
+    two window pages (at first onto the unit record's page), initializes
+    the controller, enables the device and starts the unit's receive
+    process.
   - Links the two receive lists and the three transmit lists into
     rings in the control area; every data descriptor of a receive list
     points at the one frame buffer at 0x400 of the control area.
@@ -32,7 +34,7 @@ var
   st: status_$t;
   ppn: integer32;
   unit: io_$unit_num_t;
-  level: integer;
+  channel: integer;
   i: integer;
 begin
   if not (r8025_unit_configured in u^.flags) then begin
@@ -45,15 +47,19 @@ begin
   end;
   with u^.regs^ do begin
     control_3 := control_3 ! 2;
+%if ring_8025_dma_channel %then
+    reset := reset ! 16#14;
+%else
     reset := reset ! 16#30;
+%endif
     control_7 := control_7 ! 16#70;
     control_7 := control_7 & 16#FD;
     control_3 := control_3 & 16#FB;
   end;
   if u^.cnum = 0 then
-    level := 6
+    channel := 6
   else
-    level := 5;
+    channel := 5;
   io_$acquire(ring_8025_$io_desc_ptr_t(u^.dcte^.disk_dinit)^,
               addr(ring_8025_$int), u^.dcte, unit, status);
   if status.all <> status_$ok then
@@ -70,12 +76,14 @@ begin
   u^.nullsap_in := 0;
   u^.range_count := 0;
   u^.io_unit := unit;
-  u^.word_40a := level;
+  u^.dma_channel := channel;
   u^.llc_class := 1;
   u^.ssb := addr(ring8025_$aux_da.ctl[u^.cnum].ssb);
   u^.scb := addr(ring8025_$aux_da.ctl[u^.cnum].scb);
+%if not ring_8025_dma_channel %then
   mmu_$install(0, addr(ring8025_$aux_da.map_page), 0, 16#16);
   ring_8025_map_pmape := mmu_$get_pmape_addr(addr(ring8025_$aux_da.map_page));
+%endif
   ring_8025_initialize(u, status);
   if status.all <> status_$ok then begin
     io_$release(unit, status);

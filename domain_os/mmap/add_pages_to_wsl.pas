@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E0C5AE  mmap_$add_pages_to_wsl (module-local)
+    sau8  0x03C0D506  mmap_$add_pages_to_wsl (module-local)
     sau9  0x3C40E4D8  mmap_$add_pages_to_wsl (module-local)
 
   - Every page of the list is marked on the working set list (priority

@@ -1,6 +1,7 @@
 { RING_8025_$NULLSAP_HELPER - answer the frames sent to the null SAP.
 
   Image addresses:
+    sau8  0x03C8A906  RING_8025_$NULLSAP_HELPER
     sau9  0x3C48650A  RING_8025_$NULLSAP_HELPER
 
   - Runs from the wired DXM queue (ring_8025_queue_nullsap), and answers

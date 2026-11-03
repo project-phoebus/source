@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E5C5C4  OSINFO_$GET_SEG_TABLE
+    sau8  0x03C65DA4  OSINFO_$GET_SEG_TABLE
 
   - The total is AST_$SIZE_AST; the smaller of it and the maximum is
     copied, ASTEs (20 bytes) for type 2, AST_PMAPS entries (128 bytes)

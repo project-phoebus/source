@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E44514  MST_$PRIV_SET_TOUCH_AHEAD_CNT
+    sau8  0x03C4CAC2  MST_$PRIV_SET_TOUCH_AHEAD_CNT
     sau9  0x3C44BC4A  MST_$PRIV_SET_TOUCH_AHEAD_CNT
 
   - The count's code selects n: a query, the system's count, 32, one, or

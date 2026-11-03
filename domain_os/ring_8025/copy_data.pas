@@ -1,6 +1,7 @@
 { ring_8025_copy_data - gather bytes from a caller's buffer vector.
 
   Image addresses:
+    sau8  0x03C8C1EE  ring_8025_copy_data
     sau9  0x3C487DF2  ring_8025_copy_data
 
   - len bytes from vector element idx (from 1) at offset onward go to

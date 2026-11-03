@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E76290  RING_$POLL_STICKY_BPHERR
+    sau8  0x03C82B20  RING_$POLL_STICKY_BPHERR
     sau9  0x3C47E712  RING_$POLL_STICKY_BPHERR
 
   - When the controller's DCTE status is clear, the result is whether

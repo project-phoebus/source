@@ -1,6 +1,7 @@
 { ring_8025_swap16 - exchange the bytes of a word.
 
   Image addresses:
+    sau8  0x03C89004  ring_8025_swap16
     sau9  0x3C484C04  ring_8025_swap16
 
   - The controller's system interface takes and gives its words low

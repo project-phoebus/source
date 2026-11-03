@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E16654  TIME_$WAIT2
+    sau8  0x03C1756C  TIME_$WAIT2
     sau9  0x3C4186D8  TIME_$WAIT2
 
   - A local eventcount is set to be advanced at the time (a failure

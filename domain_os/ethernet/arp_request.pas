@@ -1,6 +1,7 @@
 { ethernet_arp_request - ask for a node's Ethernet address.
 
   Image addresses:
+    sau8  0x03C8597E  ethernet_arp_request
     sau9  0x3C48157E  ethernet_arp_request
 
   - An ARP request for the node, from this unit's address and node ID,

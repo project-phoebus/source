@@ -1,6 +1,7 @@
 { RING_8025_$INT - a unit's interrupt routine.
 
   Image addresses:
+    sau8  0x03C8D30E  RING_8025_$INT
     sau9  0x3C488F12  RING_8025_$INT
     sau9  0x3C48916C  the status cell (status_$network_hardware_error)
 
@@ -10,6 +11,9 @@
     time from the byte at 2, then the words moved through the data word,
     a page at a time through the map page of the auxiliary area.  The
     adapter still asking for one is a crash.
+  - With `ring_8025_dma_channel' the adapter makes its transfers itself:
+    there is no transfer, no read of the bytes at 4 and 5, and every
+    interrupt is the system interface's.
   - The byte at 5 is read; then the system interface's interrupt (bit 1
     of the status byte at 4, as read before the transfer or after it):
     by its type, the system status block is kept in the unit's copy for
@@ -57,13 +61,18 @@ type
 
   word_ptr_t = ^ring_8025_$word_t;
 var
+%if not ring_8025_dma_channel %then
   pa: xfer_pa_t;
   len: xfer_len_t;
   xdir: xfer_dir_t;
+%endif
   sts: ring_8025_$sifint_t;
+%if not ring_8025_dma_channel %then
   off: integer;
+%endif
   ec: ec_$eventcount_ptr_t;
   u: ring_8025_$unit_ptr_t;
+%if not ring_8025_dma_channel %then
   map_va: word_ptr_t;
   p: word_ptr_t;
   ppn: integer32;
@@ -71,11 +80,16 @@ var
   t: integer;
   n: integer;
   i: integer;
+%endif
   code: integer;
   rs: integer;
 begin
   ec := nil;
   u := addr(ring8025_ucb[dcte_ptr_t(dcte)^.cnum]);
+%if ring_8025_dma_channel %then
+  { the system interface's interrupt, by its type }
+  sts := u^.regs^.sifint;
+%else
   with u^.regs^ do begin
     s := status_4;
     if (s & 1) <> 0 then begin
@@ -133,6 +147,7 @@ begin
     if (s & 2) <> 0 then begin
       { the system interface's interrupt, by its type }
       sts := sifint;
+%endif
       code := sts.code;
       if code = r8025_int_rcv_status then begin
         u^.rcv_ssb := u^.ssb^;
@@ -187,10 +202,16 @@ begin
       else
         with u^ do
           stats.other_ints := stats.other_ints + 1;
+%if ring_8025_dma_channel %then
+  u^.regs^.sifcmd := r8025_sifcmd_ssb_clear;
+  if ec <> nil then
+    ec_$advance_without_dispatch(ec^);
+%else
       sifcmd := r8025_sifcmd_ssb_clear;
       if ec <> nil then
         ec_$advance_without_dispatch(ec^);
     end;
   end;
+%endif
   ring_8025_$int := true;
 end;

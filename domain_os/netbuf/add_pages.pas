@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0E928  NETBUF_$ADD_PAGES
+    sau8  0x03C0FCA0  NETBUF_$ADD_PAGES
     sau9  0x3C410D8C  NETBUF_$ADD_PAGES
 
   - The requests are clamped to the room under 176 header pages and the

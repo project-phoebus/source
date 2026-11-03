@@ -10,7 +10,7 @@ segments' name):
 
 | section | code size | routines | attribute |
 |---------|-----------|----------|-----------|
-| WIRED_PROC | 0xB8 (SAU9 0x104) | MEM_$INIT (SAU9), MEM_$PARITY_LOG (on the SAU2 0xB6 of code, then the module-end filler) | none (the heading's) |
+| WIRED_PROC | 0xB8 (SAU9 0x104, SAU8 0x250) | MEM_$INIT (SAU9), MEM_$PARITY_LOG (on the SAU2 0xB6 of code, then the module-end filler) | none (the heading's) |
 
 Data: the map's MEM_ data segment in WIRED_DATA (0x5C bytes), two map
 symbols, both `define`d variables of the module (ref 7.2.2, Method 2;
@@ -29,7 +29,7 @@ this subsystem.
 
 | routine | fragment |
 |---------|----------|
-| MEM_$INIT | `init.pas` (SAU9 only, under `mem_ccr_board_size`) |
+| MEM_$INIT | `init.pas` (SAU9 and SAU8, under `mem_ccr_board_size` and `mem_board_jumpers`) |
 | MEM_$PARITY_LOG | `parity_log.pas` (two `for` loops, `exit` and `return`; no nested or module-local routine) |
 | (data) | the define statement of `mem.pas` |
 
@@ -60,7 +60,20 @@ The part (`base/config.ins.pas`) that changes MEM_ is
   bits 21..16 (`parity_log.pas`).
 - MEM_$MEM_REC's first word is 16#2B.
 
-The SAU4 and SAU6..SAU8 have MEM_ code of their own, not expressed.
+`mem_board_jumpers` (SAU8; WIRED_PROC 0x250 bytes):
+
+- MEM_$INIT sets the board count, 1 to 4, by a `case` on the memory
+  configuration, bits 16#74 of the SIO DUART's input port (SIO, the
+  2681's IPR; `init.pas`).
+- MEM_$PARITY_LOG takes the board by a `case` on the same bits, each
+  arm's limits on the address's MB above the first, and a page record
+  matches the address's low 24 bits (`mem_$addr_bits_t`,
+  `parity_log.pas`).
+- MEM_$MEM_REC's second word is 0 (MEM_$INIT sets it).
+
+The SAU4, SAU6 and SAU7 have MEM_ code of their own, not expressed (the
+SAU7's is the SAU8's with ROADRUNNER arms, 4 MB limits and a 26-bit
+page match).
 
 ## Open items
 

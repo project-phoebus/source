@@ -2,6 +2,7 @@
   of a list's.
 
   Image addresses:
+    sau8  0x03C8A256  ring_8025_range_overlaps
     sau9  0x3C485E5A  ring_8025_range_overlaps
 
   - first..last against the first count ranges of the list.

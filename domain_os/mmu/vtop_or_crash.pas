@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E3190C  mmu_$vtop_or_crash (module-local)
+    sau8  0x03C34CB4  mmu_$vtop_or_crash (module-local)
     sau9  0x3C4379F8  mmu_$vtop_or_crash (module-local)
 
   - A fragment of the MMAP_UNWIRED module (mmap/mmap_unwired.pas).

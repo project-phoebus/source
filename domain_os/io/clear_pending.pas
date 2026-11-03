@@ -4,6 +4,7 @@
     sau2  0x00E1A798  IO_$CLEAR_PENDING
     sau3  0x00E19846  IO_$CLEAR_PENDING
     sau5  0x00E1AAF6  IO_$CLEAR_PENDING
+    sau8  0x03C1B930  IO_$CLEAR_PENDING
     sau9  0x3C41D2E6  IO_$CLEAR_PENDING
 
   - The bus's clear_pending routine with the unit's interrupt id.
