@@ -41,6 +41,15 @@ The routines take the descriptor's address first.  The records in
 driver's interface (its display record, its blink state, its cursor
 patterns), with stand-ins between.
 
+### The SAU7
+
+The SAU7's COLOR4, COLOR4_ASM and COLOR4_DCTE segments have the SAU8's
+sizes, code and data at other addresses: the instructions are the same
+but for their address operands, the data blocks the same bytes but for
+their address cells, and COLOR4_ASM is byte for byte the SAU8's.  The
+SAU7 build is the SAU8's source; every fragment has its `sau7` address
+row.
+
 ## Routines and their fragments
 
 | routine | fragment |

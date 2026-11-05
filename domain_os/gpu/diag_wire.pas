@@ -3,6 +3,7 @@
 
   Image addresses:
     sau5  0x00E74612  GPU_$DIAG_WIRE
+    sau6  0x7807B572  GPU_$DIAG_WIRE
 
   - A page count of 0 or less unwires the pages wired before.
   - A page that cannot be wired unwires the pages wired so far.

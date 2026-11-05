@@ -1,6 +1,7 @@
 { win_$wait_phase - wait for the controller to reach a phase.
 
   Image addresses:
+    sau7  0x3C41C9B6  win_$wait_phase (module-local)
     sau8  0x03C1A01A  win_$wait_phase (module-local)
 
   - The status port of controller 0 is polled until it reads the phase

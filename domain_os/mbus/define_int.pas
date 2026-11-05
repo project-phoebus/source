@@ -4,18 +4,13 @@
     sau3  0x00E0AB38  MBUS_$DEFINE_INT
     sau4  0x0F80B21C  MBUS_$DEFINE_INT
     sau5  0x00E0AA24  MBUS_$DEFINE_INT
+    sau6  0x7800B388  MBUS_$DEFINE_INT
 
   - A level above 15 crashes the system.
   - A nil handler puts MBUS_$UNDEF_INT back and leaves the argument.
 
   Status stored: none.
 }
-
-{ TODO(sau) MBUS_$DEFINE_INT on the SAU6
-
-  The SAU6's MBUS_$DEFINE_INT is other code; the SAU3's and SAU4's are
-  the same as this one.  To be written as a conditional arm when the
-  SAU6 is translated. }
 
 procedure mbus_$define_int(id: io_$int_id_t; handler: univ_ptr;
                            handler_arg: univ_ptr);

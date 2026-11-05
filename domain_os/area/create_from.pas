@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E07A02  AREA_$CREATE_FROM
     sau4  0x0F807CF0  AREA_$CREATE_FROM
+    sau6  0x78007F3E  AREA_$CREATE_FROM
+    sau7  0x3C408832  AREA_$CREATE_FROM
     sau9  0x3C409032  AREA_$CREATE_FROM
 
   - Under the area lock an entry of the UID's hash chain (UID mod 11)

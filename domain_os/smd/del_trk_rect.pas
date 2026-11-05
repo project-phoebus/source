@@ -4,6 +4,8 @@
     sau2  0x00E6E614  SMD_$DEL_TRK_RECT
     sau4  0x0F878DAA  SMD_$DEL_TRK_RECT
     sau5  0x00E70A96  SMD_$DEL_TRK_RECT
+    sau6  0x78077E1E  SMD_$DEL_TRK_RECT
+    sau7  0x3C4818FC  SMD_$DEL_TRK_RECT
     sau9  0x3C47501C  SMD_$DEL_TRK_RECT
 
   - Every caller's rectangle is read once outside the tracking-rectangle

@@ -1,6 +1,7 @@
 { ethernet_execute - start the program loaded into the adapter.
 
   Image addresses:
+    sau7  0x3C491C12  ethernet_execute
     sau8  0x03C8540E  ethernet_execute
     sau9  0x3C48100E  ethernet_execute
 

@@ -1,7 +1,14 @@
 |
-| pbu/sau8/pbu_asm.s - PBU_ASM: the PBU page's hand-written data and
+| pbu/m68k/pbu_asm.s - PBU_ASM: the PBU page's hand-written data and
 | routines (the PBU's flags, the interrupt and trap 6 entries, the DCTE
-| table, the device-enable bits) (SAU8)
+| table, the device-enable bits) (m68k; the SAU7, SAU8)
+|
+| The PBU_ASM of the SAUs whose PBU units are the AT bus's
+| (`pbu_atbus_units', base/config.ins.pas); the other SAUs have their own
+| (pbu/sau3, sau4, sau5), so the file assembles to nothing there.  The
+| SAU7's segment is the SAU8's but for the addresses its cells and
+| operands resolve to (its own symbols; PIC1 and PROT are the I/O
+| definitions' absolute symbols).
 |
 | SAU8 map: "D44 3CA4C00 PBU_PAGE loaded at 1A7000, size = A64" and in it
 | "D 3CA4C00 PBU_ASM size = A64": the whole of the PBU page's data
@@ -61,6 +68,10 @@
 | encodings identical to the image; address operands resolve to our
 | objects.  The address and byte columns are the SAU8 image's.
 |
+        .include "base/config.inc"
+
+        .if pbu_atbus_units
+
         .section ".text.PBU_$PAGE_START","ax",@progbits
         .even
 
@@ -350,3 +361,5 @@ PBU_$ENABLE_DEVICE:
         rts                                     | 3ca5660  4e75
 PBU_$PAGE_END:                                  | 3ca5662
         .word   0                               | to the segment's end (size A64)
+
+        .endif

@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E67EE0  SIO_$K_TIMED_BREAK
     sau4  0x0F8719D4  SIO_$K_TIMED_BREAK
+    sau6  0x78070BBC  SIO_$K_TIMED_BREAK
+    sau7  0x3C47B524  SIO_$K_TIMED_BREAK
     sau9  0x3C46EC54  SIO_$K_TIMED_BREAK
 
   - A break is raised (sio_$set_break), held for the milliseconds given

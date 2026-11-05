@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E4404E  MST_$GET_VA_INFO
     sau4  0x0F84C2F8  MST_$GET_VA_INFO
+    sau6  0x7804B660  MST_$GET_VA_INFO
+    sau7  0x3C45441A  MST_$GET_VA_INFO
     sau8  0x03C4C484  MST_$GET_VA_INFO
     sau9  0x3C44B61A  MST_$GET_VA_INFO
 

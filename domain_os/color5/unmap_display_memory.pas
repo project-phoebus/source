@@ -1,6 +1,7 @@
 { COLOR5_$UNMAP_DISPLAY_MEMORY - unmap the display memory.
 
   Image addresses:
+    sau7  0x3C48410C  COLOR5_$UNMAP_DISPLAY_MEMORY
     sau8  0x03C799B8  COLOR5_$UNMAP_DISPLAY_MEMORY
 
   - The 128 KB at va (MST_$UNMAP); the second and third arguments are

@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E094FE  AREA_$TOUCH
     sau4  0x0F809B12  AREA_$TOUCH
+    sau6  0x78009CCA  AREA_$TOUCH
+    sau7  0x3C40A5DE  AREA_$TOUCH
     sau9  0x3C40ADDE  AREA_$TOUCH
 
   - Under the area lock, after waiting out any operation in transition,

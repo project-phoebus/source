@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E145F0  PMAP_$INIT_WS_SCAN
     sau4  0x0F814E64  PMAP_$INIT_WS_SCAN
+    sau6  0x78014DB8  PMAP_$INIT_WS_SCAN
+    sau7  0x3C41630E  PMAP_$INIT_WS_SCAN
     sau9  0x3C4168D2  PMAP_$INIT_WS_SCAN
 
   - index is the process's number, ws_param its working-set list.

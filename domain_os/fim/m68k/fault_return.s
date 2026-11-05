@@ -10,6 +10,10 @@
  * FIM_$FAULT_RETURN, 22 of FIM_$SETUP_RETURN and the FIM_UNWIRED segment's
  * 2-byte longword pad), in its own section.
  *
+ * With the floating-point accelerator (`fpa_board', base/config.ins.pas:
+ * the SAU7) the accelerator's register routines follow FIM_$SETUP_RETURN
+ * in FIM_UNWIRED, so the pad is not there.
+ *
  * Byte gate (tools/asm_compare.py): identical to the image modulo
  * relocations; `and.w #imm,D0' is the <ea>=#imm form (c07c) in the image,
  * ANDI in ours (recognised by the gate).
@@ -101,5 +105,7 @@ FIM_$SETUP_RETURN:
         movea.l (0,%a0,%d0.w),%a0               /* e21886 */
         subq.l  #2,%a0                          /* e2188a */
         rts                                     /* e2188c */
+        .if !fpa_board
         .short  0x0000                          /* e2188e  segment pad; FIM_WIRED */
                                                 /* (FIM_$TRACE_BIT) starts at 0xE21890 */
+        .endif

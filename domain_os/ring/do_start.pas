@@ -2,6 +2,8 @@
 
   Image addresses:
     sau2  0x00E7671C  ring_$do_start (module-local)
+    sau6  0x78084D36  ring_$do_start (module-local)
+    sau7  0x3C48F806  ring_$do_start (module-local)
     sau8  0x03C83006  ring_$do_start (module-local)
 
   - The receive process (RING_$RCV0 or RING_$RCV1) is created and its

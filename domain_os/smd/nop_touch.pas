@@ -1,6 +1,7 @@
 { SMD_$NOP_TOUCH - the default for a device's touch of its memory.
 
   Image addresses:
+    sau7  0x3C421A32  SMD_$NOP_TOUCH
     sau9  0x3C42014A  SMD_$NOP_TOUCH
 
   - Refuses the address and returns 0.

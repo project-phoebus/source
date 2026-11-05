@@ -4,6 +4,7 @@
     sau3  0x00E6EE44  sm_c_$fix_ecc (module-local)
     sau4  0x0F87BC84  sm_c_$fix_ecc (module-local)
     sau5  0x00E749A8  sm_c_$fix_ecc (module-local)
+    sau6  0x7807B738  sm_c_$fix_ecc (module-local)
 
   - The request's page is mapped at SM_ECC_BUF for SM_FIX_ECC, then
     mapped back where it was (or unmapped), its used bit cleared.

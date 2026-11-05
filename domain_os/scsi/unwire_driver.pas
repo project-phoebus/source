@@ -1,6 +1,7 @@
 { scsi_unwire_driver - unwire the driver's own code and data.
 
   Image addresses:
+    sau7  0x3C4B8380  scsi_unwire_driver
     sau9  0x3C4A4EFC  scsi_unwire_driver
 }
 

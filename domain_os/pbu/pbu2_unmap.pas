@@ -4,13 +4,18 @@
     sau3  0x00E89DE0  PBU2_$UNMAP
     sau4  0x0F897D76  PBU2_$UNMAP
     sau5  0x00E921AA  PBU2_$UNMAP
+    sau6  0x780A75A6  PBU2_$UNMAP
+    sau7  0x3C4B6ED4  PBU2_$UNMAP
     sau8  0x03CA5B56  PBU2_$UNMAP
 
   - At interrupt level (PBU_$TRAP6); no lock.  The buffer's entries
     lose their valid bit (bit 15) when the first page's entry holds the
     buffer's first page (14 bits, 12 of a word entry); word entries
     (`word_iomap') are cleared.
-  - Only the first page's entry is compared.
+  - Only the first page's entry is compared; with the DMA through the
+    I/O map space (`pbu_dma_iomap') the whole entry, and for a unit
+    with its attribute set (attr_set) the space's end is checked from
+    iova's page.
   - Without the I/O map space (`io_regions') nothing is unmapped.
 
   Status stored:
@@ -38,6 +43,9 @@ var
   k: integer;
   entry_ppn: integer32;
   not_mapped: boolean;
+%if pbu_dma_iomap %then
+  page_iova: linteger;
+%endif
 begin
   dcte := pbu_map_check_unit(unit, status);
   if status.all <> status_$ok then
@@ -46,20 +54,43 @@ begin
     status.all := status_$pbu_iomap_not_allocated;
     return;
   end;
+%if pbu_dma_iomap %then
+  if dcte^.flags.attr_set then
+    page_iova := iova div 1024 * 1024;
+%endif
   iv := iova;
   va := linteger(addr(buffer));
   offset := iv - dcte^.map_start;
+%if pbu_dma_iomap %then
+  if dcte^.flags.attr_set then begin
+    if (offset < 0) or else (page_iova + length > dcte^.map_end) or else
+       ((offset & 16#3FF) <> (va & 16#3FF)) then begin
+      status.all := status_$pbu_invalid_iova;
+      return;
+    end;
+  end
+  else if (offset < 0) or else (iv + length > dcte^.map_end) or else
+          ((offset & 16#3FF) <> (va & 16#3FF)) then begin
+    status.all := status_$pbu_invalid_iova;
+    return;
+  end;
+%else
   if (offset < 0) or else (iv + length > dcte^.map_end) or else
      ((offset & 16#3FF) <> (va & 16#3FF)) then begin
     status.all := status_$pbu_invalid_iova;
     return;
   end;
+%endif
   npages := (va + length - 1) div 1024 - va div 1024 + 1;
   first := linteger(offset) div 1024 + dcte^.map_page;
 %if long_iomap %then
   entry_ppn := iomap[first] & 16#3FFF;
 %elseif word_iomap %then
+%if pbu_dma_iomap %then
+  entry_ppn := iomap[first];
+%else
   entry_ppn := iomap[first] & 16#3FFF;
+%endif
 %else
   entry_ppn := iomap[first].entry & 16#FFF;
 %endif

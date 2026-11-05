@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E42D3A  MST_$ALLOC_ASID
     sau4  0x0F84ACEE  MST_$ALLOC_ASID
+    sau6  0x7804A0C6  MST_$ALLOC_ASID
+    sau7  0x3C452EC6  MST_$ALLOC_ASID
     sau8  0x03C4AD92  MST_$ALLOC_ASID
     sau9  0x3C44A0C6  MST_$ALLOC_ASID
 
@@ -40,9 +42,11 @@ var
 %elseif run_time_layout or region_mmu %then
   i: integer;
   base: pinteger;
+%if run_time_layout or region_registers %then
   ppn: integer32;
   rp: ^mst_rars_t;
   page: 0..31;
+%endif
 %else
   base: pinteger;
 %endif
@@ -71,6 +75,7 @@ found:
   { the ASID's root entries (region registers), a copy of ASID 0's
     (ASID 1's are MST_$INIT's), and the global regions active }
   if asid <> 1 then begin
+%if region_registers or run_time_layout %then
     rp := addr(rars[rars_asid_base[asid]]);
     page := rshft(integer32(rp) - integer32(addr(rars)), 10);
     if page in mst_$rar_pages then begin
@@ -84,6 +89,7 @@ found:
     end;
     mmu_$rars_phaddr[asid] := ppn * 1024 +
       (integer32(addr(rars[rars_asid_base[asid]])) & 16#3FF);
+%endif
 %if region_mmu %then
     for i := 0 to mst_region_members - 1 do
       rars[rars_asid_base[asid] + i] := rars[rars_asid_base[0] + i];

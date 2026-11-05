@@ -4,6 +4,8 @@
     sau2  0x00E6F700  SMD_$RETURN_DISPLAY
     sau4  0x0F879F50  SMD_$RETURN_DISPLAY
     sau5  0x00E71B28  SMD_$RETURN_DISPLAY
+    sau6  0x78078E70  SMD_$RETURN_DISPLAY
+    sau7  0x3C482618  SMD_$RETURN_DISPLAY
     sau9  0x3C475D38  SMD_$RETURN_DISPLAY
 
   - The unit becomes the caller's display unit again; the borrower is

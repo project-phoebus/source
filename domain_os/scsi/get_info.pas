@@ -1,3 +1,36 @@
+%if scsi_mailbox_ctlr %then
+{ SCSI_$GET_INFO - return the driver's limits.
+
+  Image addresses:
+    sau7  0x3C4B8BA6  SCSI_$GET_INFO
+
+  - With the mailbox host adapter: version 1 and scsi_$max_transfer, in
+    an answer of at least 8 bytes.
+
+  Status stored:
+    status_$ok: the answer was returned
+    scsi_get_tinfo's status: the handle is not the caller's
+    status_$scsi_device_not_acquired: the record is not in use
+    status_$scsi_bad_length: size is less than 8
+}
+
+procedure scsi_$get_info(in handle: scsi_$handle_t; in size: pinteger;
+                         out info: scsi_$info_t; out status: status_$t);
+var
+  t: scsi_tinfo_ptr_t;
+begin
+  t := scsi_get_tinfo(handle.all, status);
+  if not (scsi_tf_in_use in t^.flags) and (status.all = status_$ok) then
+    status.all := status_$scsi_device_not_acquired;
+  if status.all = status_$ok then
+    if size < 8 then
+      status.all := status_$scsi_bad_length
+    else begin
+      info.version := 1;
+      info.max_transfer := scsi_$max_transfer;
+    end;
+end;
+%else
 { SCSI_$GET_INFO - return the driver's limits.
 
   Image addresses:
@@ -40,3 +73,4 @@ begin
       info.max_transfer := scsi_$max_transfer;
     end;
 end;
+%endif

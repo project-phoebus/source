@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E0DCC8  MST_$VA_TO_SEGNO
     sau4  0x0F80E31C  MST_$VA_TO_SEGNO
+    sau6  0x7800E444  MST_$VA_TO_SEGNO
+    sau7  0x3C40F7E0  MST_$VA_TO_SEGNO
     sau8  0x03C0ECCC  MST_$VA_TO_SEGNO
     sau9  0x3C40FDA8  MST_$VA_TO_SEGNO
 

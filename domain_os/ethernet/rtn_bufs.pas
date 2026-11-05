@@ -2,6 +2,8 @@
   back to NETBUF.
 
   Image addresses:
+    sau6  0x78088198  ethernet_rtn_bufs
+    sau7  0x3C492640  ethernet_rtn_bufs
     sau8  0x03C85E3C  ethernet_rtn_bufs
     sau9  0x3C481A3C  ethernet_rtn_bufs
 

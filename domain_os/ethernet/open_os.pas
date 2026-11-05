@@ -1,6 +1,8 @@
 { ETHERNET_$OPEN_OS - open a system channel for MAC_OS.
 
   Image addresses:
+    sau6  0x7808A3B6  ETHERNET_$OPEN_OS
+    sau7  0x3C4949CE  ETHERNET_$OPEN_OS
     sau8  0x03C881CA  ETHERNET_$OPEN_OS
     sau9  0x3C483DCA  ETHERNET_$OPEN_OS
 

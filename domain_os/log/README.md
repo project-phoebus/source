@@ -38,6 +38,17 @@ segment, not to this module.
 LOG_$READ's worker, log_$read_internal, is one of the conformance
 targets of the compiler project (`../domain-pascal`).
 
+## The SAU6
+
+The SAU6's LOG_ (WIRED_PROC 0x2BC bytes, OS_INIT_PROC 0x2EC, the data
+block 0x1C) is the SAU9's code with the SAU6's LOG_$LAST_ENTRY: no SAU6
+source.
+
+## The SAU7
+
+The SAU7's LOG_ (WIRED_PROC 0x2BC bytes, OS_INIT_PROC 0x2EC, the data
+block 0x1C) is the SAU9's code: no SAU7 source.
+
 ## Open items
 
 The `TODO(pascal)` comments of the translation:

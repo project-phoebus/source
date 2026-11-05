@@ -1,6 +1,7 @@
 { io/io_desc.pas - the IO_DESC module, the units' I/O descriptors.
 
   Image addresses:
+    sau7  0x3C4336B0  IO_DESC data (WIRED_DATA, 0x1A0 bytes)
     sau8  0x03C2EBB8  IO_DESC data (WIRED_DATA, 0x160 bytes)
     sau9  0x3C430DF4  IO_DESC data (WIRED_DATA, 0x1C0 bytes)
 
@@ -24,9 +25,12 @@
 
   The SAU8's: the two 802.5 rings, the cartridge tape (`ct_qic02'), the
   two Ethernets, the two rings, the floppy (`floppy_disk') and the
-  Winchester controller (`winchester_ctlr'), all on the AT bus.  With
-  the part io_descriptors, empty elsewhere (the SAU7's IO_DESC, 0x1A0
-  bytes, not compared).
+  Winchester controller (`winchester_ctlr'), all on the AT bus.  The
+  SAU7's are the SAU8's with the SCSI host adapter's first
+  (`scsi_mailbox_ctlr': one descriptor, its interrupt and CSR page on
+  the AT bus) and the mailbox Winchester controller's before the
+  Winchester's (`win_mailbox_ctlr').  With the part io_descriptors,
+  empty elsewhere.
 
   Check: tools/pascal_check.sh (which finds this file by its module
   heading).
@@ -84,6 +88,9 @@ var
 %if floppy_disk %then
   flop: extern char;
 %endif
+%if win_mailbox_ctlr %then
+  win2: extern char;
+%endif
 %if winchester_ctlr %then
   win: extern char;
 %endif
@@ -93,7 +100,9 @@ var
   the second one.  The second descriptors (the SCSI controller's DMA
   interrupt, the rings' second CSR windows) have no map names. }
 var
-%if scsi_driver %then
+%if scsi_mailbox_ctlr %then
+  scsi_io_desc: extern io_desc_t;
+%elseif scsi_driver %then
   scsi9_io_desc: extern io_desc_t;
   scsi9_dma_io_desc: extern io_desc_t;
 %endif
@@ -123,12 +132,21 @@ var
 %if floppy_disk %then
   flp_io_desc: extern io_desc_t;
 %endif
+%if win_mailbox_ctlr %then
+  win7_io_desc: extern io_desc_t;
+%endif
 %if winchester_ctlr %then
   win_io_desc: extern io_desc_t;
 %endif
 
 define
-%if scsi_driver %then
+%if scsi_mailbox_ctlr %then
+  scsi_io_desc :=  { +0x000 }
+    [next := nil,
+     int := [id := [vector := 16#05], has_int := true],
+     csr := [va := addr(scsi), pa := 16#200, pages := 1, has_csr := true],
+     tag := 2, bus := 3, attrs := [0]];
+%elseif scsi_driver %then
   scsi9_io_desc :=  { +0x000 }
     [next := addr(scsi9_dma_io_desc),
      int := [id := [vector := 16#A5], has_int := true],
@@ -228,6 +246,14 @@ define
      csr := [va := addr(flop), pa := 16#3F0, pages := 1,
              has_csr := true],
      tag := 2, bus := 3];
+%endif
+%if win_mailbox_ctlr %then
+  win7_io_desc :=  { +0x160 on the SAU7 }
+    [next := nil,
+     int := [id := [vector := 16#0F], has_int := true],
+     csr := [va := addr(win2), pa := 16#1A8, pages := 1,
+             has_csr := true],
+     tag := 2, bus := 3, attrs := [0]];
 %endif
 %if winchester_ctlr %then
   win_io_desc :=  { +0x140 on the SAU8 }

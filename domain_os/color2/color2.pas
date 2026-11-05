@@ -3,18 +3,22 @@
 
   Image addresses:
     sau5  0x00E8C3B0  COLOR2 data (.DATA, 8 bytes)
+    sau6  0x7809F708  COLOR2 data (.DATA, 8 bytes)
 
   With the graphics board (`gpu_driver', base/config.ins.pas: the maps
   of the SAU5 and SAU6 have the module): one compilation unit with two
   code segments and one data segment.  On the SAU5 the map's COLOR2 code
   segments are in WIRED_PROC (0x5C bytes, COLOR2_$VIDEO_CTL) and .TEXT
   (0x458 bytes, COLOR2_$COLD_INIT .. COLOR2_$DISABLE_GPU_INT); its data
-  segment in .DATA (8 bytes).
+  segment in .DATA (8 bytes).  On the SAU6 the .TEXT segment is 0x4E4
+  bytes: COLOR2_$INT_INIT puts the handler in its own vector
+  (`gpu_own_vectors') and COLOR2_$ASSOC maps the board's pages into the
+  caller's special segment (`vm_regions').
 
   Without the board the module compiles to nothing.
 
   The hand-written COLOR2_ASM (COLOR2_$INT_DECODE, COLOR2_$INT_EC) is
-  color2/sau5/color2_asm.s.
+  color2/sau5/color2_asm.s, and the SAU6's color2/sau6/color2_asm.s.
 
   The board is either of two displays, by SMD_$GRAPHIC_DEVICE_ID: the
   DN580's (smd_gdev_color2), driven through the board's control word at
@@ -50,6 +54,7 @@ module color2;
 %include 'fim/fim.ins.pas';
 %include 'misc/crash_system.ins.pas';
 %include 'mst/mst.ins.pas';
+%include 'uid/uid.ins.pas';
 %include 'smd/smd.ins.pas';
 %include 'tpad/tpad.ins.pas';
 %include 'suma/suma.ins.pas';
@@ -58,15 +63,6 @@ module color2;
 %include 'color/color.ins.pas';
 %include 'color2/color2.ins.pas';
 %include 'smd/smd_internal.ins.pas';
-
-{ TODO(sau) the SAU6 COLOR2 code
-
-  The module's code below is the SAU5's.  tools/sau_catalog.py finds
-  COLOR2_$VIDEO_CTL, COLOR2_$ASSOC, COLOR2_$LOAD_CRSR, COLOR2_$BUSY_WAIT
-  and COLOR2_$INT_DECODE different on the SAU6 (its .TEXT segment
-  0x4E4 bytes against the SAU5's 0x458), and the SAU5's
-  COLOR2_$INT_INIT calls COLOR_ASM's COLOR_$VECTOR_INIT, which the
-  SAU6 (no COLOR module) does not have. }
 
 var
   color2_owner3: pinteger;                      { +0x0 }

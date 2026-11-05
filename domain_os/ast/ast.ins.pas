@@ -245,14 +245,18 @@ type
     first word is a set (the flags byte and its neighbor), loaded and
     tested, and updated in place (member 13, installed); the second word the
     page number. }
-  { The entry as one longword too, the second variant:
-    ast_$allocate_pages keeps bits 31..23 and merges the page's disk
-    address into the rest in memory (ast/allocate_pages.pas).  The
-    earlier fields keep their names and offsets. }
+  { The entry as one longword too, the second variant.  The earlier
+    fields keep their names and offsets. }
   { The record ast_$pmap_dentry_t (its note is below, beside the row
     types) is declared here, before the entry, whose third view it is:
     ast_$update_aste reads an entry's disk address as the packed
-    field. }
+    field.  Outside the page descriptor layout the low 23 bits are a
+    field too (ast_$pmap_fentry_t, the fourth view): the SAU6 image
+    reads and stores them as one field (AST_$TOUCH, AST_$TRUNCATE and
+    the others), and a page's disk address goes back into them as a
+    field store.  The value is the MMAP entry's longword taken as a
+    linteger: the 68010 images clear the field and OR the longword in
+    unmasked, the form of a non-negative value. }
 %if pmmu_page_maps %then
   { The entry as an MC68030 page descriptor: an installed page's frame in
     bits 31..10 (the descriptor's page address), a page not installed
@@ -289,12 +293,19 @@ type
     unused_hi: 0..1023;                   { bits 31..22 }
     daddr: 0..16#3FFFFF;                  { bits 21..0 }
   end;
+  ast_$pmap_fentry_t = packed record
+    unused_hi: 0..511;                    { bits 31..23 }
+    fm_daddr: 0..16#7FFFFF;               { bits 22..0: the disk address
+                                            with bit 22, the flags'
+                                            member 6 }
+  end;
   ast_$pmap_entry_t = record
     case integer of
       1: (flags: set of 0..15;            { 0x00 }
           vpn: pinteger);                 { 0x02 }
       2: (all: integer32);                { 0x00 }
       3: (dentry: ast_$pmap_dentry_t);    { 0x00 }
+      4: (fentry: ast_$pmap_fentry_t);    { 0x00 }
   end;
 %endif
   ast_$pmap_t = array[0..31] of ast_$pmap_entry_t;

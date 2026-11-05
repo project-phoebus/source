@@ -5,6 +5,8 @@
     sau3  0x00E6E652  SMD_$INQ_DISP_UID
     sau4  0x0F87A96E  SMD_$INQ_DISP_UID
     sau5  0x00E7258E  SMD_$INQ_DISP_UID
+    sau6  0x7807986C  SMD_$INQ_DISP_UID
+    sau7  0x3C482D8C  SMD_$INQ_DISP_UID
     sau9  0x3C4764AC  SMD_$INQ_DISP_UID
 
   - The UID is UID_$NIL, whatever the unit; with `display_devices'

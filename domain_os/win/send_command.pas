@@ -1,6 +1,7 @@
 { win_$send_command - send the controller a command block.
 
   Image addresses:
+    sau7  0x3C41CA12  win_$send_command (module-local)
     sau8  0x03C1A076  win_$send_command (module-local)
 
   - Once controller 0 is idle and then in the command phase, the block

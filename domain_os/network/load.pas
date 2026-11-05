@@ -2,6 +2,8 @@
 
   Image addresses:
     sau2  0x00E2F7F2  NETWORK_$LOAD
+    sau6  0x78038112  NETWORK_$LOAD
+    sau7  0x3C437CEA  NETWORK_$LOAD
     sau8  0x03C324BA  NETWORK_$LOAD
 
   - When port 0 is active and its driver has an entry at +0x1C, the

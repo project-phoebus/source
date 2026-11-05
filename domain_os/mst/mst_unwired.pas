@@ -5,6 +5,10 @@
     sau2  0x00E7CF0C  MST_UNWIRED data (.DATA, 0x48 bytes)
     sau2  0x00E85710  MST_UNWIRED data (DATA$, 4 bytes)
     sau4  0x0F88A708  MST_UNWIRED data (.DATA, 0xF78 bytes)
+    sau6  0x7808FDD0  MST_UNWIRED data (.DATA, 0x7850 bytes)
+    sau6  0x780A0C88  MST_UNWIRED data (DATA$, 4 bytes)
+    sau7  0x3C49EFCC  MST_UNWIRED data (.DATA, 0x7270 bytes)
+    sau7  0x3C4AF624  MST_UNWIRED data (DATA$, 4 bytes)
     sau8  0x03C923CC  MST_UNWIRED data (.DATA, 0x3670 bytes)
     sau8  0x03C9E3B8  MST_UNWIRED data (DATA$, 4 bytes)
     sau9  0x3C48E1D0  MST_UNWIRED data (.DATA, 0x74D8 bytes)
@@ -43,6 +47,12 @@
     +0x74C2  mst_$rar_pages         6       zero (read by nothing)
     +0x74C8  prot_rights            0x10    mst_$lookup_object's static
 
+  With the large address space and the pageable pages 16#4000..16#BFFF
+  (`mmap_ppns_4000_bfff'), 0x7270 bytes: page_avail_bitmap is 0x268
+  bytes (4915 MSTE pages, 15% of 32768), and every object after it is
+  0x268 bytes lower than above.  The offsets in the declarations below
+  are the 65536 pages'.
+
   With the layout chosen at boot (`run_time_layout'), 0x3670 bytes:
 
     +0x0000  page_avail_bitmap      0x68    all ones
@@ -68,6 +78,21 @@
     +0xF62  mst_$rar_pages         2       zero
     +0xF64  unused_f64             4       zero (read by nothing)
     +0xF68  prot_rights            0x10    mst_$lookup_object's static
+
+  With the 65536 segments (`vm_65536_segs'), 0x7850 bytes:
+
+    +0x0000  page_avail_bitmap      0x49C   all ones
+    +0x049C  unused_049c            4       zero (read by nothing)
+    +0x04A0  mst_$segs_mapped       0x6C4C  zero, 239 words per ASID
+    +0x70EC  unused_70ec            4       zero (read by nothing)
+    +0x70F0  mst_$bst_pages         0x6CC   zero, 30 bytes per ASID
+    +0x77BC  unused_77bc            4       zero (read by nothing)
+    +0x77C0  rars_asid_base         0x74    zero (MST_$PRE_INIT)
+    +0x7834  page_alloc_hint        2       zero
+    +0x7836  mst_$mst_pages_limit   2       zero
+    +0x7838  mst_$mst_pages_wired   2       zero
+    +0x783A  mst_$rar_pages         6       zero (read by nothing)
+    +0x7840  prot_rights            0x10    mst_$lookup_object's static
 
   Build: dpc -I domain_os domain_os/mst/mst_unwired.pas.  Check:
   tools/pascal_check.sh.
@@ -115,7 +140,9 @@ module mst_unwired;
   stand-in's place is taken by 6 bytes no instruction reaches, named
   after the SAU4 map's MST_$RAR_PAGES at the same place (6 bytes after
   MST_$MST_PAGES_WIRED); the SAU9 map has no symbol for them, so a plain
-  module variable. }
+  module variable.  The 65536 segments' block has the same 6 bytes, and
+  4 bytes nothing addresses after each of the bitmap, MST_$SEGS_MAPPED
+  and MST_$BST_PAGES: stand-ins. }
 
 type
   { One longword of the page bitmap, a set of its 32 pages (member 0 the
@@ -139,6 +166,8 @@ const
     the large address space (MST_$INIT's last index). }
 %if large_address_space %then
   mst_pages_percent = 15;
+%elseif mst_pages_tiered %then
+  mst_pages_percent = 20;
 %elseif run_time_layout %then
   mst_pages_percent = 10;
 %else
@@ -148,6 +177,11 @@ const
   { With the 8192 segments the bound is 819, a tenth of 8192 pages
     (MSTE_PAGES's size), not of the 15872 pageable ones. }
   mst_pages_max = 8192 * mst_pages_percent div 100;
+%elseif mst_pages_tiered %then
+  { A tenth of the first 4096 pages and a fifth of the 45056 pageable
+    ones above them: 9420 (MST_$INIT's bound, MSTE_PAGES's size). }
+  mst_pages_max = (mmap_$last_ppn - mmap_$first_ppn + 1 - 4096) *
+                    mst_pages_percent div 100 + 4096 * 10 div 100;
 %else
   mst_pages_max = (mmap_$last_ppn - mmap_$first_ppn + 1) *
                   mst_pages_percent div 100;
@@ -196,6 +230,38 @@ define
 var
   unused_f64: integer32;                  { +0xF64: zero, stand-in }
   { +0xF68: prot_rights, mst_$lookup_object's static. }
+%elseif vm_65536_segs %then
+var
+  page_avail_bitmap: array[0..mst_bitmap_last] of mst_page_set_t :=
+    [* of [0..31]];                       { +0x0000: ffff x 590 }
+  unused_049c: integer32;                 { +0x049C: zero, stand-in }
+
+define
+  mst_$segs_mapped;                       { +0x04A0 }
+
+var
+  unused_70ec: integer32;                 { +0x70EC: zero, stand-in }
+
+define
+  mst_$bst_pages;                         { +0x70F0 }
+
+var
+  unused_77bc: integer32;                 { +0x77BC: zero, stand-in }
+
+define
+  rars_asid_base;                         { +0x77C0 }
+
+var
+  page_alloc_hint: pinteger;              { +0x7834 }
+
+define
+  mst_$mst_pages_limit;                   { +0x7836 }
+  mst_$mst_pages_wired;                   { +0x7838 }
+
+var
+  mst_$rar_pages: array[0..2] of integer; { +0x783A: zero, read by
+                                            nothing }
+  { +0x7840: prot_rights, mst_$lookup_object's static. }
 %elseif large_address_space %then
 var
   page_avail_bitmap: array[0..mst_bitmap_last] of mst_page_set_t :=

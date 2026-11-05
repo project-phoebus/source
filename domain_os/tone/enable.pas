@@ -4,6 +4,8 @@
     sau2  0x00E1ACE8  TONE_$ENABLE
     sau3  0x00E1A33A  TONE_$ENABLE
     sau4  0x0F81BEFC  TONE_$ENABLE
+    sau6  0x7801CBFE  TONE_$ENABLE
+    sau7  0x3C41EF12  TONE_$ENABLE
     sau8  0x03C1C2CA  TONE_$ENABLE
     sau9  0x3C41D862  TONE_$ENABLE
 
@@ -12,6 +14,8 @@
     channel record is that module's (term/os_term_init.pas).
   - With `kbd_tone' the keyboard sounds the tone: one of its two tone
     commands goes to the console keyboard through KBD_$PUT.
+  - With `kbd_type_sysrev' only the type 3 keyboard does; for the type 2
+    keyboard the speaker's channel sounds it, as without `kbd_tone'.
   - The callee's status is dropped.
 
   Status stored: none.
@@ -22,7 +26,16 @@ procedure tone_$enable(in enable: boolean);
 var
   status: status_$t;
 begin
-%if kbd_tone %then
+%if kbd_type_sysrev %then
+  if not mmu.mem_err.sysrev.kbd_type_2 then begin
+    if enable then
+      kbd_$put(0, 0, tone_$on_string, 3, status)
+    else
+      kbd_$put(0, 0, tone_$off_string, 3, status);
+  end
+  else
+    sio2681_$tone(addr(tone_$channel), enable, status);
+%elseif kbd_tone %then
   if enable then
     kbd_$put(0, 0, tone_$on_string, 3, status)
   else

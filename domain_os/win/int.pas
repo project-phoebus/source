@@ -4,6 +4,7 @@
     sau2  0x00E19BFA  WIN_$INT
     sau4  0x0F81A72E  WIN_$INT
     sau5  0x00E1A0CE  WIN_$INT
+    sau6  0x7801A4B0  WIN_$INT
 
   - The ANSI form, with a chain in progress: at priority 5, the drive's
     status is posted to win_status; a finished seek starts its transfer,
@@ -25,10 +26,22 @@ function win_$int(in dcte: dcte_t): boolean;
 var
   unit: pinteger;
   regs: win_$regs_ptr_t;
+%if win_vectored_ctlr %then
+  status: pinteger;
+%endif
 begin
   unit := dcte.cnum;
   regs := win_units[unit].regs;
+%if win_vectored_ctlr %then
+  status := regs^.status;
+  if (status & win_status_int) = 0 then begin
+    win_$int := false;
+    return;
+  end;
+  win_stat := status;
+%else
   win_stat := regs^.status;
+%endif
   if (win_stat & 16#DCFF) = 16#C800 then begin
     { one descriptor done: on to the next request }
     if win_cur_req <> nil then

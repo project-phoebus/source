@@ -4,6 +4,8 @@
     sau2  0x00E6D736  smd_$reset_unit_display (module-local)
     sau4  0x0F877D8E  smd_$reset_unit_display (module-local)
     sau5  0x00E6F9B8  smd_$reset_unit_display (module-local)
+    sau6  0x78076DEC  smd_$reset_unit_display (module-local)
+    sau7  0x3C480CDA  smd_$reset_unit_display (module-local)
     sau9  0x3C4743FA  smd_$reset_unit_display (module-local)
 
   - The clip window becomes the display's limits, the font slots are

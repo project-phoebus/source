@@ -1,6 +1,7 @@
 { COLOR4_$LOCK_DISPLAY - claim the display for a request.
 
   Image addresses:
+    sau7  0x3C48BC92  COLOR4_$LOCK_DISPLAY
     sau8  0x03C7FFAE  COLOR4_$LOCK_DISPLAY
 
   - Under the unit's spin lock: a free display (lock state 0) is given

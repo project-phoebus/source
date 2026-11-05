@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E0250C  ast_$lookup_aste (module-local)
     sau4  0x0F802924  ast_$lookup_aste (module-local)
+    sau6  0x78002C8E  ast_$lookup_aste (module-local)
+    sau7  0x3C4030A4  ast_$lookup_aste (module-local)
     sau9  0x3C4038A4  ast_$lookup_aste (module-local)
 
   - The AOTE's ASTE list (descending by segment) is walked for the

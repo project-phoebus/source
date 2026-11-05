@@ -5,6 +5,8 @@
     sau3  0x00E19A20  IO_$XLATE_IOVA
     sau4  0x0F81B5D8  IO_$XLATE_IOVA
     sau5  0x00E1ACD0  IO_$XLATE_IOVA
+    sau6  0x7801C274  IO_$XLATE_IOVA
+    sau7  0x3C41E4D8  IO_$XLATE_IOVA
     sau8  0x03C1BAF4  IO_$XLATE_IOVA
 
   - The result is the bus's xlate_iova answer, a physical page number;

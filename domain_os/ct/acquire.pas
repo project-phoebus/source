@@ -3,6 +3,8 @@
   process.
 
   Image addresses:
+    sau7  0x3C4862E0  ct_scsi_open (nested)
+    sau7  0x3C486482  CT_$ACQUIRE
     sau9  0x3C477C7A  ct_scsi_open (nested)
     sau9  0x3C477E1C  CT_$ACQUIRE
 
@@ -14,6 +16,12 @@
     power-on reset, buffered mode selected).  An error gives up the unit.
   - SCSI_$SETUP's status replaces IO_$GET_DCTE's; the early failures
     audit the status before it is set.
+  - With the QIC-02 driver as well (`ct_qic02'), a drive absent from the
+    SCSI bus is the AT bus adapter's: its PBU unit is set up for CT_$INT
+    (PBU_$ACQUIRE_INT, sharing 3) before the wiring, and the AT bus
+    driver's acquisition follows it (the other arm's): a reset of an
+    outstanding command, then the drive's status read under the
+    controller's lock.
 
   Status stored:
     status_$ok: the unit was acquired
@@ -25,18 +33,31 @@
     IO_$GET_DCTE's status, with the fail bit: no DCTE, and no drive
     SCSI_$SETUP's status: it failed
     status_$ct_drive_does_not_exist: the drive did not answer in time
+    status_$ct_tape_in_read_mode or status_$ct_tape_in_write_mode:
+      warnings, a transfer is under way (QIC-02)
     the callees' statuses: those failed
 }
 
 procedure ct_$acquire(in unit: integer; out status: status_$t);
 label
+%if ct_qic02 %then
+  1, 8,
+%endif
   99;
+%if ct_qic02 %then
+type
+  req_ptr_t = ^io_$acquire_rec_t;
+%endif
 var
   rel_st: status_$t;
   st: status_$t;
   audit_flags: pinteger;
   data_count: integer;
   set_up: boolean;
+%if ct_qic02 %then
+  req: req_ptr_t;
+  first: boolean;
+%endif
 
   { ct_scsi_open - prepare the drive for the new owner. }
   procedure ct_scsi_open;
@@ -144,6 +165,15 @@ begin
         set_up := true;
     end;
   end;
+%if ct_qic02 %then
+  if (status.all = 0) and (ct_scsi_state = ct_scsi_absent) then begin
+    req := req_ptr_t(ct_dcte^.disk_dinit);
+    first := true;
+    pbu_$acquire_int(ct_pbu_unit, addr(ct_$int), ct_dcte,
+                     univ_ptr(req^.csr.va), req^.csr.pa, req^.csr.pages, 3,
+                     status);
+  end;
+%endif
   if status.all <> 0 then begin
     ct_owner := 0;
     goto 99;
@@ -159,7 +189,78 @@ begin
     ct_area_count := ct_area_count + data_count;
   end;
   if ct_scsi_state <> ct_scsi_absent then
-    ct_scsi_open;
+    ct_scsi_open
+%if ct_qic02 %then
+  else begin
+    if ct_busy then begin
+      reset_drive;
+      st.all := ct_wait(480, false);
+      if st.all <> status_$ct_tape_power_on_reset then begin
+        st.all := status_$ct_drive_does_not_exist;
+        pbu_$release_int(ct_pbu_unit, 3, status);
+        ct_owner := 0;
+        goto 8;
+      end;
+    end;
+    ct_busy := false;
+
+    ml_$lock(ct_dcte^.disk_error_que_hi);
+1:
+    case ct_state of
+      ct_state_none: begin
+          ct_reading := true;
+          st.all := do_ctl_cmd(ct_cmd_read_status, ct_count_unlocked);
+          if st.all = 0 then
+            st.all := ct_wait(960, true);
+          if st.all = 0 then
+            st.all := status_$ct_tape_not_at_load_point
+          else if st.all = status_$ct_tape_at_load_point then begin
+            st.all := 0;
+            ct_write_ok := true;
+          end
+          else if (st.all = status_$ct_tape_write_protected)
+                  or else (st.all = status_$ct_tape_power_on_reset) then
+            st.all := 0
+          else begin
+            if (st.all = status_$ct_timeout_waiting_for_io)
+               or else (st.all = status_$ct_controller_timeout)
+               or else (st.all = status_$ct_illegal_drive_command)
+               or else (st.all = status_$ct_illegal_controller_command)
+            then begin
+              reset_drive;
+              st.all := ct_wait(480, false);
+              if first and then (st.all = status_$ct_tape_power_on_reset)
+              then begin
+                first := false;
+                goto 1;
+              end;
+              st.all := status_$ct_drive_does_not_exist;
+            end;
+            pbu_$release_int(ct_pbu_unit, 3, status);
+            ct_owner := 0;
+          end;
+        end;
+      ct_state_read: begin
+          reset_drive;
+          st.all := ct_wait(960, true);
+          st.all := status_$ct_tape_in_read_mode;
+        end;
+      ct_state_write: begin
+          reset_drive;
+          st.all := ct_wait(960, true);
+          st.all := status_$ct_tape_in_write_mode;
+        end;
+    end;
+    ml_$unlock(ct_dcte^.disk_error_que_hi);
+8:
+    status := st;
+    ct_total_2c := 0;
+    ct_total_2e := 0;
+    if status.code > 0 then
+      ct_owner := 0;
+  end
+%endif
+  ;
 
 99:
   if (st.all <> 0) and then set_up then
@@ -355,6 +456,7 @@ end;
 
   Image addresses:
     sau5  0x00E775BA  CT_$ACQUIRE
+    sau6  0x7807E6FE  CT_$ACQUIRE
 
   - Under the MT lock the current process becomes unit 0's owner; the
     controller's DCTE is found, the CT cleanup bit set, and the first
@@ -362,6 +464,9 @@ end;
   - Under the controller's lock, with no transfer under way, the tape is
     loaded (960 ticks' wait with quit).  An error gives the ownership up.
   - The early failures audit the status before it is set.
+  - With the second controller (`win6_ct6_board') the load is given
+    with the load mark (ct6_loading) set, and the mark is put back
+    after it.
 
   Status stored:
     status_$ok: the unit was acquired (also "tape at load point" and
@@ -385,6 +490,9 @@ var
   st: status_$t;
   audit_flags: pinteger;
   data_count: integer;
+%if win6_ct6_board %then
+  loading: boolean;
+%endif
 begin
   if unit = 0 then
     status.all := 0
@@ -397,7 +505,11 @@ begin
   ml_$lock(ml_$mt_lock);
   if ct_owner = 0 then
     ct_owner := proc1_$current
+%if ct_owner_test_reversed %then
+  else if ct_owner = proc1_$current then
+%else
   else if proc1_$current = ct_owner then
+%endif
     status.all := status_$ct_unit_already_acquired
   else
     status.all := status_$ct_unit_in_use;
@@ -436,10 +548,17 @@ begin
   ml_$lock(ct_dcte^.disk_error_que_hi);
   case ct_state of
     ct_state_none: begin
+%if win6_ct6_board %then
+        loading := ct6_loading;
+        ct6_loading := true;
+%endif
         ct_reading := true;
         st.all := do_ctl_cmd(ct_cmd_load, ct_count_unlocked);
         if st.all = 0 then
           st.all := ct_wait(960, true);
+%if win6_ct6_board %then
+        ct6_loading := loading;
+%endif
         if st.all = 0 then
           st.all := status_$ct_tape_not_at_load_point
         else if st.all = status_$ct_tape_at_load_point then begin

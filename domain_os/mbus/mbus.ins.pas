@@ -35,7 +35,8 @@ const
   { With the vectored adapter (`mbus_vectored_adapter'): the first of the
     levels' vectors (level 0's; the level is the vector less it), the
     levels MBUS_$INIT traps, and what MBUS_$INT adds to the level for the
-    adapter's acknowledge register. }
+    adapter's acknowledge register.  With `mbus_vectored_enable' the
+    levels' vectors start at the same place. }
   mbus_$first_vector = 16#B0;
   mbus_$vectored_levels = 8;
   mbus_$ack_base = 16#60;
@@ -112,9 +113,10 @@ procedure mbus_$init; extern;
 
 { MBUS_$INT (mbus/int.pas, `mbus_polled_adapter'): the routine IO_$TRAP
   installs for the Multibus's vector; no arguments.  With
-  `mbus_vectored_adapter' the vector it was entered by, a word by value
-  (the hand-written first-level handler pushes it). }
-%if mbus_vectored_adapter %then
+  `mbus_vectored_adapter' or `mbus_vectored_enable' the vector it was
+  entered by, a word by value (the hand-written first-level handler
+  pushes it). }
+%if mbus_vectored_adapter or mbus_vectored_enable %then
 procedure mbus_$int(vector: integer); options(extern, val_param);
 %else
 procedure mbus_$int; extern;

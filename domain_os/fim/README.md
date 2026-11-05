@@ -128,6 +128,81 @@ frame's longword at +0x0A (`fault_frame_addr`) and saves no FPU state
 (`fp_state_in_cpu`); its entry also saves FP2..FP7 with a descriptor
 for them, which no source construct here produces (its TODO(pascal)).
 
+## The SAU6
+
+FIM_$BUILD_DF is the SAU8's code without `pmmu_page_maps`'s store of
+MMU_$BUS_STATUS, and keeps 1208 bytes of room on the user's stack where
+every other SAU keeps 1024 (`fim_fp_frame_margin`, fim_usp_margin in
+`fim.ins.pas`); the other six are the SAU9's code.
+
+The SAU6's FIM_WIRED (0x131C bytes) is its own between FP_$OWNER and
+FIM_$SPURIOUS_INT:
+
+| routine | file |
+|---------|------|
+| MCSR_CONFIG, MMU_$BUS_STATUS, MEM_$MCSR1 .. MEM_$MEAR2, FIM_$BUS_ERR, the memory boards' error handler, FIM_$NMI | `sau6/bus_err.s` (`mmu_status_bit_6`) |
+| the bus error's FPU entry, FIM_$FLINE, FIM_$FP_ABORT, FIM_$FP_INIT, FIM_$FSAVE, FIM_$FRESTORE, FP_$GET_FP, FP_$PUT_FP, FIM_$FP_GET_STATE, FIM_$FP_PUT_STATE | `sau6/fp.s` (`fpu_enable_mmu_9`; the m68k files and `fp/m68k/fp_context.s` are out) |
+
+and the shared files have its arms: JMP_TO_BUS_ERR acknowledges the
+VME adapter first and FIM_$SPURIOUS_INT on its way out (`fim_vme_ack`),
+FIM_$COLD_BUS_ERR reads the MMU's word at +0xE first
+(`mmu_status_bit_6`), the FP stubs' frame helper is a return and
+FIM_$FP_PARITY and FIM_$FP_VEC_EXCEPTION follow FIM_$FP_SIG_NAN
+(`fpu_enable_mmu_9`, `m68k/fp_exceptions.s`), FIM_$GET_USER_SR_PTR's
+user limit is the SAU6's PROT (`vm_65536_segs`), and there is no
+parity record before MISS_STATUS (`m68k/wired_data.s`, no
+`memory_parity`).
+
+## The SAU7
+
+The SAU7's seven compiled routines (FIM_ 0x678 bytes, the data block
+0x134) are the SAU8's code, FIM_$BUILD_DF with `pmmu_page_maps`: no
+SAU7 source.
+
+The SAU7 has a floating-point accelerator board (`fpa_board`), and its
+hand-written segments are larger than the SAU8's: FIM_UNWIRED 0xAF4
+bytes (the SAU8's 0x4F0), FIM_WIRED 0x1804 (0x1118):
+
+| image | file |
+|-------|------|
+| FIM_UNWIRED up to FIM_$SETUP_RETURN, without the segment's pad | `m68k/*.s` (`fault_return.s`: no pad with `fpa_board`) |
+| FIM_$FP_GET_FPREGS .. FIM_$FP_REX_DP_CVT, the accelerator's register and wrap routines, and the segment's pad | `sau7/fpa_regs.s` |
+| FIM_$TRACE_BIT .. FP_$OWNER and FP_$EXCLUSION | `m68k/trace_bit.s`, `m68k/bus_err.s`, `../fp/m68k/savep.s` |
+| FPA_$SAVEP, FPA_$OWNER and the accelerator's lock | `../fp/m68k/savep.s` (`fpa_board`) |
+| MMU_$BUS_STATUS, FIM_$BUS_ERR | `sau7/bus_err.s`: the SAU8's handler with the MC68030 choice (M68030), the system control page's word cleared, the accelerator's addresses (16#FFF80000 and up) sent to its code, the status mask 16#3F0E, no PMMU-less form |
+| NMI_$CNT, FIM_$NMI and its fault path after FIM_$SPUR_CNT's cells | `sau7/nmi.s` (the SAU9's handler with the physical cache's and the CPU status register's tests in front) |
+| FPA_$DEBUG1 .. FPA_$DEBUG9, the accelerator's bus error entry and owner switch | `sau7/fpa.s` |
+| FIM_$BUS_ERR's FPU entry, FIM_$FLINE, the FP context helpers, FIM_$FP_ABORT | `m68k/fline.s`, `../fp/m68k/fp_context.s`, `m68k/fp_abort.s` |
+| FIM_$FP_INIT, FIM_$FSAVE, FIM_$FRESTORE, FP_$GET_FP, FP_$PUT_FP, FIM_$FP_GET_STATE, FIM_$FP_PUT_STATE | `m68k/*.s`, `../fp/m68k/fp_context.s`, with the accelerator's arms (`fpa_board`); FIM_$FP_PUT_STATE without its pad |
+| FIM_$SPURIOUS_INT, FIM_$SPUR_CNT's cells | `m68k/spurious_int.s` |
+| PARITY_$INFO (0x16 bytes, `parity_cache_check`) .. FIM_$EXIT, the second FIM_WIRED | `m68k/*.s` |
+
+FIM_$CRASH, in the CRASH_SYSTEM segment, is
+`../misc/m68k/crash_system_restart.s`'s, with the physical cache
+turned off first (`crash_cache_off`).
+
+### FIM_FP
+
+The accelerator's exception handler is compiled Pascal of its own
+module, `fim_fp.pas` (`module fim_fp;`, the map's FIM_FP segments: code
+in .TEXT, 0x1E3C bytes, and 4 zero bytes in .DATA), its whole body
+under `fpa_board`.  One routine, FIM_$FP_INTERLUDE_HANDLER, with 34
+nested ones, in `fp_interlude_handler.pas`:
+
+| routine | what |
+|---------|------|
+| FIM_$FP_INTERLUDE_HANDLER | reads the state, decodes the instruction, completes it by the WTK status code, accrues the exceptions, writes the state back |
+| fpa_error | an internal error's code into the FPCSR |
+| decode_instruction (and check_wtk_6_low, check_wtk_6_high, check_wtk_11_low, load_kind_0 .. load_kind_4 nested in it) | the exception register into the operands, the result's register, the precisions and the operation |
+| classify, is_denormal, quiet_nan, int_result, sp_bias_up, dp_bias_up | helpers on one value |
+| get_state, put_state, post_exceptions | the accelerator's state in and out |
+| integer_overflow, invalid_result, nan_operand, overflow_result, underflow_result, divide_by_zero, inexact_result | the default results |
+| reexecute, rex_sp_monadic, rex_dp_monadic, rex_sp_cvt, rex_dp_cvt, rex_sp_diadic, rex_dp_diadic (sp_tiny_result, dp_tiny_result nested in the last two) | the operation re-executed on scaled operands |
+
+The accelerator's types and the headings of the register and wrap
+routines (`sau7/fpa_regs.s`) are in `../fp/fp.ins.pas`, the floating
+point fault statuses and the handler's heading in `fim.ins.pas`.
+
 ## Open items
 
 ### Behavior
@@ -144,6 +219,8 @@ faults (whose frames fill it) read it.
   save around the routine (`fp_state_in_cpu`).
 - `init_asid.pas`: 16 frame bytes (stand-in `unused_10`).
 - `free_asid.pas`: 4 frame bytes (stand-in `unused_4`).
+- `fim_fp.pas`: the 4-byte data block and the A5 load into it.
+- `fp_interlude_handler.pas`: four frames larger than their locals.
 
 ## Named dispatch codes
 

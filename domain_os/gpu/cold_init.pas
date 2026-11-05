@@ -2,9 +2,14 @@
 
   Image addresses:
     sau5  0x00E3732C  GPU_$COLD_INIT
+    sau6  0x7803E8F4  GPU_$COLD_INIT
 
   - Ends with two register writes to the processor, tried once more after
     a reset when the first try fails; the status is dropped.
+  - With `gpu_own_vectors' (base/config.ins.pas) it puts the two
+    interrupt handlers in their vectors; with `gpu_reset_registers' it
+    then writes the registers 16#71BA (16#000D) and 16#2007 (the
+    processor's status word with bit 7), their status dropped too.
   - In OS_INIT_PROC: gpu_$pio_write and gpu_$reset are .TEXT's, declared
     forward in gpu/gpu.pas.
 
@@ -19,12 +24,20 @@ var
   gpu_stat: pinteger;
   done: integer;
   i: integer;
+%if gpu_reset_registers %then
+  reg_cmd: gpu_cmd_t;
+  reg_status: status_$t;
+%endif
 begin
   gpu_$user_pid := 0;
   ec_$init(gpu_$done_ec);
   ec_$init(gpu_$page_ec);
   ec_$init(gpu_ec);
   ml_$exclusion_init(gpu_$ml_lock);
+%if gpu_own_vectors %then
+  gpu_done_vec := addr(gpu_$done_int);
+  gpu_page_vec := addr(gpu_$page_int);
+%endif
   diag_mode := false;
   page_faults_ok := true;
   page_count := 0;
@@ -55,4 +68,16 @@ begin
     gpu_$reset;
     gpu_$pio_write(cmds, 8, done, gpu_stat, status);
   end;
+%if gpu_reset_registers %then
+
+  { the two registers the reset leaves to the driver }
+  reg_cmd.op := 16#41C3;
+  reg_cmd.len := 2;
+  reg_cmd.arg1 := 16#71BA000D;
+  gpu_$pio_write(reg_cmd, 4, done, gpu_stat, reg_status);
+  reg_cmd.op := 16#41C3;
+  reg_cmd.len := 2;
+  reg_cmd.arg1 := integer(gpu.status) ! 16#20070000 ! 16#80;
+  gpu_$pio_write(reg_cmd, 4, done, gpu_stat, reg_status);
+%endif
 end;

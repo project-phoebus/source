@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E1C9CE  SIO_$I_INHIBIT_XMIT
     sau4  0x0F81DBE2  SIO_$I_INHIBIT_XMIT
+    sau6  0x7801E8C4  SIO_$I_INHIBIT_XMIT
+    sau7  0x3C420BB0  SIO_$I_INHIBIT_XMIT
 
   - Inhibiting sets the inhibited state member (2); resuming clears it
     and lets SIO_$I_TSTART send what is queued.

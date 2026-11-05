@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E2F0C2  AST_$ACTIVATE_AOTE_CANNED
     sau4  0x0F8324C4  AST_$ACTIVATE_AOTE_CANNED
+    sau6  0x780378C4  AST_$ACTIVATE_AOTE_CANNED
+    sau7  0x3C4374C4  AST_$ACTIVATE_AOTE_CANNED
     sau9  0x3C434CC4  AST_$ACTIVATE_AOTE_CANNED
 
   - Under the AST lock a fresh AOTE gets one reference, its location

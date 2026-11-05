@@ -2,6 +2,8 @@
 
   Image addresses:
     sau2  0x00E76F1E  ring_$copy_data (module-local)
+    sau6  0x78085516  ring_$copy_data (module-local)
+    sau7  0x3C48FFEE  ring_$copy_data (module-local)
     sau8  0x03C837EE  ring_$copy_data (module-local)
 
   - len bytes from vector element idx (from 1) at offset onward go to

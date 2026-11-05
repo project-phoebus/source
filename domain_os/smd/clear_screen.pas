@@ -4,6 +4,8 @@
     sau2  0x00E70022  SMD_$CLEAR_SCREEN
     sau4  0x0F87A92E  SMD_$CLEAR_SCREEN
     sau5  0x00E7254E  SMD_$CLEAR_SCREEN
+    sau6  0x7807982C  SMD_$CLEAR_SCREEN
+    sau7  0x3C482D2A  SMD_$CLEAR_SCREEN
     sau9  0x3C47644A  SMD_$CLEAR_SCREEN
 
   - Without `display_devices' an empty procedure that does not write

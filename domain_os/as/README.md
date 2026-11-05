@@ -41,7 +41,11 @@ Shared insert files:
 - `mst/mst.ins.pas`: the six MST_ segment words AS_$GET_ADDR reads
   (pinteger, extern); with `large_address_space` (the SAU7, SAU9)
   constants, and private B is 128 segments (AS_$GET_ADDR's
-  `as_private_b_size`), or 64 with `run_time_layout`.
+  `as_private_b_size`), or 64 with `run_time_layout`; with
+  `vm_8192_segs` (the SAU4) and `vm_65536_segs` (the SAU6) constants of
+  their own, private B 256 segments.  The SAU6's AS_ASM block
+  (`m68k/as_asm.s`) is its 65536-segment space's: global A from
+  segment 60928.
 
 No conformance unit of `../domain-pascal/tests/conformance/` covers this
 module.

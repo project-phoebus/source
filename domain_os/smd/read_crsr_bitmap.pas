@@ -4,6 +4,8 @@
     sau2  0x00E6FD16  SMD_$READ_CRSR_BITMAP
     sau4  0x0F87A618  SMD_$READ_CRSR_BITMAP
     sau5  0x00E7223C  SMD_$READ_CRSR_BITMAP
+    sau6  0x7807951C  SMD_$READ_CRSR_BITMAP
+    sau7  0x3C482B1C  SMD_$READ_CRSR_BITMAP
     sau9  0x3C47623C  SMD_$READ_CRSR_BITMAP
 
   - yorg is counted from the top again (height - 1 - the stored value);

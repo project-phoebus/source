@@ -2,6 +2,7 @@
 
   Image addresses:
     sau5  0x00E0ACB4  VME_$DEFINE_USERINT
+    sau6  0x7800B632  VME_$DEFINE_USERINT
 
   - With a handler, the handler and its argument go into the id's entry
     of VME_$USER_VEC; with nil the entry's handler becomes VME_$UNDEF_INT

@@ -188,6 +188,12 @@ var
   { SIO_VEC (map symbol in TRAP_PAGE, the level-1 autovector; KEYBD_VEC
     after it, sio6509/sio6509.ins.pas), indexed from 1 by chip. }
   sio_vec: extern array[1..sio2681_max_chips] of univ_ptr;
+%if sio2681_chip_2_pbu_8 %then
+
+  { SIO_VEC2 (map symbol in TRAP_PAGE, seven vectors after SIO_VEC):
+    the vector of an SIO2681 given interrupt vector 2. }
+  sio_vec2: extern array[2..sio2681_max_chips] of univ_ptr;
+%endif
 
 { SIO2681_$INT1_RTE, SIO2681_$INT2_RTE (hand-written, in SIO_INT,
   sio2681/m68k/int_rte.s): the interrupt entry points, no parameters. }

@@ -1,6 +1,7 @@
 { scsi_unwire_all - unwire every page a device has wired.
 
   Image addresses:
+    sau7  0x3C4B923A  scsi_unwire_all
     sau9  0x3C4A68A2  scsi_unwire_all
 
   - Walks the whole of physical memory's owner table.

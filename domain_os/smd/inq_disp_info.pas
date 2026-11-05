@@ -5,6 +5,8 @@
     sau3  0x00E6E68E  SMD_$INQ_DISP_INFO
     sau4  0x0F87AA30  SMD_$INQ_DISP_INFO
     sau5  0x00E72650  SMD_$INQ_DISP_INFO
+    sau6  0x7807992E  SMD_$INQ_DISP_INFO
+    sau7  0x3C4830B0  SMD_$INQ_DISP_INFO
     sau9  0x3C4767D0  SMD_$INQ_DISP_INFO
 
   - The visible width and height are the display limits' ends plus one.

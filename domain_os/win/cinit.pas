@@ -4,6 +4,8 @@
     sau2  0x00E30340  WIN_$CINIT
     sau4  0x0F8338BC  WIN_$CINIT
     sau5  0x00E31870  WIN_$CINIT
+    sau6  0x78038CA8  WIN_$CINIT
+    sau7  0x3C438E08  WIN_$CINIT
     sau8  0x03C332B0  WIN_$CINIT
 
   - The controller is probed at the DCTE's register address (with the
@@ -34,6 +36,9 @@ function win_$cinit(var dcte: dcte_t): integer32;
 var
   status: integer32;
   probe: univ_ptr;
+%if win_vectored_ctlr %then
+  id: io_$int_id_t;
+%endif
 begin
   status := status_$ok;
 
@@ -50,9 +55,18 @@ begin
   probe := addr(win_units[dcte.cnum].regs^.config);
   if not testpage(3, probe, win_config) then
     status := status_$io_controller_not_in_system
+%if win_vectored_ctlr %then
+  else begin
+    id.vector := dcte.disk_error_que_lo;
+    sysbus_$define_int(id, addr(win_$int), addr(dcte));
+    discard(disk_$register(0, dcte.cnum, win_units[dcte.cnum].units,
+                           win_units[dcte.cnum].lock, addr(win_jump_table)));
+  end;
+%else
   else
     discard(disk_$register(0, dcte.cnum, win_units[dcte.cnum].units,
                            win_units[dcte.cnum].lock, addr(win_jump_table)));
+%endif
 
   win_$cinit := status;
 end;

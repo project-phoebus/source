@@ -24,6 +24,12 @@ const
   fault_$parity           = 16#0012001E;
   fault_$spurious_parity  = 16#00120021;
 
+  { The same fault.ins.pas's (lines 62 and 95; stcode.db.10.2's "cache
+    parity error" and "AT bus parity error -- (I/O channel chk)"):
+    PARITY_$CHK's crashes with `parity_cache_check'. }
+  fault_$cache_parity     = 16#0012001A;
+  fault_$io_chan_chk      = 16#0012003B;
+
 var
   { The per-address-space quit eventcounts and the last value seen of
     each, map symbols FIM_$QUIT_EC and FIM_$QUIT_VALUE in the FIM_WIRED
@@ -41,6 +47,16 @@ const
   fim_df_size = 106;
   fim_df_magic = 16#DFDF;
   fim_df_version = 2;
+
+  { The room FIM_$BUILD_DF keeps on the user's stack: above the private
+    area, and above AS_$STACK_LOW for a stack it does not take.  With
+    `fim_fp_frame_margin' 1024 and the MC68881's largest saved state
+    (its busy frame, 184 bytes). }
+%if fim_fp_frame_margin %then
+  fim_usp_margin = 1024 + 184;
+%else
+  fim_usp_margin = 1024;
+%endif
 
   { status_$fault_supervisor_fault_while_resource_locks_set, 16#00120020
     ("supervisor fault while resource locks set", stcode.db.10.2):
@@ -440,6 +456,12 @@ procedure fim_$fp_undflo; extern;
 procedure fim_$fp_op_err; extern;
 procedure fim_$fp_ovrflo; extern;
 procedure fim_$fp_sig_nan; extern;
+%if fpu_enable_mmu_9 %then
+{ FIM_$FP_PARITY (map symbol; hand assembly, fim/m68k/fp_exceptions.s):
+  the FPU interface's parity error entry, vector 127
+  (`fpu_enable_mmu_9'), never called. }
+procedure fim_$fp_parity; extern;
+%endif
 %if mmu_fault_vectors %then
 { FIM_$ACC_VIOL, FIM_$FP_TRAP (map symbols; hand assembly): the access
   violation's and the FP ASID exception's entries, vectors 16#83 and 16#84
@@ -568,4 +590,32 @@ var
 
 { PBU_$GET_DIAG_PTR and PBU_$INT_FAULT_COM, which FIM_$BUILD_DF calls,
   are pbu/pbu.ins.pas's (hand assembly in PBU_ASM). }
+%endif
+
+%if fpa_board %then
+{ ---- On the SAUs with the floating-point accelerator (`fpa_board'):
+  FIM_FP. ---- }
+
+const
+  { The floating-point faults, with the names and values of Apollo's
+    customer fault.ins.pas of SR10.2 (lines 70..74, 82, 83, 102;
+    stcode.db.10.2: "floating point inexact result (loss of
+    significance)", "... divide by zero", "... underflow", "... operand
+    error", "... overflow", "floating point branch/set on unordered
+    condition", "floating point signalling not-a-number", "A88K FPU
+    Internal Error: Specific code in FPCSR<6:0>").
+    FIM_$FP_INTERLUDE_HANDLER returns them. }
+  fault_$fp_inexact            = 16#00120022;
+  fault_$fp_div_zero           = 16#00120023;
+  fault_$fp_undflo             = 16#00120024;
+  fault_$fp_op_err             = 16#00120025;
+  fault_$fp_ovrflo             = 16#00120026;
+  fault_$fp_bsun               = 16#0012002E;
+  fault_$fp_sig_nan            = 16#0012002F;
+  fault_$fp_fpu_internal_error = 16#00120042;
+
+{ FIM_$FP_INTERLUDE_HANDLER (map symbol, FIM_FP): the accelerator's
+  exception, called at IPL 0 by the accelerator's bus error entry
+  (fim/sau7/fpa.s) with the address of a longword it reads back. }
+procedure fim_$fp_interlude_handler(out status: status_$t); extern;
 %endif

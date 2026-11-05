@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E67E86  sio_$set_break (module-local)
     sau4  0x0F87197A  sio_$set_break (module-local)
+    sau6  0x78070B62  sio_$set_break (module-local)
+    sau7  0x3C47B4CA  sio_$set_break (module-local)
 
   - Under SIO's spin lock the break member (3) is set and the
     transmit-active member (0) cleared, or the break member cleared;

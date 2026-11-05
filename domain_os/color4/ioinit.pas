@@ -1,6 +1,7 @@
 { COLOR4_$IOINIT - find and set up a COLOR4 board at boot.
 
   Image addresses:
+    sau7  0x3C43E9C0  COLOR4_$IOINIT
     sau8  0x03C388FC  COLOR4_$IOINIT
 
   - The CSR pages and the display memory are each mapped (IO_$MAP_CSR)

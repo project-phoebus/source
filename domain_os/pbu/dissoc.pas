@@ -4,6 +4,8 @@
     sau3  0x00E58DD0  PBU_$DISSOC
     sau4  0x0F861A18  PBU_$DISSOC
     sau5  0x00E58F94  PBU_$DISSOC
+    sau6  0x78060CB6  PBU_$DISSOC
+    sau7  0x3C469724  PBU_$DISSOC
     sau8  0x03C6173E  PBU_$DISSOC
 
   - Undoes PBU2_$ASSOC: the memory's I/O map space is freed (a failure

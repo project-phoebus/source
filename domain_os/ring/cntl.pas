@@ -2,8 +2,12 @@
 
   Image addresses:
     sau2  0x00E72226  RINGLOG_$CNTL
+    sau6  0x780806AA  RINGLOG_$CNTL
+    sau7  0x3C488856  RINGLOG_$CNTL
     sau8  0x03C7CAD2  RINGLOG_$CNTL
     sau2  0x00E721CC  ringlog_$stop_logging (nested)
+    sau6  0x78080650  ringlog_$stop_logging (nested)
+    sau7  0x3C4887FC  ringlog_$stop_logging (nested)
     sau8  0x03C7CA78  ringlog_$stop_logging (nested)
 
   - Commands 0, 3 and 5 clear the log, wire its buffer and start

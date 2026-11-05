@@ -1,6 +1,7 @@
 { MONO_$PUTC - write characters to the display TTY.
 
   Image addresses:
+    sau7  0x3C48D9C6  MONO_$PUTC
     sau8  0x03C810D6  MONO_$PUTC
 
   - count characters, one at a time (DTTY_$PUTC); the descriptor is not

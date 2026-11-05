@@ -4,6 +4,7 @@
     sau2  0x00E75748  RING_$INT
     sau3  0x00E76F48  RING_$INT
     sau5  0x00E7CAC8  RING_$INT
+    sau6  0x78083EB0  RING_$INT
 
   - A transmit completion advances the unit's transmit eventcount; a
     receive completion hands the packet to ring_$process_rx_packet and
@@ -28,7 +29,11 @@ begin
   else if 15 in regs^.rcv_csr then begin
     regs^.rcv_csr := [];
     ring_$rcv_int_cnt := ring_$rcv_int_cnt + 1;
+%if ring_lights_8_4 %then
+    mmu_$mcr_change(4);
+%else
     mmu_$mcr_change(5);
+%endif
     ec := ring_$process_rx_packet(ring_$ctl[dcte.cnum]);
     if ec = nil then
       ring_$data[dcte.cnum].rcvcnt := ring_$data[dcte.cnum].rcvcnt + 1

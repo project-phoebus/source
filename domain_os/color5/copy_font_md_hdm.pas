@@ -1,6 +1,7 @@
 { COLOR5_$COPY_FONT_MD_HDM - copy the fonts to hidden display memory.
 
   Image addresses:
+    sau7  0x3C48C230  COLOR5_$COPY_FONT_MD_HDM
     sau8  0x03C8054C  COLOR5_$COPY_FONT_MD_HDM
 
   - The CSR pages and the display memory are mapped into the kernel's

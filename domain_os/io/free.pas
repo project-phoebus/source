@@ -4,6 +4,8 @@
     sau3  0x00E19DA6  IO_$FREE
     sau4  0x0F81B95E  IO_$FREE
     sau5  0x00E1B05E  IO_$FREE
+    sau6  0x7801C600  IO_$FREE
+    sau7  0x3C41E8F6  IO_$FREE
     sau8  0x03C1BEFC  IO_$FREE
 
   - The range of the bus's map starting at iova is freed

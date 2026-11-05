@@ -25,7 +25,7 @@
  */
 
         .include "base/config.inc"
-        .if !fp_state_in_cpu
+        .if !fp_state_in_cpu && !fpu_enable_mmu_9   /* the SAU6's: fim/sau6/fp.s */
         .section ".text.FIM_$FP_ABORT","ax",@progbits
         .even
 

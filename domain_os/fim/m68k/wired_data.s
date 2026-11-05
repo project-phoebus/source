@@ -35,21 +35,26 @@
 | The C called the run FIM_$WIRED_DATA; the hand-written users now name
 | these symbols.
 |
-| The SAUs whose memory corrects its errors (`ecc_memory',
+| With `parity_cache_check' (the SAU7) the parity record is 0x16 bytes,
+| its +0x14 word err_longword (parity/parity.ins.pas), and every object
+| after it two bytes further on (SAU7 map: PARITY_$INFO 0x3C42722C,
+| MISS_STATUS 0x3C427242).
+|
+| The SAUs whose memory corrects its errors (no `memory_parity',
 | base/config.ins.pas) have no parity record: the SAU4's run starts with
 | MISS_STATUS (0xF824278, after FIM_$ECCU_TRAP's two status words), the
-| rest laid out as above.
+| SAU6's at 0x780248B8 after FIM_$SPUR_CNT, the rest laid out as above.
 |
         .include "base/config.inc"
 
-        .if ecc_memory
+        .if !memory_parity
         .section ".text.MISS_STATUS","ax",@progbits
         .else
         .section ".text.PARITY_$INFO","ax",@progbits
         .endif
         .balign 2
 
-        .if !ecc_memory
+        .if memory_parity
         .globl  PARITY_$INFO
         .endif
         .globl  MISS_STATUS
@@ -69,9 +74,13 @@
         .endr
         .endm
 
-        .if !ecc_memory
+        .if memory_parity
 PARITY_$INFO:                           | 0xE21FE6
+        .if parity_cache_check
+        .space  0x16                    | sau7 0x3C42722C: + err_longword
+        .else
         .space  0x14
+        .endif
         .endif
 MISS_STATUS:                            | 0xE21FFA
         .long   0

@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E016D0  AST_$UPDATE
     sau4  0x0F801AE0  AST_$UPDATE
+    sau6  0x78001E70  AST_$UPDATE
+    sau7  0x3C402282  AST_$UPDATE
     sau9  0x3C402A82  AST_$UPDATE
 
   - Nothing is done on a really diskless node.

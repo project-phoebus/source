@@ -68,6 +68,16 @@ image (integer), which matters only for indices above 32767.
 | SUMA_$INIT  | `init.pas` |
 | (data)      | the module's variables in `suma.pas` |
 
+## The SAU6
+
+The SAU6's BITPAD is the same source.  Its WIRED_PROC segment is 0x1A8
+bytes: SUMA_$RCV's 68020 forms, the `case` table indexed with a scaled
+index and the identification bits merged and read with `bfins` and
+`bfextu` at their byte; the constant stores into the two 2-bit fields
+stay on the record's word.  SUMA_$INIT (OS_INIT_PROC, 0x28 bytes) is
+the SAU5's code and the data block (WIRED_DATA, 0x2C bytes, all zero)
+the same block, at other addresses.
+
 ## Open items
 
 ### TODO(pascal)

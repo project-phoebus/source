@@ -1,3 +1,44 @@
+%if scsi_mailbox_ctlr %then
+{ SCSI_$RELEASE - release a device.
+
+  Image addresses:
+    sau7  0x3C4B8E2C  SCSI_$RELEASE
+
+  - With the mailbox host adapter: under scsi_$exclusion_lock the
+    device's I/O map region is freed, its wired pages unwired, its
+    record freed and the counts of devices set up lowered; the last
+    unwires the module's code and data.
+  - The device's number is read from the record before the handle's
+    status is tested.
+
+  Status stored:
+    scsi_get_tinfo's status: in either case
+}
+
+procedure scsi_$release(in handle: scsi_$handle_t; out status: status_$t);
+var
+  t: scsi_tinfo_ptr_t;
+  dev: integer;
+  cb: scsi_mb_cb_ptr_t;
+  st: status_$t;
+begin
+  t := scsi_get_tinfo(handle.all, status);
+  dev := t^.dev;
+  if status.all <> status_$ok then
+    return;
+  cb := addr(scsi_$cb[t^.bus]);
+  ml_$exclusion_start(scsi_$exclusion_lock);
+  if scsi_tf_wired in t^.flags then
+    scsi_free_iova(t^, st);
+  scsi_unwire_all(dev);
+  t^.flags := t^.flags - [scsi_tf_in_use, scsi_tf_sys];
+  cb^.open_count := cb^.open_count - 1;
+  scsi_open_count := scsi_open_count - 1;
+  if scsi_open_count = 0 then
+    scsi_unwire_driver;
+  ml_$exclusion_stop(scsi_$exclusion_lock);
+end;
+%else
 { SCSI_$RELEASE - release a device.
 
   Image addresses:
@@ -98,3 +139,4 @@ begin
     scsi_unwire_driver;
   ml_$exclusion_stop(scsi_$exclusion_lock);
 end;
+%endif

@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E0CC64  MMAP_$AVAIL
     sau4  0x0F80D2B4  MMAP_$AVAIL
+    sau6  0x7800D448  MMAP_$AVAIL
+    sau7  0x3C40E698  MMAP_$AVAIL
     sau8  0x03C0DB84  MMAP_$AVAIL
     sau9  0x3C40EBC0  MMAP_$AVAIL
 

@@ -150,11 +150,17 @@ The parts (`base/config.ins.pas`) that change PMAP_:
 - `mmap_ppns_10000` (SAU9), `mmap_ppns_400` (SAU8): PMAP_$FLUSH's
   pageable range is mmap_$first_ppn..mmap_$last_ppn, and the
   purifiers reach MMAP's entries from that lower bound.
-- `region_mmu` (SAU4): the page maps are forward-mapped, so the
+- `region_mmu` (SAU4, SAU6): the page maps are forward-mapped, so the
   `pmmu_page_maps` arms are the SAU4's too, with the page map entry's
   own bits (ast/ast.ins.pas); PMAP_$FLUSH tests the entry's resident
   bit, where the MC68030 form tests the descriptor's type.  The SAU4
-  has no `boot_time_lock`.
+  and SAU6 have no `boot_time_lock`.
+- `mmap_ppns_4000` (SAU6): PMAP_$FLUSH's pageable range and the
+  purifiers' MMAP offsets are 16#4000..16#FFFF's; the SAU6's PMAP_ is
+  otherwise the SAU4's source compiled for the 68020.
+- `mmap_ppns_4000_bfff` (SAU7): PMAP_$FLUSH's pageable range and the
+  purifiers' MMAP offsets are 16#4000..16#BFFF's; the SAU7's PMAP_ is
+  otherwise the SAU9's source as it stands.
 
 The large-VM layouts (the 28-byte ASTE, the 21-bit disk address in
 MMAP's entries) come in through the types alone.  The rest of the

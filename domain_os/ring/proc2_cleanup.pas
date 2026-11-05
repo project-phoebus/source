@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E76A42  RING_$PROC2_CLEANUP
     sau3  0x00E78232  RING_$PROC2_CLEANUP
+    sau6  0x7808504C  RING_$PROC2_CLEANUP
+    sau7  0x3C48FB22  RING_$PROC2_CLEANUP
     sau8  0x03C83322  RING_$PROC2_CLEANUP
 
   - On a started unit, under the channel lock, each channel the address

@@ -1,6 +1,8 @@
 { ETHERNET_$STOP - stop a unit.
 
   Image addresses:
+    sau6  0x78088940  ETHERNET_$STOP
+    sau7  0x3C492E76  ETHERNET_$STOP
     sau8  0x03C86672  ETHERNET_$STOP
     sau9  0x3C482272  ETHERNET_$STOP
 

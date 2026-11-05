@@ -1,6 +1,7 @@
 { SMD_$ADD_DEVICE - add a display device as the next display unit.
 
   Image addresses:
+    sau7  0x3C43E3C4  SMD_$ADD_DEVICE
     sau9  0x3C43B394  SMD_$ADD_DEVICE
 
   - The unit gets the device's descriptor and routine vector; each nil

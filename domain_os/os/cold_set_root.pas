@@ -1,6 +1,7 @@
 { cold_set_root - point root table entries at segment tables.
 
   Image addresses:
+    sau7  0x010029EC  cold_set_root (module-local)
     sau9  0x040030D4  cold_set_root (module-local)
 
   - Entries first .. first + count - 1 of the root table (RARS's page,

@@ -2,6 +2,7 @@
   that overlaps a range.
 
   Image addresses:
+    sau7  0x3C496CC6  ring_8025_find_range
     sau8  0x03C8A31A  ring_8025_find_range
     sau9  0x3C485F1E  ring_8025_find_range
 

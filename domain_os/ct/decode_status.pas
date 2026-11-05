@@ -2,12 +2,14 @@
 
   Image addresses:
     sau5  0x00E76FAC  ct_decode_status (module-local)
+    sau6  0x7807DD24  ct_decode_status (module-local)
 
   - From the controller's and the drive's status words (ct_cstat,
     ct_dstat): the controller's error bits first (7, 6, 5, 3, 2, 1),
     then with bit 8 the drive's status through the module's table.
   - With bit 8 the controller's two counters are added to CT_$DIAG's
-    totals.
+    totals (not with the second controller, whose counts CT6_$INT
+    totals).
 
   Returns:
     0: the command succeeded
@@ -67,6 +69,9 @@ begin
     status := status_$ct_unrecognized_controller_status;
 
 1:
+%if win6_ct6_board %then
+  if ct6_page = nil then
+%endif
   if (ct_cstat.all & 16#100) <> 0 then
     with ct_regs^ do begin
       ct_total_2c := ct_total_2c + count_2c;

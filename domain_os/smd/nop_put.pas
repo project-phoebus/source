@@ -1,6 +1,7 @@
 { SMD_$NOP_PUT - the default for a device's character output: nothing.
 
   Image addresses:
+    sau7  0x3C421A2E  SMD_$NOP_PUT
     sau9  0x3C420146  SMD_$NOP_PUT
 
   Status stored: none.

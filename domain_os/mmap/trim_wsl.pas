@@ -4,6 +4,7 @@
   Image addresses:
     sau2  0x00E0C760  mmap_$trim_wsl (module-local)
     sau4  0x0F80CDC0  mmap_$trim_wsl (module-local)
+    sau7  0x3C40E1B2  mmap_$trim_wsl (module-local)
     sau8  0x03C0D69E  mmap_$trim_wsl (module-local)
     sau9  0x3C40E6C8  mmap_$trim_wsl (module-local)
 

@@ -4,6 +4,8 @@
     sau2  0x00E6E122  SMD_$INQ_KBD_TYPE
     sau4  0x0F8788AC  SMD_$INQ_KBD_TYPE
     sau5  0x00E70586  SMD_$INQ_KBD_TYPE
+    sau6  0x78077922  SMD_$INQ_KBD_TYPE
+    sau7  0x3C481348  SMD_$INQ_KBD_TYPE
     sau9  0x3C474A68  SMD_$INQ_KBD_TYPE
 
   - Line 0's type string is copied as far as the caller's buffer holds.

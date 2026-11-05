@@ -1,6 +1,7 @@
 { COLOR5_$VIDEO_CTL - turn the video on or off.
 
   Image addresses:
+    sau7  0x3C484026  COLOR5_$VIDEO_CTL
     sau8  0x03C798D2  COLOR5_$VIDEO_CTL
 
   - The control word's video enable is set from on, with the display

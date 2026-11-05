@@ -1,6 +1,7 @@
 { AST_$PTOV - the virtual address that maps a physical page.
 
   Image addresses:
+    sau7  0x3C407ED0  AST_$PTOV
     sau8  0x03C076C4  AST_$PTOV
     sau9  0x3C4086D0  AST_$PTOV
 

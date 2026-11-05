@@ -2,6 +2,8 @@
 { CT_$DIAG - return diagnostic information about the tape controller.
 
   Image addresses:
+    sau7  0x3C486BFC  ct_scsi_diag (nested)
+    sau7  0x3C486C88  CT_$DIAG
     sau9  0x3C4781C6  ct_scsi_diag (nested)
     sau9  0x3C478252  CT_$DIAG
 
@@ -9,6 +11,8 @@
     mode (the ct_$diag_ constants): the drive's self-test is run (10
     seconds' wait) and the last command's status code returned, or the
     drive's sense is taken and its word at byte 22 returned.
+  - With the QIC-02 driver as well (`ct_qic02'), a drive not set up on
+    the SCSI bus is the AT bus adapter's: the other arm's information.
 
   Status stored:
     status_$ok: the information was returned
@@ -54,8 +58,37 @@ begin
       buf[i] := 0;
   ret_len := 0;
   status.all := ct_check_unit(unit);
+%if ct_qic02 %then
+  if status.all <> 0 then
+    return;
+  if ct_scsi_state = ct_scsi_present then
+    ct_scsi_diag
+  else
+    case mode of
+      ct_$diag_drive_status: begin
+          buf[1] := ct_drive_status.all;
+          ret_len := 2;
+        end;
+      ct_$diag_registers: begin
+          for i := 1 to 2 do
+            buf[i] := ct_regs^.words[i];
+          ret_len := 4;
+        end;
+      ct_$diag_counts: begin
+          buf[1] := ct_total_2c;
+          ct_total_2c := 0;
+          buf[2] := ct_total_2e;
+          ct_total_2e := 0;
+          ret_len := 4;
+        end;
+      otherwise begin
+        status.all := status_$ct_unrecognized_action_type;
+      end;
+    end;
+%else
   if (status.all = 0) and then (ct_scsi_state = ct_scsi_present) then
     ct_scsi_diag;
+%endif
 end;
 %elseif ct_atbus_qic02 %then
 { CT_$DIAG - return diagnostic information about the tape controller.
@@ -114,11 +147,15 @@ end;
 
   Image addresses:
     sau5  0x00E779CC  CT_$DIAG
+    sau6  0x7807EC74  CT_$DIAG
 
   - The caller's buffer is cleared; by the mode (the ct_$diag_
     constants) it gets the drive's status word, the controller's first
     256 register words (as many as fit), or CT_$DIAG's two counts.
   - In the last case the counts are then cleared.
+  - With the second controller (`win6_ct6_board') the drive's status
+    word is the one CT6_$INT kept, or when that is 0 the failed block's
+    status word; the registers are not available.
 
   Status stored:
     status_$ok: the information was returned
@@ -143,16 +180,33 @@ begin
   with ct_regs^ do
     case mode of
       ct_$diag_drive_status: begin
+%if win6_ct6_board %then
+          if ct6_page = nil then
+            buf[1] := dstat
+          else if ct_dstat.all <> 0 then
+            buf[1] := ct_dstat.all
+          else
+            buf[1] := ct6_status;
+%else
           buf[1] := dstat;
+%endif
           ret_len := 2;
         end;
       ct_$diag_registers: begin
+%if win6_ct6_board %then
+          if ct6_page = nil then begin
+%endif
           n := (integer32(addr(words_end)) - integer32(ct_regs)) div 2;
           if buf_len div 2 < n then
             n := buf_len div 2;
           for i := 1 to n do
             buf[i] := ct_regs^.words[i];
           ret_len := n + n;
+%if win6_ct6_board %then
+          end
+          else
+            status.all := status_$ct_unrecognized_action_type;
+%endif
         end;
       ct_$diag_counts: begin
           buf[1] := ct_total_2c;

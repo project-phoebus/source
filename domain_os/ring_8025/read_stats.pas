@@ -2,6 +2,7 @@
   statistics and return them.
 
   Image addresses:
+    sau7  0x3C497D60  ring_8025_read_stats
     sau8  0x03C8B37C  ring_8025_read_stats
     sau9  0x3C486F80  ring_8025_read_stats
 

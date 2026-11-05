@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E724C4  KBD_$GET_CHAR_AND_MODE
     sau3  0x00E73B60  KBD_$GET_CHAR_AND_MODE
+    sau6  0x78080984  KBD_$GET_CHAR_AND_MODE
+    sau7  0x3C488B24  KBD_$GET_CHAR_AND_MODE
     sau9  0x3C479EC0  KBD_$GET_CHAR_AND_MODE
 
   - The mode is mapped through kbd_$mode_table; the result is true when

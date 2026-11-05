@@ -2,6 +2,9 @@
   buffers.
 
   Image addresses:
+    sau7  0x3C484E36  build_entry (nested)
+    sau7  0x3C484F8E  do_xfer (nested)
+    sau7  0x3C48500C  ct_scsi_transfer (module-local)
     sau9  0x3C47757C  build_entry (nested)
     sau9  0x3C4776D2  do_xfer (nested)
     sau9  0x3C477750  ct_scsi_transfer (module-local)

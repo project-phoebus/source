@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E01C52  ast_$lookup_with_hints (module-local)
     sau4  0x0F80206A  ast_$lookup_with_hints (module-local)
+    sau6  0x780023F8  ast_$lookup_with_hints (module-local)
+    sau7  0x3C40280E  ast_$lookup_with_hints (module-local)
     sau9  0x3C40300E  ast_$lookup_with_hints (module-local)
 
   - A UID naming this node first searches this node's volumes.  Then

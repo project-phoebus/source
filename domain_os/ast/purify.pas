@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E0567A  AST_$PURIFY
     sau4  0x0F805A26  AST_$PURIFY
+    sau6  0x78005CC6  AST_$PURIFY
+    sau7  0x3C406124  AST_$PURIFY
     sau8  0x03C05918  AST_$PURIFY
     sau9  0x3C406924  AST_$PURIFY
 

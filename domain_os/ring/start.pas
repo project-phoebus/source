@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E76830  RING_$START
     sau3  0x00E78020  RING_$START
+    sau6  0x78084E42  RING_$START
+    sau7  0x3C48F916  RING_$START
     sau8  0x03C83116  RING_$START
 
   - The driver is wired and the unit marked running; its receive

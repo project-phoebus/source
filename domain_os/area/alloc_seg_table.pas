@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E09D2E  area_$alloc_seg_table (module-local)
     sau4  0x0F80A55C  area_$alloc_seg_table (module-local)
+    sau6  0x7800A6BA  area_$alloc_seg_table (module-local)
+    sau7  0x3C40AFF2  area_$alloc_seg_table (module-local)
     sau9  0x3C40B7F2  area_$alloc_seg_table (module-local)
 
   - Under the AST lock the record at the pool's search cursor gets a

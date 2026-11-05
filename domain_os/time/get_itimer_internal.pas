@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E58C74  time_$get_itimer_internal (module-local)
     sau4  0x0F8610E8  time_$get_itimer_internal (module-local)
+    sau6  0x7806001E  time_$get_itimer_internal (module-local)
+    sau7  0x3C468E1E  time_$get_itimer_internal (module-local)
 
   - An armed timer gives its reload interval and the time left (0 when
     already past); an idle one gives 0 for both.

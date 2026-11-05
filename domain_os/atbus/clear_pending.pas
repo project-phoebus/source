@@ -1,8 +1,9 @@
 { ATBUS_$CLEAR_PENDING - clear an AT bus interrupt's pending interrupt.
 
   Image addresses:
-    sau9  0x3C40C9A0  ATBUS_$CLEAR_PENDING
+    sau7  0x3C40C316  ATBUS_$CLEAR_PENDING
     sau8  0x03C0B9C2  ATBUS_$CLEAR_PENDING
+    sau9  0x3C40C9A0  ATBUS_$CLEAR_PENDING
 
   - An interrupt above 15 crashes the system; so does one that is not
     the one defined on its level.  Its system bus level's pending

@@ -3,12 +3,15 @@
 
   Image addresses:
     sau2  0x00E8180C  PEB_UNWIRED data (.DATA, 4 bytes)
+    sau6  0x7809BEE4  PEB_UNWIRED data (.DATA, 4 bytes)
+    sau7  0x3C4AAAFC  PEB_UNWIRED data (.DATA, 4 bytes)
     sau9  0x3C499F90  PEB_UNWIRED data (.DATA, 4 bytes)
 
   One compilation unit: the map's PEB_UNWIRED code segments in
   OS_INIT_PROC (0x5F8 bytes: PEB_$INIT, PEB_$LOAD_WCS) and in .TEXT
   (0x200 bytes: PEB_$ASSOC .. PEB_$PUT_FP), and its data segment in
-  .DATA (4 bytes: M68881_EXISTS, a boolean at +0, zero).  Without
+  .DATA (4 bytes: M68881_EXISTS, a boolean at +0, zero; with `peb_fpx'
+  FPX_EXISTS at +0 and M68881_EXISTS at +2).  Without
   `peb_board' (base/config.ins.pas) only the OS_INIT_PROC segment, 0x1D8
   bytes on the SAU9: PEB_$INIT and PEB_$LOAD_WCS for the MC68881.
   Without `peb_setup' (the SAU4, whose map has no PEB_UNWIRED segment)
@@ -44,8 +47,13 @@ module peb_unwired;
 %include 'peb/peb.ins.pas';
 
 %if peb_setup %then
-{ The module's one variable, the map symbol M68881_EXISTS (+0x0, zero). }
+{ The module's one variable, the map symbol M68881_EXISTS (+0x0, zero);
+  with `peb_fpx' or `fpa_board' the map symbol FPX_EXISTS at +0x0 and
+  M68881_EXISTS at +0x2, both zero. }
 define
+%if peb_fpx or fpa_board %then
+  fpx_exists;
+%endif
   m68881_exists;
 
 define

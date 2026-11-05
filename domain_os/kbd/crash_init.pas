@@ -2,6 +2,8 @@
 
   Image addresses:
     sau2  0x00E1CE94  KBD_$CRASH_INIT
+    sau6  0x7801EF66  KBD_$CRASH_INIT
+    sau7  0x3C421252  KBD_$CRASH_INIT
     sau9  0x3C41FBA2  KBD_$CRASH_INIT
 
   - An empty procedure but with `kbd_commands': the descriptor KBD_$INIT

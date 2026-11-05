@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E07F0E  AREA_$SHUTDOWN
     sau4  0x0F8081FA  AREA_$SHUTDOWN
+    sau6  0x78008438  AREA_$SHUTDOWN
+    sau7  0x3C408D2C  AREA_$SHUTDOWN
     sau9  0x3C40952C  AREA_$SHUTDOWN
 
   - Every address space's areas are freed (AREA_$FREE_ASID for 0..57);

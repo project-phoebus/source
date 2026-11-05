@@ -4,6 +4,8 @@
     sau3  0x00E19DEA  io_$add_region
     sau4  0x0F81B9A2  io_$add_region
     sau5  0x00E1B0A2  io_$add_region
+    sau6  0x7801C644  io_$add_region
+    sau7  0x3C41E93A  io_$add_region
 
   - A node off the free list (io_$region_free) gets the region's page,
     start and stop and goes at the head of the slot's list; an empty

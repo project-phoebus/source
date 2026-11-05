@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E3DFE2  FLP_$DO_IO
     sau4  0x0F845F9C  FLP_$DO_IO
+    sau7  0x3C44E182  FLP_$DO_IO
     sau8  0x03C460AA  FLP_$DO_IO
 
   - Hands its arguments to FLP_DO_IO, with zero 0 (the AT bus form's

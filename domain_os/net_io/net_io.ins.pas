@@ -186,10 +186,10 @@ function net_io_$put_in_sock_int(net_type: integer; socket: pinteger;
   options(extern, val_param);
 
 { NET_IO_$COPY_PACKET - copy a packet into fresh network buffers. }
-procedure net_io_$copy_packet(var hdr_src: pkt_$hdr_ptr_t;
+procedure net_io_$copy_packet(var hdr_src: univ pkt_$hdr_ptr_t;
                               hdr_len: pinteger;
                               src_data_va: integer32;
-                              in src_pages: pkt_$data_pages_t;
+                              in src_pages: univ pkt_$data_pages_t;
                               data_len: pinteger;
                               out hdr_va_out: integer32;
                               out data_pages_out: pkt_$data_pages_t;

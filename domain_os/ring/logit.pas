@@ -2,6 +2,8 @@
 
   Image addresses:
     sau2  0x00E1A20C  RINGLOG_$LOGIT
+    sau6  0x7801BB50  RINGLOG_$LOGIT
+    sau7  0x3C41DDB4  RINGLOG_$LOGIT
     sau8  0x03C1B3D0  RINGLOG_$LOGIT
 
   - A packet passes the node filter when the filter is 0 or names its

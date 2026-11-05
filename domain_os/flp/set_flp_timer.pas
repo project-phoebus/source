@@ -1,6 +1,7 @@
 { SET_FLP_TIMER - queue the motor's callback after a time.
 
   Image addresses:
+    sau7  0x3C44DAA2  SET_FLP_TIMER
     sau8  0x03C45AA2  SET_FLP_TIMER
 
   - The driver's element is taken off the real-time queue and queued

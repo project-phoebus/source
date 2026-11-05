@@ -4,6 +4,7 @@
     sau2  0x00E6FA14  SMD_$COND_INPUT_U
     sau4  0x0F87A2D4  SMD_$COND_INPUT_U
     sau5  0x00E71ECA  SMD_$COND_INPUT_U
+    sau6  0x780791DE  SMD_$COND_INPUT_U
 
   - Input events are taken until there are none or a call fails; a
     keystroke with modifier 0 or 15 is returned in ch, the result true.

@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E76950  RING_$GET_STATS
     sau3  0x00E78140  RING_$GET_STATS
+    sau6  0x78084F60  RING_$GET_STATS
+    sau7  0x3C48FA36  RING_$GET_STATS
     sau8  0x03C83236  RING_$GET_STATS
 
   Status stored:

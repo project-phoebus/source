@@ -4,6 +4,8 @@
     sau2  0x00E196AA  win_$format_track (module-local)
     sau4  0x0F819E9A  win_$format_track (module-local)
     sau5  0x00E19A6C  win_$format_track
+    sau6  0x78019EA0  win_$format_track
+    sau7  0x3C41CD0C  win_$format_track
     sau8  0x03C1A360  win_$format_track
 
   - Up to five tries: the ANSI form seeks to the cylinder, starts the

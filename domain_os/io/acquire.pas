@@ -10,7 +10,11 @@
     sau4  0x0F81B144  int_ids_match (nested)
     sau5  0x00E1A870  IO_$ACQUIRE
     sau5  0x00E1A824  int_ids_match (nested)
+    sau6  0x7801BE2C  IO_$ACQUIRE
+    sau6  0x7801BDE0  int_ids_match (nested)
+    sau7  0x3C41E090  IO_$ACQUIRE
     sau8  0x03C1B6AC  IO_$ACQUIRE
+    sau7  0x3C41E044  int_ids_match (nested)
     sau8  0x03C1B660  int_ids_match (nested)
 
   - Under io_$exclusion, the first free slot of IO_$DCTES; the request

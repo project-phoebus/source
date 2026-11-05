@@ -3,6 +3,8 @@
   Image addresses:
     sau3  0x00E59FCC  pbu_access_csr (module-local)
     sau5  0x00E5A478  pbu_access_csr (module-local)
+    sau6  0x780620CC  pbu_access_csr (module-local)
+    sau7  0x3C46AC44  pbu_access_csr (module-local)
     sau8  0x03C6293C  pbu_access_csr (module-local)
 
   - The CSR must be in the unit's CSR page (its first page only) or its

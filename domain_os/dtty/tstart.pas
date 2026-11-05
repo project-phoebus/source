@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E1D6D0  DTTY_$TSTART
     sau4  0x0F81E9F0  DTTY_$TSTART
+    sau6  0x7801F940  DTTY_$TSTART
+    sau7  0x3C421980  DTTY_$TSTART
 
   - A resume position past the target means the buffer has wrapped: the
     part to the buffer's end goes first.

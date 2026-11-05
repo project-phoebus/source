@@ -47,10 +47,14 @@
  * (FIM_$NMI and MMU_$BUS_STATUS ahead of it, `fim_nmi') 0x6EC; on the
  * SAU3 (the PBU arms without the display window's 0x3E bytes,
  * `display_driver' in fim/m68k/bus_err.s) 0x6A8; on the SAU8
- * (`cpu_status_register' with `parity_cpu_status': its own FIM_$BUS_ERR,
- * fim/sau8/bus_err.s, and the FPU routines' longer enable) 0x73C; on the
- * SAU4 (`region_mmu': its MMU's fault handlers, fim/sau4/bus_err.s, and
- * the FP save tables, fim/sau4/fp.s) 0x1384.  Where
+ * (`cpu_status_register': its own FIM_$BUS_ERR, fim/sau8/bus_err.s, and
+ * the FPU routines' longer enable) 0x73C, on the SAU7 (the same, with
+ * FIM_$NMI ahead of it, `fim_nmi') 0xE40; on the
+ * SAU4 (`region_registers': its MMU's fault handlers, fim/sau4/bus_err.s,
+ * and the FP save tables, fim/sau4/fp.s) 0x1384; on the SAU6 (its own
+ * FIM_$BUS_ERR, ECC handler, FIM_$NMI and FP routines, fim/sau6/) 0x9A0,
+ * and the routine checks the VME adapter's interrupt on its way out
+ * (`fim_vme_ack'), 32 bytes that put its cells 32 further on.  Where
  * the bus error status is the CPU status register (`cpu_status_register')
  * the routine also clears it after the `lea', 12 bytes that put its cells
  * 12 further on (.Lspur_pre).
@@ -62,17 +66,23 @@
         .even
 
         .if cpu_status_register
-        .if parity_cpu_status
-        .set    .Lspur_dist, 0x73c      /* sau8: 0x3C2380C - 0x3C230D0 */
-        .else
+        .if fim_nmi
         .set    .Lspur_dist, 0xe40      /* sau7: 0x3C427174 - 0x3C426334 */
+        .else
+        .set    .Lspur_dist, 0x73c      /* sau8: 0x3C2380C - 0x3C230D0 */
         .endif
         .set    .Lspur_pre, 12          /* the CPU status register cleared */
         .else
+        .if fim_vme_ack
+        .set    .Lspur_pre, 0x20        /* sau6: the VME adapter's check */
+        .else
         .set    .Lspur_pre, 0
+        .endif
         .if pbu_driver
-        .if region_mmu
+        .if region_registers
         .set    .Lspur_dist, 0x1384     /* sau4: 0xF8241E4 - 0xF822E60 */
+        .elseif fim_vme_ack
+        .set    .Lspur_dist, 0x9a0      /* sau6: 0x78024834 - 0x78023E94 */
         .elseif display_driver
         .set    .Lspur_dist, 0x6e4      /* sau5: 0xE22C3C - 0xE22558 */
         .else
@@ -88,6 +98,9 @@
          * FIM_$SPUR_CNT 0x5E, .Lspur_allowance 0x62 */
 
         .extern TIME_$CLOCKH_EC
+        .if fim_vme_ack
+        .extern VME_CTL                 /* the VME adapter's registers (I/O definitions) */
+        .endif
 
         .set    TIME_$CLOCKH, TIME_$CLOCKH_EC   /* the eventcount value word, map 0xE2B0D4 (time/time.ins.pas) */
         .extern FIM_$CRASH              /* fim/m68k/crash.s, map 0xE1E864 */
@@ -126,6 +139,18 @@ FIM_$SPURIOUS_INT:
         move.w  #1000,(.Lspur_dist+.Lspur_pre+0x62,%a5)    /* e21f68  3b7c 03e8 06f2 */
         move.l  %d0,(.Lspur_dist+.Lspur_pre+0x5a,%a5)      /* e21f6e  2b40 06ea */
 .Lspur_exit:
+        .if fim_vme_ack
+        /* the VME adapter's interrupt, acknowledged */
+        movea.l #VME_CTL,%a5                    /* sau6 78024886  2a7c 7fff 9400 */
+        move.w  (8,%a5),%d0                     /* sau6 7802488c  302d 0008 */
+        btst    #6,%d0                          /* sau6 78024890  0800 0006 */
+        beq.s   .Lspur_vme_done                 /* sau6 78024894  6710 */
+        move.w  (0x90,%a5),%d0                  /* sau6 78024896  302d 0090 */
+        btst    #7,%d0                          /* sau6 7802489a  0800 0007 */
+        beq.s   .Lspur_vme_done                 /* sau6 7802489e  6706 */
+        ori.w   #0x440,(8,%a5)                  /* sau6 780248a0  006d 0440 0008 */
+.Lspur_vme_done:
+        .endif
         movem.l (%sp)+,%d0/%a5                  /* e21f72 */
         jmp     (FIM_$EXIT:w,%pc)               /* e21f76  4efa 0944 */
 

@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E1763E  LOG_$ADD
     sau4  0x0F817FF6  LOG_$ADD
+    sau6  0x78018112  LOG_$ADD
+    sau7  0x3C4190FE  LOG_$ADD
     sau8  0x03C185AE  LOG_$ADD
 
   - Nothing is done before LOG_$INIT maps the page, nor for an entry

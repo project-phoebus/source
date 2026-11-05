@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E42CEC  mst_$init_table_page (module-local)
     sau4  0x0F84ACA0  mst_$init_table_page (module-local)
+    sau6  0x7804A078  mst_$init_table_page (module-local)
+    sau7  0x3C452E78  mst_$init_table_page (module-local)
     sau8  0x03C4AD44  mst_$init_table_page (module-local)
     sau9  0x3C44A078  mst_$init_table_page (module-local)
 

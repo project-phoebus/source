@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E064B0  ast_$invalidate_no_wait (nested)
     sau4  0x0F806848  ast_$invalidate_no_wait (nested)
+    sau6  0x78006ACC  ast_$invalidate_no_wait (nested)
+    sau7  0x3C406F34  ast_$invalidate_no_wait (nested)
     sau9  0x3C407734  ast_$invalidate_no_wait (nested)
 
   Assume we're called with the AST lock held.

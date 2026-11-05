@@ -90,4 +90,6 @@ MT_$PRESENT's heading is `../io/io.ins.pas`'s until the merge
   192), `word_iomap`, the CPIO status register's bus timeout
   (`region_mmu`, mt_mmu_bus_timeout) and `-cpu 460` (MT_$WAIT's
   multiply).
-- TODO(sau): the SAU6's MT_$SIO bus timeout member (`mt.ins.pas`).
+- The SAU6's MT is the SAU5's source with `region_mmu` and the turbo
+  boards' MMU (`mmu_status_bit_6`): MT_$SIO tests the status word's
+  member 15 (mt_mmu_bus_timeout).

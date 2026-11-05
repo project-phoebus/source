@@ -2,12 +2,15 @@
 
   Image addresses:
     sau4  0x0F80E8C4  mst_$va_to_aste (module-local)
+    sau6  0x7800E9C8  mst_$va_to_aste (module-local)
+    sau7  0x3C40FE38  mst_$va_to_aste (module-local)
     sau8  0x03C0F31C  mst_$va_to_aste (module-local)
     sau9  0x3C4103F8  mst_$va_to_aste (module-local)
 
   - The address's MST entry is activated (AST_$MSTE_ACTIVATE_AND_WIRE,
     under the AST lock); the address space's segment map entry is made
-    to point at the segment's page map, as MST_$TOUCH does.
+    to point at the segment's page map, as MST_$TOUCH does; on the
+    DN5xx-T its bit 0 is set as well.
   - The result is the wired ASTE, nil when the address has no entry or
     the activation failed; page is the address's page in its segment.
 
@@ -43,12 +46,22 @@ begin
       if not e.valid then begin
         e.pmap_pa := aste^.pmap_pa;
         e.valid := true;
+%if va_to_aste_smap_bit_0 %then
+        low := low + [0];
+%endif
 %else
       if ctl.dt = mst_smap_invalid then begin
         table := (table & 15) + aste^.pmap_pa;
         lim.limit := 31;
         if asid = 0 then flags := flags + [9];
-%if not smap_shared_global %then
+%if smap_shared_global_68851 %then
+        { the bit set for a global segment is cleared at once on the
+          MC68030, as in MST_$TOUCH }
+        if m68030 then begin
+          flags := flags - [9];
+          flags := flags + [10..15];
+        end;
+%elseif not smap_shared_global %then
         { the bit set for a global segment is cleared at once, as in
           MST_$TOUCH }
         flags := flags - [9];

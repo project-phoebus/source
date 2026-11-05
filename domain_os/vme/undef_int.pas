@@ -2,6 +2,7 @@
 
   Image addresses:
     sau5  0x00E0AA7C  VME_$UNDEF_INT
+    sau6  0x7800B66C  VME_$UNDEF_INT
 
   - The system is crashed with status_$vme_undefined_interrupt; the
     result false (not handled) is never reached.  Every entry of

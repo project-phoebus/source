@@ -47,9 +47,11 @@ variant is this controller's layout).
 
 ## Open items
 
-- TODO(sau): the SAU6's own SM_C code.
 - The SAU4's SM_C is the SAU3's with `mbus_map_64k`, `word_iomap`,
   `large_vm` (sm_c_$fix_ecc) and without `memory_parity`.
+- The SAU6's SM_C is the SAU4's with `long_iomap` and without
+  `mbus_map_64k`, and SM_C_$INT's restart of a chain by a clear and a go
+  (`sm_c_clear_go`).
 - TODO(pascal): the data block's open words (`sm_c.pas`).
 - The status codes the controller returns have no known names; the case
   labels are their numbers (`check_status.pas`).

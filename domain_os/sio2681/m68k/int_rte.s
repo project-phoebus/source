@@ -1,8 +1,8 @@
 /*
  * sio2681/m68k/int_rte.s - SIO2681_$INT1_RTE / SIO2681_$INT2_RTE
  *
- * The SAU2, SAU3 and SAU5 images have the same code here; the address and
- * byte columns below are the SAU2 image's.  The SAU8's (`D 3C30200
+ * The SAU2, SAU3, SAU5 and SAU6 images have the same code here; the
+ * address and byte columns below are the SAU2 image's.  The SAU8's (`D 3C30200
  * SIO_INT size = 68', `atbus_pics') ends the interrupt at the AT bus's
  * interrupt controllers (PIC2 for chip 2, then PIC1) before the common
  * tail; those lines carry the SAU8 image's addresses.

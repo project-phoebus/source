@@ -6,6 +6,10 @@
     sau3  0x00E5A1B2  PBU_$INIT
     sau5  0x00E5A5AE  map_owner_pages (nested)
     sau5  0x00E5A65E  PBU_$INIT
+    sau6  0x78062202  map_owner_pages (nested)
+    sau6  0x780622AA  PBU_$INIT
+    sau7  0x3C46AD9E  map_owner_pages (nested)
+    sau7  0x3C46AE46  PBU_$INIT
     sau8  0x03C62A96  map_owner_pages (nested)
     sau8  0x03C62B3E  PBU_$INIT
 

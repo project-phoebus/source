@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E43982  MST_$MAPS
     sau4  0x0F84BA58  MST_$MAPS
+    sau6  0x7804ADCC  MST_$MAPS
+    sau7  0x3C453B4A  MST_$MAPS
     sau8  0x03C4BB88  MST_$MAPS
     sau9  0x3C44AD4A  MST_$MAPS
 

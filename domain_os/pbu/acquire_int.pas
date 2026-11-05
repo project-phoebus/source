@@ -3,6 +3,8 @@
   Image addresses:
     sau3  0x00E588B2  PBU_$ACQUIRE_INT
     sau5  0x00E588B2  PBU_$ACQUIRE_INT
+    sau6  0x78060522  PBU_$ACQUIRE_INT
+    sau7  0x3C469322  PBU_$ACQUIRE_INT
     sau8  0x03C613D6  PBU_$ACQUIRE_INT
 
   - The kernel drivers' PBU_$SETUP: a DDF for the one unit (the wide I/O

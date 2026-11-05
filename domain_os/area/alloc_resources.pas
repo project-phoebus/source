@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E075CA  area_$alloc_resources (module-local)
     sau4  0x0F8078BA  area_$alloc_resources (module-local)
+    sau6  0x78007B08  area_$alloc_resources (module-local)
+    sau7  0x3C4083FC  area_$alloc_resources (module-local)
     sau9  0x3C408BFC  area_$alloc_resources (module-local)
 
   - False when the table (AREAS) is full to AREA_$FORMAT.max_entries;

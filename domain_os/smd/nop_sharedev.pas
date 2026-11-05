@@ -1,6 +1,7 @@
 { SMD_$NOP_SHAREDEV - the default for a device's sharing.
 
   Image addresses:
+    sau7  0x3C480CC6  SMD_$NOP_SHAREDEV
     sau9  0x3C4743E6  SMD_$NOP_SHAREDEV
 
   - A device without it refuses.

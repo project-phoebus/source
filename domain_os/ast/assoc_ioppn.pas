@@ -2,6 +2,8 @@
 
   Image addresses:
     sau4  0x0F807554  AST_$ASSOC_IOPPN
+    sau6  0x780077A8  AST_$ASSOC_IOPPN
+    sau7  0x3C407D30  AST_$ASSOC_IOPPN
     sau8  0x03C07524  AST_$ASSOC_IOPPN
     sau9  0x3C408530  AST_$ASSOC_IOPPN
 

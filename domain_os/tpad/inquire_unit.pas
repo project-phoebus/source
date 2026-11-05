@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E6996C  TPAD_$INQUIRE_UNIT
     sau4  0x0F873432  TPAD_$INQUIRE_UNIT
+    sau6  0x78072590  TPAD_$INQUIRE_UNIT
+    sau7  0x3C47CF06  TPAD_$INQUIRE_UNIT
 
   - The check reads the current unit, tpad_$unit; the record is unitp's,
     as in TPAD_$SET_UNIT_CURSOR.

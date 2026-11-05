@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E32BB8  sio_$init_drain_handler (module-local)
     sau4  0x0F835D64  sio_$init_drain_handler (module-local)
+    sau6  0x7803C078  sio_$init_drain_handler (module-local)
+    sau7  0x3C43C0BC  sio_$init_drain_handler (module-local)
     sau8  0x03C36584  sio_$init_drain_handler
     sau9  0x3C43958C  sio_$init_drain_handler (module-local)
 

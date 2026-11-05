@@ -2,8 +2,9 @@
   interrupting.
 
   Image addresses:
-    sau9  0x3C40C944  ATBUS_$DEVICE_INTERRUPTING
+    sau7  0x3C40C2C0  ATBUS_$DEVICE_INTERRUPTING
     sau8  0x03C0B96C  ATBUS_$DEVICE_INTERRUPTING
+    sau9  0x3C40C944  ATBUS_$DEVICE_INTERRUPTING
 
   - An interrupt above 15 crashes the system; so does one that is not
     the one defined on its level.  The result is its system bus level's

@@ -4,6 +4,8 @@
     sau2  0x00E6EB42  SMD_$ACQ_DISPLAY
     sau4  0x0F8792D4  SMD_$ACQ_DISPLAY
     sau5  0x00E70FC0  SMD_$ACQ_DISPLAY
+    sau6  0x7807832A  SMD_$ACQ_DISPLAY
+    sau7  0x3C481E0E  SMD_$ACQ_DISPLAY
     sau9  0x3C47552E  SMD_$ACQ_DISPLAY
 
   - SMD_$LOCK_DISPLAY is tried until it succeeds; lock_data 1 marks a

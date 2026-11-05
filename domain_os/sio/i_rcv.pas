@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E1C620  SIO_$I_RCV
     sau4  0x0F81D834  SIO_$I_RCV
+    sau6  0x7801E520  SIO_$I_RCV
+    sau7  0x3C42080C  SIO_$I_RCV
 
   - Enabled error bits (params.break_mask) become pending conditions;
     condition 5 calls the special-receive handler when the line asks for

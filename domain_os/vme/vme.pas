@@ -2,6 +2,7 @@
 
   Image addresses:
     sau5  0x00E236B0  VME_ data (WIRED_DATA, 0xD8 bytes)
+    sau6  0x78025464  VME_ data (WIRED_DATA, 0x40 bytes)
 
   One compilation unit: on the SAU5 the map's VME_ code segments in
   WIRED_PROC (0x304 bytes: VME_$UNDEF_INT .. VME_$SAVE_VME,
@@ -12,8 +13,15 @@
 
   The map's VME_ASM data segment (0xC bytes, VME_$SPURIOUS_INT) is hand
   assembly (vme/sau5/vme_asm.s).  The module is present with the part
-  vme_bus (base/config.ins.pas), empty elsewhere; only the SAU5's form
-  is written (the TODO(sau) below).
+  vme_bus (base/config.ins.pas), empty elsewhere.
+
+  With `vme_vectored_ints' (the SAU6) the module is the turbo boards'
+  form: the map's VME_ code segments in WIRED_PROC (0x84 bytes:
+  VME_$INT, VME_$DEFINE_USERINT, VME_$UNDEF_INT) and OS_INIT_PROC (0x48
+  bytes: VME_$INIT), and its data segment (0x40 bytes: VME_$USER_VEC,
+  eight entries, each VME_$UNDEF_INT and nil).  Its VME_ASM data
+  segment (0x4C bytes: VME_$SAVE_VME and VME_$SAVE) is hand assembly,
+  vme/sau6/vme_asm.s.
 
   The heading names the code and data sections that hold the block (the
   LOG_ form, log/log.pas); VME_$INIT is headed `[section(os_init_proc,
@@ -42,16 +50,25 @@ module vme_, wired_proc, wired_data;
 
 %if vme_bus %then
 
-{ TODO(sau) the SAU6's VME_ module
-
-  The SAU6's VME_ segments are other code (0x84 bytes in WIRED_PROC:
-  VME_$INT, VME_$DEFINE_USERINT, VME_$UNDEF_INT; 0x48 in OS_INIT_PROC:
-  VME_$INIT; data 0x40, VME_$USER_VEC only; VME_$SAVE and VME_$SAVE_VME
-  in a VME_ASM segment).  To be written, with the part
-  that tells the two forms apart, when the SAU6 is translated. }
-
 { The global routines and variables this module defines (ref 7.3.4 and
   7.2.2, Method 2), in map order. }
+%if vme_vectored_ints %then
+define
+  vme_$int;
+  vme_$define_userint;
+  vme_$undef_int;
+  vme_$init;
+  vme_$user_vec := [8 of [handler := addr(vme_$undef_int)]];
+                                          { +0x00 }
+
+{ ---- WIRED_PROC ---- }
+%include 'vme/int.pas';                   { VME_$INT            }
+%include 'vme/define_userint.pas';        { VME_$DEFINE_USERINT }
+%include 'vme/undef_int.pas';             { VME_$UNDEF_INT      }
+
+{ ---- OS_INIT_PROC ---- }
+%include 'vme/init.pas';                  { VME_$INIT           }
+%else
 define
   vme_$undef_int;
   vme_$define_int;
@@ -82,5 +99,6 @@ define
 
 { ---- OS_INIT_PROC ---- }
 %include 'vme/init.pas';                  { VME_$INIT           }
+%endif
 
 %endif

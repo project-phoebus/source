@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E14F52  PROC1_$GET_INFO
     sau4  0x0F8157C6  PROC1_$GET_INFO
+    sau6  0x780156D0  PROC1_$GET_INFO
+    sau7  0x3C416C28  PROC1_$GET_INFO
 
   - For a process other than the current one, with an OS stack, the
     hand-written PROC1_$GET_INFO_INT reads its user registers from the

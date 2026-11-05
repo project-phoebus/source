@@ -5,6 +5,9 @@
     sau4  0x0F8618BE  PBU2_$ASSOC
     sau5  0x00E58B8E  window_free (nested)
     sau5  0x00E58C08  PBU2_$ASSOC
+    sau6  0x780607F4  window_free (nested)
+    sau6  0x78060866  PBU2_$ASSOC
+    sau7  0x3C4695DE  PBU2_$ASSOC
     sau8  0x03C615F4  PBU2_$ASSOC
 
   - The memory's I/O map space is allocated at iova and its pages
@@ -14,6 +17,12 @@
     unit's iova must be in the Multibus window (16#80000..16#FFFFF,
     free), which turns the Multibus off, or the upper window
     (16#380000..16#3FFFFF, its upper half free).
+  - With the turbo boards' VME windows (`pbu_vme_windows') the upper
+    window is 16#310000..16#3FFFFF (its upper half free when the memory
+    reaches it), and the windows 16#200000..16#2FFFFF,
+    16#600000..16#FFFFFF (16#600000..16#7FFFFF with a GPU display, type
+    smd_$color2_display, as unit 1 or 2) and 16#3000000..16#3FFFFFF are
+    allowed too.
   - window_free (nested, with the VME bus) allocates and frees the space
     to see that it is free; with the Multibus off it counts as free.
   - The space is allocated for a Multibus unit, or with the AT bus's
@@ -103,6 +112,67 @@ begin
         pbu_ctl.word_00 := 16#213;
       end;
     end
+%if pbu_vme_windows %then
+    else if (a >= 16#310000) and then (a < 16#400000) then begin
+      if length > 16#F0000 then begin
+        status.all := status_$pbu_bad_controller_memory_length;
+        return;
+      end;
+      if a + length > 16#400000 then begin
+        status.all := status_$pbu_invalid_iova;
+        return;
+      end;
+      if a + length > 16#380000 then
+        if not window_free(16#80000) then
+          return;
+      if pbu_$mcb.present then begin
+        pbu_$mcb.high_window := true;
+        pbu_ctl.word_00 := 16#213;
+      end;
+    end
+    else if (a >= 16#200000) and then (a < 16#300000) then begin
+      if length > 16#100000 then begin
+        status.all := status_$pbu_bad_controller_memory_length;
+        return;
+      end;
+      if a + length > 16#300000 then begin
+        status.all := status_$pbu_invalid_iova;
+        return;
+      end;
+    end
+    else if (smd_$inq_disp_type(1) <> smd_$color2_display) and then
+            (smd_$inq_disp_type(2) <> smd_$color2_display) and then
+            (iova >= 16#600000) and then (iova < 16#1000000) then begin
+      if length > 16#A00000 then begin
+        status.all := status_$pbu_bad_controller_memory_length;
+        return;
+      end;
+      if iova + length > 16#1000000 then begin
+        status.all := status_$pbu_invalid_iova;
+        return;
+      end;
+    end
+    else if (iova >= 16#600000) and then (iova < 16#800000) then begin
+      if length > 16#200000 then begin
+        status.all := status_$pbu_bad_controller_memory_length;
+        return;
+      end;
+      if iova + length > 16#800000 then begin
+        status.all := status_$pbu_invalid_iova;
+        return;
+      end;
+    end
+    else if (iova >= 16#3000000) and then (iova < 16#4000000) then begin
+      if length > 16#1000000 then begin
+        status.all := status_$pbu_bad_controller_memory_length;
+        return;
+      end;
+      if iova + length > 16#4000000 then begin
+        status.all := status_$pbu_invalid_iova;
+        return;
+      end;
+    end
+%else
     else if (a >= 16#380000) and then (a < 16#400000) then begin
       if length > 16#80000 then begin
         status.all := status_$pbu_bad_controller_memory_length;
@@ -119,6 +189,7 @@ begin
         pbu_ctl.word_00 := 16#213;
       end;
     end
+%endif
     else if not dcte^.flags.any_address then begin
       status.all := status_$pbu_invalid_iova;
       return;

@@ -5,6 +5,7 @@
     sau3  0x00E6F030  sm_c_$command (module-local)
     sau4  0x0F87BE2C  sm_c_$command (module-local)
     sau5  0x00E74B94  sm_c_$command (module-local)
+    sau6  0x7807B8E0  sm_c_$command (module-local)
 
   - The wait is for the unit's eventcount or 20 clock ticks; a time-out
     is counted and gives status_$disk_controller_busy, else the result

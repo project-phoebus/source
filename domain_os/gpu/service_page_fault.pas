@@ -3,6 +3,7 @@
 
   Image addresses:
     sau5  0x00E73B08  gpu_$service_page_fault (module-local)
+    sau6  0x7807AA18  gpu_$service_page_fault (module-local)
 
   - Reads the faulting address from the processor (its registers 16#8006
     and 16#8007), wires the page, which gives the processor the mapping,

@@ -3,14 +3,15 @@
   Image addresses:
     sau2  0x00E19F6C  FLP_$INT
     sau4  0x0F81ABD8  FLP_$INT
+    sau7  0x3C41DB14  FLP_$INT
     sau8  0x03C1B130  FLP_$INT
 
   - The first three result bytes go into FLP_$SREGS; SENSE INTERRUPT
     STATUS is written when the controller wants a command before any
     byte came.
   - The AT bus form pauses before each byte and crashes the system when
-    the controller is not ready within 2000 polls; the disk change line
-    marks the drive's disk changed too.
+    the controller is not ready within flp_int_polls polls; the disk
+    change line marks the drive's disk changed too.
   - The result is always true.
 
   Status stored: none.
@@ -46,8 +47,8 @@ begin
       polls := 0;
       repeat
         polls := polls + 1;
-      until polls = 128;
-      polls := 2000;
+      until polls = flp_int_spin;
+      polls := flp_int_polls;
       while not (7 in main_status_bits) do begin
         polls := polls - 1;
         if polls <= 0 then begin

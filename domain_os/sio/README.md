@@ -96,6 +96,11 @@ settled note).
   TIME_$WAIT2, TIME_$Q_ADD_CALLBACK), `base`
   (status_$async_fault_while_waiting_for_input).
 
+## The SAU6
+
+The SAU6's SIO (WIRED_PROC 0x3D0 bytes, the default section 0x5E4, the
+data blocks 0x8 and 0x4) is the SAU9's code: no SAU6 source.
+
 ## Open items
 
 Form and names:

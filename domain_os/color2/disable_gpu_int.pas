@@ -2,6 +2,7 @@
 
   Image addresses:
     sau5  0x00E73570  COLOR2_$DISABLE_GPU_INT
+    sau6  0x7807A48C  COLOR2_$DISABLE_GPU_INT
 
   - Member 7 of the board's control word (a word set) is removed and
     member 6 added, in place.

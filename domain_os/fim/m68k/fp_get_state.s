@@ -31,6 +31,16 @@
  * With `fpu_enable_cpu_control' (the SAU8) they set and clear bit 2 of
  * the CPU control register (MMU + 0x101) and of its copy, MMU_$PID_PRIV's
  * low byte, at IPL 7; those lines carry the SAU8 image's addresses.
+ * With `fpa_board' (the SAU7: FIM_$FP_GET_STATE 0x3C426EEA) the
+ * accelerator's state comes first when FPA_$SAVEP is set: if the
+ * current address space owns the accelerator, its live state is saved
+ * (fpa_$save_state) and ownership dropped (bit 1 of the CPU control
+ * register set) under the accelerator's lock; then, if its save slot's
+ * flag word is 1, regs gets the word 0x1234, the 32 register longwords,
+ * the exception and the control and status registers, and frame the
+ * word 0x1234 and the 18 status bytes; otherwise a zero word each.  The
+ * FPU's state follows in both buffers.  Those lines carry the SAU7
+ * image's addresses.
  *
  * Not on the SAUs whose floating-point registers are the CPU's own
  * (`fp_state_in_cpu', base/config.ins.pas): the SAU4's routine is
@@ -38,7 +48,7 @@
  */
 
         .include "base/config.inc"
-        .if !fp_state_in_cpu
+        .if !fp_state_in_cpu && !fpu_enable_mmu_9   /* the SAU6's: fim/sau6/fp.s */
 
         .section ".text.FIM_$FP_GET_STATE","ax",@progbits
         .even
@@ -53,6 +63,15 @@
 
         /* The FPU owner register (SAU2 MMU page). */
         .equ    FP_HW_OWNER, 0x00FFB402
+        .if fpa_board
+        .extern FPA_$SAVEP              /* fp/m68k/savep.s */
+        .extern FPA_$OWNER              /* fp/m68k/savep.s */
+        .extern fpa_$exclusion          /* fp/m68k/savep.s */
+        .extern fpa_$save_state         /* fim/sau7/fpa.s */
+        /* Bytes per address space in the accelerator's save-area table
+         * (fim/sau7/fpa.s). */
+        .equ    FPA_SAVE_AREA_SIZE, 156
+        .endif
 
         .global FIM_$FP_GET_STATE
 FIM_$FP_GET_STATE:
@@ -61,6 +80,63 @@ FIM_$FP_GET_STATE:
         movea.l (0x18,%sp),%a4                  /* e21dca  A4 = frame */
         addq.l  #4,%a3                          /* e21dce  past the count longword */
         addq.l  #4,%a4                          /* e21dd0 */
+        .if fpa_board
+        move.l  (FPA_$SAVEP:w,%pc),%d0          /* sau7 3c426efa  203a f492 */
+        beq.w   .Lgs_fpa_none                   /* sau7 3c426efe  6700 00b2  no accelerator */
+        move.w  (PROC1_$AS_ID).l,%d0            /* sau7 3c426f02  3039 3c42 4aa2 */
+        cmp.w   (FPA_$OWNER:w,%pc),%d0          /* sau7 3c426f08  b07a f488 */
+        bne.s   .Lgs_fpa_read                   /* sau7 3c426f0c  6650 */
+        pea     (fpa_$exclusion:w,%pc)          /* sau7 3c426f0e  487a f484 */
+        jsr     (ML_$EXCLUSION_START).l         /* sau7 3c426f12  4eb9 3c42 529a */
+        addq.l  #4,%sp                          /* sau7 3c426f18  588f */
+        move.w  (PROC1_$AS_ID).l,%d0            /* sau7 3c426f1a  3039 3c42 4aa2 */
+        cmp.w   (FPA_$OWNER:w,%pc),%d0          /* sau7 3c426f20  b07a f470  still the owner? */
+        bne.s   .Lgs_fpa_unlock                 /* sau7 3c426f24  662c */
+        movea.l (FPA_$SAVEP:w,%pc),%a1          /* sau7 3c426f26  227a f466 */
+        bsr.w   fpa_$save_state                 /* sau7 3c426f2a  6100 f900  (D0 = asid) */
+        clr.w   (FPA_$OWNER).l                  /* sau7 3c426f2e  4279 3c42 6392 */
+        move.w  %sr,%d2                         /* sau7 3c426f34  40c2 */
+        ori.w   #0x700,%sr                      /* sau7 3c426f36  007c 0700 */
+        move.w  (MMU_$PID_PRIV).l,%d1           /* sau7 3c426f3a  3239 3c42 8ff4  the CPU control copy */
+        bset    #1,%d1                          /* sau7 3c426f40  08c1 0001  the accelerator's bit */
+        move.w  %d1,(MMU_$PID_PRIV).l           /* sau7 3c426f44  33c1 3c42 8ff4 */
+        move.b  %d1,(MMU+0x101).l               /* sau7 3c426f4a  13c1 3fff b501  the CPU control register */
+        move.w  %d2,%sr                         /* sau7 3c426f50  46c2 */
+.Lgs_fpa_unlock:
+        pea     (fpa_$exclusion:w,%pc)          /* sau7 3c426f52  487a f440 */
+        jsr     (ML_$EXCLUSION_STOP).l          /* sau7 3c426f56  4eb9 3c42 5320 */
+        addq.l  #4,%sp                          /* sau7 3c426f5c  588f */
+.Lgs_fpa_read:
+        movea.l (FPA_$SAVEP:w,%pc),%a0          /* sau7 3c426f5e  207a f42e */
+        move.w  (PROC1_$AS_ID).l,%d0            /* sau7 3c426f62  3039 3c42 4aa2 */
+        subq.w  #1,%d0                          /* sau7 3c426f68  5340 */
+        blt.w   .Lgs_fpa_none                   /* sau7 3c426f6a  6d00 0046 */
+        mulu.w  #FPA_SAVE_AREA_SIZE,%d0         /* sau7 3c426f6e  c0fc 009c */
+        cmpi.w  #1,(0,%a0,%d0.l)                /* sau7 3c426f72  0c70 0001 0800  a state saved? */
+        bne.w   .Lgs_fpa_none                   /* sau7 3c426f78  6600 0038 */
+        lea     (2,%a0,%d0.l),%a0               /* sau7 3c426f7c  41f0 0802 */
+        move.w  #0x1234,(%a3)+                  /* sau7 3c426f80  36fc 1234 */
+        move.w  #31,%d0                         /* sau7 3c426f84  303c 001f  32 longwords */
+.Lgs_fpa_regs:
+        move.l  (%a0)+,(%a3)+                   /* sau7 3c426f88  26d8 */
+        dbf     %d0,.Lgs_fpa_regs               /* sau7 3c426f8a  51c8 fffc */
+        adda.l  #18,%a0                         /* sau7 3c426f8e  d1fc 0000 0012  past the status bytes */
+        move.l  (%a0)+,(%a3)+                   /* sau7 3c426f94  26d8  the exception register */
+        move.l  (%a0),(%a3)+                    /* sau7 3c426f96  26d0  the control and status register */
+        suba.l  #22,%a0                         /* sau7 3c426f98  91fc 0000 0016  back to the status bytes */
+        moveq   #18,%d0                         /* sau7 3c426f9e  7012 */
+        move.w  #0x1234,(%a4)+                  /* sau7 3c426fa0  38fc 1234 */
+        lsr.l   #1,%d0                          /* sau7 3c426fa4  e288 */
+        subq.l  #1,%d0                          /* sau7 3c426fa6  5380  9 words */
+.Lgs_fpa_status:
+        move.w  (%a0)+,(%a4)+                   /* sau7 3c426fa8  38d8 */
+        dbf     %d0,.Lgs_fpa_status             /* sau7 3c426faa  51c8 fffc */
+        bra.w   .Lgs_fpu                        /* sau7 3c426fae  6000 000a */
+.Lgs_fpa_none:
+        move.w  #0,(%a3)+                       /* sau7 3c426fb2  36fc 0000 */
+        move.w  #0,(%a4)+                       /* sau7 3c426fb6  38fc 0000 */
+.Lgs_fpu:
+        .endif
         move.l  (FP_$SAVEP:w,%pc),%d0           /* e21dd2  203a fafc */
         beq.w   .Lgs_none                       /* e21dd6  6700 0090: no FPU */
         move.w  (PROC1_$AS_ID).l,%d0            /* e21dda */

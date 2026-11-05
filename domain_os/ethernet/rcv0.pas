@@ -1,6 +1,8 @@
 { ETHERNET_$RCV0 - unit 0's receive process.
 
   Image addresses:
+    sau6  0x7808B084  ETHERNET_$RCV0
+    sau7  0x3C49562A  ETHERNET_$RCV0
     sau8  0x03C88E26  ETHERNET_$RCV0
     sau9  0x3C484A4C  ETHERNET_$RCV0
 

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau5  0x00E1996E  win_$command
+    sau6  0x78019D9E  win_$command
 
   - The command byte goes to the controller's window; the wait is for
     WIN_$INT's advance of the eventcount, or 40 ticks (a time-out counted

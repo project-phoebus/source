@@ -1,6 +1,7 @@
 { COLOR4_$PUTC - write characters to the display TTY.
 
   Image addresses:
+    sau7  0x3C48BFEA  COLOR4_$PUTC
     sau8  0x03C80306  COLOR4_$PUTC
 
   - count characters, one at a time (DTTY_$PUTC); the descriptor is not

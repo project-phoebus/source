@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E0901A  AREA_$COPY
     sau4  0x0F80952E  AREA_$COPY
+    sau6  0x78009714  AREA_$COPY
+    sau7  0x3C40A00C  AREA_$COPY
     sau9  0x3C40A80C  AREA_$COPY
 
   - A new area of the same sizes is made for new_asid; the result is its

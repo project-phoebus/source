@@ -1,6 +1,7 @@
 { COLOR4_$DISSOC - dissociate the board from the current process.
 
   Image addresses:
+    sau7  0x3C483EF0  COLOR4_$DISSOC
     sau8  0x03C7979C  COLOR4_$DISSOC
 
   - Only the owner gives the board up; its registers stay mapped in its

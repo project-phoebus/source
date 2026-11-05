@@ -2,6 +2,8 @@
 
   Image addresses:
     sau4  0x0F80B608  MEM_$INIT
+    sau6  0x7800B860  MEM_$INIT
+    sau7  0x3C40C5D4  MEM_$INIT
     sau8  0x03C0BBC8  MEM_$INIT
     sau9  0x3C40CC00  MEM_$INIT
 
@@ -13,6 +15,10 @@
   - With `ecc_memory' the boards are the controllers that answer a probe,
     one per board in the first of its slots that does; each gets the
     control word that turns its reporting on.
+  - With `ecc6_memory' the boards are counted from the first while
+    their pages answer a probe, each added to MCSR_CONFIG (1 the first,
+    2 the second); each counted board's control word gets bits 7..6
+    cleared and its reporting on.
 
   Status stored: none.
 }
@@ -45,6 +51,31 @@ begin
   for board := 1 to mem_ecc_boards do
     if mem_board_slot[board] <> 0 then
       mem[board, mem_board_slot[board]].csr.ctl := mem_ecc_ctl_report;
+end;
+%elseif ecc6_memory %then
+var
+  data: integer;
+  board: integer;
+  n_boards: integer;
+  location: univ_ptr;
+begin
+  { the boards that answer, from the first }
+  n_boards := 0;
+  for board := 1 to mem_ecc6_boards do begin
+    location := addr(mem[board]);
+    if not testpage(0, location, data) then
+      exit;
+    n_boards := n_boards + 1;
+    if board = 1 then
+      mcsr_config := mcsr_config + 1
+    else
+      mcsr_config := mcsr_config + 2;
+  end;
+  mem_$mem_rec.n_boards := n_boards;
+
+  { reporting on }
+  for board := 1 to n_boards do
+    mem[board].ctl.all := (mem[board].ctl.all & 16#FF3F) ! mem_ecc6_ctl_report;
 end;
 %elseif mem_board_jumpers %then
 var

@@ -77,6 +77,18 @@ PCHIST_$CNTL.  None is hand assembly.
 - Used as they are: ml, mst (MST_$WIRE_AREA), wp (WP_$UNWIRE), proc1,
   proc2 (PROC2_$GET_PID, _$SET_CLEANUP), term (TERM_$WRITE).
 
+## The SAU6
+
+The SAU6's PCHIST (WIRED_PROC 0xC0 bytes, OS_INIT_PROC 0x14, the default
+section 0x5D4, the data block 0x128 and PCHIST_UNWIRED_D 0x938) is the
+SAU8's and SAU9's code: no SAU6 source.
+
+## The SAU7
+
+The SAU7's PCHIST (WIRED_PROC 0xC0 bytes, OS_INIT_PROC 0x14, the default
+section 0x5D0, the data block 0x128 and PCHIST_UNWIRED_D 0x938) is the
+SAU9's code: no SAU7 source.
+
 ## Open items
 
 The histogram record: the process filter is at +0x04 and the shift at

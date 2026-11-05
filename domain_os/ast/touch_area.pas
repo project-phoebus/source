@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E03548  AST_$TOUCH_AREA
     sau4  0x0F803960  AST_$TOUCH_AREA
+    sau6  0x78003C84  AST_$TOUCH_AREA
+    sau7  0x3C404096  AST_$TOUCH_AREA
     sau8  0x03C0388A  AST_$TOUCH_AREA
     sau9  0x3C404896  AST_$TOUCH_AREA
 
@@ -46,7 +48,7 @@ var
   pages_marked: integer;
   pages_done: integer;
   i: integer;
-%if region_mmu %then
+%if large_vm %then
   run_max: integer;
 %endif
 begin
@@ -59,7 +61,7 @@ begin
   pages_marked := n;
   while ast_$pmap_in_trans in segmap^.flags do
     ast_$wait_for_page_transition;
-%if region_mmu %then
+%if large_vm %then
   { the runs: the segment's pages from this one, at most 4 }
   run_max := min(32 - page, 4);
 %endif
@@ -77,7 +79,7 @@ begin
       out := ast_$ppn_ptr_t(integer32(out) + 4);
       n := n + 1;
       segmap := ast_$pmap_entry_ptr_t(integer32(segmap) + 4);
-%if region_mmu %then
+%if large_vm %then
       if n >= run_max then
         exit;
 %else
@@ -141,7 +143,7 @@ begin
       segmap^.flags := segmap^.flags + [ast_$pmap_in_trans];
       pages_marked := pages_marked + 1;
       segmap := ast_$pmap_entry_ptr_t(integer32(segmap) + 4);
-%if region_mmu %then
+%if large_vm %then
       if pages_marked >= run_max then
         exit;
 %else
@@ -214,7 +216,7 @@ begin
 %if pmmu_page_maps %then
         disk_addr.all := segmap^.vpn;
 %else
-        disk_addr.all := segmap^.all & 16#7FFFFF;
+        disk_addr.all := segmap^.fentry.fm_daddr;
 %endif
       end;
       segmap^.vpn := ppn_array[i];

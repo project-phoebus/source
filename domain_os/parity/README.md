@@ -47,6 +47,17 @@ privilege byte off around the scan of PAR_BUFF's 256 longwords
 MMU symbol's layout differs from mmu/mmu.ins.pas's).  PARITY_$CHK_IO
 and PARITY_$SET_STATE take the channel and two page numbers.
 
+On the SAU7 the module is the SAU8's with `parity_cache_check` (WIRED_PROC
+0x3CC bytes: PARITY_$CHK 0x348): on a board with the physical cache
+(ROADRUNNER) PARITY_$CHK turns the cache off while it runs, crashes the
+system on an error the cache's register (MMU + 16#200) shows, and moves
+the error to the second longword of the memory's 8-byte word when status
+bit 14 says so (PARITY_$INFO's word at 16#14, 0x16 bytes there); on any
+board it takes the page number unmasked, only logs an error with status
+bit 9, an AT bus channel check, and crashes the system with
+fault_$io_chan_chk when that bit is set and no lane failed.
+PARITY_$CHK_IO and PARITY_$SET_STATE are the SAU8's.
+
 The state both routines work on, PARITY_$INFO (0x14 bytes), is a map
 symbol inside the hand-written FIM's data (FIM_WIRED), so it is an
 extern variable in `parity.ins.pas`, not this module's.
@@ -91,6 +102,12 @@ Changes to shared insert files:
 
 No conformance unit of `../domain-pascal/tests/conformance/` covers this
 module.
+
+## The SAU6
+
+The SAU6's map has no PARITY segment (its memory corrects errors,
+`../mem/`, `ecc6_memory`): without `memory_parity` the module file
+compiles to an empty object.
 
 ## Open items
 

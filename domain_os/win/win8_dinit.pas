@@ -1,6 +1,7 @@
 { WIN8_$DINIT - the unit initialization entry.
 
   Image addresses:
+    sau7  0x3C41D4D0  WIN8_$DINIT
     sau8  0x03C1AB00  WIN8_$DINIT
 
   - Under the controller's ML lock.  The drive type is the low four

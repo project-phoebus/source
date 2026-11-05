@@ -20,6 +20,12 @@
  * With `fpu_enable_cpu_control' (the SAU8) they set and clear bit 2 of
  * the CPU control register (MMU + 0x101) and of its copy, MMU_$PID_PRIV's
  * low byte, at IPL 7; those lines carry the SAU8 image's addresses.
+ * With `fpa_board' (the SAU7: FIM_$FP_INIT 0x3C426AE0, the copier
+ * 0x3C426B56) FIM_$FP_INIT first gives asid a fresh accelerator context
+ * (fpa_$fp_init, fim/sau7/fpa.s) when FPA_$SAVEP is set, and the copier
+ * steps over a state topped by the flag word 2, the accelerator's
+ * 32 bytes, to the FPU's flag word below it, counting them in D1 and in
+ * FPA_$DEBUG9; those lines carry the SAU7 image's addresses.
  *
  * Not on the SAUs whose floating-point registers are the CPU's own
  * (`fp_state_in_cpu', base/config.ins.pas): the SAU4's routine is
@@ -27,7 +33,7 @@
  */
 
         .include "base/config.inc"
-        .if !fp_state_in_cpu
+        .if !fp_state_in_cpu && !fpu_enable_mmu_9   /* the SAU6's: fim/sau6/fp.s */
 
         .section ".text.FIM_$FP_INIT","ax",@progbits
         .even
@@ -37,6 +43,11 @@
         .extern FP_$EXCLUSION           /* fp/m68k/savep.s, image 0xE218D6 */
         .extern ML_$EXCLUSION_START     /* map 0xE20DF8 */
         .extern ML_$EXCLUSION_STOP      /* map 0xE20E7E */
+        .if fpa_board
+        .extern FPA_$SAVEP              /* fp/m68k/savep.s */
+        .extern FPA_$DEBUG9             /* fim/sau7/fpa.s */
+        .extern fpa_$fp_init            /* fim/sau7/fpa.s */
+        .endif
 
         /* The FPU owner register (SAU2 MMU page):
          * the low byte of the owning address space. */
@@ -55,6 +66,12 @@
  * ==================================================================== */
         .global FIM_$FP_INIT
 FIM_$FP_INIT:
+        .if fpa_board
+        tst.l   (FPA_$SAVEP).l                  /* sau7 3c426ae0  4ab9 3c42 638e */
+        beq.s   .Lfpi_no_fpa                    /* sau7 3c426ae6  6704  no accelerator */
+        bsr.w   fpa_$fp_init                    /* sau7 3c426ae8  6100 fde8 */
+.Lfpi_no_fpa:
+        .endif
         tst.l   (FP_$SAVEP).l                   /* e21bb0  4ab9 00e2 18d0 */
         beq.b   .Lfpi_done                      /* e21bb6  no FPU */
         move.w  (0x4,%sp),%d1                   /* e21bb8  D1 = asid */
@@ -108,6 +125,14 @@ FIM_$FP_INIT:
 fim_$copy_fp_frame:
         clr.l   %d1                             /* e21c04 */
         clr.l   %d3                             /* e21c06 */
+        .if fpa_board
+        cmpi.w  #2,(%a0)                        /* sau7 3c426b5a  0c50 0002  the accelerator's state? */
+        bne.s   .Lcff_no_fpa                    /* sau7 3c426b5e  660a */
+        moveq   #32,%d1                         /* sau7 3c426b60  7220  its 32 bytes */
+        adda.l  %d1,%a0                         /* sau7 3c426b62  d1c1  A0 = the FPU's flag word */
+        addq.w  #1,(FPA_$DEBUG9).l              /* sau7 3c426b64  5279 3c42 6652 */
+.Lcff_no_fpa:
+        .endif
         cmpi.w  #1,(%a0)+                       /* e21c08  frame present? */
         bne.b   .Lcff_count                     /* e21c0c */
         move.b  (1,%a0),%d3                     /* e21c0e  frame size byte */

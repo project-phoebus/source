@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E09822  AREA_$REMOVE_SEG
     sau4  0x0F809FCA  AREA_$REMOVE_SEG
+    sau6  0x7800A16A  AREA_$REMOVE_SEG
+    sau7  0x3C40AA9C  AREA_$REMOVE_SEG
     sau9  0x3C40B29C  AREA_$REMOVE_SEG
 
   - Under the area lock, after waiting out any operation in transition,

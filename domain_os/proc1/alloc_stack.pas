@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E1501A  PROC1_$ALLOC_STACK
     sau4  0x0F81588E  PROC1_$ALLOC_STACK
+    sau6  0x78015796  PROC1_$ALLOC_STACK
+    sau7  0x3C416CEE  PROC1_$ALLOC_STACK
 
   - Under the PROC1 create lock.  The size is rounded up to whole 1 KB
     pages; the result is the stack's top.

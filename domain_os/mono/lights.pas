@@ -1,6 +1,7 @@
 { MONO_$LIGHTS - draw the lights.
 
   Image addresses:
+    sau7  0x3C48D9FC  MONO_$LIGHTS
     sau8  0x03C8110C  MONO_$LIGHTS
 
   - Sixteen lights, one per bit of pattern (bit 0 first), each a word of

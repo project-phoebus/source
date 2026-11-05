@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E67FBE  SIO_$K_SIGNAL_WAIT
     sau4  0x0F871AB2  SIO_$K_SIGNAL_WAIT
+    sau6  0x78070C9C  SIO_$K_SIGNAL_WAIT
+    sau7  0x3C47B604  SIO_$K_SIGNAL_WAIT
 
   - In a loop the driver refreshes the block (inq_params, selectors 7
     and 8) until one of the signals is in its first flag set; between,

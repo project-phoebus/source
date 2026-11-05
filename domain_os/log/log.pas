@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E2B280  LOG_ data (WIRED_DATA, 0x1C bytes)
     sau4  0x0F82D934  LOG_ data (WIRED_DATA, 0x1C bytes)
+    sau6  0x7802E77C  LOG_ data (WIRED_DATA, 0x1C bytes)
+    sau7  0x3C430DA0  LOG_ data (WIRED_DATA, 0x1C bytes)
 
   One compilation unit, `module log_, wired_proc, wired_data;': the
   map's LOG_ code segments in WIRED_PROC and OS_INIT_PROC (LOG_$INIT,

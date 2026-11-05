@@ -158,7 +158,8 @@ type
     installed: boolean;                   { 0x1A }
     wcs_loaded: boolean;                  { 0x1B }
     savep_flag: boolean;                  { 0x1C }
-    flag_1d: boolean;                     { 0x1D }
+    flag_1d: boolean;                     { 0x1D: with `fpa_board' the
+                                            accelerator answered }
     info_byte: char;                      { 0x1E: copied as a byte }
     mmu_installed: boolean;               { 0x1F }
     m68881_save_flag: boolean;            { 0x20 }
@@ -183,6 +184,16 @@ var
     it.  A boolean, the block rounded to 4.  Defined in
     peb/peb_unwired.pas. }
   m68881_exists: extern boolean;
+%if peb_fpx or fpx_eco_check or fpa_board %then
+
+  { FPX_EXISTS (map symbol without `$', a global; PEB_UNWIRED's .DATA
+    block, its first byte, before M68881_EXISTS): set when the FPX
+    floating-point accelerator is present; PEB_$INIT and OS_$INIT test
+    it as a boolean (with `fpa_board' PEB_$INIT then probes the
+    accelerator).  Zero in the image; nothing in the kernel writes it.
+    Defined in peb/peb_unwired.pas. }
+  fpx_exists: extern boolean;
+%endif
 
   { PEB_$REGS (map symbol; the whole PEB_WIRED data segment, 0x658
     bytes, .DATA, which the map also labels PEB_$WIRED_DATA_START): the

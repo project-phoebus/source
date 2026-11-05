@@ -1,6 +1,7 @@
 { WIN8_$INT - the controller's interrupt routine.
 
   Image addresses:
+    sau7  0x3C41D860  WIN8_$INT
     sau8  0x03C1AE8C  WIN8_$INT
 
   - With the controller's interrupt bit set, its interrupt is turned off

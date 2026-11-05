@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E43F40  mst_$alloc_table_page (module-local)
     sau4  0x0F84C0D4  mst_$alloc_table_page (module-local)
+    sau6  0x7804B420  mst_$alloc_table_page (module-local)
+    sau7  0x3C4541F6  mst_$alloc_table_page (module-local)
     sau8  0x03C4C22C  mst_$alloc_table_page (module-local)
     sau9  0x3C44B3F6  mst_$alloc_table_page (module-local)
 
@@ -18,9 +20,10 @@
   - With the layout chosen at boot two regions share a page of segment
     map entries: a region whose partner is active takes the partner's
     page, the odd one of the pair the page's second half.
-  - With the region registers a region made active gets a page of
-    segment map entries of its own, and its register is loaded into the
-    MMU when the address space is the current one.
+  - With the longword tables a region made active gets a page of
+    segment map entries of its own; with the region registers its
+    register is loaded into the MMU when the address space is the
+    current one.
 
   Returns:
     status_$ok: a page was installed, or none was needed
@@ -100,8 +103,10 @@ begin
         rars[rars_asid_base[asid] + region].bits - [30];
       rars[rars_asid_base[asid] + region].bits :=
         rars[rars_asid_base[asid] + region].bits + [31];
+%if region_registers %then
       if asid = proc1_$as_id then
         mmu_$install_region(region, rars[rars_asid_base[asid] + region].all);
+%endif
       if netlog_$ok_to_log then
         netlog_$log_it(mst_region_netlog_kind, uid_$nil, 0, 0, 1, region,
                        0, 0);

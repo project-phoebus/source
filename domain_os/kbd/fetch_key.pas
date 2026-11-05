@@ -2,6 +2,8 @@
 
   Image addresses:
     sau2  0x00E1CAFE  kbd_$fetch_key (module-local)
+    sau6  0x7801EB4C  kbd_$fetch_key (module-local)
+    sau7  0x3C420E38  kbd_$fetch_key (module-local)
 
   - The ring's bytes run through the keyboard state machine from the
     descriptor's sub_state until one yields a key or the ring is empty;

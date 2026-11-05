@@ -12,6 +12,11 @@
     sau5  0x00E379F4  OS data (OS_INIT_DATA, 0x194 bytes)
     sau5  0x00E89A44  OS data (.DATA, 0x18 bytes)
     sau5  0x00E2F300  OS data (WIRED_DATA, 0x20 bytes)
+    sau6  0x7803F1D8  OS data (OS_INIT_DATA, 0xCB8 bytes)
+    sau6  0x7809CE28  OS data (.DATA, 0x18 bytes)
+    sau6  0x78032C08  OS data (WIRED_DATA, 0x20 bytes)
+    sau7  0x3C44067C  OS data (OS_INIT_DATA, 0x8F0 bytes)
+    sau7  0x3C4ABA1C  OS data (.DATA, 0x18 bytes)
     sau8  0x03C39678  OS data (OS_INIT_DATA, 0x2A8 bytes)
     sau8  0x03C9B218  OS data (.DATA, 0x18 bytes)
     sau9  0x3C43BE64  OS data (OS_INIT_DATA, 0x10B0 bytes)
@@ -51,8 +56,12 @@
   On the SAU9 OS_INIT_DATA is 0x10B0 bytes (MMAP_$INIT's table of 1024
   longwords, the vector table's 42 cells from +0x1000).  With
   `crash_reboot' the .DATA block has restart_code at +0x0C and
-  OS_$SHUTTING_DOWN_FLAG at +0x0E.  With `large_address_space'
-  OS_INIT_PROC has os_$free_gap_pmaps before OS_$INIT.
+  OS_$SHUTTING_DOWN_FLAG at +0x0E.  With `large_address_space' (and
+  the SAU6's `vm_65536_segs') OS_INIT_PROC has os_$free_gap_pmaps before
+  OS_$INIT.
+
+  On the SAU6 OS_INIT_DATA is 0xCB8 bytes (MMAP_$INIT's table of 768
+  longwords, the vector table's 44 cells from +0xC00).
 
   On the SAU8 OS_INIT_DATA is 0x2A8 bytes (MMAP_$INIT's table of 128
   longwords, the vector table's 40 cells from +0x200), and OS_$INIT
@@ -172,6 +181,22 @@ const
 procedure mmu_$set_seg_prot(va: univ_ptr; prot: integer);
   options(extern, val_param);
 %endif
+%if physical_cache_enable %then
+
+var
+  { ROADRUNNER (map symbol without `$', in the hand-written MMU_ASM's
+    data): a boolean, its first byte's sign, set on the boards with the
+    physical cache (mmu/mmu.ins.pas declares it too, a file this module
+    does not include here). }
+  roadrunner: extern boolean;
+%endif
+%endif
+%if physical_cache_enable %then
+%include 'cache/cache.ins.pas';             { CACHE_$ENABLE_PHYSICAL }
+%endif
+%if fpx_eco_check and not pft_mmu %then
+%include 'mmu/mmu_page.ins.pas';            { MMU, its system revision
+                                              word }
 %endif
 %include 'mmap/mmap.ins.pas';
 %include 'mst/mst.ins.pas';
@@ -322,6 +347,26 @@ var
   gpu: extern os_$gpu_regs_t;
 %endif
 
+%if display_driver %then
+const
+  { The display apertures and the color board's register that OS_$INIT
+    probes and installs (constant cells), at the top of the I/O space:
+    DISP1_MEM's and DISP2_MEM's addresses (DISP_MEM_2KX1K's with
+    `gpu_driver'), and the color board's register (`color_board'). }
+%if io_space_7ff %then
+  os_disp1_mem = 16#7FFC0000;
+  os_disp2_mem = 16#7FFA0000;
+%elseif io_space_0ff %then
+  os_disp1_mem = 16#0FFC0000;
+  os_disp2_mem = 16#0FFA0000;
+  os_color_board_reg = 16#0FFF6402;
+%else
+  os_disp1_mem = 16#FC0000;
+  os_disp2_mem = 16#FA0000;
+  os_color_board_reg = 16#FF6402;
+%endif
+
+%endif
 %if pmmu_page_maps or region_mmu %then
 { OS_PMAPS (map symbol without `$', the second object of the OS_PMAPS
   load section, after MMAP): the page maps of global B's 2048 segments,
@@ -347,7 +392,7 @@ procedure os_$start_proc2(in ctx: fim_$startup_context_t);
 { ---- OS_INIT_PROC ---- }
 %include 'network/fetch_diskless_info.pas'; { network_$fetch_diskless_info }
 %include 'misc/prompt_for_yes_or_no.pas';   { prompt_for_yes_or_no }
-%if large_address_space %then
+%if large_address_space or vm_65536_segs %then
 %include 'os/free_gap_pmaps.pas';           { os_$free_gap_pmaps }
 %endif
 %include 'os/init.pas';                     { OS_$INIT }

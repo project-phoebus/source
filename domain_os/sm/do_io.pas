@@ -4,6 +4,7 @@
     sau3  0x00E6E2BA  SM_$DO_IO
     sau4  0x0F877A02  SM_$DO_IO
     sau5  0x00E6F612  SM_$DO_IO
+    sau6  0x78076A5E  SM_$DO_IO
 
   - Under the controller's lock.  A format request (operation 3) goes
     to sm_$format.

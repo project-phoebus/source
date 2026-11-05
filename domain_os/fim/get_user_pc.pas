@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E0AAA6  FIM_$GET_USER_PC
     sau4  0x0F80B1EE  FIM_$GET_USER_PC
+    sau6  0x7800B35A  FIM_$GET_USER_PC
+    sau7  0x3C40C0EE  FIM_$GET_USER_PC
 
   - For a process stopped in the kernel, the result is its user-mode PC;
     nothing is checked.

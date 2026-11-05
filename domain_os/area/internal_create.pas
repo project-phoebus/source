@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E077DA  area_$internal_create (module-local)
     sau4  0x0F807AC8  area_$internal_create (module-local)
+    sau6  0x78007D16  area_$internal_create (module-local)
+    sau7  0x3C40860A  area_$internal_create (module-local)
     sau9  0x3C408E0A  area_$internal_create (module-local)
 
   - An entry is taken off AREA_$FREE_LIST (the table grown when it is

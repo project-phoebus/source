@@ -5,6 +5,7 @@
     sau2  0x00E6FEBE  SMD_$WRITE_STRING
     sau4  0x0F87A7C8  SMD_$WRITE_STRING
     sau5  0x00E723EA  SMD_$WRITE_STRING
+    sau6  0x780796C8  SMD_$WRITE_STRING
 
   - The clip window is set to the display's whole limits for the write
     (SMD_$WRITE_STR_CLIP, in SMD_UTILS) and restored after it.

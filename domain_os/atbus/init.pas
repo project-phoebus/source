@@ -1,14 +1,16 @@
 { ATBUS_$INIT - set the AT bus's interrupts up at boot.
 
   Image addresses:
-    sau9  0x3C4350BC  ATBUS_$INIT
+    sau7  0x3C43796C  ATBUS_$INIT
     sau8  0x03C32154  ATBUS_$INIT
+    sau9  0x3C4350BC  ATBUS_$INIT
 
   - Each of the system bus levels 1..3 gets ATBUS_$UNDEF_INT, with the
     level as its argument, and no interrupt defined.
   - With `atbus_pics' the vectors 16#A0..16#AF are trapped to
     ATBUS_$INT and the two controllers programmed, everything masked
-    but the master's inputs 0, 1 and 3.
+    but the master's inputs 0, 1 and 3 (and, with
+    `atbus_irq8_unmasked', the slave's input 0).
 
   Status stored: none.
 }
@@ -36,7 +38,11 @@ begin
     s_imr := atbus_$icw4;
     s_imr := atbus_$mask_all;
     m_imr := atbus_$m_mask_run;
+%if atbus_irq8_unmasked %then
+    s_imr := atbus_$s_mask_run;
+%else
     s_imr := atbus_$mask_all;
+%endif
   end;
 end;
 %else

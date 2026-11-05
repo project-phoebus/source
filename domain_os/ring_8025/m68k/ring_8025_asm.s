@@ -1,12 +1,13 @@
 |
-| ring_8025/sau8/ring_8025_asm.s - RING_8025_ASM, RING_8025_$$MOVB2B:
+| ring_8025/m68k/ring_8025_asm.s - RING_8025_ASM, RING_8025_$$MOVB2B:
 | copy bytes downward, from the ends of the two buffers
 |
 | SAU8 map: "I 3C8D720 RING_8025_ASM size = 38" (RING8025_PROC, after
 | the RING_8025 code segment), RING_8025_$$MOVB2B its only symbol.  The
 | SAU7's segment has the same bytes (0x3C49A1A8); the SAU9's driver has
-| no such segment.  Nothing in the image calls it: no instruction or
-| cell holds its address.
+| no such segment: only with `ring_8025_dma_channel'
+| (base/config.ins.pas).  Nothing in the image calls it: no instruction
+| or cell holds its address.
 |
 | Hand-written (an `_ASM' segment, no frame, the arguments read off SP),
 | three arguments by value:
@@ -23,9 +24,12 @@
 | encodes as andi, is written as `.short'.
 |
 | Byte check: assembled with `m68k-elf-as -m68020 -m68881' and compared
-| with the image's 0x38 bytes; the build has no SAU8 target yet.  The
-| address and byte columns are the SAU8 image's.
+| with the SAU8 and SAU7 images' 0x38 bytes.  The address and byte
+| columns are the SAU8 image's.
 |
+        .include "base/config.inc"
+        .if     ring_8025_dma_channel
+
         .section ".text.RING_8025_ASM.RING8025_PROC","ax",@progbits
         .even
 
@@ -52,3 +56,5 @@ RING_8025_$$MOVB2B:                     | 0x3C8D720
 3:      move.b  -(%a1),-(%a0)           | 3c8d750  1121
         dbf     %d0,3b                  | 3c8d752  51c8 fffc
 4:      rts                             | 3c8d756  4e75
+
+        .endif

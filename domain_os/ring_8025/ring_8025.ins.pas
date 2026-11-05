@@ -12,8 +12,9 @@
 
   Apollo's customer insert files of SR10.2 declare nothing of RING_8025.
   Include base/base.ins.pas, ec/ec.ins.pas, ml/ml.ins.pas, io/io.ins.pas,
-  uid/uid.ins.pas, pkt/pkt.ins.pas and mac_os/mac_os.ins.pas before it,
-  and not mmu/mmu.ins.pas (the MMU headings are here).
+  uid/uid.ins.pas, pkt/pkt.ins.pas and mac_os/mac_os.ins.pas before it
+  (and iomap/iomap.ins.pas with `ring_8025_iomap'), and not
+  mmu/mmu.ins.pas (the MMU headings are here).
 }
 
 const
@@ -92,6 +93,23 @@ const
     MTU), and the data descriptors of a list. }
   r8025_frame_size = 4504;
   r8025_list_data = 3;
+
+%if ring_8025_iomap %then
+  { A unit's I/O map region (`ring_8025_iomap'): its bus and its length,
+    eleven 1024-byte bus pages.  Its pages from the first: a frame's
+    header page and data pages as a transmit maps them; the receive
+    frame buffer's five, from r8025_map_frame; the page the control
+    area's blocks and lists are mapped at, r8025_map_ctl. }
+  r8025_iomap_bus = 3;
+  r8025_iomap_len = 16#2C00;
+  r8025_map_frame = 5;
+  r8025_map_ctl = 10;
+
+  { The room for a Domain packet's headers at a control area's xmit_hdr
+    that a send maps: the MAC header and the LLC and SNAP header, to the
+    error counters (52 bytes). }
+  r8025_xmit_hdr_room = 52;
+%endif
 
   { A list's CSTAT byte's members (ring_8025_$cstat_t, TI's bits 15..8
     of the list's CSTAT word): the list is valid for the adapter; the
@@ -756,8 +774,9 @@ type
       6: (station: ring_8025_$addr_t);    { 0x00 }
   end;
 
-  { A unit's record (0x434 bytes; the map's RING8025_UCB section,
-    0x868 bytes, holds the two units).  The fields are those the
+  { A unit's record (0x434 bytes, 0x438 with `ring_8025_iomap', whose
+    fields from rcv_list are 4 bytes on; the map's RING8025_UCB section,
+    0x868 or 0x870 bytes, holds the two units).  The fields are those the
     translated routines reach; the unused_ fields hold the places of
     the rest. }
   ring_8025_$unit_t = record
@@ -830,6 +849,11 @@ type
     cmd_ssb: ring_8025_$ssb_t;            { 0x414: of the last command }
     ring_ssb: ring_8025_$ssb_t;           { 0x41C: of the last ring
                                             status }
+%if ring_8025_iomap %then
+    iomap_page: integer;                  { 0x424: the first bus page of
+                                            the unit's I/O map region }
+    unused_426: integer;                  { 0x426 }
+%endif
     rcv_list: ring_8025_$list_ptr_t;      { 0x424: the first receive list }
     xmit_list: ring_8025_$list_ptr_t;     { 0x428: the first transmit list }
     ssb: ring_8025_$ssb_ptr_t;            { 0x42C: the status block }
@@ -838,7 +862,7 @@ type
   ring_8025_$unit_ptr_t = ^ring_8025_$unit_t;
 
 { ring_8025_$unit_t's unused_ fields (the word after each exclusion
-  lock, and 0x00A and 0x0F2) and the auxiliary area's are places no
+  lock, and 0x00A, 0x0F2 and 0x426) and the auxiliary area's are places no
   routine of the module addresses. }
 
   { The driver record (net_io/net_io.ins.pas net_io_$driver_t's
@@ -886,7 +910,7 @@ var
   ethernet/ethernet_3c505.ins.pas): the SAU9's MMU_$REMOVE takes a word
   after its longword (0 at the receive process's call), where
   mmu/mmu.ins.pas declares the SAU2's one-argument form, so this module
-  does not include that file and declares the six it calls here, the
+  does not include that file and declares the seven it calls here, the
   others as mmu/mmu.ins.pas has them. }
 
 { MMU_$REMOVE (hand-written): a page's mapping removed; the address and
@@ -905,6 +929,12 @@ procedure mmu_$install(ppn: integer32; va: univ_ptr; asid: integer;
 function mmu_$vtop(va: integer32; out status: status_$t): integer32;
   options(extern, val_param);
 
+%if ring_8025_iomap %then
+{ MMU_$CACHE_INHIBIT_VA (hand-written): the page at the virtual address
+  made uncached; the address by value. }
+procedure mmu_$cache_inhibit_va(va: univ_ptr); options(extern, val_param);
+
+%endif
 { MMU_$MCR_CHANGE (hand-written): the bit number of the memory control
   register to change, a word by value. }
 procedure mmu_$mcr_change(bit: integer); options(extern, val_param);

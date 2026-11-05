@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E0A9C2  FIM_$INSTALL
     sau4  0x0F80B10A  FIM_$INSTALL
+    sau6  0x7800B282  FIM_$INSTALL
+    sau7  0x3C40C016  FIM_$INSTALL
 
   - The result is the old handler; when there was none, the address
     space's quit inhibit is lifted.

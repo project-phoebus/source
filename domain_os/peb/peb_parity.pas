@@ -3,6 +3,8 @@
 
   Image addresses:
     sau2  0x00E24C78  PEB_PARITY data (WIRED_DATA, 0x24 bytes)
+    sau6  0x78028034  PEB_PARITY data (WIRED_DATA, 0x24 bytes)
+    sau7  0x3C42A8AC  PEB_PARITY data (WIRED_DATA, 0x24 bytes)
     sau9  0x3C428478  PEB_PARITY data (WIRED_DATA, 0x24 bytes)
 
   One compilation unit: the map's PEB_PARITY code segment in WIRED_PROC

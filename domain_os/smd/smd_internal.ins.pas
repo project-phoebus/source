@@ -633,14 +633,20 @@ type
     +0xFC, then the device's vector and descriptor (SMD_$ADD_DEVICE
     stores them; every call into the device reads them) and the cursor
     versions its device has at +0x104 (smd_crsr_versions_t, above).  The pointer the users
-    form is 0xFC bytes into the record, at the vector. }
+    form is 0xFC bytes into the record, at the vector.  With
+    `smd_unit_280_bytes' as well the record is 0x118 bytes: the
+    `two_display_units' record's 4 bytes at +0x0C, which nothing reaches
+    there, then the mapped addresses at +0x10 and every later field 4
+    bytes on (font_table +0xF8, hdm_list +0xFC, vector +0x100, dcte
+    +0x104, crsr_versions +0x108); the pointer is 0x100 bytes into the
+    record. }
   smd_display_unit_t = record
     hw: smd_display_hw_ptr_t;             { 0x00 }
     owner_asid: proc1_$asid_t;            { 0x04 }
     borrowed_asid: proc1_$asid_t;         { 0x06 }
     field_08: proc1_$asid_t;              { 0x08 }
     field_0a: integer;                    { 0x0A }
-%if two_display_units %then
+%if two_display_units or smd_unit_280_bytes %then
     iomap_base: integer;                  { 0x0C }
     unused_0e: integer;                   { 0x0E }
 %endif
@@ -648,9 +654,9 @@ type
     font_table: smd_unit_fonts_ptr_t;     { 0xF4, 0xF8 }
     hdm_list: smd_hdm_list_ptr_t;         { 0xF8, 0xFC }
 %if display_devices %then
-    vector: smd_dev_vector_ptr_t;         { 0xFC }
-    dcte: univ_ptr;                       { 0x100 }
-    crsr_versions: smd_crsr_versions_t;   { 0x104 }
+    vector: smd_dev_vector_ptr_t;         { 0xFC, 0x100 }
+    dcte: univ_ptr;                       { 0x100, 0x104 }
+    crsr_versions: smd_crsr_versions_t;   { 0x104, 0x108 }
 %else
     ctrl_regs: smd_ctrl_regs_ptr_t;       { 0xFC, 0x100 }
     display_uid: uid_$t;                  { 0x100, 0x104 }
@@ -682,7 +688,9 @@ type
     versions at +0x8CC (smd_crsr_versions_t, above), and the
     count of units at +0x8DC, which SMD_$ADD_DEVICE counts up and the
     unit loops run to (the SAU9's code); the words at +0x8CA and +0x8DE
-    nothing addresses. }
+    nothing addresses.  With `smd_unit_280_bytes' as well it is 0x900
+    bytes: the unit records of 0x118 bytes, the lock at +0x8D8, the
+    cursors' versions at +0x8EC, the count at +0x8FC (the SAU7's code). }
   { TODO(pascal) 6 bytes at the end of SMD_$WIRED_DATA nothing addresses (stand-in unused_136)
 
     The section is 0x13C bytes; the objects the code reaches end at 0x136
@@ -697,12 +705,12 @@ type
     ec_1: ec_$eventcount_t;               { 0x000 }
     ec_2: ec_$eventcount_t;               { 0x00C }
     unit: array[1..smd_unit_count] of smd_display_unit_t;  { 0x018 }
-    trk_rect_mutex: ml_$exclusion_t;      { 0x124, 0x238, 0x8B8 }
+    trk_rect_mutex: ml_$exclusion_t;      { 0x124, 0x238, 0x8B8, 0x8D8 }
 %if display_devices %then
-    unused_8ca: integer;                  { 0x8CA }
-    crsr_versions: smd_crsr_versions_t;   { 0x8CC }
-    unit_count: integer;                  { 0x8DC }
-    unused_8de: integer;                  { 0x8DE }
+    unused_8ca: integer;                  { 0x8CA, 0x8EA }
+    crsr_versions: smd_crsr_versions_t;   { 0x8CC, 0x8EC }
+    unit_count: integer;                  { 0x8DC, 0x8FC }
+    unused_8de: integer;                  { 0x8DE, 0x8FE }
 %else
     unused_136: array[0..5] of char;      { 0x136, 0x24A }
 %endif

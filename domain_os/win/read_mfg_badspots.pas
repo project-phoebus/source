@@ -2,6 +2,7 @@
   a request's page.
 
   Image addresses:
+    sau7  0x3C41CE22  win_$read_mfg_badspots (module-local)
     sau8  0x03C1A476  win_$read_mfg_badspots (module-local)
 
   - The controller's bad-spot command for the request's head; its

@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E1A134  PCHIST_$COUNT
     sau4  0x0F81AD9C  PCHIST_$COUNT
+    sau6  0x7801BA90  PCHIST_$COUNT
+    sau7  0x3C41DCF4  PCHIST_$COUNT
 
   - In mode 1, a profiled process with no sample pending gets the pc as
     its pending sample (pchist_$addr) and a trace fault, which runs

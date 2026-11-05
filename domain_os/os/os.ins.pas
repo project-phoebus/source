@@ -224,6 +224,9 @@ const
   status_$os_no_calendar_on_system = 16#001B0004;
                                           { "no calendar on system --
                                             please boot over network" }
+  status_$os_cpu_board_below_minimum_revision_level = 16#001B0005;
+                                          { "CPU board below minimum
+                                            revision level" }
   { status_$mst_no_space_available (16#40003, "no space available"), the
     other status OS_$INIT crashes with, is mst/mst.ins.pas's (moved there
     in MST part 4; os/os.pas includes that insert first). }
@@ -235,13 +238,24 @@ type
   os_$boot_flags_t = set of 0..15;
 
   { The PROM's boot record, OS_$INIT's first parameter: nine longwords,
-    copied whole. }
+    copied whole.  With `boot_record_bus' the PROM gives the boot
+    device's bus in the controller word's high byte; OS_$INIT moves it
+    to `bus' and clears the byte through the second view. }
   os_$boot_info_t = record
-    device: integer;                      { 0x00 }
-    ctlr: integer;                        { 0x02 }
-    unit: integer;                        { 0x04 }
-    flags: os_$boot_flags_t;              { 0x06 }
-    reserved: array[1..7] of integer32;   { 0x08..0x23 }
+    case integer of
+      1: (device: integer;                { 0x00 }
+          ctlr: integer;                  { 0x02 }
+          unit: integer;                  { 0x04 }
+          flags: os_$boot_flags_t;        { 0x06 }
+          node_id: linteger;              { 0x08: the node id
+                                            (`node_id_boot_record') }
+          bus: integer;                   { 0x0C (`boot_record_bus') }
+          reserved_0e: integer;           { 0x0E }
+          reserved: array[1..5] of integer32);
+                                          { 0x10..0x23 }
+      2: (device_view: integer;           { 0x00 }
+          ctlr_bus: char);                { 0x02: the controller word's
+                                            high byte }
   end;
 
   { The diskless reply the bootstrap fetched, OS_$INIT's second
@@ -287,6 +301,11 @@ var
   os_data_end: extern char;
   iodefs_guard: extern char;
   iodefs: extern char;
+%if vm_65536_segs %then
+  { VM_TABLES_END (map symbol): the end of the VM tables, below the low
+    region; OS_$INIT frees the page maps of global B up to OS_LOW. }
+  vm_tables_end: extern char;
+%endif
 
   { The STACK segment's labels (the map's STACK data segment in the PAGE
     load section): the three guard pages OS_$INIT frees,

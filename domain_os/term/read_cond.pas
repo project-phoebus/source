@@ -5,6 +5,7 @@
     sau2  0x00E6689A  TERM_$READ_COND
     sau3  0x00E67804  TERM_$READ_COND
     sau4  0x0F87038E  TERM_$READ_COND
+    sau7  0x3C479F16  TERM_$READ_COND
 
   - TTY_$K_GET with the conditional option; the result is the count
     read.

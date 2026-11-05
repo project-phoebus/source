@@ -4,6 +4,7 @@
     sau3  0x00E6DB52  sm_$reset (module-local)
     sau4  0x0F8772CE  sm_$reset (module-local)
     sau5  0x00E6EEAA  sm_$reset (module-local)
+    sau6  0x7807634E  sm_$reset (module-local)
 
   - The controller is probed and reset five times, and each drive then
     reset; the probe's and the drives' statuses are not returned.

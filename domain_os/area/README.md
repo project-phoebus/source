@@ -212,6 +212,19 @@ AREA_$REMOVE_SEG and AREA_$DEACTIVATE_ASTE clear it.  AREA_ has no
 multiply or divide (its `mod`s call the run-time on every 68010
 SAU), so it needs no `-cpu 460`.
 
+The SAU6's AREA_ (WIRED_PROC 0x33E4 bytes, OS_INIT_PROC 0x14C, the data
+block 0x5E8, the same bytes as the SAU4's) is the SAU4's logic in the
+SAU9's 68020 code: the region MMU's longword segment map entries
+(`region_mmu`) and the SAU9's MST index (55808 words,
+`mst_55808_words`).  The SAU6 image's `for` loops test their pinteger
+bounds unsigned where the SAU9's test the count's sign (AREA_$TRANSFER,
+AREA_$THREAD_BSTES), the code generation of the MST loops alike; the
+tree keeps pinteger.  None of AREA_'s SAU6 routines is hand assembly.
+
+The SAU7's AREA_ (WIRED_PROC 0x3428 bytes, OS_INIT_PROC 0x14C, the data
+block 0x5E8) is the SAU9's code, routine by routine and module-local by
+module-local: the source as it stands, no sau7 arm.
+
 ## Open items
 
 ### TODO(pascal)

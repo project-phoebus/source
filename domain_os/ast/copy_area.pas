@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E03A30  AST_$COPY_AREA
     sau4  0x0F803E3C  AST_$COPY_AREA
+    sau6  0x78004152  AST_$COPY_AREA
+    sau7  0x3C404586  AST_$COPY_AREA
     sau8  0x03C03D7A  AST_$COPY_AREA
     sau9  0x3C404D86  AST_$COPY_AREA
 
@@ -137,7 +139,7 @@ begin
 %if pmmu_page_maps %then
     else if src_row^.vpn <> 0 then begin
 %else
-    else if (src_row^.all & 16#7FFFFF) <> 0 then begin
+    else if src_row^.fentry.fm_daddr <> 0 then begin
 %endif
       { a run of on-disk source pages }
       run := 0;
@@ -159,7 +161,7 @@ begin
 %if pmmu_page_maps %then
       until ent^.vpn = 0;
 %else
-      until (ent^.all & 16#7FFFFF) = 0;
+      until ent^.fentry.fm_daddr = 0;
 %endif
 
       discard(ast_$allocate_pages(run, run, new_ppns));

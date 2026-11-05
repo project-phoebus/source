@@ -4,6 +4,7 @@
     sau2  0x00E6FAE2  SMD_$BLT_U
     sau4  0x0F87A3A2  SMD_$BLT_U
     sau5  0x00E71F98  SMD_$BLT_U
+    sau6  0x780792AC  SMD_$BLT_U
 
   - Valid coordinates: the ends at most 1023, the starts' sign bits
     clear.

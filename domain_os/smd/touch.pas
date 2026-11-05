@@ -1,6 +1,7 @@
 { SMD_$TOUCH - have a unit's device touch its memory.
 
   Image addresses:
+    sau7  0x3C421C06  SMD_$TOUCH
     sau9  0x3C42031E  SMD_$TOUCH
 
   - The unit is the request's; the unit is not checked.  The result is

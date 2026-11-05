@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E0209E  ast_$lookup_aote_by_uid (module-local)
     sau4  0x0F8024B6  ast_$lookup_aote_by_uid (module-local)
+    sau6  0x78002832  ast_$lookup_aote_by_uid (module-local)
+    sau7  0x3C402C48  ast_$lookup_aote_by_uid (module-local)
     sau9  0x3C403448  ast_$lookup_aote_by_uid (module-local)
 
   - The UID's hash chain (251 buckets) is walked for the UID; an entry

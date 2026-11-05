@@ -2,6 +2,9 @@
   descriptors, and the driver's wired data.
 
   Image addresses:
+    sau7  0x3C435BF4  COLOR5_DCTE data (WIRED_DATA, 0x80 bytes)
+    sau7  0x3C4BA300  COLOR5_$WIRED_DATA overlay (0x184 bytes)
+    sau7  0x3C4BA484  COLOR5_END_DATA overlay (0x4 bytes)
     sau8  0x03C303A0  COLOR5_DCTE data (WIRED_DATA, 0x80 bytes)
     sau8  0x03CA645C  COLOR5_$WIRED_DATA overlay (0x184 bytes)
     sau8  0x03CA65E0  COLOR5_END_DATA overlay (0x4 bytes)

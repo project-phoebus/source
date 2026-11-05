@@ -5,6 +5,8 @@
     sau4  0x0F88481E  RING_$SVC_WRITE
     sau3  0x00E7878E  RING_$SVC_WRITE
     sau5  0x00E7E21E  RING_$SVC_WRITE
+    sau6  0x78085592  RING_$SVC_WRITE
+    sau7  0x3C49006A  RING_$SVC_WRITE
     sau8  0x03C8386A  RING_$SVC_WRITE
 
   - Under a cleanup handler.  The ring header is built in a fresh

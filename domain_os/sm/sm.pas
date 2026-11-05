@@ -4,6 +4,7 @@
     sau3  0x00E83CD4  SM data (.DATA, 0x5C bytes)
     sau4  0x0F890EB4  SM data (.DATA, 0x5C bytes)
     sau5  0x00E89A5C  SM data (.DATA, 0x5C bytes)
+    sau6  0x7809CE40  SM data (.DATA, 0x5C bytes)
 
   One compilation unit, one code segment and one data segment: on the
   SAU5 the map's SM code segment in .TEXT (0xB1C bytes: eight

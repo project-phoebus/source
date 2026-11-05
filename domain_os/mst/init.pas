@@ -7,6 +7,10 @@
     sau4  0x0F8340E2  mst_init_page (nested)
     sau4  0x0F834144  mst_init_global_page (nested)
     sau4  0x0F8341BC  MST_$INIT
+    sau6  0x780397AA  MST_$INIT
+    sau7  0x3C439634  mst_init_page (nested)
+    sau7  0x3C439698  mst_init_global_page (nested)
+    sau7  0x3C439710  MST_$INIT
     sau8  0x03C33BD2  mst_init_page (nested)
     sau8  0x03C33C34  mst_init_global_page (nested)
     sau8  0x03C33CA8  MST_$INIT
@@ -33,6 +37,10 @@
     32 region registers follow ASID 0's, and its region 0 register,
     valid and not global, points at the page of segment map entries it
     gets.
+  - With the 65536 segments the limit is a tenth of the first 4096
+    real pages and a fifth of the rest (bound 9420), and every ASID's
+    RARS entries lie 512 longwords after the previous ASID's in
+    physical memory.
 
   Status stored: none.
 }
@@ -127,6 +135,17 @@ begin
   for seg := mst_$global_a_size div 64 to
       (mst_$global_a_size + mst_$global_b_size) div 64 - 1 do
     mst_init_global_page(seg);
+%if mst_pages_tiered %then
+  { a tenth of the first 4096 real pages, a fifth of the rest }
+  if mmap_$real_pages > 4096 then
+    mst_$mst_pages_limit := min((mmap_$real_pages - 4096) *
+                                  mst_pages_percent div 100 +
+                                  4096 * 10 div 100,
+                                (mst_$seg_tn div 64) * (mst_max_asid + 1))
+  else
+    mst_$mst_pages_limit := min(mmap_$real_pages * 10 div 100,
+                                (mst_$seg_tn div 64) * (mst_max_asid + 1));
+%else
 %if large_address_space or run_time_layout or vm_8192_segs %then
   pages := mmap_$real_pages;
 %else
@@ -138,6 +157,7 @@ begin
   ten_percent := (pages * mst_pages_percent) div 100;
   mst_$mst_pages_limit := min((mst_$seg_tn div 64) * (mst_max_asid + 1),
                               ten_percent);
+%endif
   mst_$mst_pages_limit := max(125, mst_$mst_pages_limit);
   mst_$mst_pages_limit := min(mst_$mst_pages_limit, mst_pages_max);
   mst_$mst_pages_limit := (mst_$mst_pages_limit div 32) * 32;
@@ -155,10 +175,18 @@ begin
     for grp := 0 to mst_seg_groups - 1 do
       mst_$segs_mapped[asid][grp] := 0;
   end;
+%if region_registers %then
   { ASID 1's region registers, after ASID 0's in RARS's first page, a
     copy of them }
   mmu_$rars_phaddr[1] := mmu_$rars_phaddr[0] + mst_region_members * 4;
   mst_$rar_pages := [0];
+%else
+  { every ASID's RARS entries, after ASID 0's in physical memory; ASID
+    1's a copy of ASID 0's }
+  for asid := 1 to mst_max_asid do
+    mmu_$rars_phaddr[asid] := asid * mst_rars_asid_entries * 4 +
+                              mmu_$rars_phaddr[0];
+%endif
   for i := 0 to mst_region_members - 1 do
     rars[rars_asid_base[1] + i] := rars[rars_asid_base[0] + i];
   mst_$regions_active[0] := mst_global_regions;

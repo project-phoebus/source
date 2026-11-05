@@ -1,8 +1,8 @@
 |
 | lpr/m68k/release.s - LPR_$RELEASE, the line-printer stub
 |
-| The SAU2 and SAU5 images have the same code here; the address and
-| byte columns below are the SAU2 image's.
+| The SAU2, SAU5 and SAU6 images have the same code here;
+| the address and byte columns below are the SAU2 image's.
 |
 | Byte gate (tools/asm_compare.py, `make check-asm'): the
 | image's four bytes.

@@ -1,6 +1,8 @@
 { ETHERNET_$START - start a unit.
 
   Image addresses:
+    sau6  0x780888A0  ETHERNET_$START
+    sau7  0x3C492DD6  ETHERNET_$START
     sau8  0x03C865D2  ETHERNET_$START
     sau9  0x3C4821D2  ETHERNET_$START
 
@@ -9,7 +11,7 @@
     one finds it on line; each success counts a user and marks the unit
     as taking Domain packets.  The driver is unwired again when the
     start failed.
-  - A failure counts in the unit's seventh statistic.
+  - A failure counts in the unit's eth_stat_errors count.
 
   Status stored:
     status_$ok: the unit is started
@@ -42,7 +44,7 @@ begin
     end
     else
       with u^ do
-        stats.counts[7] := stats.counts[7] + 1;
+        stats.counts[eth_stat_errors] := stats.counts[eth_stat_errors] + 1;
   end;
   ml_$exclusion_stop(u^.lock);
   if status.all <> status_$ok then

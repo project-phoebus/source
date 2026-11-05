@@ -4,6 +4,8 @@
     sau2  0x00E590FA  PBU_$FAULTED_UNITS
     sau3  0x00E5A2BA  PBU_$FAULTED_UNITS
     sau5  0x00E5A79C  PBU_$FAULTED_UNITS
+    sau6  0x780623CC  PBU_$FAULTED_UNITS
+    sau7  0x3C46AEFE  PBU_$FAULTED_UNITS
     sau8  0x03C62BF6  PBU_$FAULTED_UNITS
 
   - With the driver (`pbu_driver'), the set, as a word, of the units the

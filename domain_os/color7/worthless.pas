@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E752E8  COLOR7_$WORTHLESS
+    sau6  0x78083948  COLOR7_$WORTHLESS
 
   Status stored: none.
 }

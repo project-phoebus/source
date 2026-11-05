@@ -4,6 +4,7 @@
     sau3  0x00E32E14  OS_$INIT_POWER_OFF_CHECK
     sau4  0x0F837D82  OS_$INIT_POWER_OFF_CHECK
     sau5  0x00E36C14  OS_$INIT_POWER_OFF_CHECK
+    sau6  0x7803E370  OS_$INIT_POWER_OFF_CHECK
 
   - Compiled only with `power_off_check' (base/config.ins.pas).
   - Enters the repeating element whose callback, OS_$CHECK_POWER_OFF,

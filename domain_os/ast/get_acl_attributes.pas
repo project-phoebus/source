@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E04AAA  AST_$GET_ACL_ATTRIBUTES
     sau4  0x0F804E56  AST_$GET_ACL_ATTRIBUTES
+    sau6  0x78005120  AST_$GET_ACL_ATTRIBUTES
+    sau7  0x3C40557E  AST_$GET_ACL_ATTRIBUTES
     sau9  0x3C405D7E  AST_$GET_ACL_ATTRIBUTES
 
   - From AST_$GET_ATTRIBUTES' full record: its first four bytes, its ACL

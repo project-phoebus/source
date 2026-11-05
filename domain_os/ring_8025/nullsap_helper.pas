@@ -1,6 +1,7 @@
 { RING_8025_$NULLSAP_HELPER - answer the frames sent to the null SAP.
 
   Image addresses:
+    sau7  0x3C4972BA  RING_8025_$NULLSAP_HELPER
     sau8  0x03C8A906  RING_8025_$NULLSAP_HELPER
     sau9  0x3C48650A  RING_8025_$NULLSAP_HELPER
 
@@ -143,14 +144,23 @@ begin
       { sent: the header, then the data pages }
       ml_$exclusion_start(u^.xmit_lock);
       frame_size := len + dlen;
+%if ring_8025_iomap %then
+      pieces[1].pa := ring_8025_map_pa(pa, u^.iomap_page);
+%else
       pieces[1].pa := pa;
+%endif
       pieces[1].cnt.len := len;
       count := 1;
       m := dlen;
       while m <> 0 do begin
         count := count + 1;
         chunk := min(m, 1024);
+%if ring_8025_iomap %then
+        pieces[count].pa := ring_8025_map_pa(pages[count - 1],
+                                             u^.iomap_page + count - 1);
+%else
         pieces[count].pa := pages[count - 1];
+%endif
         pieces[count].cnt.len := chunk;
         m := m - chunk;
       end;

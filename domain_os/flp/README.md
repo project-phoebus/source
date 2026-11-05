@@ -76,6 +76,22 @@ and the data register, which the shared bodies use), the kind-3 DCTE's
 view, the controller slot, the overrun record, the map variables and
 the four headings under the part.
 
+The SAU7's form is the SAU8's with two parts more (the same block,
+0x1FC bytes, and routines; the map's FLP_ code segment 0xE00 bytes
+where the SAU8's is 0xCCC):
+
+- `floppy_iomap`: the DMA reaches memory through the AT bus's I/O map.
+  FLP_$DINIT takes a 2 KB region (`flp_map_base`, +0x1E0, which the
+  SAU8 addresses nothing at; `flp_map_allocated` at +0x1FA, in the
+  SAU8's block rounding) with the format table's page at its second
+  page, and cache-inhibits the overrun page; FLP_DO_IO cache-inhibits
+  its page and maps the request's page at the region for the first try
+  (IOMAP_$MAP; IOMAP_$UNMAP after it, or after a DMA failure);
+  flp_format_track maps the table's page around the format; FLP_$SHUTDOWN
+  frees the region.  `iomap/iomap.ins.pas` gives the IOMAP_ headings.
+- `floppy_long_delays`: the delay loops twice as long (`flp_int_spin`,
+  `flp_int_polls`, `flp_shake_spin`, `flp_reset_hold` in `flp.ins.pas`).
+
 The SAU4's form (`floppy_page_dma`, with `floppy_dcte_request`) is a
 third arm: the SAU2's routines and sections, with a block of 0x138
 bytes (the SAU2's objects but the format buffer's physical address and

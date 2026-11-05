@@ -3,6 +3,8 @@
 
   Image addresses:
     sau4  0x0F84C7F6  MST_$MAP_SPECIAL
+    sau6  0x7804BB28  MST_$MAP_SPECIAL
+    sau7  0x3C454918  MST_$MAP_SPECIAL
     sau8  0x03C4C994  MST_$MAP_SPECIAL
     sau9  0x3C44BB18  MST_$MAP_SPECIAL
 
@@ -35,7 +37,7 @@ begin
   if asid = 0 then
     crash_system(status_$mst_asid_0_illegal);
   ml_$lock(ml_$mst_asid_lock);
-%if large_address_space or vm_8192_segs %then
+%if large_address_space or vm_8192_segs or vm_65536_segs %then
   s := seg + (mst_$seg_global_b_offset - mst_special_segs);
 %elseif run_time_layout %then
   s := mst_$private_a_size + seg + (mst_private_b_count - mst_special_segs);
@@ -59,7 +61,7 @@ begin
       end;
     s := s + 1;
   end;
-%if large_address_space or vm_8192_segs %then
+%if large_address_space or vm_8192_segs or vm_65536_segs %then
   mst_$map_special := univ_ptr(lshft(seg, 15) +
                         lshft(mst_$seg_global_b - mst_special_segs, 15));
 %elseif run_time_layout %then

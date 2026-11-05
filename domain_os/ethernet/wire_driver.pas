@@ -2,6 +2,8 @@
   record.
 
   Image addresses:
+    sau6  0x7808685A  ethernet_wire_driver
+    sau7  0x3C49105A  ethernet_wire_driver
     sau8  0x03C8485A  ethernet_wire_driver
     sau9  0x3C48045A  ethernet_wire_driver
 

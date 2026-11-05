@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E76E22  RING_$SVC_CLOSE
     sau3  0x00E78612  RING_$SVC_CLOSE
+    sau6  0x78085422  RING_$SVC_CLOSE
+    sau7  0x3C48FEFA  RING_$SVC_CLOSE
     sau8  0x03C836FA  RING_$SVC_CLOSE
 
   - Under the channel lock the channel's socket (unless the system's) is

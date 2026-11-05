@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E3E112  FLP_$DINIT
     sau4  0x0F8460DE  FLP_$DINIT
+    sau7  0x3C44E27E  FLP_$DINIT
     sau8  0x03C461A6  FLP_$DINIT
 
   - The FORMAT TRACK table's page is wired the first time.
@@ -74,6 +75,9 @@ begin
       crash_system(status);
     flp_ovrrun_va := addr(flp_ovrrun_page);
     mmu_$install(flp_ovrrun_ppn, flp_ovrrun_va, 0, 16#16);
+%if floppy_iomap %then
+    mmu_$cache_inhibit_va(flp_ovrrun_va);
+%endif
     flp_ovrrun_last := flp_$long_ptr_t(integer32(flp_ovrrun_va) + 16#3FC);
     flp_need_ovrrun_page := false;
   end;
@@ -95,9 +99,20 @@ begin
     return;
   end;
   excs_vol.as_options := [];
+%if floppy_iomap %then
+  { the I/O map region: the format table's page at its second page }
+  flp_map_base := io_$alloc_map(flp_io_unit, 16#800, false, 0, status);
+  if status.all = status_$ok then begin
+    flp_map_allocated := true;
+    flp_fmt_buf_pa2 := flp_map_base + 1024;
+    flp_hw_addr^.dor := 16#0C;
+    io_$enable_device(flp_io_unit, status);
+  end;
+%else
   flp_fmt_buf_pa2 := flp_fmt_buf_pa;
   flp_hw_addr^.dor := 16#0C;
   io_$enable_device(flp_io_unit, status);
+%endif
   if status.all <> status_$ok then begin
     flp_$dinit := status.all;
     io_$release(flp_io_unit, status);
@@ -108,7 +123,7 @@ begin
   with flp_hw_addr^ do begin
     flp_$motor_on := false;
     dor := 8;
-    for i := 1 to 100 do
+    for i := 1 to flp_reset_hold do
       flp_delay := flp_delay + 1;
     dor := 16#0C;
     dig_in := 0;

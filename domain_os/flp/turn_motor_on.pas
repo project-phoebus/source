@@ -1,6 +1,7 @@
 { FLP_$TURN_MOTOR_ON - switch the drives' motor on, and wait for it.
 
   Image addresses:
+    sau7  0x3C44DB30  FLP_$TURN_MOTOR_ON
     sau8  0x03C45B30  FLP_$TURN_MOTOR_ON
 
   - Under the driver's spin lock the motor is marked on and used.  A

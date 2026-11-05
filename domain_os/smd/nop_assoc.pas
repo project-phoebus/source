@@ -1,6 +1,7 @@
 { SMD_$NOP_ASSOC - the default for a device's association with a process.
 
   Image addresses:
+    sau7  0x3C480C82  SMD_$NOP_ASSOC
     sau9  0x3C4743A2  SMD_$NOP_ASSOC
 
   - Maps nothing: the address is nil.

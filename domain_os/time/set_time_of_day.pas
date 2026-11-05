@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E1678C  TIME_$SET_TIME_OF_DAY
     sau4  0x0F81716C  TIME_$SET_TIME_OF_DAY
+    sau6  0x78017208  TIME_$SET_TIME_OF_DAY
+    sau7  0x3C4181F4  TIME_$SET_TIME_OF_DAY
 
   - The microseconds are rounded down to whole ticks.  A time before
     1980 (the Apollo epoch) only sets the time of day and clears the

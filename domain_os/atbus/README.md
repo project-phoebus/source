@@ -55,6 +55,11 @@ segment of ATBUS_$INTLEV_VEC and ATBUS_$INT_VEC alone.
 | ATBUS_$UNDEF_INT, ATBUS_$XLATE_IOVA | the SAU9's code |
 | ATBUS_$DEFINE_INT .. ATBUS_$CLEAR_PENDING, ATBUS_$INIT | their fragments' arms |
 
+The SAU7's routines and data are the SAU8's but for PIC1's address,
+except that its ATBUS_$INIT leaves the slave's input 0 (AT bus
+interrupt 8) unmasked at the end (`atbus_irq8_unmasked`), where the
+SAU8's masks all eight.
+
 ## Insert files
 
 - `atbus.ins.pas` (new): with `atbus_pics` the controllers' record,
@@ -73,9 +78,6 @@ segment of ATBUS_$INTLEV_VEC and ATBUS_$INT_VEC alone.
 
 ## Open items
 
-- The SAU7's ATBUS_$INIT unmasks the slave's input 0 at the end
-  (16#FE) where the SAU8's masks all (16#FF): the bank's only
-  difference, for when the SAU7 is translated.
 - The two ATBUS_ units have the same module name: a SAU9 layout must
   place two `ATBUS_` segments in WIRED_PROC and two in WIRED_DATA, the
   system bus's first.

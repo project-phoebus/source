@@ -5,6 +5,8 @@
     sau3  0x00E1953C  io_$check_unit
     sau4  0x0F81B10C  io_$check_unit
     sau5  0x00E1A7EC  io_$check_unit
+    sau6  0x7801BDA8  io_$check_unit
+    sau7  0x3C41E00C  io_$check_unit
     sau8  0x03C1B628  io_$check_unit
 
   - The result is whether the status is ok.

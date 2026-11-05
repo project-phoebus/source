@@ -1,6 +1,7 @@
 { ct_wait_ready - wait for the tape adapter to show ready.
 
   Image addresses:
+    sau7  0x3C485536  ct_wait_ready (module-local)
     sau8  0x03C7A168  ct_wait_ready (module-local)
 
   - The adapter's status is polled until it shows ready or, unless

@@ -2,6 +2,8 @@
   that overlaps a range.
 
   Image addresses:
+    sau6  0x7808814E  ethernet_find_range
+    sau7  0x3C4925F6  ethernet_find_range
     sau8  0x03C85DF2  ethernet_find_range
     sau9  0x3C4819F2  ethernet_find_range
 

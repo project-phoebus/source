@@ -1,6 +1,7 @@
 { ring_$set_timer - load one of the controller's counters.
 
   Image addresses:
+    sau7  0x3C48DC00  ring_$set_timer (module-local)
     sau8  0x03C81400  ring_$set_timer (module-local)
     sau9  0x3C47D000  ring_$set_timer (module-local)
 

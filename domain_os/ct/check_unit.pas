@@ -2,6 +2,8 @@
 
   Image addresses:
     sau5  0x00E76F72  ct_check_unit (module-local)
+    sau6  0x7807DC0E  ct_check_unit (module-local)
+    sau7  0x3C4854FC  ct_check_unit (module-local)
     sau9  0x3C477C40  ct_check_unit (module-local)
     sau8  0x03C7A12E  ct_check_unit (module-local)
 

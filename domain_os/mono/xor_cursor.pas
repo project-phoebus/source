@@ -1,6 +1,8 @@
 { MONO_$XOR_CURSOR - draw or remove the cursor.
 
   Image addresses:
+    sau7  0x3C48D7D2  MONO_$XOR_CURSOR
+    sau7  0x3C48D70A  xor_at (nested)
     sau8  0x03C80EE2  MONO_$XOR_CURSOR
     sau8  0x03C80E1A  xor_at (nested)
 

@@ -3,6 +3,7 @@
 
   Image addresses:
     sau5  0x00E736F0  gpu_$wait_pio (module-local)
+    sau6  0x7807A606  gpu_$wait_pio (module-local)
 
   - The status word is read at most 25000 times; gpu_stat is the last
     one read.

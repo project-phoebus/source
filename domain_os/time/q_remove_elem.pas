@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E16E48  TIME_$Q_REMOVE_ELEM
     sau4  0x0F817800  TIME_$Q_REMOVE_ELEM
+    sau6  0x78017898  TIME_$Q_REMOVE_ELEM
+    sau7  0x3C418884  TIME_$Q_REMOVE_ELEM
 
   - time_$q_remove_internal under the queue's spin lock.
 

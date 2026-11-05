@@ -1,6 +1,7 @@
 { ethernet_do_cmd - give the adapter a command and wait for its reply.
 
   Image addresses:
+    sau7  0x3C4914C2  ethernet_do_cmd
     sau8  0x03C84CBE  ethernet_do_cmd
     sau9  0x3C4808BE  ethernet_do_cmd
 

@@ -1,6 +1,7 @@
 { RING_8025_$INT - a unit's interrupt routine.
 
   Image addresses:
+    sau7  0x3C499D82  RING_8025_$INT
     sau8  0x03C8D30E  RING_8025_$INT
     sau9  0x3C488F12  RING_8025_$INT
     sau9  0x3C48916C  the status cell (status_$network_hardware_error)

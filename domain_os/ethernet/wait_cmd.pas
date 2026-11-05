@@ -1,10 +1,15 @@
 { ethernet_wait_cmd - wait for a command's reply.
 
   Image addresses:
+    sau6  0x78086B58  ethernet_wait_cmd
+    sau7  0x3C49144C  ethernet_wait_cmd
     sau8  0x03C84C48  ethernet_wait_cmd
     sau9  0x3C480848  ethernet_wait_cmd
 
   - The reply eventcount is waited for, eight clock ticks at most.
+  - With `ethernet_vme': a reply with a nonzero status is an error,
+    except a transmit's whose status, bit 3 aside, is 1 or 2 (that one
+    is good) or another value (that one leaves the status alone).
 
   Status stored:
     status_$ok: the reply came
@@ -22,7 +27,19 @@ begin
   ecs[2] := addr(time_$clockh_ec);
   vals[2] := ec_$read(time_$clockh_ec) + 8;
   case ec_$waitn(ecs, vals, 2) of
+%if ethernet_vme %then
+    1: if u^.reply_status = 0 then
+         status.all := status_$ok
+       else if u^.reply_cmd <> eth_vme_cmd_transmit then
+         status.all := status_$eth_adapter_hardware_error
+       else
+         case u^.reply_status & 16#F7 of
+           1, 2: status.all := status_$ok;
+         end;
+    2: status.all := status_$eth_adapter_hardware_error;
+%else
     1: status.all := status_$ok;
     2: status.all := status_$eth_adapter_hardware_error;
+%endif
   end;
 end;

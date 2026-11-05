@@ -1,6 +1,7 @@
 { RING_8025_$SVC_OPEN - open a user channel.
 
   Image addresses:
+    sau7  0x3C498796  RING_8025_$SVC_OPEN
     sau8  0x03C8BD86  RING_8025_$SVC_OPEN
     sau9  0x3C48798A  RING_8025_$SVC_OPEN
 

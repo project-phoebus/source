@@ -1,6 +1,8 @@
 { ETHERNET_$IOCTL - a unit's control request.
 
   Image addresses:
+    sau6  0x78088D22  ETHERNET_$IOCTL
+    sau7  0x3C4933DC  ETHERNET_$IOCTL
     sau8  0x03C86BD8  ETHERNET_$IOCTL
     sau9  0x3C4827D8  ETHERNET_$IOCTL
 

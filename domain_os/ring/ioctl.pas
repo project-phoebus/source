@@ -4,6 +4,8 @@
     sau2  0x00E76B2C  RING_$IOCTL
     sau3  0x00E7831C  RING_$IOCTL
     sau5  0x00E7DDAC  RING_$IOCTL
+    sau6  0x78085130  RING_$IOCTL
+    sau7  0x3C48FC06  RING_$IOCTL
     sau8  0x03C83406  RING_$IOCTL
 
   Status stored:

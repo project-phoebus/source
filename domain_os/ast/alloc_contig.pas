@@ -1,6 +1,7 @@
 { AST_$ALLOC_CONTIG - allocate a run of contiguous physical pages.
 
   Image addresses:
+    sau7  0x3C407C24  AST_$ALLOC_CONTIG
     sau9  0x3C408424  AST_$ALLOC_CONTIG
 
   - MMAP_$ALLOC_CONTIG under the PMAP lock; a failure wakes the purifier

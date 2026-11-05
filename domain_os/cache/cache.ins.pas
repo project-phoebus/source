@@ -18,3 +18,10 @@ procedure cache_$clear; extern;
   it with nothing pushed (AS_IO_SETUP, DISK_$AS_XFER_MULTI,
   DISK_$DIAG_IO) and reads no register after it.  A procedure. }
 procedure cache_$flush_virtual; extern;
+
+{ CACHE_$ENABLE_PHYSICAL and CACHE_$DISABLE_PHYSICAL (hand-written, in
+  MMU_ASM on the SAU7): write the physical cache's register (MMU +
+  16#200), 16#E4 and 0.  PARITY_$CHK calls them with nothing pushed
+  and reads no register after them.  Procedures. }
+procedure cache_$enable_physical; extern;
+procedure cache_$disable_physical; extern;

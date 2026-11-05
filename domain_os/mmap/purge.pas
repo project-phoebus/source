@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E0D11C  MMAP_$PURGE
     sau4  0x0F80D78C  MMAP_$PURGE
+    sau6  0x7800D8F8  MMAP_$PURGE
+    sau7  0x3C40EB46  MMAP_$PURGE
     sau8  0x03C0E032  MMAP_$PURGE
     sau9  0x3C40F082  MMAP_$PURGE
 

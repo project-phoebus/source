@@ -2,6 +2,8 @@
   interrupt.
 
   Image addresses:
+    sau6  0x7808AB84  ETHERNET_$INT_DEFERRED
+    sau7  0x3C495110  ETHERNET_$INT_DEFERRED
     sau8  0x03C8890C  ETHERNET_$INT_DEFERRED
     sau9  0x3C48450C  ETHERNET_$INT_DEFERRED
 
@@ -13,12 +15,79 @@
     in the receive state for the receive process.
   - The result is the eventcount to advance, the receive process's when
     it has work, else nil.
-  - A failed step counts in the seventh statistic; a call with nothing
+  - A failed step counts in the eth_stat_errors count; a call with nothing
     to do counts in idle_defers.
+  - With `ethernet_vme': a packet the controller has put in a receive
+    buffer is copied into the pages (no command); without one the call
+    counts in idle_defers; the buffer is marked free before it is given
+    back to the controller.
 
   Status stored: none.
 }
 
+%if ethernet_vme %then
+function ethernet_$int_deferred(u: ethernet_$unit_ptr_t):
+  ec_$eventcount_ptr_t;
+  options(val_param);
+var
+  st: status_$t;
+begin
+  { a packet the controller has put in a receive buffer: take it }
+  if eth_unit_rcv_ready in u^.flags then begin
+    if u^.rcv_state <> eth_rcv_idle then begin
+      ethernet_$int_deferred := addr(u^.rcv_wake_ec);
+      return;
+    end;
+    u^.flags := u^.flags - [eth_unit_rcv_ready];
+    ethernet_rcv_packet(u, u^.rcv_len[u^.rcv_idx], u^.rcv_len[u^.rcv_idx],
+                        st);
+    if st.all = status_$ok then
+      u^.rcv_state := eth_rcv_got
+    else
+      u^.stats.counts[eth_stat_errors] := u^.stats.counts[eth_stat_errors] + 1;
+  end
+  else
+    u^.idle_defers := u^.idle_defers + 1;
+
+  { a packet in the pages: learn from it, hand it on, new pages }
+  if u^.rcv_state = eth_rcv_got then begin
+    if ml_$exclusion_check(u^.cmd_lock) then begin
+      ethernet_$int_deferred := addr(u^.rcv_wake_ec);
+      return;
+    end;
+    if not ethernet_arp_input_cond(u, u^.hdr_va) then begin
+      ethernet_$int_deferred := addr(u^.rcv_wake_ec);
+      return;
+    end;
+    if not ethernet_demux_int(u) then begin
+      u^.rcv_state := eth_rcv_demux;
+      ethernet_$int_deferred := addr(u^.rcv_wake_ec);
+      return;
+    end;
+    if not ethernet_get_rcv_bufs_cond(u) then begin
+      u^.rcv_state := eth_rcv_bufs;
+      ethernet_$int_deferred := addr(u^.rcv_wake_ec);
+      return;
+    end;
+    u^.rcv_state := eth_rcv_idle;
+  end;
+
+  { the buffer free again, and given back to the controller }
+  if not (eth_unit_rcv_pending in u^.flags) then begin
+    u^.rcv_busy[u^.rcv_idx] := false;
+    if not ethernet_start_rcv_cond(u, st) then begin
+      if st.all <> status_$ok then
+        u^.stats.counts[eth_stat_errors] :=
+          u^.stats.counts[eth_stat_errors] + 1;
+      ethernet_$int_deferred := addr(u^.rcv_wake_ec);
+      return;
+    end
+    else if st.all <> status_$ok then
+      u^.stats.counts[eth_stat_errors] := u^.stats.counts[eth_stat_errors] + 1;
+  end;
+  ethernet_$int_deferred := nil;
+end;
+%else
 function ethernet_$int_deferred(u: ethernet_$unit_ptr_t):
   ec_$eventcount_ptr_t;
   options(val_param);
@@ -46,7 +115,7 @@ begin
     if st.all = status_$ok then
       u^.rcv_state := eth_rcv_got
     else
-      u^.stats.counts[7] := u^.stats.counts[7] + 1;
+      u^.stats.counts[eth_stat_errors] := u^.stats.counts[eth_stat_errors] + 1;
   end
   else if u^.rcv_state <> eth_rcv_got then
     u^.idle_defers := u^.idle_defers + 1;
@@ -78,11 +147,13 @@ begin
   if not (eth_unit_rcv_pending in u^.flags) then
     if not ethernet_start_rcv_cond(u, st) then begin
       if st.all <> status_$ok then
-        u^.stats.counts[7] := u^.stats.counts[7] + 1;
+        u^.stats.counts[eth_stat_errors] :=
+          u^.stats.counts[eth_stat_errors] + 1;
       ethernet_$int_deferred := addr(u^.rcv_wake_ec);
       return;
     end
     else if st.all <> status_$ok then
-      u^.stats.counts[7] := u^.stats.counts[7] + 1;
+      u^.stats.counts[eth_stat_errors] := u^.stats.counts[eth_stat_errors] + 1;
   ethernet_$int_deferred := nil;
 end;
+%endif

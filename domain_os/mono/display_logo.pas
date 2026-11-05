@@ -1,6 +1,7 @@
 { MONO_$DISPLAY_LOGO - copy the boot logo into display memory.
 
   Image addresses:
+    sau7  0x3C4845B0  MONO_$DISPLAY_LOGO
     sau8  0x03C79E5C  MONO_$DISPLAY_LOGO
 
   - The display memory is mapped here for the copy and unmapped after

@@ -2,6 +2,7 @@
   address space.
 
   Image addresses:
+    sau7  0x3C4840BE  COLOR5_$MAP_DISPLAY_MEMORY
     sau8  0x03C7996A  COLOR5_$MAP_DISPLAY_MEMORY
 
   - All 128 KB of the display's object from its start, whatever the

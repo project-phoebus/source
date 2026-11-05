@@ -4,6 +4,8 @@
     sau2  0x00E700E8  SMD_$ASSOC_CSRS
     sau4  0x0F87A9F4  SMD_$ASSOC_CSRS
     sau5  0x00E72614  SMD_$ASSOC_CSRS
+    sau6  0x780798F2  SMD_$ASSOC_CSRS
+    sau7  0x3C483004  SMD_$ASSOC_CSRS
     sau9  0x3C476724  SMD_$ASSOC_CSRS
 
   - Not implemented; param1 and param2 are not read.

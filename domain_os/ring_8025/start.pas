@@ -1,6 +1,7 @@
 { RING_8025_$START - start a unit.
 
   Image addresses:
+    sau7  0x3C498016  RING_8025_$START
     sau8  0x03C8B632  RING_8025_$START
     sau9  0x3C487236  RING_8025_$START
 

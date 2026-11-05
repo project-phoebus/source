@@ -3,6 +3,7 @@
 
   Image addresses:
     sau5  0x00E7405A  GPU_$FLUSH
+    sau6  0x7807AFD2  GPU_$FLUSH
 
   - A process with no pages in the table returns at once; otherwise it
     waits until it holds the processor, and outside diagnostic mode

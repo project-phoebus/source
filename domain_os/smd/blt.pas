@@ -4,6 +4,7 @@
     sau2  0x00E6EC6E  SMD_$BLT
     sau4  0x0F879424  SMD_$BLT
     sau5  0x00E710F8  SMD_$BLT
+    sau6  0x7807845E  SMD_$BLT
 
   - The display is acquired (lock word 0 for an interrupt-driven BLT,
     the mode's idone, else 1); a synchronous BLT releases it at once, an

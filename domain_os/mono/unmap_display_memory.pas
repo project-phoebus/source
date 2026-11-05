@@ -1,6 +1,7 @@
 { MONO_$UNMAP_DISPLAY_MEMORY - unmap the display memory.
 
   Image addresses:
+    sau7  0x3C484458  MONO_$UNMAP_DISPLAY_MEMORY
     sau8  0x03C79D04  MONO_$UNMAP_DISPLAY_MEMORY
 
   - The display memory's size (line_bits * word_74 bits) at va

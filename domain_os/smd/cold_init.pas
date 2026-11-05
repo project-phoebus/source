@@ -4,6 +4,8 @@
     sau2  0x00E34F00  SMD_$COLD_INIT
     sau4  0x0F83830A  SMD_$COLD_INIT
     sau5  0x00E372B6  SMD_$COLD_INIT
+    sau6  0x7803E8EE  SMD_$COLD_INIT
+    sau7  0x3C43E682  SMD_$COLD_INIT
     sau9  0x3C43B652  SMD_$COLD_INIT
 
   - Without `display_devices' an empty procedure.

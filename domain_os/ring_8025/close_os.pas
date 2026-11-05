@@ -1,6 +1,7 @@
 { RING_8025_$CLOSE_OS - close a system channel MAC_OS opened.
 
   Image addresses:
+    sau7  0x3C499A56  RING_8025_$CLOSE_OS
     sau8  0x03C8D022  RING_8025_$CLOSE_OS
     sau9  0x3C488C26  RING_8025_$CLOSE_OS
 

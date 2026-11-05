@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E16C5E  TIME_$Q_INIT_QUEUE
     sau4  0x0F817616  TIME_$Q_INIT_QUEUE
+    sau6  0x780176AE  TIME_$Q_INIT_QUEUE
+    sau7  0x3C41869A  TIME_$Q_INIT_QUEUE
 
   - The queue is emptied, its lock cleared, and its kind and id set.
 

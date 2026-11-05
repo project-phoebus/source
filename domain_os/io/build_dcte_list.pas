@@ -5,6 +5,8 @@
     sau3  0x00E31004  io_$build_dcte_list
     sau4  0x0F83599C  io_$build_dcte_list
     sau5  0x00E347E4  io_$build_dcte_list
+    sau6  0x7803BCB4  io_$build_dcte_list
+    sau7  0x3C43BCFC  io_$build_dcte_list
     sau8  0x03C361F0  io_$build_dcte_list
 
   - The dynamic DCTE area's records (each rounded up to 8 bytes) are

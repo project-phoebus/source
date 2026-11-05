@@ -1,3 +1,28 @@
+%if vme_vectored_ints %then
+{ VME_$INIT - install the VME bus's interrupt routines and its levels'
+  handlers at boot.
+
+  Image addresses:
+    sau6  0x78037DE8  VME_$INIT
+
+  - With `vme_vectored_ints': each of the eight user interrupts' vectors
+    goes to VME_$INT, and its VME_$USER_VEC entry's handler is
+    VME_$UNDEF_INT.
+
+  Status stored: none.
+}
+
+[section(os_init_proc, os_init_data)]
+procedure vme_$init;
+var
+  i: integer;
+begin
+  for i := 0 to vme_$n_user_ints - 1 do begin
+    io_$trap(i + vme_$first_user_vector, addr(vme_$int));
+    vme_$user_vec[i + vme_$first_user_int].handler := addr(vme_$undef_int);
+  end;
+end;
+%else
 { VME_$INIT - install the VME bus's interrupt routines and its levels'
   handlers at boot.
 
@@ -45,3 +70,4 @@ begin
     dcte := dcte^.nextp;
   end;
 end;
+%endif

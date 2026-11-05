@@ -1,6 +1,7 @@
 { COLOR4_$REL_DISP - release the display after a request.
 
   Image addresses:
+    sau7  0x3C483D28  COLOR4_$REL_DISP
     sau8  0x03C795D4  COLOR4_$REL_DISP
 
   - The display's lock state is cleared.

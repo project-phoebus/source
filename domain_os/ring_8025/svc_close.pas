@@ -1,6 +1,7 @@
 { RING_8025_$SVC_CLOSE - close a user channel.
 
   Image addresses:
+    sau7  0x3C4987C6  RING_8025_$SVC_CLOSE
     sau8  0x03C8BDB6  RING_8025_$SVC_CLOSE
     sau9  0x3C4879BA  RING_8025_$SVC_CLOSE
 

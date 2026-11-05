@@ -4,6 +4,8 @@
     sau2  0x00E32B26  sio_$init_line (module-local)
     sau3  0x00E312EE  sio_$init_line (module-local)
     sau4  0x0F835CD2  sio_$init_line (module-local)
+    sau6  0x7803BFE6  sio_$init_line (module-local)
+    sau7  0x3C43C02A  sio_$init_line (module-local)
     sau8  0x03C364F2  sio_$init_line
     sau9  0x3C4394FA  sio_$init_line (module-local)
 

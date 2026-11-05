@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E72562  KBD_$INQ_KBD_TYPE
     sau3  0x00E73B98  KBD_$INQ_KBD_TYPE
+    sau6  0x78080AA2  KBD_$INQ_KBD_TYPE
+    sau7  0x3C488C42  KBD_$INQ_KBD_TYPE
 
   - Without `display_driver' there is no keyboard: the call is refused.
 

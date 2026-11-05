@@ -4,6 +4,8 @@
     sau2  0x00E590F8  PBU_$FREE_ASID
     sau3  0x00E5A25C  PBU_$FREE_ASID
     sau5  0x00E5A73E  PBU_$FREE_ASID
+    sau6  0x7806236E  PBU_$FREE_ASID
+    sau7  0x3C46AEC4  PBU_$FREE_ASID
     sau8  0x03C62BBC  PBU_$FREE_ASID
 
   - With the driver (`pbu_driver'), every unit is set down

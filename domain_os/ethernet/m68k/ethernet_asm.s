@@ -7,8 +7,11 @@
 | ETHERNET code segment), ETHERNET_$$PIO_READ at its start and
 | ETHERNET_$$PIO_WRITE at +0x40; the SAU8's "I 3C88E60 ETHERNET_ASM size
 | = 80" is the same code but for the poll count (`ethernet_short_polls',
-| base/config.ins.pas: 7500 for 10000).  Only with the driver
-| (`ethernet_driver').
+| base/config.ins.pas: 7500 for 10000), and so is the SAU7's "I 3C495664
+| ETHERNET_ASM size = 80" (`ethernet_long_polls': 17500).  Only with the driver
+| of the 3C505 adapter (`ethernet_driver' without `ethernet_vme': the VME
+| controller's driver moves no data by program, and its image has no
+| ETHERNET_ASM).
 |
 | Hand-written (an `_ASM' segment, no frame, the arguments read off SP).
 | The ETHERNET routines call them with four arguments by value but the
@@ -21,19 +24,19 @@
 |
 | For each word the data register's ready bit (HRDY, bit 7 of the
 | status register at 2) is polled 10001 times at most (7501 with
-| `ethernet_short_polls'); then the word is moved through the data
+| `ethernet_short_polls', 17501 with `ethernet_long_polls'); then the word is moved through the data
 | register at 4.  The result in D0 is true (-1) with the status 0, or
 | false (0) with status_$eth_adapter_hardware_error (16#002F0006) when a
 | word's wait timed out.
 |
 | Byte check: assembled with `m68k-elf-as -m68030' (SAU9) and
-| `-m68020 -m68881' (SAU8) and compared with each image's 0x80 bytes;
-| the build has no SAU8 target yet.  The address and byte columns are
-| the SAU9 image's; the SAU8's routines are at 0x3C88E60 and 0x3C88EA0,
-| their count words `323c 1d4c'.
+| `-m68020 -m68881' (SAU8, SAU7) and compared with each image's 0x80
+| bytes.  The address and byte columns are the SAU9 image's; the SAU8's
+| routines are at 0x3C88E60 and 0x3C88EA0, their count words `323c
+| 1d4c', the SAU7's at 0x3C495664 and 0x3C4956A4, `323c 445c'.
 |
         .include "base/config.inc"
-        .if     ethernet_driver
+        .if     ethernet_driver && !ethernet_vme
 
         .section ".text.ETHERNET_ASM.ETHER_PROC","ax",@progbits
         .even
@@ -49,6 +52,8 @@ ETHERNET_$$PIO_READ:                    | 0x3C484A88
         bra.s   3f                      | 3c484a96  6022
         .if     ethernet_short_polls
 1:      move.w  #7500,%d1               |           323c 1d4c
+        .elseif ethernet_long_polls
+1:      move.w  #17500,%d1              |           323c 445c
         .else
 1:      move.w  #10000,%d1              | 3c484a98  323c 2710
         .endif
@@ -74,6 +79,8 @@ ETHERNET_$$PIO_WRITE:                   | 0x3C484AC8
         bra.s   3f                      | 3c484ad6  6022
         .if     ethernet_short_polls
 1:      move.w  #7500,%d1               |           323c 1d4c
+        .elseif ethernet_long_polls
+1:      move.w  #17500,%d1              |           323c 445c
         .else
 1:      move.w  #10000,%d1              | 3c484ad8  323c 2710
         .endif

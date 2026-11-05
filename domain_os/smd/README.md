@@ -121,6 +121,44 @@ clip window's seventeen operands at the SAU4 record's +0xD6..+0xDC
 `m68k/national_ktt.s`.  Every byte of both segments is the SAU4
 image's.
 
+### The SAU6
+
+The SAU6's map has the SAU5's five modules: SMD_WIRED code 0x56C and
+data 0x71C (the SAU5's symbols), SMD in WIRED_PROC 0x278, OS_INIT_PROC
+0x2E8, .TEXT 0x2D58, PROCEDURE$ 0x5C, PROC2_DELETE_PRO 0x80, data .DATA
+0x1E58, WIRED_DATA 0x1C, OS_INIT_DATA 4 and DATA$ 4, the overlay
+SMD_$WIRED_DATA 0x250, SMD_UTILS code 0x4C0 and data 0x5C8.  The
+compiled SMD module is the SAU5's source with the SAU5's parts but
+`color_board` (`two_display_units`, `color_displays`,
+`blt_request_start`, `gpu_driver`), and one of its own,
+`gpu_displays_only` (base/config.ins.pas): SMD_$INIT probes no unit's
+controller, and unit 1's record without the graphics board is the
+default kind's (disp_kind 0, where the SAU5 starts from 1).
+
+Against the SAU5, every other routine differs only in the 68020's
+code generation, registers, the frame, the constant cells' places, or
+the color board's arms the SAU6 does not have (COLOR_$INQ_DONE_WAIT,
+COLOR_$SHUTDOWN, COLOR_$DISSOC, COLOR_$VIDEO_CTL, COLOR_$LOAD_CRSR and
+the color types' hidden memory): no fragment has a SAU6 arm but
+SMD_$INIT, and each has its `sau6` address row.
+
+SMD_WIRED is `sau6/*.s` and the three shared files, the SAU5's
+division.  The code segment (`sau6/wired_proc.s`) is the SAU5's
+without the color board's cursor (types 3 and 4 fall to the monochrome
+path), its data-segment displacements the SAU6's; the data segment's
+code (`sau6/disp1_int.s` .. `sau6/start_blt.s`) is the SAU5's with the
+SAU2's interrupt entry and exits (IPL 6 and IO_$USE_INT_STACK on both
+handlers, PROC1_$INT_EXIT and PROC1_$INT_ADVANCE), no unit 2 color
+controller case in SMD_$BLINK_CURSOR_2, and an SMD_$INTERRUPT_INIT that
+stores the two handlers in DISP1_VEC and DISP2_VEC; the data
+(`m68k/wired_data.s`) has the SAU5's `gpu_driver` cells without the
+color board's command block.  SMD_UTILS is `sau6/smd_utils.s`, the
+SAU5's file byte for byte.  Every byte of both modules' segments was
+checked against the SAU6 image by assembling the files with
+`m68k-elf-as -m68020 -m68881` and linking them at the map's addresses
+(the shared SMD_$LOCK_DISPLAY's CMP <ea>=#imm is the assembler-spelling
+difference, as on the other SAUs).
+
 ### The SAU9 (`display_devices`)
 
 The SAU9's map (and the SAU7's and SAU8's, the same module sizes but the
@@ -180,8 +218,26 @@ module-locals, has its `sau9' address row:
 - the SAU2's source, the code differing only by the 68020 forms, the
   data layout and register choice: the others.
 SMD_WIRED's data (the cursor table and pointers, SMD_$DISPLAY_COM,
-SMD_TIME_$COM, the keyboard table pointers, SMD_$KTT) and SMD_UTILS's
-keyboard tables have no SAU9 file yet (the TODO(sau) below).
+SMD_TIME_$COM, the keyboard table pointers, SMD_$KTT) is
+`m68k/wired_data.s`'s `display_devices` arm, and SMD_UTILS's keyboard
+tables are the shared `m68k/national_ktt.s`.
+
+### The SAU7 (`display_devices`, `smd_unit_280_bytes`)
+
+The SAU7's map has the SAU9's SMD, SMD_WIRED and SMD_UTILS segments with
+the SAU9's sizes, but the overlay SMD_$WIRED_DATA is 0x900 bytes: each
+of the eight unit records is 0x118 bytes, with 4 bytes at +0x0C before
+the mapped addresses (the `two_display_units` record's I/O map word and
+the word after it), which nothing reaches; every later field and the
+lock, the cursors' versions and the unit count after the records are on
+by that much (`smd_unit_280_bytes`, base/config.ins.pas;
+smd_internal.ins.pas).  The code is otherwise the SAU9's: every routine
+has its SAU9 size, and the two images' instructions differ only in the
+unit record's size and the displacements that follow from it.  So no
+fragment has a SAU7 arm; each has its `sau7` address row.  The SMD data
+blocks are the SAU9's bytes (their address cells aside), and SMD_WIRED
+and SMD_UTILS are the SAU9's files, byte for byte at the SAU7 map's
+addresses.
 
 ### The SMD module
 
@@ -504,10 +560,11 @@ of the SAU3's kernel.
 - The SAU5's hand assembly is written (`sau5/*.s`, above); the SAU5
   link still needs the I/O names it reads as absolute symbols (an
   `arch/m68k/sau5` iodefs, outside this subsystem).
-- The SAU9's SMD_WIRED data segment (0x4D8 bytes) and SMD_UTILS
-  segment (0x500 bytes, the national keyboard tables only) are not
-  written: hand data, `sau9/*.s` or `.if' arms in `m68k/wired_data.s'
-  and the SAU2's keyboard tables, checked against the image's bytes.
+- The SAU6's hand assembly is written (`sau6/*.s`, above); its link
+  needs the SAU6 map's I/O names and vector cells as absolute symbols
+  (DISP1, DISP2, DISP1_MEM, DISP2_MEM, DISP_MEM_2KX1K, KOLOR_CTL,
+  DISP1_VEC, DISP2_VEC; an `arch/m68k/sau6` iodefs, outside this
+  subsystem).
 
 ## Named dispatch codes
 

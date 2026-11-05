@@ -5,6 +5,8 @@
     sau3  0x00E310B0  IO_$INIT
     sau4  0x0F835A48  IO_$INIT
     sau5  0x00E34890  IO_$INIT
+    sau6  0x7803BD60  IO_$INIT
+    sau7  0x3C43BDA8  IO_$INIT
     sau8  0x03C3629C  IO_$INIT
     sau9  0x3C439088  IO_$INIT
 

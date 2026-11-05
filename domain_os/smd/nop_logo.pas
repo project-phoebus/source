@@ -1,6 +1,7 @@
 { SMD_$NOP_LOGO - the default for a device's boot logo.
 
   Image addresses:
+    sau7  0x3C480C96  SMD_$NOP_LOGO
     sau9  0x3C4743B6  SMD_$NOP_LOGO
 
   - Draws nothing.

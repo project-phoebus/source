@@ -1,6 +1,8 @@
 { color5/color5.pas - the COLOR5 module, a color display board's driver.
 
   Image addresses:
+    sau7  0x3C435BD4  COLOR5 data (WIRED_DATA, 0x20 bytes)
+    sau7  0x3C4ADE24  COLOR5 data (.DATA, 0x4 bytes)
     sau8  0x03C30380  COLOR5 data (WIRED_DATA, 0x20 bytes)
     sau8  0x03C9D430  COLOR5 data (.DATA, 0x4 bytes)
 

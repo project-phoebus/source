@@ -3,6 +3,8 @@
   Image addresses:
     sau3  0x00E591DC  PBU_$RELEASE_EC
     sau5  0x00E593AC  PBU_$RELEASE_EC
+    sau6  0x7806106A  PBU_$RELEASE_EC
+    sau7  0x3C469AF8  PBU_$RELEASE_EC
     sau8  0x03C61A06  PBU_$RELEASE_EC
 
   - Undoes PBU_$ALLOCATE_EC under the exclusion lock: the eventcount's

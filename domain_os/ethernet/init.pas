@@ -2,6 +2,8 @@
 
   Image addresses:
     sau2  0x00E78004  ETHERNET_$INIT
+    sau6  0x78088740  ETHERNET_$INIT
+    sau7  0x3C492C20  ETHERNET_$INIT
     sau8  0x03C8641C  ETHERNET_$INIT
     sau9  0x3C48201C  ETHERNET_$INIT
 
@@ -13,6 +15,11 @@
     at 0x34 points to it); the adapter is reset, the unit's record set
     up, the driver record given the network's UID and a NET_IO port
     created for the unit, and the unit's I/O map space allocated.
+  - With `ethernet_vme': the DCTE's longword at 0x34 is the
+    controller's register address itself, TESTPAGE must reach it and the
+    controller answer there; the unit's record is set up without the
+    register write and the I/O map space, and the driver record is
+    given ETHERNET_VME_$NETWORK_UID.
   - The result is the status as a longword; a unit out of range or an
     adapter that does not answer is status_$io_controller_not_in_system.
 
@@ -27,9 +34,59 @@ var
   status: status_$t;
   u: ethernet_$unit_ptr_t;
   i: integer;
+%if ethernet_vme %then
+  probe_data: integer;
+%endif
 %endif
 begin
-%if ethernet_driver %then
+%if ethernet_vme %then
+  if dcte.cnum <= eth_max_unit then begin
+    regs := dcte.disk_dinit;
+    if testpage(1, regs, probe_data) then
+      if ethernet_probe(regs) then begin
+        if not ethernet_reset(regs, status) then begin
+          ethernet_$init := status.all;
+          return;
+        end;
+        u := addr(ether_ucb[dcte.cnum]);
+        u^.flags := [eth_unit_configured];
+        ml_$exclusion_init(u^.lock);
+        u^.users := 0;
+        u^.wired := false;
+        u^.cnum := dcte.cnum;
+        u^.station.high := 0;
+        u^.station.low := 0;
+        u^.regs := dcte.disk_dinit;
+        u^.dcte := addr(dcte);
+        ml_$exclusion_init(u^.excl_1098);
+        for i := 1 to 10 do
+          u^.channels[i].open := false;
+        ec_$init(u^.rcv_exit_ec);
+        u^.rcv_state := eth_rcv_bufs;
+        u^.idle_defers := 0;
+        u^.stats.counts[1] := 0;
+        u^.stats.counts[5] := 0;
+        u^.stats.counts[7] := 0;
+        u^.stats.counts[8] := 0;
+        u^.stats.counts[6] := 0;
+        u^.stats.counts[2] := 0;
+        u^.stats.counts[3] := 0;
+        for i := eth_stat_errors to eth_stat_xmit_failed do
+          u^.stats.counts[i] := 0;
+        ethernet_driver.network_uid := ethernet_vme_$network_uid;
+        ethernet_port_array[dcte.cnum] :=
+          net_io_$create_port(4, dcte.cnum, addr(ethernet_driver), 0,
+                              status);
+        if status.all <> status_$ok then begin
+          ethernet_$init := status.all;
+          return;
+        end;
+        ethernet_$init := status_$ok;
+        return;
+      end;
+  end;
+  ethernet_$init := status_$io_controller_not_in_system;
+%elseif ethernet_driver %then
   if dcte.cnum <= eth_max_unit then begin
     io_$map_csr(ethernet_$io_desc_ptr_t(dcte.disk_dinit)^, status);
     if status.all <> status_$ok then begin

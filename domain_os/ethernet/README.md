@@ -15,11 +15,23 @@ One module, `ethernet.pas`, `module ethernet, ether_proc, ether_data;`
 
 | section | contents |
 |---------|----------|
-| ETHER_PROC | the ETHERNET code segment: SAU2 0x10 bytes (ETHERNET_$INIT); SAU9 0x4684 bytes, SAU8 0x465C (43 module-local routines, two nested routines and the 22 map routines ETHERNET_$INIT .. ETHERNET_$RCV1) |
-| ETHER_PROC (ETHERNET_ASM) | SAU9 and SAU8 0x80 bytes: ETHERNET_$$PIO_READ, ETHERNET_$$PIO_WRITE, hand assembly (`m68k/ethernet_asm.s`) |
-| ETHER_DATA | SAU2 empty; SAU9 0xE0 bytes: the wired pages, the driver record, the ports, the wiring counts, the receive processes' table (`ethernet.pas` tables them) |
-| ETHER_UCB | SAU9 0x2570 bytes: the two units' records (`ethernet_$unit_t`, 0x12B8 bytes each), an overlay section |
+| ETHER_PROC | the ETHERNET code segment: SAU2 0x10 bytes (ETHERNET_$INIT); SAU9 0x4684 bytes, SAU8 0x465C, SAU7 0x4660 (43 module-local routines, two nested routines and the 22 map routines ETHERNET_$INIT .. ETHERNET_$RCV1); SAU6 0x48BC (39 module-local routines, one nested routine and 20 map routines) |
+| ETHER_PROC (ETHERNET_ASM) | SAU9, SAU8 and SAU7 0x80 bytes: ETHERNET_$$PIO_READ, ETHERNET_$$PIO_WRITE, hand assembly (`m68k/ethernet_asm.s`) |
+| ETHER_DATA | SAU2 empty; SAU9 and SAU6 0xE0 bytes: the wired pages, the driver record, the ports, the wiring counts, the receive processes' table (`ethernet.pas` tables them) |
+| ETHER_UCB | SAU9 0x2570 bytes: the two units' records (`ethernet_$unit_t`, 0x12B8 bytes each), an overlay section; SAU6 0x2670 (0x1338 each) |
+| ETHERNET_VME_$SH | SAU6 0x3848 bytes: the units' blocks the controller shares (`ethernet_$vme_sh_t`, 0x1C24 bytes each), an overlay section |
 | ETHERNET_$BUFFER | SAU9 0x1000 bytes, an overlay section |
+
+With `ethernet_vme` (the SAU6): the driver of the Ethernet controller
+on the VME bus, the map's ETHERNET code segment of 0x48BC bytes.  The
+host and the controller share each unit's block of the section
+ETHERNET_VME_$SH (0x3848 bytes, in ETHERNET_$BUFFER's place): a start
+block, rings of eight 64-byte command and reply slots, the controller's
+statistics and two receive and two transmit buffers.  A command is a
+slot handed to the controller and a byte written to its command
+register (ethernet_kick); the interrupt routine takes back the command
+slots and reads the next reply.  Nothing is downloaded (no
+ETHERNET_$LOAD, no ETHERNET_ASM).
 
 The driver's declarations are `ethernet_3c505.ins.pas` (statuses,
 registers, command blocks, the unit and driver records, the headings);
@@ -35,6 +47,7 @@ registers, command blocks, the unit and driver records, the headings);
 | ethernet_unwire_driver | `unwire_driver.pas` |
 | ethernet_probe | `probe.pas` |
 | ethernet_reset | `reset.pas` |
+| ethernet_kick | `kick.pas` (`ethernet_vme` only) |
 | ethernet_get_pcb | `get_pcb.pas` |
 | ethernet_send_pcb | `send_pcb.pas` |
 | ethernet_start_cmd | `start_cmd.pas` |
@@ -106,6 +119,16 @@ woken through the eventcount ETHERNET_$INT_DEFERRED returns.
 
 ## Open items
 
+- The VME form (`ethernet_vme`) is not finished, and the part is not in
+  the SAU6's bank yet, so the SAU6 still compiles the 3C505 form.  Its
+  arms are written for ethernet_probe, _reset, _kick, _start_cmd,
+  _wait_cmd, _start_rcv, _configure, _start_unit, _start_rcv_cond,
+  _read_stats, ETHERNET_$INIT and ETHERNET_$INTERRUPT; the rest need
+  theirs (ethernet_setup, _transmit, _rcv_packet, _load_mcast,
+  _arp_request, _arp_reply, ethernet_open, ETHERNET_$SEND,
+  _SVC_WRITE, _SVC_IOCTL with set_station, _PROC2_CLEANUP, _SEND_OS,
+  _INT_DEFERRED, ethernet_rcv_process).
+
 - SAU6, SAU7 and SAU8 have the driver too (0x48BC, 0x4660, 0x465C
   bytes); `tools/sau_catalog.py` puts the SAU7, SAU8 and SAU9 forms of
   most routines in one family, the SAU6's apart.  The SAU7, SAU8 and
@@ -115,8 +138,11 @@ woken through the eventcount ETHERNET_$INT_DEFERRED returns.
   and in the polling loops' counts (`ethernet_short_polls`: the reset,
   the program's start, a command block's bytes and answer, a reply's
   bytes, and ETHERNET_ASM's waits); the SAU7's counts are larger again
-  (7500000, 87500, 50000 and 312500, 17500), not translated.  The
-  rest is the SAU9's code but for addresses.
+  (`ethernet_long_polls`: 7500000, 87500, 50000 and 312500, 17500, the
+  reply byte's count a longword in ethernet_get_pcb and the command
+  byte's an unsigned word in ethernet_send_pcb).  The rest is the
+  SAU9's code but for addresses; the SAU7's is the SAU8's but for the
+  counts.
 - TODO(pascal): the unit record's undecoded places
   (`ethernet_3c505.ins.pas`); the configure-memory command's 12-byte
   constant (`setup.pas`); the stand-in locals of ethernet_rtn_bufs,

@@ -25,6 +25,16 @@ segment in WIRED_DATA (0x18 bytes: the channels' owners, the spin lock,
 the terminal counts seen).  The registers are the IODEFS page DMA as
 the controllers' ports (`dma.ins.pas`).
 
+With `atbus_dma_iomap` (the SAU7, 0x458 bytes in WIRED_PROC, 0xB0 in
+OS_INIT_PROC, 0x1C of data) the channels reach memory through the I/O
+map: DMA_$START only refuses, DMA_$START_NCHECK takes a bus address of
+the map's window from 16#80000 and writes no page register, a cascade
+channel is enabled in the master enable register (MAST_ENBL_REG +
+16#200, `dma.ins.pas`) instead of programmed and DMA_$STOP disables it,
+and the CPU status register's word is read into the block's dma_io_wait
+between the controllers' accesses (dma_io_delay's body).  The block adds
+dma_io_wait (+0x14) and dma_cascade (+0x16) before dma_done (+0x18).
+
 ## Routines and their fragments
 
 | routine | fragment |

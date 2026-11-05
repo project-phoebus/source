@@ -2,6 +2,7 @@
   destination.
 
   Image addresses:
+    sau7  0x3C4970BE  ring_8025_find_route
     sau8  0x03C8A70A  ring_8025_find_route
     sau9  0x3C48630E  ring_8025_find_route
 

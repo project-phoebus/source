@@ -8,6 +8,10 @@
     sau3  0x00E33554  OS_TERM_INIT data (OS_INIT_DATA, 0x5C bytes)
     sau4  0x0F82F5AC  OS_TERM_INIT data (WIRED_DATA, 0x1948 bytes)
     sau4  0x0F838554  OS_TERM_INIT data (OS_INIT_DATA, 0x34 bytes)
+    sau6  0x78030E90  OS_TERM_INIT data (WIRED_DATA, 0x1B14 bytes)
+    sau6  0x7803F160  OS_TERM_INIT data (OS_INIT_DATA, 0x34 bytes)
+    sau7  0x3C433C58  OS_TERM_INIT data (WIRED_DATA, 0x1B14 bytes)
+    sau7  0x3C440604  OS_TERM_INIT data (OS_INIT_DATA, 0x34 bytes)
     sau8  0x03C2F020  OS_TERM_INIT data (WIRED_DATA, 0xFD4 bytes)
     sau8  0x03C39600  OS_TERM_INIT data (OS_INIT_DATA, 0x34 bytes)
     sau9  0x3C43178C  OS_TERM_INIT data (WIRED_DATA, 0x1A8C bytes)
@@ -34,7 +38,13 @@
   chip's channel A: four TTY and SIO descriptors (tty_descs +0x180,
   sio_descs +0x14F0), the two chips' records and four channels after the
   keyboard descriptor, no SIO6509 channel (DTTE +0x1850, TERM_$MAX_DTTE
-  +0x1938); TERM_$INIT's statics are 52 bytes.
+  +0x1938); TERM_$INIT's statics are 52 bytes.  With `kbd_key_ring_512'
+  as well (6932 bytes) the keyboard descriptor is 0x1C0 bytes longer and
+  the objects after it lie that much higher (DTTE +0x1A10,
+  TERM_$MAX_DTTE +0x1AFC); `kbd_type_sysrev' or `kbd_reset_chan_a'
+  records the console's channel after the DTTEs, as `console_sio2681'
+  does (+0x1AF4), and `kbd_tone' ends the block with the two tone
+  strings.
 
   With `console_sio2681' (4052 bytes) the display console's keyboard
   line is the SIO2681's channel A: two lines, the console and one
@@ -212,12 +222,16 @@ var
   { The console's 16550 channel: SIO_$INIT records it, KBD_$RESET writes
     the keyboard's reset bytes through it. }
   term_$console_chan_ptr: sio16550_$chan_ptr_t; {         (+0x1A6C), zero }
-%elseif console_sio2681 %then
+%elseif console_sio2681 or kbd_type_sysrev or kbd_reset_chan_a %then
   { The console's SIO2681 channel: TERM_$INIT records it, KBD_$RESET
     writes the keyboard's reset bytes through it. }
   term_$console_chan_ptr: sio2681_$channel_ptr_t;
                                                 { +0xFB4 with
-                                                  `console_sio2681', zero }
+                                                  `console_sio2681',
+                                                  +0x1AF4 with
+                                                  `kbd_type_sysrev' or
+                                                  `kbd_reset_chan_a',
+                                                  zero }
 %endif
 
 define

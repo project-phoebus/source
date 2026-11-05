@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E1495C  PROC1_$SET_VT
     sau4  0x0F8151D0  PROC1_$SET_VT
+    sau6  0x78015110  PROC1_$SET_VT
+    sau7  0x3C416668  PROC1_$SET_VT
 
   - The timer value is delay's low word, or -1 when its high longword is
     not zero.

@@ -2,6 +2,8 @@
   interrupt level.
 
   Image addresses:
+    sau6  0x7808A8DC  ethernet_arp_input_cond
+    sau7  0x3C494E68  ethernet_arp_input_cond
     sau8  0x03C88664  ethernet_arp_input_cond
     sau9  0x3C484264  ethernet_arp_input_cond
 

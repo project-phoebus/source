@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E1C690  SIO_DELAY_RESTART
     sau4  0x0F81D8A4  SIO_DELAY_RESTART
+    sau6  0x7801E590  SIO_DELAY_RESTART
+    sau7  0x3C42087C  SIO_DELAY_RESTART
 
   - The TIME queue's callback for a delay SIO_$I_TSTART queued, with
     TIME's two-level argument (a pointer to a cell holding the

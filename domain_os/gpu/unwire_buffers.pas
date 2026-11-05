@@ -2,6 +2,7 @@
 
   Image addresses:
     sau5  0x00E73CF6  gpu_$unwire_buffers (module-local)
+    sau6  0x7807AC72  gpu_$unwire_buffers (module-local)
 
   - The pages are unwired last first, and the count cleared.
 

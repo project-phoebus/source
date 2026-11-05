@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E77402  RING_$SVC_READ
     sau3  0x00E78BF2  RING_$SVC_READ
+    sau6  0x780859EA  RING_$SVC_READ
+    sau7  0x3C4904C2  RING_$SVC_READ
     sau8  0x03C83CC2  RING_$SVC_READ
 
   - Under a cleanup handler.  A packet whose header is shorter than the

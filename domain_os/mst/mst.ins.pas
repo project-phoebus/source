@@ -122,6 +122,18 @@ const
   mst_$private_a_size = 7424;
   mst_$seg_global_a = 7424;
   mst_$global_a_size = 256;
+%elseif vm_65536_segs %then
+const
+  { The address space's regions, in 32 KB segments: private A from 0,
+    global A from 60928 (256 segments), private B from 61184 (256),
+    global B from 61440 (4096), the segment numbers' end at 65536.
+    Constants, as with the large address space. }
+  mst_$global_b_size = 4096;
+  mst_$seg_global_b = 61440;
+  mst_$seg_private_b = 61184;
+  mst_$private_a_size = 60928;
+  mst_$seg_global_a = 60928;
+  mst_$global_a_size = 256;
 %else
 var
   { The segment numbers and sizes AS_$GET_ADDR reads, map symbols of

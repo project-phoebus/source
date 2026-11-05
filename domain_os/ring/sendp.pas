@@ -5,6 +5,8 @@
     sau3  0x00E77116  RING_$SENDP
     sau4  0x0F8831B2  RING_$SENDP
     sau5  0x00E7CBFA  RING_$SENDP
+    sau6  0x78083FE2  RING_$SENDP
+    sau7  0x3C48E720  RING_$SENDP
     sau8  0x03C81F20  RING_$SENDP
     sau9  0x3C47DB12  RING_$SENDP
 
@@ -25,6 +27,8 @@
     controller's transmit status with its own bits; a transmit bus
     error crashes the system with status_$network_transmit_bus_error
     (no parity check), and the light is bit 8.
+  - Without `memory_parity' a transmit bus error is only counted and
+    retried; with `ring_lights_8_4' the light is bit 8.
   - With the controller with buffers of its own (`ring8_controller')
     the packet is copied into the controller (ring_$setup_tx) under the
     unit's buffer lock, held to the end of the send on the 16 KB
@@ -47,7 +51,8 @@
     status_$ring_controller_hardware_error: the transmitter stays busy,
       or a forced retry did not complete
     status_$network_memory_parity_error_during_transmit: a bus error
-      that was a parity error (not with `ring8_controller')
+      that was a parity error (with `memory_parity', not with
+      `ring8_controller')
 }
 
 procedure ring_$sendp(var socket: pinteger; hdr_pa: integer32;
@@ -352,7 +357,7 @@ var
   no_retry: boolean;
 %if ring_board_dma %then
   cmd: integer;
-%else
+%elseif memory_parity %then
   parity_err: boolean;
 %endif
 begin
@@ -605,7 +610,11 @@ process_status:
   xmit_status := xmit_status + [ring_sendp_res_no_return];
 %else
 %if ring_xmit_light %then
+%if ring_lights_8_4 %then
+  mmu_$mcr_change(8);
+%else
   mmu_$mcr_change(4);
+%endif
 %endif
   hw_status := hw^.xmit_csr;
 %if not ring_controller_dma %then
@@ -634,12 +643,14 @@ process_status:
   end;
 
   if 6 in hw_status then begin
+%if memory_parity %then
     parity_err := parity_$chk_io(rshft(hdr_pa, 10), rshft(data_buf[1], 10))
                   = 2;
     if parity_err then begin
       status_ret.all := status_$network_memory_parity_error_during_transmit;
       goto transmit_done;
     end;
+%endif
     xmit_status := xmit_status + [ring_sendp_res_bus_err];
     stats^.xmit_bus := stats^.xmit_bus + 1;
     goto retry_gate;

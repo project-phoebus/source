@@ -284,6 +284,45 @@ MST_UNWIRED's .DATA block 0xF78.
 Every routine of the SAU4 map's MST_WIRED, MST_ASM and MST_UNWIRED
 segments, and every module-local, has its sau4 address.
 
+## The 65536 segments (SAU6)
+
+The SAU6 (DN560T, DN570T, DN580T, DN590T) has the large VM layout, the
+regions and the page maps' thread with the longword tables of the
+SAU4's MMU (`region_mmu`) but not its 32 registers
+(`region_registers`): 65536 segments (`vm_65536_segs`: private A
+60928, global A 256, private B 256, global B 4096, constants), 256
+regions of 256 segments, and each ASID's RARS entries 512 longwords
+apart in one physically contiguous table, so MST_$INIT gives every
+ASID its MMU_$RARS_PHADDR from ASID 0's and MST_$ALLOC_ASID,
+MST_$FREE_ASID and mst_$alloc_table_page have no RARS pages to
+install, give back or load.  mst_$free_region clears the RARS entry's
+valid bit alone.  mst_$va_to_aste sets bit 0 of the segment map entry
+it makes valid (`va_to_aste_smap_bit_0`).  The MST is 55808 words
+(`mst_55808_words`); MST_$INIT lets the MSTE pages take a tenth of the
+first 4096 real pages and a fifth of the rest, at most 9420
+(`mst_pages_tiered`); the special segments are the top 10 of private
+B.  MST_$FIND and MST_$WIRE are the SAU6..9 form (`find_touches`),
+mst_$set_mstes clears the cache, and the map has no MST_$BST_TO_VA or
+MST_$ASSOC.  The MST_WIRED block is 0xA58 bytes, MST_UNWIRED's .DATA
+block 0x7850.
+
+## The SAU7
+
+The SAU7 (DN3500, DN3550, DN4000, DN4500) has the SAU9's large address
+space (`large_address_space`), its tables and its MMU forms; its
+pageable pages are 16#4000..16#BFFF (`mmap_ppns_4000_bfff`), so
+MST_$INIT's bound on the MSTE pages is 4915 (15% of 32768), the page
+bitmap 154 longwords, and MST_UNWIRED's .DATA block 0x7270 bytes, the
+SAU9's 0x74D8 less 0x268.  Its machines have either the MC68851 PMMU
+(the DN4000) or an MC68030: MST_$TOUCH and mst_$va_to_aste clear the
+shared-globally bit of a global segment's map entry, and set bits
+15..10, only when M68030 is set (`smap_shared_global_68851`).  Every
+other routine is the SAU9's source as it stands.  The MST_WIRED block is
+0xA58 bytes; MST_ASM is the SAU9's.
+
+Every routine of the SAU7 map's MST_WIRED, MST_ASM and MST_UNWIRED
+segments, and every module-local, has its sau7 address.
+
 ## Open items
 
 The TODO(pascal) blocks of `alloc_asid.pas`, `alloc_segs.pas`,

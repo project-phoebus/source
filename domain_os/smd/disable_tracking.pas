@@ -4,6 +4,8 @@
     sau2  0x00E6E482  SMD_$DISABLE_TRACKING
     sau4  0x0F878C18  SMD_$DISABLE_TRACKING
     sau5  0x00E70904  SMD_$DISABLE_TRACKING
+    sau6  0x78077C8E  SMD_$DISABLE_TRACKING
+    sau7  0x3C481768  SMD_$DISABLE_TRACKING
     sau9  0x3C474E88  SMD_$DISABLE_TRACKING
 
   - Cursor 0 is redrawn at the display's own position, waiting for the

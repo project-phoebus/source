@@ -1,6 +1,8 @@
 { ETHERNET_$PROC2_CLEANUP - close every channel an address space holds.
 
   Image addresses:
+    sau6  0x7808A232  ETHERNET_$PROC2_CLEANUP
+    sau7  0x3C494850  ETHERNET_$PROC2_CLEANUP
     sau8  0x03C8804C  ETHERNET_$PROC2_CLEANUP
     sau9  0x3C483C4C  ETHERNET_$PROC2_CLEANUP
 
@@ -9,7 +11,7 @@
     as ETHERNET_$SVC_CLOSE closes it; then, under the unit's lock, the
     users drop by the channels closed, as there.
   - A failed multicast reload is not counted; a failed reconfigure
-    counts in the seventh statistic.
+    counts in the eth_stat_errors count.
   - The driver is unwired once however many channels were closed.
 
   Status stored: none.
@@ -74,7 +76,7 @@ begin
         ethernet_configure(u, false, st);
         if st.all <> status_$ok then
           with u^ do
-            stats.counts[7] := stats.counts[7] + 1;
+            stats.counts[eth_stat_errors] := stats.counts[eth_stat_errors] + 1;
       end;
       ml_$exclusion_stop(u^.lock);
       if closed <> 0 then

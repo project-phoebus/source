@@ -32,6 +32,7 @@ const
   ml_$ast_lock = 18;
   ml_$ping_server_lock = 19;
   ml_$pmap_lock = 20;
+  ml_$win_stats_lock = 23;
   ml_$net_io_lock = 24;
   ml_$mem_lites_lock = 26;
 

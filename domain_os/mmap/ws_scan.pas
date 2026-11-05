@@ -6,6 +6,9 @@
     sau2  0x00E0D274  mmap_$move_pages_to_wsl_type (nested)
     sau4  0x0F80D9D4  MMAP_$WS_SCAN
     sau4  0x0F80D8E4  mmap_$move_pages_to_wsl_type (nested)
+    sau6  0x7800DB1E  MMAP_$WS_SCAN
+    sau7  0x3C40ED6A  MMAP_$WS_SCAN
+    sau7  0x3C40EC90  mmap_$move_pages_to_wsl_type (nested)
     sau8  0x03C0E256  MMAP_$WS_SCAN
     sau8  0x03C0E17C  mmap_$move_pages_to_wsl_type (nested)
     sau9  0x3C40F2CE  MMAP_$WS_SCAN

@@ -4,6 +4,7 @@
   Image addresses:
     sau2  0x00E74A74  mst_$unwire_page (module-local)
     sau4  0x0F8820B8  mst_$unwire_page (module-local)
+    sau7  0x3C48B080  mst_$unwire_page (module-local)
     sau8  0x03C7F320  mst_$unwire_page (module-local)
     sau9  0x3C47C3DC  mst_$unwire_page (module-local)
 

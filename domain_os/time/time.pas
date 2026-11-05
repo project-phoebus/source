@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E29198  TIME_ data (WIRED_DATA, 0x1628 bytes)
     sau4  0x0F82B84C  TIME_ data (WIRED_DATA, 0x1628 bytes)
+    sau6  0x7802C6E8  TIME_ data (WIRED_DATA, 0x1628 bytes)
+    sau7  0x3C42ECD4  TIME_ data (WIRED_DATA, 0x1628 bytes)
 
   One compilation unit: the map's TIME_ code segments in WIRED_PROC
   (0x7A8 bytes, TIMER_$INIT .. TIME_$GET_ADJUST) and OS_INIT_PROC (0xE4

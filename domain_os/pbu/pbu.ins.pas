@@ -208,10 +208,18 @@ const
     16#200, and 0xE00 bytes on the SAU3, a byte per page
     (`pbu_8_units'); 0x4000 bytes on the SAU8, a word per page from
     16#400 (`mmap_ppns_400'); 0x3E00 bytes on the SAU4, a byte per
-    page from 16#200 to 16#3FFF (`mmap_ppns_200_3fff').
-    TODO(sau) the SAU7's PBU_TABLES size differs (0x18000); a part's
-    constant when it is translated. }
-%if mmap_ppns_400 %then
+    page from 16#200 to 16#3FFF (`mmap_ppns_200_3fff'); 0x10000 bytes of
+    the SAU7's 0x18000 (SCSI_$PPN_OWNERS follows), a word per page from
+    16#4000 (`pbu_ppns_4000'); 0x18000 bytes on the SAU6, a word per
+    page from 16#4000 to 16#FFFF, the pageable pages
+    (`mmap_ppns_4000'). }
+%if pbu_ppns_4000 %then
+  pbu_ppn_owners_first = 16#4000;
+  pbu_ppn_owners_last = 16#BFFF;
+%elseif mmap_ppns_4000 %then
+  pbu_ppn_owners_first = 16#4000;
+  pbu_ppn_owners_last = 16#FFFF;
+%elseif mmap_ppns_400 %then
   pbu_ppn_owners_first = 16#400;
   pbu_ppn_owners_last = 16#23FF;
 %elseif mmap_ppns_200_3fff %then
@@ -283,7 +291,12 @@ type
     buses 2 and 3.  cleared_8_7 and cleared_0 PBU_$SETUP clears, and
     nothing in the PBU or PBU_MAP reads; with the AT bus's units
     (`pbu_atbus_units') bit 8 is attr_set, set by PBU_$DMA_START when it
-    gives the unit attribute 0 (IO_$ATTR_CNTL). }
+    gives the unit attribute 0 (IO_$ATTR_CNTL), and bit 7 dma_mapped,
+    which PBU_$SETUP clears; with the DMA through the I/O map space
+    (`pbu_dma_iomap') PBU_$DMA_START sets dma_mapped when it maps a
+    buffer, PBU_$DMA_STOP then unmaps the channel's, PBU2_$DMA_START
+    sets attr_set when it starts a transfer, and PBU2_$MAP and
+    PBU2_$UNMAP read it. }
   pbu_$dcte_flags_t = packed record
     int_pending: boolean;                 { bit 15 }
     unused_14: boolean;                   { bit 14 }
@@ -294,7 +307,7 @@ type
     global: boolean;                      { bit 9 }
 %if pbu_atbus_units %then
     attr_set: boolean;                    { bit 8 }
-    cleared_7: boolean;                   { bit 7 }
+    dma_mapped: boolean;                  { bit 7 }
 %else
     cleared_8_7: 0..3;                    { bits 8..7 }
 %endif
@@ -750,6 +763,30 @@ type
     low: pinteger;                        { 0x02 }
   end;
 
+%if pbu_dma_iomap %then
+  pbu_$buffer_ptr_t = ^pbu_$buffer_t;
+
+  { A unit's DMA mapping for one channel, one of PBU_$MAPPED_INFO's,
+    20 bytes.  iova, the channel's page of the unit's I/O map space
+    (1 KB a channel from the space's start), kept while valid is set;
+    dma_address, PBU2_$MAP's result for the buffer, the address the
+    transfer starts at; buffer and length, the buffer mapped, which
+    PBU_$DMA_STOP unmaps.  The second variant is the byte PBU_$SETUP and
+    PBU_$FREE_MAP clear, within buffer. }
+  pbu_$mapped_info_t = record
+    case integer of
+      1: (iova: linteger;                 { 0x00 }
+          dma_address: linteger;          { 0x04 }
+          buffer: pbu_$buffer_ptr_t;      { 0x08 }
+          length: linteger;               { 0x0C }
+          valid: boolean;                 { 0x10 }
+          unused_11: char;                { 0x11 }
+          unused_12: integer);            { 0x12 }
+      2: (unused_00: array[1..5] of integer;  { 0x00 }
+          cleared_10: boolean);           { 0x0A }
+  end;
+%endif
+
 { PBU_$DMA_START - start a PBU unit's DMA transfer.
   PBU_$DMA_STOP - stop a PBU unit's DMA transfer.
   PBU_$DMA_STATUS - a PBU unit's DMA transfer's status.
@@ -771,7 +808,7 @@ procedure pbu_$dma_status(in unit: integer; in channel: integer;
 procedure pbu2_$dma_start(in unit: integer; in channel: integer;
                           in direction: integer;
                           in buffer: univ pbu_$buffer_t;
-                          in unused_5: integer32; in length: integer32;
+                          in iova: integer32; in length: integer32;
                           in options: pbu_$dma_options_t;
                           out status: status_$t);
   extern;
@@ -805,8 +842,17 @@ function pbu_$wait(in unit: integer; in timeout: integer32;
   extern;
 
 var
+%if pbu_dma_iomap %then
+  { PBU_$MAPPED_INFO (map symbol in the PBU_MAP data segment, +4): each
+    unit's DMA mappings, one for each channel.  Defined in
+    pbu/pbu_map.pas. }
+  pbu_$mapped_info: extern array[0..pbu_$max_unit, 0..7] of
+    pbu_$mapped_info_t;
+%endif
+
   { PBU_$DCTE_INT_PTR and PBU_$VME_DISABLE_COUNT (map symbols in the
-    PBU_MAP data segment, PBU_WIRED_DATA, 0xC bytes, +4 and +8): zero in
+    PBU_MAP data segment, PBU_WIRED_DATA, 0xC bytes, +4 and +8, or
+    0xA0C bytes, +0xA04 and +0xA08, with PBU_$MAPPED_INFO): zero in
     the image, and nothing in it refers to them, so their types are not
     seen (a pointer and a count, by their names).  Defined in
     pbu/pbu_map.pas. }

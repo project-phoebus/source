@@ -55,23 +55,35 @@
  *                   REMAP_FRM_PPN at DISP1_MEM, where the SAU9's maps the
  *                   128 pages from PPN 0x4000 at DISP1_MEM.  It is 0x2A
  *                   bytes longer, so every cell after it is too.
+ * The SAU7's module (`D 3C422B00 CRASH_SYSTEM size = 444') is the SAU8's
+ * with the SAU9's PROM cells (`trap_page_high') and:
+ *   crash_cache_off CRASH_SYSTEM, unless its status is "manual stop",
+ *                   and FIM_$CRASH first turn the physical cache off
+ *                   (a zero byte at MMU + 0x200) on a ROADRUNNER board
+ *                   or an MC68020 CPU, 0x32 and 0x22 bytes before their
+ *                   entry sequences;
+ *   cold_ram_16mb   the DUMP page is at physical 0x01000C00.
  * The address and byte columns are the SAU9 image's, except in the `.if'
  * arms, which carry the SAU8 image's (CRASH_SYSTEM 0x3C1FF00, REMAP_DISPLAY
- * 0x3C200BA, FIM_$CRASH 0x3C2011E, CRASH_REPORT 0x3C20224).
+ * 0x3C200BA, FIM_$CRASH 0x3C2011E, CRASH_REPORT 0x3C20224) or the SAU7
+ * image's (CRASH_SYSTEM 0x3C422B00, FIM_$CRASH 0x3C422D58).
  *
  * Not on the SAUs whose crash does not restart the node, or restarts it
  * through the PROM's cell 0x128 from the SAU2's code (misc/m68k/
  * crash_system.s: `crash_reboot', `crash_prom_restart'), nor on the SAU4
- * (`crash_cache_check': misc/sau4/crash_system.s).
+ * (`crash_cache_check': misc/sau4/crash_system.s) and the SAU6
+ * (`crash_win6_save': misc/sau6/crash_system.s).
  *
  * Byte gate (tools/asm_compare.py, `make TARGET_SAU=sau9 check-asm',
  * `make TARGET_SAU=sau8 check-asm'): encodings identical to the image;
- * address operands resolve to our objects.
+ * address operands resolve to our objects.  The SAU7 (no tables yet):
+ * assembled with `m68k-elf-as -m68030 -m68881' and compared with the
+ * SAU7 image at the map's addresses by the same rules.
  */
 
         .include "base/config.inc"
         /* (not `a || b': `|' starts a comment in m68k gas) */
-        .if     crash_reboot && !crash_prom_restart && !crash_cache_check
+        .if     crash_reboot && !crash_prom_restart && !crash_cache_check && !crash_win6_save
 
         .section ".text.CRASH_SYSTEM","ax",@progbits
         .even
@@ -97,6 +109,11 @@
         .if trap_page_high
         .extern TRAP_PAGE               /* the vector page, the PROM's cells at +0x100.. */
         .endif
+        .if crash_cache_off
+        .extern M68030                  /* mmu/mmu.ins.pas: the CPU is an MC68030 */
+        .extern ROADRUNNER              /* mmu/mmu.ins.pas */
+        .extern MMU                     /* the MMU's page; + 0x200 the physical cache's register */
+        .endif
 
 /* The PROM's entry cells, offsets in the trap page (dtty/m68k/prom_io.s). */
         .equ    PROM_PUTC_CELL,         0x108   /* putc, D1 = the character */
@@ -108,7 +125,9 @@
    DUMP page there; the kernel's VAs are their physical address +
    0x38400000); on the SAU8 0x00100C00, PPN 0x403, as on the SAU2.  CRASH
    hands the PROM DUMP + 4. */
-        .if trap_page_high
+        .if cold_ram_16mb
+        .equ    DUMP_PHYS,              0x01000C00      /* the SAU7's: its RAM starts at 16 MB */
+        .elseif trap_page_high
         .equ    DUMP_PHYS,              0x04001400
         .else
         .equ    DUMP_PHYS,              0x00100C00
@@ -117,6 +136,8 @@
 /* The status a clean restart passes (OS_$SHUTDOWN): no report, and on a
    server or a node that may not restart, the PROM's monitor. */
         .equ    STATUS_REBOOT,          0x001B0008
+/* "manual stop: type G<ret>G *+2<ret> to continue" */
+        .equ    STATUS_MANUAL_STOP,     0x000B0008
 
 /* -------------------------------------------------------------------------
  * CRASH_SYSTEM(status) - 0x3C421300
@@ -126,9 +147,28 @@
  *   0x40(SP)              the SR pushed at entry (a word)
  *   0x42(SP)              the caller's return address
  *   0x46(SP)              the status_$t * argument
+ * With `crash_cache_off' the physical cache goes off first, A0 kept,
+ * unless the status is STATUS_MANUAL_STOP: on a ROADRUNNER board, or
+ * when the CPU is not an MC68030.
  * ------------------------------------------------------------------------- */
 CRASH_PAUSE:
 CRASH_SYSTEM:
+        .if crash_cache_off
+        move.l  %a0,-(%sp)                      | sau7 3c422b00  2f08
+        movea.l (8,%sp),%a0                     | sau7 3c422b02  206f 0008  the status pointer
+        cmpi.l  #STATUS_MANUAL_STOP,(%a0)       | sau7 3c422b06  0c90 000b 0008
+        beq.s   .Lcs_cache_kept                 | sau7 3c422b0c  6722
+        tst.b   (ROADRUNNER).l                  | sau7 3c422b0e  4a39 3c42 90ec
+        beq.s   .Lcs_not_rr                     | sau7 3c422b14  670a
+        move.b  #0,(MMU+0x200).l                | sau7 3c422b16  13fc 0000 3fff b600  the cache off
+        bra.s   .Lcs_cache_kept                 | sau7 3c422b1e  6010
+.Lcs_not_rr:
+        tst.b   (M68030).l                      | sau7 3c422b20  4a39 3c42 90ea
+        bne.s   .Lcs_cache_kept                 | sau7 3c422b26  6608
+        move.b  #0,(MMU+0x200).l                | sau7 3c422b28  13fc 0000 3fff b600  the cache off
+.Lcs_cache_kept:
+        movea.l (%sp)+,%a0                      | sau7 3c422b30  205f
+        .endif
         move.w  %sr,-(%sp)                      | 3c421300  40e7
         ori.w   #0x700,%sr                      | 3c421302  007c 0700  IPL 7
         movem.l %d0-%d7/%a0-%a7,-(%sp)          | 3c421306  48e7 ffff
@@ -416,8 +456,21 @@ REMAP_DISPLAY:
  * block and CRASH_SYSTEM called with the status.
  *   0x6(SP) the exception frame, 0xA(SP) the register block, 0xE(SP)
  *   the status pointer (after the SR push)
+ * With `crash_cache_off' the physical cache goes off first, as in
+ * CRASH_SYSTEM, whatever the status.
  * ------------------------------------------------------------------------- */
 FIM_$CRASH:
+        .if crash_cache_off
+        tst.b   (ROADRUNNER).l                  | sau7 3c422d58  4a39 3c42 90ec
+        beq.s   .Lfc_not_rr                     | sau7 3c422d5e  670a
+        move.b  #0,(MMU+0x200).l                | sau7 3c422d60  13fc 0000 3fff b600  the cache off
+        bra.s   .Lfc_cache_off                  | sau7 3c422d68  6010
+.Lfc_not_rr:
+        tst.b   (M68030).l                      | sau7 3c422d6a  4a39 3c42 90ea
+        bne.s   .Lfc_cache_off                  | sau7 3c422d70  6608
+        move.b  #0,(MMU+0x200).l                | sau7 3c422d72  13fc 0000 3fff b600  the cache off
+.Lfc_cache_off:
+        .endif
         move.w  %sr,-(%sp)                      | 3c4214fc  40e7
         ori.w   #0x700,%sr                      | 3c4214fe  007c 0700
         lea     (CRASH_SYSTEM,%pc),%a5          | 3c421502  4bfa fdfc

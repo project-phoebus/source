@@ -4,7 +4,8 @@ The memory parity-error statistics: the errors counted by memory board
 and by page, and on the SAU9 the count of the boards.  On the SAU4
 (`ecc_memory`, without `memory_parity`) the memory boards correct their
 errors: MEM_$INIT finds their controllers and MEM_$ECCC_LOG logs and
-counts the corrected errors instead.
+counts the corrected errors instead; on the SAU6 (`ecc6_memory`) the
+boards' own registers, MEM_$INIT and MEM_$ECCC6_LOG.
 
 ## Layout
 
@@ -13,7 +14,7 @@ segments' name):
 
 | section | code size | routines | attribute |
 |---------|-----------|----------|-----------|
-| WIRED_PROC | 0xB8 (SAU9 0x104, SAU8 0x250, SAU4 0x214) | MEM_$INIT (SAU9, SAU8, SAU4), MEM_$ECCC_LOG (SAU4), MEM_$PARITY_LOG (not the SAU4's; on the SAU2 0xB6 of code, then the module-end filler) | none (the heading's) |
+| WIRED_PROC | 0xB8 (SAU9 0x104, SAU8 0x250, SAU4 0x214, SAU6 0x198) | MEM_$INIT (SAU9, SAU8, SAU6, SAU4), MEM_$ECCC_LOG (SAU4), MEM_$ECCC6_LOG (SAU6), MEM_$PARITY_LOG (not the SAU4's; on the SAU2 0xB6 of code, then the module-end filler) | none (the heading's) |
 
 Data: the map's MEM_ data segment in WIRED_DATA (0x5C bytes), two map
 symbols, both `define`d variables of the module (ref 7.2.2, Method 2;
@@ -38,6 +39,7 @@ this subsystem.
 |---------|----------|
 | MEM_$INIT | `init.pas` (SAU9 and SAU8, under `mem_ccr_board_size` and `mem_board_jumpers`) |
 | MEM_$ECCC_LOG | `eccc_log.pas` (SAU4, `ecc_memory`; a `goto` to the controller's write after the board loop) |
+| MEM_$ECCC6_LOG | `eccc6_log.pas` (SAU6, `ecc6_memory`; a boolean function, its result ignored by the ECC trap) |
 | MEM_$PARITY_LOG | `parity_log.pas` (two `for` loops, `exit` and `return`; no nested or module-local routine) |
 | (data) | the define statement of `mem.pas` |
 
@@ -79,9 +81,31 @@ The part (`base/config.ins.pas`) that changes MEM_ is
   `parity_log.pas`).
 - MEM_$MEM_REC's second word is 0 (MEM_$INIT sets it).
 
-The SAU6 and SAU7 have MEM_ code of their own, not expressed (the
-SAU6's is MEM_$ECCC6_LOG, another controller's; the SAU7's is the SAU8's
-with ROADRUNNER arms, 4 MB limits and a 26-bit page match).
+`mem_jumpers_16mb` (SAU7, with `mem_board_jumpers`; WIRED_PROC 0x2AC
+bytes): MEM_$INIT is the SAU8's; MEM_$PARITY_LOG takes the MB above 16
+MB, its limits are four times the SAU8's, on a board with the physical
+cache (ROADRUNNER) it takes the board from the configuration's halves
+and address bit 2, and a page record matches the address's low 26 bits
+(`mem_$addr_bits26_t`); MEM_$MEM_REC's first word is 16#2A, its second
+0.
+
+## The SAU6
+
+With `ecc6_memory` each memory board has a 128-byte page of MEM with
+its error registers: the status (+0), the control word (+2: bits 1..0
+the reporting, 3 on and 2 quiet), the error address (+4) and a word at
++8.  MEM_$INIT probes the boards' pages from the first, up to two,
+counts those that answer, adds 1 (the first) or 2 (the second) to
+FIM_WIRED's MCSR_CONFIG, and turns each counted board's reporting on.
+MEM_$ECCC6_LOG, called by FIM_WIRED's hand-written ECC handler with
+the board, the word at +8, the error address and the status, logs the
+four (type 7, 12 bytes), counts the error against the board, quiets the
+board after 2000 and returns false then, and counts it against the
+record of its page: the error address's bits 25..1 and the board, else
+a free record or the one with the lowest count.  The SAU6's page
+records hold the four registers' values (`mem_$page_error_t`'s
+`ecc6_memory` form).  MEM_$MEM_REC's first word is 3, its second 0; no
+MEM_$PARITY_LOG (no `memory_parity`).
 
 ## Open items
 

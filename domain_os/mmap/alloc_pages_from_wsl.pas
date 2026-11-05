@@ -4,6 +4,7 @@
   Image addresses:
     sau2  0x00E0D6F8  mmap_$alloc_pages_from_wsl (module-local)
     sau4  0x0F80DD4C  mmap_$alloc_pages_from_wsl (module-local)
+    sau7  0x3C40F0CC  mmap_$alloc_pages_from_wsl (module-local)
     sau8  0x03C0E5B8  mmap_$alloc_pages_from_wsl (module-local)
     sau9  0x3C40F672  mmap_$alloc_pages_from_wsl (module-local)
 

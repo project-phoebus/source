@@ -22,6 +22,12 @@
  * word at 0x400 while the recovery is still armed (`probe_settle_read';
  * `D F82B7E8 TESTPAGE size = 64'); those lines carry the SAU4 image's
  * addresses.
+ * The SAU6 clears bit 6 of the MMU status byte (MMU + 3) alone
+ * (`mmu_status_bit_6'; `D 7802C680 TESTPAGE size = 68'), waits after a
+ * completed access with two calls of its own return
+ * (`probe_settle_calls'), and does not save the VME state after a bus
+ * error, which its FIM_$BUS_ERR has done (`fim_vme_ack'); those lines
+ * carry the SAU6 image's addresses.
  *
  * Byte gate (tools/asm_compare.py, `make check'): encodings identical
  * to the image (modulo the documented widenings); address operands
@@ -133,6 +139,8 @@ _io_$probe:
         clr.w   (MMU).l                 /* sau8 0x3C2B10A  4279 03ff b400  */
         .elseif mmu_status_word
         clr.w   (MMU+2).l               /* sau4 0xF82B810  4279 0fff b402  */
+        .elseif mmu_status_bit_6
+        bclr    #6, (MMU+3).l           /* sau6 0x7802C6A8 08b9 0006 7fff b403 */
         .else
         clr.b   MMU_STATUS_REG          /* 0x00E29160 fresh fault status   */
         .endif
@@ -166,6 +174,9 @@ _io_$probe:
         st      %d0                     /* 0x00E29182 D0.b = 0xFF          */
         .if probe_settle_read
         tst.w   (0x400).w               /* sau4 0xF82B834  4a78 0400       */
+        .elseif probe_settle_calls
+        bsr.s   .Lprobe_rts             /* sau6 0x7802C6CE 610e: a wait    */
+        bsr.s   .Lprobe_rts             /* sau6 0x7802C6D0 610c            */
         .endif
 
 .Lexit:
@@ -175,12 +186,13 @@ _io_$probe:
         .endif
         move    %d3, %sr                /* 0x00E2918A restore SR/IPL       */
         movem.l (%sp)+, %d3/%a2/%a4     /* 0x00E2918C                      */
+.Lprobe_rts:
         rts                             /* 0x00E29190                      */
 
 .Lbus_error:                            /* 0x00E29192, entered from        */
                                         /* FIM_$BUS_ERR, not by a branch   */
         movea.l %d1, %sp                /* 0x00E29192 unwind to the probe  */
-        .if vme_bus
+        .if vme_bus && !fim_vme_ack     /* the SAU6's bus error handler saves the VME state */
         lea     (VME_$SAVE_VME).l, %a0  /* sau5 0x00E2A2BC the VME state   */
         jsr     (%a0)                   /* sau5 0x00E2A2C2                 */
         lea     (VME_CTL).l, %a0        /* sau5 0x00E2A2C4 0xFF9400 (SAU5  */
@@ -189,3 +201,6 @@ _io_$probe:
         .endif
         sf      %d0                     /* 0x00E29194 D0.b = 0x00          */
         bra.b   .Lexit                  /* 0x00E29196 -> 0x00E29184        */
+        .if probe_settle_calls
+        .short  0                       /* sau6 0x7802C6E6: the segment rounded to a longword */
+        .endif

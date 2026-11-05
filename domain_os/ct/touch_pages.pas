@@ -2,6 +2,8 @@
 
   Image addresses:
     sau5  0x00E76EAC  ct_touch_pages (module-local, at CT_$PROC_START)
+    sau6  0x7807DB48  ct_touch_pages (module-local, at CT_$PROC_START)
+    sau7  0x3C484AD4  ct_touch_pages (module-local, at CT_$PROC_START)
     sau9  0x3C4771F8  ct_touch_pages (module-local, at CT_$PROC_START)
     sau8  0x03C7A068  ct_touch_pages (module-local, at CT_$PROC_START)
 

@@ -1,6 +1,7 @@
 { SMD_$NOP_CRSR - the default for a device's cursor pattern load: nothing.
 
   Image addresses:
+    sau7  0x3C480C54  SMD_$NOP_CRSR
     sau9  0x3C474374  SMD_$NOP_CRSR
 
   Status stored: none.

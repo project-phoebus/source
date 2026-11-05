@@ -2,10 +2,14 @@
 
   Image addresses:
     sau2  0x00E00D46  ast_$allocate_pages (module-local)
-    sau4  0x0F80114A  ast_$allocate_pages (module-local)
-    sau9  0x3C40212A  ast_$allocate_pages (module-local)
     sau2  0x00E00CAC  ast_$allocate_pages_log (nested)
+    sau4  0x0F80114A  ast_$allocate_pages (module-local)
     sau4  0x0F8010AC  ast_$allocate_pages_log (nested)
+    sau6  0x7800152A  ast_$allocate_pages (module-local)
+    sau6  0x7800148C  ast_$allocate_pages_log (nested)
+    sau7  0x3C40192A  ast_$allocate_pages (module-local)
+    sau7  0x3C40188C  ast_$allocate_pages_log (nested)
+    sau9  0x3C40212A  ast_$allocate_pages (module-local)
     sau9  0x3C40208C  ast_$allocate_pages_log (nested)
 
   Assume we're called with the PMAP lock held.
@@ -82,8 +86,7 @@ begin
 %if pmmu_page_maps %then
           vpn := disk_addr.all;
 %else
-          all := all & 16#FF800000;
-          all := all ! disk_addr.all;
+          fentry.fm_daddr := linteger(disk_addr.all);
 %endif
         end;
         ast[seg].page_count := pred(ast[seg].page_count);

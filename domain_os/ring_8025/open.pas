@@ -1,6 +1,7 @@
 { ring_8025_open - open a unit's adapter onto the ring.
 
   Image addresses:
+    sau7  0x3C496088  ring_8025_open
     sau8  0x03C89784  ring_8025_open
     sau9  0x3C485368  ring_8025_open
 
@@ -33,7 +34,13 @@ begin
     open_parms.ram_start := 16#4006;
     open_parms.xmit_buf_min := 4;
     open_parms.xmit_buf_max := 4;
+%if ring_8025_iomap %then
+    open_parms.product_id_pa := ring_8025_vtop(integer32(addr(product_id)),
+                                               sizeof(product_id),
+                                               u^.iomap_page + r8025_map_ctl);
+%else
     open_parms.product_id_pa := ring_8025_vtop(integer32(addr(product_id)));
+%endif
   end;
   ring_8025_scb_cmd(u, r8025_cmd_open,
                     addr(ring8025_$aux_da.ctl[u^.cnum].open_parms),

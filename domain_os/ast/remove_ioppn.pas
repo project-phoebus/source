@@ -2,6 +2,8 @@
 
   Image addresses:
     sau4  0x0F8075E4  AST_$REMOVE_IOPPN
+    sau6  0x78007838  AST_$REMOVE_IOPPN
+    sau7  0x3C407DCA  AST_$REMOVE_IOPPN
     sau9  0x3C4085CA  AST_$REMOVE_IOPPN
 
   - Under the PMAP lock, after the entry's transition: the descriptor

@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E148F8  PROC1_$SET_ASID
     sau4  0x0F81516C  PROC1_$SET_ASID
+    sau6  0x780150AC  PROC1_$SET_ASID
+    sau7  0x3C416604  PROC1_$SET_ASID
 
   - MMU_$INSTALL_ASID also sets PROC1_$AS_ID.
 

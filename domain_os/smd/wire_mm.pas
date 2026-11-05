@@ -4,6 +4,7 @@
     sau2  0x00E6F4A0  SMD_$WIRE_MM
     sau4  0x0F879C22  SMD_$WIRE_MM
     sau5  0x00E7188E  SMD_$WIRE_MM
+    sau6  0x78078BE8  SMD_$WIRE_MM
 
   - With `blt_main_memory' (base/config.ins.pas): npages pages of the
     buffer at va, a page each 1024 bytes, are wired into the unit's

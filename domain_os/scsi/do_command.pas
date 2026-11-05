@@ -1,3 +1,90 @@
+%if scsi_mailbox_ctlr %then
+{ SCSI_$DO_COMMAND - start a command on a buffer.
+
+  Image addresses:
+    sau7  0x3C4B891E  SCSI_$DO_COMMAND
+
+  - With the mailbox host adapter: the command's group gives its length
+    (6 bytes for groups 0, 10 for 1); a set link bit is refused, as is
+    another group.  Under scsi_$exclusion_lock a buffer is mapped into
+    the device's I/O map region, which is allocated first when the
+    device has none, and allocated again when the buffer does not fit;
+    the command is posted with the device's next command id.
+
+  Status stored:
+    scsi_get_tinfo's status: the handle is not the caller's
+    status_$scsi_bad_length: len past scsi_$max_transfer
+    status_$scsi_unsupported_function: the command's group or link bit
+    status_$scsi_command_in_progress: a transfer is outstanding
+    the region's, the mapping's or scsi_post_cmd's status: otherwise
+}
+
+procedure scsi_$do_command(in handle: scsi_$handle_t; in cdb: scsi_$cdb_t;
+                           in buf: univ char; in len: integer32;
+                           in dir: integer; out id: integer32;
+                           out status: status_$t);
+label
+  9;
+var
+  t: scsi_tinfo_ptr_t;
+  n: integer;
+  next: integer32;
+  iova: integer32;
+  st: status_$t;
+begin
+  t := scsi_get_tinfo(handle.all, status);
+  if status.all <> status_$ok then
+    return;
+  if linteger(len) > scsi_$max_transfer then begin
+    status.all := status_$scsi_bad_length;
+    return;
+  end;
+  if ord(cdb.b[0]) <= 31 then
+    n := 6
+  else if ord(cdb.b[0]) <= 63 then
+    n := 10
+  else begin
+    status.all := status_$scsi_unsupported_function;
+    return;
+  end;
+  if odd(ord(cdb.b[n - 1])) then begin
+    status.all := status_$scsi_unsupported_function;
+    return;
+  end;
+  ml_$exclusion_start(scsi_$exclusion_lock);
+  next := t^.next_id + 1;
+  st.all := status_$ok;
+  if len <> 0 then begin
+    if not (scsi_tf_wired in t^.flags) then
+      discard(scsi_alloc_iova(t^, len, st))
+    else if scsi_tf_busy in t^.flags then
+      st.all := status_$scsi_command_in_progress;
+    if st.all <> status_$ok then
+      goto 9;
+    iova := scsi_map_buffer(t^, integer32(addr(buf)), len, t^.iova, st);
+    if st.all = status_$scsi_buffer_too_large then begin
+      scsi_free_iova(t^, st);
+      if st.all <> status_$ok then
+        goto 9;
+      discard(scsi_alloc_iova(t^, len, st));
+      if st.all <> status_$ok then
+        goto 9;
+      iova := scsi_map_buffer(t^, integer32(addr(buf)), len, t^.iova, st);
+    end;
+  end
+  else
+    iova := 0;
+  if st.all = status_$ok then begin
+    scsi_post_cmd(t^, cdb, iova, len, dir, next, st);
+    if st.all = status_$ok then
+      t^.next_id := next;
+  end;
+9:
+  ml_$exclusion_stop(scsi_$exclusion_lock);
+  status := st;
+  id := next;
+end;
+%else
 { SCSI_$DO_COMMAND - start a command on a buffer.
 
   Image addresses:
@@ -140,3 +227,4 @@ begin
   status := st;
   id := req_id;
 end;
+%endif

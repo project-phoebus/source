@@ -1,6 +1,7 @@
 { ring_8025_learn_route - learn the route to a frame's source station.
 
   Image addresses:
+    sau7  0x3C496E42  ring_8025_learn_route
     sau8  0x03C8A48E  ring_8025_learn_route
     sau9  0x3C486092  ring_8025_learn_route
 

@@ -2,6 +2,7 @@
   controller.
 
   Image addresses:
+    sau7  0x3C495E0C  ring_8025_initialize
     sau8  0x03C89524  ring_8025_initialize
     sau9  0x3C485124  ring_8025_initialize
 
@@ -13,8 +14,9 @@
     before each reset and set to cascade mode in place of the device's
     enabling, and the burst sizes are zero.
   - The parameters carry the physical addresses of the unit's system
-    command and status blocks in its control area; their interrupt
-    vectors are not set.
+    command and status blocks in its control area (with
+    `ring_8025_iomap' their bus addresses, at the region's control
+    page); their interrupt vectors are not set.
 
   Status stored:
     status_$ok: the controller is initialized
@@ -51,10 +53,19 @@ begin
 %endif
   params.abort_dma := chr(3);
   params.abort_parity := chr(3);
+%if ring_8025_iomap %then
+  params.scb_pa := ring_8025_vtop(
+                     integer32(addr(ring8025_$aux_da.ctl[u^.cnum].scb)),
+                     sizeof(ring_8025_$scb_t), u^.iomap_page + r8025_map_ctl);
+  params.ssb_pa := ring_8025_vtop(
+                     integer32(addr(ring8025_$aux_da.ctl[u^.cnum].ssb)),
+                     sizeof(ring_8025_$ssb_t), u^.iomap_page + r8025_map_ctl);
+%else
   params.scb_pa := ring_8025_vtop(
                      integer32(addr(ring8025_$aux_da.ctl[u^.cnum].scb)));
   params.ssb_pa := ring_8025_vtop(
                      integer32(addr(ring8025_$aux_da.ctl[u^.cnum].ssb)));
+%endif
   for tries := 1 to 3 do begin
 %if ring_8025_dma_channel %then
     dma_$stop(u^.dma_channel, count, status);

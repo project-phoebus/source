@@ -84,7 +84,8 @@ const
     the request register's read; ICW1 (edge, cascade, ICW4 needed); the
     vectors from 16#A0 (master) and 16#A8 (slave); the master's slave on
     input 3 and the slave's id 3; ICW4 (8086 mode); every interrupt
-    masked; and the master's interrupts 0, 1 and 3 unmasked. }
+    masked; the master's interrupts 0, 1 and 3 unmasked; and the
+    slave's interrupt 0 unmasked. }
   atbus_$eoi = 16#20;
   atbus_$read_irr = 16#0A;
   atbus_$icw1 = 16#11;
@@ -95,6 +96,7 @@ const
   atbus_$icw4 = 16#01;
   atbus_$mask_all = 16#FF;
   atbus_$m_mask_run = 16#F4;
+  atbus_$s_mask_run = 16#FE;
 
   { The vectors ATBUS_$INIT traps to ATBUS_$INT, 16#A0..16#AF. }
   atbus_$first_vector = 16#A0;

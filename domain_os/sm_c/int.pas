@@ -4,12 +4,15 @@
     sau3  0x00E6F0CA  SM_C_$INT
     sau4  0x0F87BEC0  SM_C_$INT
     sau5  0x00E74C2E  SM_C_$INT
+    sau6  0x7807B974  SM_C_$INT
 
   - The result is 3 when the chain ends (no request, its last, the
     register's bit 6 or a parity error): the controller is acknowledged
     and the PBU given the unit's eventcount to advance.
   - Otherwise 1: the chain's next request is set up and continued.
   - A DMA parity error marks the unit's parity flag.
+  - With `sm_c_clear_go' the controller is cleared as the next request
+    is taken, and started with the go command once the block is set up.
 
   Status stored: none.
 }
@@ -51,6 +54,9 @@ begin
     end
     else begin
       sm_c_req := sm_c_req^.next;
+%if sm_c_clear_go %then
+      page^.cmd := sm_c_reg_clear;
+%endif
       if sm_$cb.c_cmd = sm_c_cmd_write then begin
         sm_c_hdr^ := sm_c_req^.header.l;
         stats.xfers[2] := stats.xfers[2] + 1;
@@ -71,7 +77,11 @@ begin
       sm_$cb.c_count := 1;
       sm_$cb.c_buf_lo := sm_c_hdr_lo.lo;
       sm_$cb.c_buf_mid := sm_c_hdr_mid.lo;
+%if sm_c_clear_go %then
+      page^.cmd := sm_c_reg_go;
+%else
       page^.cmd := sm_c_reg_continue;
+%endif
       sm_c_$int := 1;
     end;
   end;

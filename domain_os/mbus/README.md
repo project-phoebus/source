@@ -2,8 +2,8 @@
 
 The Multibus interrupt vector and its set-up, on the SAUs whose kernel
 has a Multibus (the part `mbus_bus`, `../base/config.ins.pas`: the
-SR10.2 SAU3..SAU6).  Translated from the SAU5 image, with the SAU3's
-polled adapter as conditional arms; the SAU2 build compiles the module
+SR10.2 SAU3..SAU6).  Translated from the SAU5 image, with the SAU3's,
+SAU4's and SAU6's adapters as conditional arms; the SAU2 build compiles the module
 to an empty object.
 
 ## Layout
@@ -27,7 +27,7 @@ directory.
 |---------|----------|
 | MBUS_$UNDEF_INT | `undef_int.pas` |
 | MBUS_$DEFINE_INT | `define_int.pas` |
-| MBUS_$INT | `int.pas` (`mbus_polled_adapter`) |
+| MBUS_$INT | `int.pas` (`mbus_polled_adapter`, `mbus_vectored_adapter`, `mbus_vectored_enable`) |
 | MBUS_$INIT | `init.pas` |
 | MBUS_$ENABLE_DEV | `enable_dev.pas` (included by `../vme/vme.pas`) |
 | MBUS_$DISABLE_DEV | `disable_dev.pas` (included by `../vme/vme.pas`) |
@@ -59,10 +59,17 @@ clears MBUS_$HIGH_OK and writes the mask register (+0x82) three times;
 MBUS_$INT takes the vector, acknowledges the level and masks it while
 its handler runs.  The data block is the same 0x84 bytes.
 
+On the SAU6 (`mbus_vectored_enable`) levels 0..6 have their own vectors,
+16#B0 plus the level: MBUS_$INIT traps the seven to MBUS_$INT before it
+gives the levels MBUS_$UNDEF_INT, and its set-up is the SAU5's with
+16#1B05 in the third register; MBUS_$INT takes the vector and clears the
+level's enable bit (+2) while its handler runs, setting it again when
+the handler returns true.  MBUS_$UNDEF_INT and MBUS_$DEFINE_INT are the
+SAU5's logic in 68020 code.  The data block is the same 0x84 bytes.
+
 ## Open items
 
-- TODO(sau): MBUS_$INT's and MBUS_$INIT's SAU6 forms, MBUS_$DEFINE_INT's
-  SAU6 form.
+- TODO(pascal): the polled form's 4 frame bytes (`int.pas`).
 - TODO(pascal): the `integer32` transfer on the status constant, for
   dpc (mbus.ins.pas).
 - MBUS_$INIT sets only levels 0..6 to MBUS_$UNDEF_INT; levels 7..15 keep

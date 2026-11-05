@@ -3,14 +3,20 @@
   Image addresses:
     sau2  0x00E11548  NETWORK_$PAGE_SERVER
     sau4  0x0F811EB6  NETWORK_$PAGE_SERVER
+    sau6  0x78011E56  NETWORK_$PAGE_SERVER
+    sau7  0x3C41336E  NETWORK_$PAGE_SERVER
     sau8  0x03C1281E  NETWORK_$PAGE_SERVER
     sau9  0x3C413932  NETWORK_$PAGE_SERVER
     sau2  0x00E10510  network_$ps_send_reply (nested)
     sau4  0x0F810E90  network_$ps_send_reply (nested)
+    sau6  0x78010E5C  network_$ps_send_reply (nested)
+    sau7  0x3C412374  network_$ps_send_reply (nested)
     sau8  0x03C11824  network_$ps_send_reply (nested)
     sau9  0x3C412938  network_$ps_send_reply (nested)
     sau2  0x00E10628  network_$process_paging_request (nested)
     sau4  0x0F810FA8  network_$process_paging_request (nested)
+    sau6  0x78010F74  network_$process_paging_request (nested)
+    sau7  0x3C41248C  network_$process_paging_request (nested)
     sau8  0x03C1193C  network_$process_paging_request (nested)
     sau9  0x3C412A50  network_$process_paging_request (nested)
 

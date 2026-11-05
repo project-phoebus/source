@@ -2,6 +2,8 @@
   of a list's.
 
   Image addresses:
+    sau6  0x78088088  ethernet_range_overlaps
+    sau7  0x3C492530  ethernet_range_overlaps
     sau8  0x03C85D2C  ethernet_range_overlaps
     sau9  0x3C48192C  ethernet_range_overlaps
 

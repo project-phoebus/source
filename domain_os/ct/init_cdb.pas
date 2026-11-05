@@ -1,6 +1,7 @@
 { ct_init_cdb - clear the command block for the next command.
 
   Image addresses:
+    sau7  0x3C484B68  ct_init_cdb (module-local)
     sau9  0x3C47728C  ct_init_cdb (module-local)
 
   - Sets ct_cmd_cdb's logical unit and clears its other fields but the

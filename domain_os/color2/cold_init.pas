@@ -3,6 +3,7 @@
 
   Image addresses:
     sau5  0x00E73138  COLOR2_$COLD_INIT
+    sau6  0x78079FC8  COLOR2_$COLD_INIT
 
   - The DN580's display gets COLOR2_$INT_EC and its interrupt
     (COLOR2_$INT_INIT); the DN570's its control word's copy with the

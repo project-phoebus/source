@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E2DD88  BITPAD data (WIRED_DATA, 0x2C bytes)
+    sau6  0x780329A4  BITPAD data (WIRED_DATA, 0x2C bytes)
 
   One compilation unit, in two code sections and one data section: the
   map's BITPAD code segments in WIRED_PROC (0x1B8 bytes, SUMA_$RCV) and

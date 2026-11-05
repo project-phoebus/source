@@ -1,6 +1,7 @@
 { ring_8025_copy_to_user - scatter bytes into a caller's buffer vector.
 
   Image addresses:
+    sau7  0x3C498902  ring_8025_copy_to_user
     sau8  0x03C8BEF2  ring_8025_copy_to_user
     sau9  0x3C487AF6  ring_8025_copy_to_user
 

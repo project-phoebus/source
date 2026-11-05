@@ -2,6 +2,7 @@
   has it wired.
 
   Image addresses:
+    sau7  0x3C4B8000  scsi_va_to_ppn
     sau9  0x3C4A4E3C  scsi_va_to_ppn
 
   - A user address is looked up in the current address space (MST),

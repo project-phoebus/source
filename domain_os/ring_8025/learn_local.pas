@@ -1,6 +1,7 @@
 { ring_8025_learn_local - learn that a station is on this ring.
 
   Image addresses:
+    sau7  0x3C497074  ring_8025_learn_local
     sau8  0x03C8A6C0  ring_8025_learn_local
     sau9  0x3C4862C4  ring_8025_learn_local
 

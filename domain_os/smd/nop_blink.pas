@@ -1,6 +1,7 @@
 { SMD_$NOP_BLINK - the default for a device's cursor blink: nothing.
 
   Image addresses:
+    sau7  0x3C421A1E  SMD_$NOP_BLINK
     sau9  0x3C420136  SMD_$NOP_BLINK
 
   Status stored: none.

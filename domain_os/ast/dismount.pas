@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E069CA  AST_$DISMOUNT
     sau4  0x0F806D66  AST_$DISMOUNT
+    sau6  0x78006FE0  AST_$DISMOUNT
+    sau7  0x3C407458  AST_$DISMOUNT
     sau9  0x3C407C58  AST_$DISMOUNT
 
   - Under the AST lock the volume is marked as dismounting and the

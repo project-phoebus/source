@@ -5,6 +5,7 @@
     sau2  0x00E22904  ATBUS_ data (WIRED_DATA, 0x2C bytes)
     sau3  0x00E218D8  ATBUS_ data (WIRED_DATA, 0x2C bytes)
     sau4  0x0F824BB4  ATBUS_ data (WIRED_DATA, 0x100 bytes)
+    sau6  0x78025280  ATBUS_ data (WIRED_DATA, 0x1E4 bytes)
     sau9  0x3C425548  ATBUS_ data (WIRED_DATA, 0x80 bytes)
 
   One compilation unit, `module atbus_, wired_proc, wired_data;': the
@@ -21,7 +22,11 @@
     routines with `util_pic'), and a block of 128 bytes, the map's
     SYSBUS_$INT_VEC, all zero in the image; with `sysbus_vectors_90'
     (the SAU4's) 32 levels on two ranges of vectors (0x160 bytes) and a
-    block of 256 bytes;
+    block of 256 bytes; with `sysbus_vectors_88' (the SAU6's) 32 levels
+    on two other ranges, each with a second handler (0x1DC bytes), and
+    a block of 0x1E4 bytes: SYSBUS_$DUP_VEC, eight 12-byte entries,
+    SYSBUS_$INT_VEC's 32 12-byte entries at +0x60 and the next free
+    entry of SYSBUS_$DUP_VEC, a word at +0x1E0, all zero in the image;
   - without it (the SAU2's): DISK_INTERRUPT, RING_INTERRUPT (from disk/
     and ring/), SYSBUS_$INIT and SYSBUS_$DEFINE_INT (0x118 bytes), and a
     block of 44 bytes, all zero in the image, which SYSBUS_$INIT fills:
@@ -40,14 +45,6 @@
   tools/pascal_check.sh (which finds this file by its module heading).
 }
 module atbus_, wired_proc, wired_data;
-
-{ TODO(sau) the other SAUs' ATBUS_ code
-
-  The SAU6's SYSBUS_$INT, SYSBUS_$UNDEF_INT, SYSBUS_$DEFINE_INT and
-  SYSBUS_$INIT are in other forms than the SAU9's and the SAU4's (with
-  SYSBUS_$INT_VEC, and SYSBUS_$DUP_VEC before it).  Their conditionals go in
-  this file and its fragments, each with its own part, when they are
-  translated. }
 
 %include 'base/base.ins.pas';
 %include 'ec/ec.ins.pas';
@@ -75,7 +72,15 @@ define
   sysbus_$clear_pending;
 %endif
   sysbus_$init;
+%if sysbus_vectors_88 %then
+  sysbus_$dup_vec;                        { +0x00 }
+  sysbus_$int_vec;                        { +0x60 }
+
+var
+  dup_next: integer;                      { +0x1E0 }
+%else
   sysbus_$int_vec;                        { +0x00 }
+%endif
 
 { ---- WIRED_PROC ---- }
 %include 'sysbus/int.pas';                { SYSBUS_$INT                 }

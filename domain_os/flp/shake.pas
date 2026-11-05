@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E3E49E  SHAKE
     sau4  0x0F846456  SHAKE
+    sau7  0x3C44E790  SHAKE
     sau8  0x03C4665C  SHAKE
 
   - dir 0 reads count bytes into the words, widened with zeros; dir 1
@@ -31,7 +32,7 @@ begin
       polls := 0;
       repeat
         polls := polls + 1;
-      until polls = 25;
+      until polls = flp_shake_spin;
 %endif
       polls := 2000;
       while not (7 in main_status_bits) do begin

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E151FE  EC_$INIT
+    sau7  0x3C416ECA  EC_$INIT
 
   - Both waiter list pointers point at the eventcount itself, the ring's
     sentinel (ec/m68k/advance_int.s walks the ring until it comes back

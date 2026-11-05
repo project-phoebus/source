@@ -4,6 +4,8 @@
   Image addresses:
     sau3  0x00E5882C  pbu_check_unit (module-local)
     sau5  0x00E5882C  pbu_check_unit (module-local)
+    sau6  0x780604A0  pbu_check_unit (module-local)
+    sau7  0x3C4692A0  pbu_check_unit (module-local)
     sau8  0x03C61354  pbu_check_unit (module-local)
 
   - A publicly owned unit, a unit the current process owns and a global

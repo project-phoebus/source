@@ -2,6 +2,8 @@
 
   Image addresses:
     sau2  0x00E76B7C  ring_$open_internal (module-local)
+    sau6  0x78085180  ring_$open_internal (module-local)
+    sau7  0x3C48FC56  ring_$open_internal (module-local)
     sau8  0x03C83456  ring_$open_internal (module-local)
 
   - The driver is wired; under the transmit lock the first open starts
@@ -12,6 +14,8 @@
     socket (is_os) or a new one.  On failure the open is uncounted.
   - The unit is tested twice, before and after the version; the SAU2
     image keeps both tests.
+  - With `ring_pkt_index_reversed' the new entries are indexed with the
+    table's count first.
 
   Status stored:
     status_$ok: the channel was opened
@@ -101,8 +105,13 @@ begin
         status.all := status_$ring_pkt_type_in_use;
         goto done;
       end;
+%if ring_pkt_index_reversed %then
+      u^.pkt_types[u^.pkt_type_cnt + i].entry.range := args.types[i];
+      u^.pkt_types[u^.pkt_type_cnt + i].entry.channel := ch;
+%else
       u^.pkt_types[i + u^.pkt_type_cnt].entry.range := args.types[i];
       u^.pkt_types[i + u^.pkt_type_cnt].entry.channel := ch;
+%endif
     end;
 
   { the socket }

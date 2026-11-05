@@ -199,6 +199,51 @@ never reads them), so the sysbus insert needs io.ins.pas before it.
 Changes to other shared insert files: `ml/ml.ins.pas` (ml_$exclusion_t,
 ML_$EXCLUSION_INIT), `mmu/mmu.ins.pas` (MMU_$VTOP).
 
+## The SAU6
+
+The SAU6's IO_ (WIRED_PROC 0xB9C bytes, OS_INIT_PROC 0x26C, PROCEDURE$
+0xD4, the data block 0x684) is the SAU5's logic in 68020 code, with the
+SAU6's configuration words (no floppy, the Ethernet's `chk(6)`): no
+source change.  Its DCTES block (0x268 bytes) is the kind-1 form with
+nine DCTEs: two Ethernets (`ethernet_driver` without `named_dctes`), the
+second tape and Winchester controller's CTAPE6_DCTE and WIN6_DCTE
+(`win6_ct6_board`), and the SAU5's CTAPE_DCTE, SMD_DCTE_1, SMD_DCTE_0,
+RING_DCTE and WIN_DCTE, their vectors `sysbus_vectors_88`'s (16#88 the
+ring, 16#8C the Winchester and the tape, 16#90 the second pair, 16#F5
+and 16#F6 the Ethernets) in disk_error_que's low byte; DEV_DCTES lists
+the nine and nil (io_$dev_dctes_last 9).  The hand-written IO_$TBLS is
+the SAU2's; IO_$PROBE clears bit 6 of the MMU's status byte
+(`mmu_status_bit_6`), waits with two calls after a completed access
+(`probe_settle_calls`) and leaves the VME state to FIM_$BUS_ERR
+(`fim_vme_ack`).
+
+## The SAU7
+
+The SAU7's DCTES block (0x3A4 bytes) is the SAU8's with three more
+DCTEs: WIN7_DCTE_1 and WIN7_DCTE_0 (`win_mailbox_ctlr`), of kind 3 with
+their requests' attribute bit 0 set, before WIN8_DCTE, and SCSI7_DCTE
+(`scsi_mailbox_ctlr`), of kind 2 with its I/O descriptor, after it, a
+zero longword after each kind-3 DCTE that another follows; DEV_DCTES
+lists SCSI7_DCTE, WIN8_DCTE and the two WIN7_ DCTEs first and has
+COLOR6's three units' (`color6_driver`) and COLOR7's DCTE
+(`color7_driver`) among the display drivers' (io_$dev_dctes_last 24).
+The per-target SCSI DCTEs and SCSI9_DCTE are the NCR 53C90 driver's, not
+the mailbox adapter's, though `ct_scsi` is on.
+
+IO_ (WIRED_PROC 0xC54 bytes, OS_INIT_PROC 0x268, PROCEDURE$ 0xC8, the
+data block 0x9D4) has the region list (`io_regions`) and the SAU8's AT
+bus arms (`pbu_alloc_atbus_windows`), and `io_atbus_map_windows`:
+IO_$ALLOC allocates an iova of 0 anywhere in the AT bus's first 16#80000
+and its second window is 16#100000..16#1000000; IO_$ALLOC_MAP allocates
+only for an AT bus unit, a bus master (`io_$attr_bus_master`) in the
+map's first 16#80000, another from 16#80000 to 16#90000 (16#A0000 with
+`io_$attr_wide_iomap`).  The other routines are the existing source.  IO_DESC (0x1A0 bytes) is
+the SAU8's with SCSI_IO_DESC first and WIN7_IO_DESC before WIN_IO_DESC.
+
+The hand-written IO_$TBLS (IO_$TRAP, IO_$SAVED_OS_SP, IO_$USE_INT_STACK,
+IO_$COND_SWITCH_BACK, the first-level handler table) and TESTPAGE
+(`m68k/`) assemble to the SAU7 image's bytes.
+
 ## Open items
 
 ### Form
@@ -222,5 +267,4 @@ ML_$EXCLUSION_INIT), `mmu/mmu.ins.pas` (MMU_$VTOP).
 
 ### TODO(sau)
 
-- `dctes.pas`: the DCTES blocks of the SAUs other than the SAU2, SAU3,
-  SAU4, SAU5, SAU8 and SAU9.
+- `dctes.pas`: the DCTES block of the SAU7.

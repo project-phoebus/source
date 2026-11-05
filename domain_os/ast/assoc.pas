@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E0444E  AST_$ASSOC
     sau4  0x0F80480A  AST_$ASSOC
+    sau6  0x78004AF6  AST_$ASSOC
+    sau7  0x3C404F4C  AST_$ASSOC
     sau9  0x3C40574C  AST_$ASSOC
 
   - The object's segment is activated and wired, and under the PMAP

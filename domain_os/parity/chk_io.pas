@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E0B174  PARITY_$CHK_IO
+    sau7  0x3C40CBC8  PARITY_$CHK_IO
     sau8  0x03C0C0B4  PARITY_$CHK_IO
     sau9  0x3C40D05C  PARITY_$CHK_IO
 

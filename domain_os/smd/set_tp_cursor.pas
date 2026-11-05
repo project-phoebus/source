@@ -4,6 +4,8 @@
     sau2  0x00E6E964  SMD_$SET_TP_CURSOR
     sau4  0x0F8790F6  SMD_$SET_TP_CURSOR
     sau5  0x00E70DE2  SMD_$SET_TP_CURSOR
+    sau6  0x7807814C  SMD_$SET_TP_CURSOR
+    sau7  0x3C481C2E  SMD_$SET_TP_CURSOR
     sau9  0x3C47534E  SMD_$SET_TP_CURSOR
 
   - A move event (the edge flag false) to SMD_$LOC_EVENT.

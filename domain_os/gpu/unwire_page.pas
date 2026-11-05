@@ -3,6 +3,7 @@
 
   Image addresses:
     sau5  0x00E73806  gpu_$unwire_page (module-local)
+    sau6  0x7807A71A  gpu_$unwire_page (module-local)
 
   - The processor is told to drop the page's mapping only when tell is
     set and the page's owner holds the processor.

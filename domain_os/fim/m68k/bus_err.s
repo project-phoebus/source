@@ -20,6 +20,11 @@
  * The address and byte columns are the SAU2 image's, except on the lines
  * of the `.if pbu_driver' arms, which carry the SAU5 image's addresses.
  *
+ * The SAU6's JMP_TO_BUS_ERR first acknowledges the VME adapter
+ * (`fim_vme_ack': VME_CTL + 8 ORed with 16#440, 8 bytes, so the
+ * trampoline is at 0x78023ED0 and BUS_ERROR_SWITCH at 0x78023EDA); its
+ * FIM_$BUS_ERR is fim/sau6/bus_err.s.
+ *
  * The SAU3 has the SAU5's PBU arms (`pbu_driver': CPU_B_PBU_SWITCH at
  * 0xE20802, the pad at 0xE20822, FIM_$BUS_ERR at 0xE20824) and no
  * display: a supervisor fault on a page not resident in the I/O window
@@ -268,6 +273,11 @@ CPU_B_PBU_SWITCH:
          * the same holds without an alignment device. */
         .global JMP_TO_BUS_ERR
 JMP_TO_BUS_ERR:
+        .if fim_vme_ack
+        .extern VME_CTL                 /* the VME adapter's registers (I/O definitions) */
+        ori.w   #0x440,(VME_CTL+8).l    /* sau6 78023ed0  0079 0440 7fff 9408: */
+                                        /* the VME adapter acknowledged */
+        .endif
         .short  0x4EF9                  /* jmp (BUS_ERROR_SWITCH).l - the */
                                         /* operand is the patchable cell below */
         .global BUS_ERROR_SWITCH
@@ -296,7 +306,8 @@ BUS_ERROR_SWITCH:
  *
  * Assembly (0x00E218E8, 484 bytes):
  * ==================================================================== */
-        .if !pmmu_page_maps && !region_mmu   /* the SAU4's: fim/sau4/bus_err.s */
+        /* the SAU4's: fim/sau4/bus_err.s; the SAU6's: fim/sau6/bus_err.s */
+        .if !pmmu_page_maps && !region_registers && !mmu_status_bit_6
         .section ".text.FIM_$BUS_ERR","ax",@progbits
         .even
 

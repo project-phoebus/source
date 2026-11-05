@@ -1,6 +1,7 @@
 { COLOR4_$XOR_CURSOR - draw or remove the cursor.
 
   Image addresses:
+    sau7  0x3C48BCE2  COLOR4_$XOR_CURSOR
     sau8  0x03C7FFFE  COLOR4_$XOR_CURSOR
 
   Assume we're called without the SMD request lock; it is held here.

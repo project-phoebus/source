@@ -3,6 +3,7 @@
 
   Image addresses:
     sau4  0x0F80B330  SYSBUS_$UNDEF_INT
+    sau6  0x7800B4BC  SYSBUS_$UNDEF_INT
     sau9  0x3C40C4EC  SYSBUS_$UNDEF_INT
 
   - CRASH_SYSTEM does not return, so the result false (not handled) is

@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E144F6  PMAP_$WS_SCAN_CALLBACK
     sau4  0x0F814D6A  PMAP_$WS_SCAN_CALLBACK
+    sau6  0x78014CC2  PMAP_$WS_SCAN_CALLBACK
+    sau7  0x3C416218  PMAP_$WS_SCAN_CALLBACK
     sau9  0x3C4167DC  PMAP_$WS_SCAN_CALLBACK
 
   - arg's word at +2 is the process's number (the TODO(pascal) below); a

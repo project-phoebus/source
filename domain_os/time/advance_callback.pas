@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E16434  TIME_$ADVANCE_CALLBACK
     sau4  0x0F816E14  TIME_$ADVANCE_CALLBACK
+    sau6  0x78016EB6  TIME_$ADVANCE_CALLBACK
+    sau7  0x3C417EA2  TIME_$ADVANCE_CALLBACK
 
   - When the element expires, the eventcount its datum names is advanced
     without dispatching.

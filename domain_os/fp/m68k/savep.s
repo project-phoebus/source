@@ -28,9 +28,16 @@
  * holder, both waiter links pointing at the lock itself, count -1.  The
  * self-pointers are relocations here (R_68K_32 FP_$EXCLUSION).
  *
+ * With the floating-point accelerator (`fpa_board', base/config.ins.pas:
+ * the SAU7) the same three cells follow for it, FPA_$SAVEP, FPA_$OWNER
+ * and its lock (no map name), 24 bytes to MMU_$BUS_STATUS; those lines
+ * carry the SAU7 image's addresses.
+ *
  * Byte gate (tools/asm_compare.py): identical to the image modulo
  * relocations.
  */
+
+        .include "base/config.inc"
 
         .section ".text.FP_$SAVEP","ax",@progbits
         .even
@@ -50,3 +57,24 @@ FP_$EXCLUSION:                                  /* e218d6  ml_$exclusion_t */
         .long   FP_$EXCLUSION                   /* +0x08  waiter list tail (self) */
         .long   0                               /* +0x0C */
         .short  -1                              /* +0x10  -1: unlocked */
+
+        .if fpa_board
+/* The floating-point accelerator's cells, the FPU's three again (sau7
+ * 3c42638e..3c4263a5): its save-area base, its owner, and the lock of its
+ * context, whose waiter links point at itself. */
+        .global FPA_$SAVEP
+FPA_$SAVEP:
+        .long   0                               /* sau7 3c42638e */
+
+        .global FPA_$OWNER
+FPA_$OWNER:
+        .short  0                               /* sau7 3c426392 */
+
+        .global fpa_$exclusion
+fpa_$exclusion:                                 /* sau7 3c426394  ml_$exclusion_t */
+        .long   0                               /* +0x00 */
+        .long   fpa_$exclusion                  /* +0x04  waiter list head (self) */
+        .long   fpa_$exclusion                  /* +0x08  waiter list tail (self) */
+        .long   0                               /* +0x0C */
+        .short  -1                              /* +0x10  -1: unlocked */
+        .endif

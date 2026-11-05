@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E2F958  PROC1_$INIT
     sau4  0x0F832E50  PROC1_$INIT
+    sau6  0x78038278  PROC1_$INIT
+    sau7  0x3C437E50  PROC1_$INIT
 
   - The stack allocator's regions run from OS_STACK up and from
     OS_STACK_END down; the system process's OS stack base is

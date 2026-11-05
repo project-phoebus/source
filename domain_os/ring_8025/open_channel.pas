@@ -2,6 +2,7 @@
   types.
 
   Image addresses:
+    sau7  0x3C4984F6  ring_8025_open_channel
     sau8  0x03C8BAE6  ring_8025_open_channel
     sau9  0x3C4876EA  ring_8025_open_channel
 

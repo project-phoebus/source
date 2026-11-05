@@ -5,11 +5,16 @@
     sau2  0x00E72450  TERM_$PCHIST_ENABLE
     sau3  0x00E73B3C  TERM_$PCHIST_ENABLE
     sau4  0x0F87FA2C  TERM_$PCHIST_ENABLE
+    sau6  0x78080918  TERM_$PCHIST_ENABLE
+    sau7  0x3C488AB8  TERM_$PCHIST_ENABLE
     sau8  0x03C7CD34  TERM_$PCHIST_ENABLE
     sau9  0x3C479E48  TERM_$PCHIST_ENABLE
 
-  - The word goes into the flags of the second SIO2681 channel record,
-    which the SIO2681 interrupt routine tests before PCHIST_$INTERRUPT.
+  - The word goes into the flags of the last serial line's SIO2681
+    channel record (the second chip's channel B with
+    `sio2681_four_lines'), which the SIO2681 interrupt routine tests
+    before PCHIST_$INTERRUPT; with `pchist_third_line' into the third
+    serial line's, the second chip's channel A.
   - With `sio16550_lines' it goes into the flags of the 16550 channel of
     the fourth DTTE's SIO descriptor, which the 16550 interrupt routine
     tests the same way; a line without one is refused.
@@ -43,6 +48,10 @@ begin
   else
     sio16550_$chan_ptr_t(
       sio_$desc_ptr_t(dtte[3].tty_handler)^.context)^.flags := count;
+%elseif pchist_third_line %then
+  term_$serial_chan_a2.flags := count;
+%elseif sio2681_four_lines %then
+  term_$serial_chan_b2.flags := count;
 %else
   term_$serial_chan_b.flags := count;
 %endif

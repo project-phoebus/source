@@ -2,6 +2,8 @@
 
   Image addresses:
     sau2  0x00E752BC  PEB_$PROC_CLEANUP
+    sau6  0x78083938  PEB_$PROC_CLEANUP
+    sau7  0x3C48BB34  PEB_$PROC_CLEANUP
     sau9  0x3C47CE90  PEB_$PROC_CLEANUP
 
   - When the board is installed and its pages are not,

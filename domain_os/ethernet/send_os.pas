@@ -1,6 +1,8 @@
 { ETHERNET_$SEND_OS - send a MAC_OS packet on a system channel.
 
   Image addresses:
+    sau6  0x7808A466  ETHERNET_$SEND_OS
+    sau7  0x3C494A7E  ETHERNET_$SEND_OS
     sau8  0x03C8827A  ETHERNET_$SEND_OS
     sau9  0x3C483E7A  ETHERNET_$SEND_OS
 
@@ -15,8 +17,11 @@
   - The frame goes out under the NET_IO lock; one for this unit's own
     address, for all or for a multicast address on the unit's list is
     also looped back, copied, through MAC_OS_$DEMUX.
-  - A failed transmit counts in the tenth statistic, another error in
-    the seventh.  A failed copy or loopback is not reported.
+  - A failed transmit counts in eth_stat_xmit_failed, another error in
+    eth_stat_errors.  A failed copy or loopback is not reported.
+  - With `ethernet_vme': only the header's length is rounded up; every
+    piece is copied into the transmit buffer, the data page mapped with
+    NETBUF_$GETVA for the copy and given back after it.
 
   Status stored:
     ethernet_transmit's status: the frame was sent, or not
@@ -39,6 +44,173 @@
   (four pieces at most are used), so the stand-in's size is the room
   after a four-piece list. }
 
+%if ethernet_vme %then
+procedure ethernet_$send_os(line: integer; var callback_data: pinteger;
+                            var pkt: mac_os_$send_pkt_t;
+                            out bytes_sent: integer; out status: status_$t);
+  options(val_param);
+type
+  { The Ethernet header, or its first three words (the destination). }
+  hdr_view_t = record
+    case integer of
+      1: (eth: ethernet_$eth_hdr_t);
+      2: (words: array[0..6] of integer);
+  end;
+  hdr_view_ptr_t = ^hdr_view_t;
+
+  { A two-word link address: a node ID, its low 24 bits a station's. }
+  link_view_t = packed record
+    n_words: integer;                     { 0x00 }
+    node_high: 0..255;                    { 0x02 }
+    node_low: 0..16#FFFFFF;               { 0x03 }
+  end;
+  link_view_ptr_t = ^link_view_t;
+var
+  rpkt: mac_os_$rcv_pkt_t;
+  new_pages: pkt_$data_pages_t;
+  ehdr: hdr_view_t;
+  pas: ethernet_$xmit_pa_list_t;
+  pad: array[1..46] of char;
+  list: array[1..4] of ethernet_$xmit_piece_t;
+  unused_buf: array[1..1080] of char;     { stand-in, see the TODO }
+  node: linteger;
+  new_hdr: integer32;
+  src_va: integer32;
+  st: status_$t;
+  hdr_page: pkt_$hdr_ptr_t;
+  eh: hdr_view_ptr_t;
+  demux_flag: boolean;
+  u: ethernet_$unit_ptr_t;
+  off: integer32;
+  own_hdr: boolean;
+  hlen: pinteger;
+  total: pinteger;
+  n: integer;
+  i: integer;
+begin
+  bytes_sent := 0;
+  u := addr(ether_ucb[line]);
+  if not (eth_unit_rcv_proc in u^.flags) then begin
+    status.all := status_$eth_device_offline;
+    return;
+  end;
+  if (callback_data = 0) or else (callback_data > 10)
+     or else not u^.channels[callback_data].open then begin
+    status.all := status_$eth_channel_not_open;
+    return;
+  end;
+
+  { the lengths }
+  hlen := (pkt.hdr_desc.length + 1) & ~1;
+  total := hlen + pkt.data_length + 14;
+  if (pkt.hdr_desc.length < 0) or else (pkt.data_length < 0)
+     or else (total > 1514) then begin
+    status.all := status_$eth_illegal_pkt_length;
+    return;
+  end;
+
+  { the Ethernet header: before the caller's, or of its own }
+  off := pkt.hdr_desc.address & 16#3FF;
+  own_hdr := false;
+  if off <> 14 then begin
+    eh := addr(ehdr);
+    own_hdr := true;
+  end
+  else
+    eh := hdr_view_ptr_t(pkt.hdr_desc.address & 16#FFFFFC00);
+
+  { the destination }
+  case pkt.link_addr.n_words of
+    3: begin
+      for i := 0 to 2 do
+        eh^.words[i] := pkt.link_addr.addr[i];
+    end;
+    2: begin
+      eh^.eth.dst.high := eth_apollo_high;
+      eh^.eth.dst.low := link_view_ptr_t(addr(pkt.link_addr))^.node_low;
+    end;
+    otherwise begin
+      status.all := status_$eth_illegal_dest_address;
+      return;
+    end;
+  end;
+  if (pkt.link_addr.n_words = 2)
+     or else (eh^.eth.dst.high = eth_apollo_high) then begin
+    node := eh^.eth.dst.low;
+    ml_$lock(ml_$net_io_lock);
+    ethernet_arp_resolve(u, node, eh^.eth.dst);
+    ml_$unlock(ml_$net_io_lock);
+  end;
+  eh^.eth.src.addr := u^.station;
+  eh^.eth.src.ptype := pkt.frame_type;
+
+  { the pieces: the header, the data, the padding }
+  list[1].va := eh;
+  pas[1] := eth_vme_dma_limit;
+  if own_hdr then begin
+    list[1].len := 14;
+    list[2].va := univ_ptr(pkt.hdr_desc.address);
+    list[2].len := hlen;
+    pas[2] := eth_vme_dma_limit;
+    n := 2;
+  end
+  else begin
+    list[1].len := 14 + hlen;
+    n := 1;
+  end;
+  if pkt.data_length <> 0 then begin
+    n := n + 1;
+    netbuf_$getva(pkt.data_pages[1], u^.xmit_map_va, status);
+    ethernet_check_status(status);
+    list[n].va := univ_ptr(u^.xmit_map_va);
+    list[n].len := pkt.data_length;
+    pas[n] := eth_vme_dma_limit;
+  end;
+  if total < 60 then begin
+    n := n + 1;
+    list[n].va := addr(pad);
+    list[n].len := 60 - total;
+    pas[n] := eth_vme_dma_limit;
+    total := 60;
+  end;
+
+  { the frame out }
+  ml_$lock(ml_$net_io_lock);
+  ethernet_transmit(u, addr(list), n, addr(pas), total, 0, st);
+  if pkt.data_length <> 0 then
+    discard(netbuf_$rtnva(ether_ucb[line].xmit_map_va));
+  ml_$unlock(ml_$net_io_lock);
+  status := st;
+  if status.all = status_$eth_transmit_failed then
+    with u^ do
+      stats.counts[eth_stat_xmit_failed] :=
+        stats.counts[eth_stat_xmit_failed] + 1
+  else if status.all <> status_$ok then
+    with u^ do
+      stats.counts[eth_stat_errors] := stats.counts[eth_stat_errors] + 1;
+
+  { a frame for this unit too: loop a copy back }
+  if (eh^.eth.dst = eh^.eth.src.addr) or else pkt.is_broadcast
+     or else ethernet_mcast_listed(eh^.eth.dst, u^.mcast,
+                                   u^.mcast_count) then begin
+    src_va := 0;
+    rpkt := mac_os_$rcv_pkt_t(pkt);
+    hdr_page := pkt_$hdr_ptr_t(rpkt.body & 16#FFFFFC00);
+    net_io_$copy_packet(hdr_page, off + rpkt.body_len, src_va, rpkt.data_pa,
+                        rpkt.data_len, new_hdr, new_pages, st);
+    if st.all = status_$ok then begin
+      rpkt.body := off + new_hdr;
+      rpkt.data_pa := new_pages;
+      demux_flag := false;
+      mac_os_$demux(rpkt, ethernet_port_array[u^.cnum], demux_flag, st);
+      if st.all <> status_$ok then begin
+        netbuf_$rtn_hdr(new_hdr);
+        pkt_$dump_data(new_pages, rpkt.data_len);
+      end;
+    end;
+  end;
+end;
+%else
 procedure ethernet_$send_os(line: integer; var callback_data: pinteger;
                             var pkt: mac_os_$send_pkt_t;
                             out bytes_sent: integer; out status: status_$t);
@@ -172,10 +344,11 @@ begin
   status := st;
   if status.all = status_$eth_transmit_failed then
     with u^ do
-      stats.counts[10] := stats.counts[10] + 1
+      stats.counts[eth_stat_xmit_failed] :=
+        stats.counts[eth_stat_xmit_failed] + 1
   else if status.all <> status_$ok then
     with u^ do
-      stats.counts[7] := stats.counts[7] + 1;
+      stats.counts[eth_stat_errors] := stats.counts[eth_stat_errors] + 1;
 
   { a frame for this unit too: loop a copy back }
   if (eh^.eth.dst = eh^.eth.src.addr) or else pkt.is_broadcast
@@ -198,3 +371,4 @@ begin
     end;
   end;
 end;
+%endif

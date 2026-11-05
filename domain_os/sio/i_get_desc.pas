@@ -4,6 +4,8 @@
     sau2  0x00E667C6  SIO_$I_GET_DESC
     sau3  0x00E67730  SIO_$I_GET_DESC
     sau4  0x0F8702BA  SIO_$I_GET_DESC
+    sau6  0x7806F4DA  SIO_$I_GET_DESC
+    sau7  0x3C479E42  SIO_$I_GET_DESC
 
   - The real line's DTTE entry's SIO descriptor is the result.  A
     fragment of the OS_TERM module (term/os_term.pas), not of SIO.

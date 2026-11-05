@@ -54,8 +54,16 @@ const
   win_cmd_read_params = 8;
 
   { The configuration word WIN_$CINIT writes to probe the controller and
-    WIN_$DINIT stores at +0x300. }
+    WIN_$DINIT stores at +0x300: the turbo boards' controller
+    (`win_vectored_ctlr') takes another. }
+%if win_vectored_ctlr %then
+  win_config_word = 16#1B05;
+
+  { The status word's bit WIN_$INT tests: the controller's interrupt. }
+  win_status_int = 16#800;
+%else
   win_config_word = 16#3D05;
+%endif
 
 type
   { One drive's parameters in the controller's table, 8 bytes from
@@ -135,6 +143,287 @@ type
     pad_2d8: array[1..20] of integer;     { 0x2D8 }
     config: pinteger;                     { 0x300 }
   end;
+%if win6_ct6_board %then
+
+{ ---- The second Winchester and tape controller (`win6_ct6_board',
+  base/config.ins.pas; the WIN6_ driver, beside the descriptor-list
+  one).  The board's 32 KB page holds 250 command blocks (IOPBs) of 32
+  bytes from +0x6000, chained by a link word, of which the driver keeps
+  a free list (WIN6_$GET_IOPBS, WIN6_$RTN_IOPBS), and a mailbox area
+  near its end: the start word takes the offset of a chain's first
+  block, the completion word gives the offset of the chain the
+  controller finished, and two more words report the controller's
+  other two interrupts.  A block the controller rejects comes back
+  with its status bytes set, an error block (EPB).  The cartridge tape
+  driver CT6_ uses the same page and blocks. ---- }
+
+const
+  { 16#80028 "disk subsystem detected a DC powerfail" (stcode.db.10.2),
+    one of the error blocks' statuses. }
+  status_$disk_dc_powerfail = 16#00080028;
+
+  { The command blocks: the last one's number, and the link word of the
+    last block of a chain (a link is the next block's offset from the
+    first block, its number times 32). }
+  win6_last_iopb = 249;
+  win6_iopb_size = 32;
+  win6_end_of_chain = -1;
+
+  { A block's operation byte: read, write, format a track, the drive's
+    parameters, the two drive commands WIN6_$ERROR_QUE gives before a
+    retry (the seek takes the drive's geometry), and a format of the
+    drive (DISK_$FORMAT's request, at the drive's last cylinder).  The
+    seek and the recalibration go to the head of the start queue. }
+  win6_op_read = 16#00;
+  win6_op_write = 16#10;
+  win6_op_format_track = 16#14;
+  win6_op_drive_params = 16#22;
+  win6_op_seek_geometry = 16#40;
+  win6_op_recalibrate = 16#41;
+  win6_op_format = 16#86;
+
+  { A format block's code byte (+0x17). }
+  win6_format_code = 16#37;
+
+  { A block's state word (+0x08), its low bits: handed out, started,
+    done (both); a transfer's options word: the request is
+    checksummed. }
+  win6_state_used = 1;
+  win6_state_started = 2;
+  win6_state_done = 3;
+  win6_opt_chksum = 16#20;
+
+  { An error block's severity: none, recovered, failed, and the
+    controller's answer to a block it did not take. }
+  win6_sev_none = 0;
+  win6_sev_recovered = 1;
+  win6_sev_failed = 2;
+  win6_sev_rejected = 3;
+
+  { An error block's class (the low four bits of its byte at +0x04): the
+    command, the drive, the controller, the bus, the board. }
+  win6_class_command = 0;
+  win6_class_drive = 1;
+  win6_class_ctlr = 2;
+  win6_class_bus = 3;
+  win6_class_board = 4;
+
+  { win6_$epb_status's action: what WIN6_$ERROR_QUE does with the failed
+    request (none, a retry, a correction of the data); WIN6_$ERROR_QUE's
+    own: a retry after a recalibration or after a seek to the drive's
+    geometry, and none set yet. }
+  win6_act_none = 0;
+  win6_act_retry = 1;
+  win6_act_recal = 2;
+  win6_act_seek = 3;
+  win6_act_ecc = 4;
+  win6_act_unset = -1;
+
+  { The controller's initialization status byte once it has run: 0, or
+    16#80. }
+  win6_init_ok = 0;
+  win6_init_ok_2 = 16#80;
+
+  { The start queue's length (RQ, a ring from 1) and the error logs':
+    WIN6_$INT_ERS (LOG_INT_ERROR's words) and WIN6_$EPBS
+    (win6_$epb_status's copies of the error blocks). }
+  win6_rq_size = 128;
+  win6_int_ers_size = 40;
+  win6_epbs_size = 64;
+
+type
+  { An error block's status bytes (+0x04): the severity, the class and
+    the code. }
+  win6_$err_t = packed record
+    sev: 0..3;                            { 0x04 bits 7..6 }
+    unused_54: 0..3;                      { 0x04 bits 5..4 }
+    class: 0..15;                         { 0x04 bits 3..0 }
+    code: win_$byte_t;                    { 0x05 }
+  end;
+
+  { The word at +0x0A: zero, written as two bytes or as the word. }
+  win6_$f0a_t = record
+    case integer of
+      1: (b_0a: win_$byte_t;              { 0x0A }
+          b_0b: win_$byte_t);             { 0x0B }
+      2: (w: integer);                    { 0x0A }
+  end;
+
+  { The operation word (+0x06): the operation byte and the drive. }
+  win6_$opu_t = packed record
+    op: win_$byte_t;                      { 0x06 }
+    unused_72: 0..63;                     { 0x07 bits 7..2 }
+    unit: 0..3;                           { 0x07 bits 1..0 }
+  end;
+
+  { The drive's parameters a win6_op_drive_params block brings back
+    (from +0x14). }
+  win6_$drive_info_t = record
+    unused_00: integer;                   { 0x14 }
+    b_02: win_$byte_t;                    { 0x16 }
+    unused_03: win_$byte_t;               { 0x17 }
+    cyls: integer;                        { 0x18 }
+    heads: win_$byte_t;                   { 0x1A }
+    spt: win_$byte_t;                     { 0x1B }
+    dtype: win_$byte_t;                   { 0x1C }
+    unused_09: win_$byte_t;               { 0x1D }
+    flags: win_$byte_t;                   { 0x1E }
+    b_0b: win_$byte_t;                    { 0x1F }
+  end;
+  win6_$drive_info_ptr_t = ^win6_$drive_info_t;
+
+  { A format block's parameters (+0x10): the track twice and the code. }
+  win6_$format_t = record
+    cyl: pinteger;                        { 0x10 }
+    head: win_$byte_t;                    { 0x12 }
+    zero_13: win_$byte_t;                 { 0x13 }
+    cyl_2: pinteger;                      { 0x14 }
+    head_2: win_$byte_t;                  { 0x16 }
+    code: win_$byte_t;                    { 0x17 }
+    zero_18: integer32;                   { 0x18 }
+  end;
+  win6_$format_ptr_t = ^win6_$format_t;
+
+  { A drive's geometry, 4 bytes: WIN6_$DINIT keeps the cylinder count,
+    the seek block takes the four bytes whole. }
+  win6_$geom_t = record
+    cyls: integer;                        { 0x00 }
+    b_02: win_$byte_t;                    { 0x02 }
+    b_03: win_$byte_t;                    { 0x03 }
+  end;
+
+  win6_$ecc_pattern_t = array[1..4] of win_$byte_t;
+
+  { The board's command and error block, 32 bytes:
+    - 0x00 req: the request it carries (WIN6_$INT follows it back);
+    - 0x04 status: -1 when started; the controller's answer (err);
+    - 0x06 the operation word; 0x08 state: the state bits and the
+      options; 0x0A, 0x0B, 0x0C: zero; 0x0E link;
+    - 0x10..0x1F the operation's parameters: a transfer's disk address,
+      buffer and page addresses; a format's track; a seek's geometry;
+      the drive's parameters (from +0x14); an error block's ECC
+      position (+0x10) and pattern (+0x1C).
+    The longword view (l) is WIN6_$CINIT's, which clears the error
+    blocks. }
+  win6_$iopb_t = record
+    case integer of
+      1: (req: disk_$io_req_ptr_t;        { 0x00 }
+          case integer of
+            1: (status: integer;          { 0x04 }
+                opu: win6_$opu_t;         { 0x06 }
+                state: integer;           { 0x08 }
+                f_0a: win6_$f0a_t;        { 0x0A }
+                w_0c: integer;            { 0x0C }
+                link: integer;            { 0x0E }
+                case integer of
+                  1: (daddr: disk_$daddr_t;   { 0x10 }
+                      phys: integer32;        { 0x14 }
+                      buf: integer32;         { 0x18 }
+                      l_1c: integer32);       { 0x1C }
+                  2: (fmt: win6_$format_t);   { 0x10 }
+                  3: (geom: win6_$geom_t);    { 0x10 }
+                  4: (w_10: integer);         { 0x10 }
+                  5: (l_10: integer32;        { 0x10 }
+                      drive: win6_$drive_info_t);  { 0x14 }
+                  6: (ecc_pos: integer;       { 0x10 }
+                      pad_12: array[1..5] of integer;
+                      ecc_pattern: win6_$ecc_pattern_t));  { 0x1C }
+            2: (err: win6_$err_t));       { 0x04 }
+      2: (l: array[1..8] of integer32);   { 0x00 }
+  end;
+  win6_$iopb_ptr_t = ^win6_$iopb_t;
+
+  { A mailbox flag, bit 0 of its byte (a 1-byte packed record, 2
+    bytes). }
+  win6_$mbox_t = packed record
+    unused_71: 0..127;                    { bits 7..1 }
+    flag: 0..1;                           { bit 0 }
+  end;
+
+  { The board's page, `[device]': the controller reads and writes it,
+    constants are stored as constants (ref 3.15.3).  The fields:
+    - 0x6000 iopbs: the command blocks;
+    - 0x7FB5..0x7FBB: the initialization's parameter bytes (WIN6_$CINIT;
+      WIN6_$DINIT clears bits 0, 2 and 3 of 0x7FB9);
+    - 0x7FBC init_go: 1 starts the initialization; 0x7FBD init_status;
+    - 0x7FC0 start: set while the controller has not taken a start;
+      0x7FC2 start_iopb, the offset of the chain to start;
+    - 0x7FC4 done: a completion waiting; 0x7FC6 done_iopb, its chain's
+      offset;
+    - 0x7FD4 ctlr_int and 0x7FD6 ctlr_status, 0x7FDC async_int and
+      0x7FDE async_status: the controller's other two interrupts.
+    The bytes before the command blocks are the board's buffers. }
+  win6_$page_t = [device] record
+    data: array[0..16#5FFF] of win_$byte_t;   { 0x0000 }
+    iopbs: array[0..win6_last_iopb] of win6_$iopb_t;  { 0x6000 }
+    pad_7f40: array[0..16#74] of win_$byte_t; { 0x7F40 }
+    init_b5: win_$byte_t;                 { 0x7FB5 }
+    init_b6: win_$byte_t;                 { 0x7FB6 }
+    init_b7: win_$byte_t;                 { 0x7FB7 }
+    init_b8: win_$byte_t;                 { 0x7FB8 }
+    init_b9: win_$byte_t;                 { 0x7FB9 }
+    init_ba: win_$byte_t;                 { 0x7FBA }
+    init_bb: win_$byte_t;                 { 0x7FBB }
+    init_go: win_$byte_t;                 { 0x7FBC }
+    init_status: win_$byte_t;             { 0x7FBD }
+    pad_7fbe: integer;                    { 0x7FBE }
+    start: win6_$mbox_t;                  { 0x7FC0 }
+    start_iopb: integer;                  { 0x7FC2 }
+    done: win6_$mbox_t;                   { 0x7FC4 }
+    done_iopb: integer;                   { 0x7FC6 }
+    pad_7fc8: array[1..6] of integer;     { 0x7FC8 }
+    ctlr_int: win6_$mbox_t;               { 0x7FD4 }
+    ctlr_status: integer;                 { 0x7FD6 }
+    pad_7fd8: integer32;                  { 0x7FD8 }
+    async_int: win6_$mbox_t;              { 0x7FDC }
+    async_status: integer;                { 0x7FDE }
+  end;
+  win6_$page_ptr_t = ^win6_$page_t;
+
+  { The error counts of one severity (WIN6_$ERRORS: recovered, failed),
+    140 bytes: a word for each class's codes, from 1. }
+  win6_$err_counts_t = record
+    c0: array[1..7] of pinteger;          { 0x00 }
+    c1: array[1..45] of pinteger;         { 0x0E }
+    c2: array[1..10] of pinteger;         { 0x68 }
+    c3: array[1..7] of pinteger;          { 0x7C }
+    c4: array[1..1] of pinteger;          { 0x8A }
+  end;
+  win6_$errors_t = array[win6_sev_recovered..win6_sev_failed] of
+    win6_$err_counts_t;
+  win6_$epbs_t = array[1..win6_epbs_size] of win6_$iopb_t;
+
+  { A drive's record, 280 bytes (indexed by the drive with a stride of
+    280): the eventcount a parameters block advances; the interrupt
+    watch (set at each completion with its clock, cleared by
+    WIN6_$ERROR_QUE's time-out call); each process's failed request, by
+    its DISK_BPTBL number, whose element 0 is the drive's geometry. }
+  win6_$drive_t = record
+    ec: ec_$eventcount_t;                 { 0x00 }
+    int_seen: boolean;                    { 0x0C }
+    int_time: integer32;                  { 0x0E }
+    case integer of
+      1: (geom: win6_$geom_t);            { 0x12 }
+      2: (failed: array[0..64] of disk_$io_req_ptr_t;  { 0x12 }
+          pad_116: integer);              { 0x116 }
+  end;
+
+  { WIN_$DT: the board's command blocks' address and their address on
+    the bus (the crash dump reads them). }
+  win_$dt_t = record
+    iopbs: integer32;                     { 0x00 }
+    iopbs_bus: integer32;                 { 0x04 }
+  end;
+
+  { The label information WIN6_$DINIT fills. }
+  win6_$pvlabel_info_t = record
+    w_00: pinteger;                       { 0x00 }
+    w_02: pinteger;                       { 0x02 }
+    w_04: pinteger;                       { 0x04 }
+    w_06: pinteger;                       { 0x06 }
+    w_08: pinteger;                       { 0x08 }
+  end;
+%endif
 %elseif win_atbus_ctlr %then
 { ---- The AT bus controller (`win_atbus_ctlr', base/config.ins.pas; the
   WIN8_ driver).  The controller takes a 6-byte command block through
@@ -308,6 +597,7 @@ type
     unused_4a: integer;                   { 0x4A }
   end;
   win_$dcte_ptr_t = ^win_$dcte_t;
+
 %elseif win_ring_disk_ctlr %then
 { ---- The ring/disk board's disk controller (`win_ring_disk_ctlr',
   base/config.ins.pas; the DN400/DN600 family's board, on the DNx60 the
@@ -537,6 +827,315 @@ type
     stats: win_$stats_t;                  { 0x00 }
     unused_16: integer;                   { 0x16 }
   end;
+
+%if win_mailbox_ctlr %then
+{ ---- The mailbox controller (`win_mailbox_ctlr', base/config.ins.pas;
+  the WIN7_ driver, beside the WIN8_ one).  Up to two controllers on
+  the AT bus, each with a block of memory the driver maps into the bus
+  through the I/O map: 62 outgoing and 62 incoming mailboxes, then
+  18 command blocks of 68 bytes (WIN_$CB's mbox and iopb_pa).  The
+  driver builds a command block (WIN_SETUP_IOPB), puts its bus address
+  in the next outgoing mailbox (WIN_SETUP_MAILBOX) and writes the start
+  command with the mailbox's number to the command port
+  (WIN_SEND_COMMAND); the controller interrupts with the number of the
+  incoming mailbox that holds the block's address and its completion
+  code (WIN7_$INT).  A transfer's pages are mapped into a 16 KB window
+  of the I/O map, one of 16 the driver hands out. ---- }
+
+const
+  { The bytes WIN_SEND_COMMAND writes to the command port: the
+    initialization (followed by its parameter bytes, below), the second
+    command WIN7_$DINIT gives after it, the request for an interrupt
+    when an outgoing mailbox is free, and the start of the command
+    block in the outgoing mailbox the low six bits name. }
+  win7_ctl_initialize = 1;
+  win7_ctl_enable = 2;
+  win7_ctl_mbox_free_int = 4;
+  win7_ctl_start = 16#80;
+
+  { The initialization's parameter bytes, between its two leading
+    zeros and the mailbox area's 3-byte bus address: 16#70 and 16#20;
+    and the count of outgoing and of incoming mailboxes after it. }
+  win7_init_param_1 = 16#70;
+  win7_init_param_2 = 16#20;
+  win7_mailboxes = 62;
+
+  { The command blocks' operations (the block's byte 0). }
+  win7_op_read = 16#20;
+  win7_op_write = 16#30;
+  win7_op_format_track = 16#50;
+  win7_op_drive_params = 16#F4;
+  win7_op_format = 16#F5;
+
+  { The status port's bits: the command port ready, a command
+    rejected, the controller initialized.  The interrupt status port:
+    its two high bits are win7_int_mailbox when an incoming mailbox
+    holds a completion (its number in the low six bits), win7_int_free
+    when an outgoing mailbox is free. }
+  win7_status_ready = 16#40;
+  win7_status_rejected = 16#20;
+  win7_status_initialized = 16#10;
+  win7_int_mask = 16#C0;
+  win7_int_mailbox = 16#C0;
+  win7_int_free = 16#80;
+  win7_int_mbox_number = 16#3F;
+
+  { The control port's values: reset the controller; then its
+    interrupt and its DMA on. }
+  win7_ctl_reset = 1;
+  win7_ctl_run = 12;
+
+  { A completion code in an incoming mailbox: done; the codes of a
+    failed block, which go to the failed list for WIN7_$ERROR_QUE. }
+  win7_done = 1;
+  win7_failed_2 = 2;
+  win7_failed_3 = 3;
+  win7_failed_16 = 16;
+  win7_failed_17 = 17;
+  win7_failed_18 = 18;
+
+  { The window pool: 16 windows of 16 KB; win7_buf_index is 17 when
+    all are taken. }
+  win7_windows = 16;
+  win7_window_size = 16384;
+
+  { WIN7_$DINIT's drive identifiers by capacity (the flags it returns). }
+  win7_id_small_7_heads = 16#603;
+  win7_id_small = 16#607;
+  win7_id_200000 = 16#60C;
+  win7_id_400000 = 16#608;
+  win7_id_800000 = 16#609;
+  win7_id_2000000 = 16#60A;
+
+type
+  win7_$iopb_ptr_t = ^win7_$iopb_t;
+
+  { A command block's record of the driver's own, 28 bytes, one per
+    block (win7_infos): the block's bus address; the next and the
+    previous block of the list it is on (WIN_$CB's free, busy and failed
+    lists); the request it serves (its chain's first); its count of
+    pages; the window's bus address (buf); the completion code the
+    interrupt found (status); the block's length in bytes, the
+    mailbox's first byte (length); the drive (unit); whether the block
+    is in a mailbox (in_mbox) and the process that set it up
+    (owner).  A packed record: length and unit are 16-bit fields at odd
+    offsets. }
+  win7_$info_t = packed record
+    phys: integer32;                      { 0x00 }
+    next: win7_$iopb_ptr_t;               { 0x04 }
+    prev: win7_$iopb_ptr_t;               { 0x08 }
+    req: disk_$io_req_ptr_t;              { 0x0C }
+    count: win_$byte_t;                   { 0x10 }
+    unused_11: win_$byte_t;               { 0x11 }
+    buf: integer32;                       { 0x12 }
+    status: win_$byte_t;                  { 0x16 }
+    length: -32768..32767;                { 0x17 }
+    unit: -32768..32767;                  { 0x19 }
+    in_mbox: boolean;                     { 0x1B bit 7 }
+    owner: 0..127;                        { 0x1B bits 6..0 }
+  end;
+  win7_$info_ptr_t = ^win7_$info_t;
+
+  { A command block, 64 bytes the controller reads and writes, and the
+    pointer to the driver's record of it at 0x40.  The bytes:
+    - 0x00 op, the operation (win7_op_...); 0x01..0x04 the controller's
+      completion bytes, cleared before the block is sent: 0x03 the
+      drive's status (stat), 0x04 the error bits (error);
+    - 0x05..0x0B for a transfer or a format: 0x06 the count of sectors
+      (a format track's sectors per track), 0x07 the first sector,
+      0x08..0x09 the cylinder, low byte first, 0x0A the drive and head
+      (16#80 + drive * 16 + head), 0x0B the sectors done (cleared; the
+      controller's count when a transfer failed);
+    - from 0x0C, addr: the data's 3-byte bus address, the high byte
+      first; for a transfer, the headers' addresses follow, 3 bytes each
+      from 0x0F;
+    - for the drive's parameters (win7_op_drive_params), the reply's
+      fields from 0x0B: the cylinders plus one at 0x0D, the heads at
+      0x12, the precompensation cylinder at 0x15, the sectors per track
+      at 0x18; the other fields are cleared before the block is sent. }
+  win7_$iopb_t = packed record
+    case integer of
+      1: (op: win_$byte_t;                { 0x00 }
+          b_01: win_$byte_t;              { 0x01 }
+          b_02: win_$byte_t;              { 0x02 }
+          stat: win_$byte_t;              { 0x03 }
+          error: win_$byte_t;             { 0x04 }
+          b_05: win_$byte_t;              { 0x05 }
+          count: win_$byte_t;             { 0x06 }
+          sector: win_$byte_t;            { 0x07 }
+          cyl_lo: win_$byte_t;            { 0x08 }
+          cyl_hi: win_$byte_t;            { 0x09 }
+          drive_head: win_$byte_t;        { 0x0A }
+          done: win_$byte_t;              { 0x0B }
+          addr: array[0..51] of win_$byte_t;
+                                          { 0x0C: 3-byte addresses }
+          info: win7_$info_ptr_t);        { 0x40 }
+      2: (pad_00: array[0..10] of win_$byte_t;
+                                          { 0x00..0x0A }
+          w_0b: 0..65535;                 { 0x0B }
+          cyls: 0..65535;                 { 0x0D }
+          w_0f: 0..65535;                 { 0x0F }
+          b_11: win_$byte_t;              { 0x11 }
+          heads: win_$byte_t;             { 0x12 }
+          w_13: 0..65535;                 { 0x13 }
+          precomp: 0..65535;              { 0x15 }
+          b_17: win_$byte_t;              { 0x17 }
+          sectors: win_$byte_t;           { 0x18 }
+          w_19: 0..65535;                 { 0x19 }
+          b_1b: win_$byte_t;              { 0x1B }
+          b_1c: win_$byte_t;              { 0x1C }
+          b_1d: win_$byte_t;              { 0x1D }
+          b_1e: win_$byte_t;              { 0x1E }
+          b_1f: win_$byte_t;              { 0x1F }
+          b_20: win_$byte_t;              { 0x20 }
+          b_21: win_$byte_t;              { 0x21 }
+          b_22: win_$byte_t;              { 0x22 }
+          b_23: win_$byte_t;              { 0x23 }
+          b_24: win_$byte_t;              { 0x24 }
+          b_25: win_$byte_t;              { 0x25 }
+          b_26: win_$byte_t;              { 0x26 }
+          b_27: win_$byte_t;              { 0x27 }
+          b_28: win_$byte_t;              { 0x28 }
+          b_29: win_$byte_t;              { 0x29 }
+          b_2a: win_$byte_t;              { 0x2A }
+          w_2b: 0..65535;                 { 0x2B }
+          b_2d: win_$byte_t);             { 0x2D }
+      3: (bytes: array[0..63] of win_$byte_t);
+                                          { 0x00 }
+  end;
+
+  { A mailbox, 4 bytes: the completion code (or 0 when free) and the
+    command block's 3-byte bus address; cleared as a pointer. }
+  win7_$mbox_entry_t = packed record
+    case integer of
+      1: (all: univ_ptr);
+      2: (status: win_$byte_t;            { 0x00 }
+          hi: win_$byte_t;                { 0x01 }
+          mid: win_$byte_t;               { 0x02 }
+          lo: win_$byte_t);               { 0x03 }
+      3: (w: integer32);
+  end;
+
+  { The mailbox area, 496 bytes: the outgoing mailboxes, then the
+    incoming (at 0xF8). }
+  win7_$mbox_t = record
+    case integer of
+      1: (out: array[0..61] of win7_$mbox_entry_t;
+                                          { 0x00 }
+          inb: array[0..61] of win7_$mbox_entry_t);
+                                          { 0xF8 }
+      2: (all: array[0..123] of win7_$mbox_entry_t);
+  end;
+  win7_$mbox_ptr_t = ^win7_$mbox_t;
+
+  { The controller's ports, through WIN_$CB's regs (`[device]'): the
+    command port (written) and the status port (read) at 0x00; the
+    interrupt status (read) and its acknowledgement (written 1) at
+    0x01; the control port at 0x02. }
+  win7_$regs_t = [device] record
+    cmd: win_$byte_t;                     { 0x00 }
+    int: win_$byte_t;                     { 0x01 }
+    ctl: win_$byte_t;                     { 0x02 }
+  end;
+  win7_$regs_ptr_t = ^win7_$regs_t;
+
+  { A drive's record in WIN_$CB, 36 bytes: its statistics (the
+    22-byte record of the WIN8_ driver), the geometry the drive reported
+    (win7_op_drive_params) and whether it has. }
+  win7_$drive_t = record
+    stats: win_$stats_t;                  { 0x00 }
+    heads: pinteger;                      { 0x16 }
+    sectors: pinteger;                    { 0x18 }
+    unused_1a: integer;                   { 0x1A }
+    cyls: pinteger;                       { 0x1C }
+    precomp: pinteger;                    { 0x1E }
+    unused_20: integer;                   { 0x20 }
+    valid: boolean;                       { 0x22 }
+  end;
+  win7_$drive_ptr_t = ^win7_$drive_t;
+
+  { A process's record for a drive: its command blocks in the
+    controller (count), and the flags: member 15 its chain's last block
+    sent, member 14 a block failed. }
+  win7_$proc_unit_t = record
+    count: integer;                       { 0x00 }
+    flags: set of 0..15;                  { 0x02 }
+  end;
+
+  { A controller's record, one of WIN_$CB's two, 640 bytes: the drives;
+    the command blocks' lists (free, busy, failed: done) and the block
+    being set up (cur), under the spin lock; the interrupt's vector word
+    (vector) and the ports' bus address (csr_pa) of the DCTE's request;
+    the ports (regs); the block's bus addresses (map_base, the mailbox
+    area's; iopb_pa, the command blocks'); the mailbox area (mbox); the
+    DCTE's ML lock; the DMA channel; IO_$ACQUIRE's unit; whether the
+    record is set up (initialized); the next outgoing mailbox
+    (mbox_index); and the processes' records (procs), indexed by the
+    process number and the drive.
+
+    The processes' array, as the image indexes it, starts 0x54 bytes
+    into the record, so its records of processes 1 to 5 overlay the
+    fields from cur on. }
+  win7_$ctlr_t = record
+    case integer of
+      1: (drives: array[0..1] of win7_$drive_t;
+                                          { 0x00 }
+          free: win7_$iopb_ptr_t;         { 0x48 }
+          busy: win7_$iopb_ptr_t;         { 0x4C }
+          done: win7_$iopb_ptr_t;         { 0x50 }
+          cur: win7_$iopb_ptr_t;          { 0x54 }
+          spin: integer32;                { 0x58 }
+          vector: integer32;              { 0x5C }
+          regs: win7_$regs_ptr_t;         { 0x60 }
+          csr_pa: integer32;              { 0x64 }
+          map_base: integer32;            { 0x68 }
+          iopb_pa: integer32;             { 0x6C }
+          mbox: win7_$mbox_ptr_t;         { 0x70 }
+          lock: integer;                  { 0x74 }
+          dma_channel: integer;           { 0x76 }
+          unit: io_$unit_num_t;           { 0x78 }
+          initialized: boolean;           { 0x7A }
+          mbox_index: integer);           { 0x7C }
+      2: (unused_00: array[1..21] of integer32;
+                                          { 0x00..0x53 }
+          procs: array[1..64] of array[0..1] of win7_$proc_unit_t;
+                                          { 0x54 }
+          unused_254: array[1..11] of integer32);
+                                          { 0x254..0x27F }
+  end;
+  win7_$ctlr_ptr_t = ^win7_$ctlr_t;
+
+  { A slot of the format's sector table (win7_sg): a zero byte and the
+    sector's number. }
+  win7_$sector_slot_t = record
+    flag: win_$byte_t;                    { 0x00 }
+    sector: win_$byte_t;                  { 0x01 }
+  end;
+
+  { A longword and its bytes, the high one first: how the driver takes
+    an address or a cylinder apart into a command block's bytes. }
+  win7_$bytes_t = packed record
+    case integer of
+      1: (l: integer32);
+      2: (b0: win_$byte_t;
+          b1: win_$byte_t;
+          b2: win_$byte_t;
+          b3: win_$byte_t);
+  end;
+
+  { The start command WIN_SETUP_MAILBOX returns, a longword, and its
+    low word, which WIN7_$DO_IO hands WIN_SEND_COMMAND. }
+  win7_$start_t = record
+    case integer of
+      1: (l: integer32);
+      2: (hi: integer;
+          lo: integer);
+  end;
+
+  { The page lists WIN_SETUP_IOPB hands IOMAP_$MAP and WP_$CALLOC_LIST
+    fills. }
+  win7_$ppn_list_t = array[1..32] of integer32;
+%endif
 %else
 %if win_ring_disk_ctlr %then
   { The ring/disk controller's unit word as WIN_$CINIT stores bit 12:
@@ -620,7 +1219,11 @@ var
   win_$cnt: extern win_$cnt_t;
   win_$fixes: extern integer32;
   win_$restores: extern integer32;
+%if win6_ct6_board %then
+  win_$dt: extern win_$dt_t;
+%else
   win_$dt: extern integer32;
+%endif
   win_$timeout_st: extern pinteger;
 
   { WIN_ECC_BUF (map symbol, in DISK_BUFFERS): the buffer the data of a
@@ -647,6 +1250,86 @@ function seek(in ctlr: pinteger; in dev_unit: pinteger;
 function retry_data_check(in ctlr: pinteger; in dev_unit: pinteger;
                           in retry: integer): integer32;
   extern;
+%if win6_ct6_board %then
+
+var
+  { The WIN6_ driver's map symbols in the map's WIN_ data segment
+    (WIRED_DATA, 0xD54 bytes with the descriptor-list driver's), defined
+    in win/win.pas:
+    - WIN6_$INT_ERS, LOG_INT_ERROR's log of the controller's other
+      interrupts' words, and WIN6_$INT_ERX, its last entry;
+    - WIN6_$EPBS, win6_$epb_status's copies of the error blocks, and
+      WIN6_$EPBX, the last one's number;
+    - WIN6_$ERRORS, the error counts by severity, class and code;
+    - RQ, the start queue of the blocks waiting for the controller, a
+      ring of RQST (its head, the next taken) and RQND (its tail), RQCNT
+      the blocks in it, CTL_BSY true while a start is the controller's;
+    - WIN6_$FIXES, the count of corrected data checks; WIN6_$RETRIES, a
+      failed request's retries (10), WIN6_$FIX_ECCC, whether a data
+      check is corrected (true). }
+  win6_$int_ers: extern array[1..win6_int_ers_size] of integer;
+  win6_$epbs: extern win6_$epbs_t;
+  win6_$errors: extern win6_$errors_t;
+  rq: extern array[1..win6_rq_size] of integer;
+  win6_$fixes: extern integer32;
+  win6_$int_erx: extern integer;
+  win6_$epbx: extern integer;
+  win6_$retries: extern pinteger;
+  rqnd: extern integer;
+  rqst: extern integer;
+  rqcnt: extern integer;
+  win6_$fix_eccc: extern boolean;
+  ctl_bsy: extern boolean;
+
+{ WIN6_$GET_IOPBS - hand out a chain of command blocks. }
+function win6_$get_iopbs(n: integer; out first: integer;
+                         out last: integer): integer32;
+  options(extern, val_param);
+
+{ WIN6_$RTN_IOPBS - give a chain of command blocks back. }
+procedure win6_$rtn_iopbs(n: integer; first: integer; last: integer);
+  options(extern, val_param);
+
+{ WIN6_$GET_ERROR_INFO - copy out the error counts and the error log. }
+procedure win6_$get_error_info(out errors: win6_$errors_t;
+                               out epbx: integer;
+                               out epbs: win6_$epbs_t);
+  extern;
+
+{ WIN6_$INT - the second controller's completion interrupt. }
+function win6_$int(in dcte: dcte_t): boolean;
+  extern;
+
+{ LOG_INT_ERROR - log a word of the controller's other interrupts. }
+procedure log_int_error(in w: integer);
+  extern;
+
+{ WIN6_$ASYNC_INT, WIN6_$CTLR_INT - the controller's other two
+  interrupts. }
+function win6_$async_int(in dcte: dcte_t): boolean;
+  extern;
+function win6_$ctlr_int(in dcte: dcte_t): boolean;
+  extern;
+
+{ WIN6_$DINIT - the unit initialization entry. }
+function win6_$dinit(unit: pinteger; ctlr: pinteger;
+                     var num_blocks: integer32;
+                     out sec_per_track: pinteger; var num_heads: pinteger;
+                     var pvlabel_info: win6_$pvlabel_info_t;
+                     out flags: pinteger): integer32;
+  options(extern, val_param);
+
+{ WIN6_$DO_IO - the driver's I/O entry. }
+procedure win6_$do_io(in vol: disk_$volume_t; var req: disk_$io_req_t;
+                      in param_3: univ integer32; out result: boolean);
+  extern;
+
+{ WIN6_$ERROR_QUE - the error queue entry: retry or finish a process's
+  failed request. }
+procedure win6_$error_que(in vol: disk_$volume_t; is_timeout: integer;
+                          out result: boolean);
+  options(extern, val_param);
+%endif
 %elseif win_atbus_ctlr %then
 var
   { WIN_$CNT (map symbol inside the map's WIN_ data segment, WIRED_DATA,
@@ -657,6 +1340,17 @@ var
   { WIN_PAGE (map symbol, in the BUFFER_PAGES region): the page a
     sector's data is mapped at for WIN_ASM. }
   win_page: extern array[0..1023] of char;
+%if win_mailbox_ctlr %then
+
+  { WIN_$CB (map symbol inside the WIN_ data segment, at +0x5D0),
+    defined in win/win.pas: the two mailbox controllers' records. }
+  win_$cb: extern array[0..1] of win7_$ctlr_t;
+
+  { RAW_BUF (map symbol, the DISK_BUFFERS region's buffer at its +0x10000):
+    the virtual address at which WIN7_$DINIT maps the controllers'
+    mailbox areas and command blocks. }
+  raw_buf: extern array[0..1023] of char;
+%endif
 
 %else
 %if not win_ring_disk_ctlr %then
@@ -745,9 +1439,66 @@ function seek(unit: pinteger; dev_unit: pinteger; in req: disk_$io_req_t;
 
 %if win_atbus_ctlr %then
 { Routine headings, in map order: the map's WIN_ code segment in
-  WIRED_PROC (WIN_$SPIN_DOWN, then the module-local routines, whose
-  headings are in their fragments, then WIN8_$DO_IO .. WIN8_$GET_STATS),
-  WIN_ASM, and WIN_ in OS_INIT_PROC (WIN_$CINIT). }
+  WIRED_PROC (with `win_mailbox_ctlr' the WIN7_ routines first, from
+  WIN7_$DINIT to WIN7_$INT; then WIN_$SPIN_DOWN, the module-local
+  routines, whose headings are in their fragments, and WIN8_$DO_IO ..
+  WIN8_$GET_STATS), WIN_ASM, and WIN_ in OS_INIT_PROC (WIN7_$CINIT with
+  the part, then WIN_$CINIT).  WIN_SETUP_IOPB, WIN_SETUP_MAILBOX and
+  WIN_SEND_COMMAND, map symbols without `$', are globals. }
+
+%if win_mailbox_ctlr %then
+{ WIN7_$DINIT - the unit initialization entry. }
+function win7_$dinit(unit: integer; ctlr: pinteger;
+                     var num_blocks: integer32;
+                     out sec_per_track: pinteger; out num_heads: pinteger;
+                     out pvlabel_info: win_$pvlabel_t;
+                     out flags: pinteger): integer32;
+  options(extern, val_param);
+
+{ WIN_SETUP_IOPB - take a free command block and fill it in for an
+  operation. }
+procedure win_setup_iopb(in op: integer; in iova: integer32;
+                         in unit: integer; in out ctlr: win7_$ctlr_t;
+                         in drive: win7_$drive_t; in count: integer;
+                         in req: disk_$io_req_ptr_t;
+                         in param_8: univ integer32;
+                         out status: status_$t);
+  extern;
+
+{ WIN_SETUP_MAILBOX - put the block being set up in the next outgoing
+  mailbox. }
+procedure win_setup_mailbox(in out ctlr: win7_$ctlr_t;
+                            out start_cmd: integer32;
+                            out status: status_$t);
+  extern;
+
+{ WIN_SEND_COMMAND - write a byte to the controller's command port. }
+procedure win_send_command(in start: boolean; in cmd: integer;
+                           in unit: integer; in out ctlr: win7_$ctlr_t;
+                           out status: status_$t);
+  extern;
+
+{ WIN7_$GET_STATS - the statistics entry. }
+procedure win7_$get_stats(cnum: pinteger; unit: pinteger;
+                          out stats: win_$stats_t);
+  options(extern, val_param);
+
+{ WIN7_$DO_IO - the driver's I/O entry: format a track or the drive,
+  or run a chain of read and write requests. }
+procedure win7_$do_io(in vol: disk_$volume_t; var req: disk_$io_req_t;
+                      in param_3: univ integer32; out result: boolean);
+  extern;
+
+{ WIN7_$ERROR_QUE - the error queue entry: the failed blocks of the
+  current process's requests on a drive. }
+procedure win7_$error_que(in vol: disk_$volume_t; is_timeout: integer;
+                          out result: boolean);
+  options(extern, val_param);
+
+{ WIN7_$INT - the controller's interrupt routine. }
+function win7_$int(in dcte: win_$dcte_t): boolean;
+  extern;
+%endif
 
 { WIN_$SPIN_DOWN - stop the drive's spindle. }
 function win_$spin_down(in unit: pinteger): integer;
@@ -782,7 +1533,7 @@ procedure win8_$get_stats(cnum: integer; unit: pinteger;
   options(extern, val_param);
 
 { WIN_$FILL_CTL_BUF and WIN_$EMPTY_CTL_BUF (WIN_ASM, hand assembly,
-  win/sau8/win_asm.s): move a sector's header (16 words) and data (512
+  win/m68k/win_asm.s): move a sector's header (16 words) and data (512
   words) to and from the controller's data port.  Each argument is a
   pointer, by address: the header's, the data's and the ports' for
   FILL; the ports', the header's and the data's for EMPTY. }
@@ -793,6 +1544,12 @@ procedure win_$empty_ctl_buf(in regs: win_$regs_ptr_t; in hdr: univ_ptr;
                              in data: univ_ptr);
   extern;
 
+%if win_mailbox_ctlr %then
+{ WIN7_$CINIT - a mailbox controller's initialization. }
+function win7_$cinit(var dcte: win_$dcte_t): integer32;
+  extern;
+
+%endif
 { WIN_$CINIT - the Winchester controller's initialization. }
 function win_$cinit(var dcte: win_$dcte_t): integer32;
   extern;

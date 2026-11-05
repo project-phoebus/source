@@ -1,6 +1,7 @@
 { RING_8025_$RCV1 - unit 1's receive process.
 
   Image addresses:
+    sau7  0x3C49A188  RING_8025_$RCV1
     sau8  0x03C8D702  RING_8025_$RCV1
     sau9  0x3C4893FA  RING_8025_$RCV1
 

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau5  0x00E73460  COLOR2_$BUSY_WAIT
+    sau6  0x7807A37A  COLOR2_$BUSY_WAIT
 
   - The DN580's display: until its status has member 14 (done) and not
     member 15 (busy), clearing bit 15 of the word at +0x7008 whenever

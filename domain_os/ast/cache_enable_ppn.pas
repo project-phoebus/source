@@ -1,6 +1,7 @@
 { AST_$CACHE_ENABLE_PPN - resume caching a physical page.
 
   Image addresses:
+    sau7  0x3C408126  AST_$CACHE_ENABLE_PPN
     sau9  0x3C408926  AST_$CACHE_ENABLE_PPN
 
   - Under the PMAP lock: the page's descriptor in its segment's page map

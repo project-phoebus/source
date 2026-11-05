@@ -1,6 +1,7 @@
 { MONO_$REL_DISP - release the display after a request.
 
   Image addresses:
+    sau7  0x3C4843A4  MONO_$REL_DISP
     sau8  0x03C79C50  MONO_$REL_DISP
 
   - The display's lock state is cleared.

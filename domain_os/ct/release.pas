@@ -2,6 +2,8 @@
 { CT_$RELEASE - release the cartridge tape unit.
 
   Image addresses:
+    sau7  0x3C486DF6  ct_scsi_release (nested)
+    sau7  0x3C486EBC  CT_$RELEASE
     sau9  0x3C478310  ct_scsi_release (nested)
     sau9  0x3C4783D6  CT_$RELEASE
 
@@ -10,9 +12,12 @@
     answers are unwired, the SCSI device released and the unit given up.
   - The module's code and data are unwired unless a command is
     outstanding.
-  - Without a drive that is set up, nothing is stored.
-  - The frame holds the QIC-02 arm's dma_status, PBU_$DMA_STOP's status
-    in the SAU7's copy (at -4), which this arm does not use.
+  - Without a drive that is set up, nothing is stored; with the QIC-02
+    driver as well (`ct_qic02') the AT bus adapter's release runs
+    instead (the other arm's), its DMA stopped by PBU_$DMA_STOP
+    (`ct_iomap').
+  - The frame holds the QIC-02 code's dma_status, which the SCSI
+    driver's code does not use.
 
   Status stored:
     status_$ok: the unit was released
@@ -54,7 +59,28 @@ var
 
 begin
   if ct_scsi_state = ct_scsi_present then
-    ct_scsi_release;
+    ct_scsi_release
+%if ct_qic02 %then
+  else begin
+    status_ret.all := ct_check_unit(unit);
+    if status_ret.all = status_$ct_operation_in_progress then begin
+      if mode then begin
+        reset_drive;
+        status_ret.all := ct_wait(960, true);
+        ct_busy := status_ret.all = 0;
+      end;
+      status_ret.all := 0;
+    end;
+    if status_ret.all = 0 then begin
+      discard(pbu_$dma_stop(ct_pbu_unit, ct_dma_channel, dma_status));
+      pbu_$release_int(ct_pbu_unit, 3, status_ret);
+      if not ct_busy then
+        ct_unwire_pages(ct_area_pages, ct_area_flags, ct_area_count);
+      ct_owner := 0;
+    end;
+  end
+%endif
+  ;
 end;
 %elseif ct_atbus_qic02 %then
 { CT_$RELEASE - release the cartridge tape unit.
@@ -103,6 +129,7 @@ end;
   Image addresses:
     sau2  0x00E70AF4  CT_$RELEASE
     sau5  0x00E77AF8  CT_$RELEASE
+    sau6  0x7807EE14  CT_$RELEASE
 
   - With the QIC-02 driver (`ct_qic02'): an operation in progress is no error;
     with mode the controller is reset (960 ticks' wait with quit).

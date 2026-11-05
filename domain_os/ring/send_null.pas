@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E75914  RING_$SEND_NULL
     sau4  0x0F8831B0  RING_$SEND_NULL
+    sau6  0x78083FE0  RING_$SEND_NULL
+    sau7  0x3C48E71E  RING_$SEND_NULL
     sau8  0x03C81F1E  RING_$SEND_NULL
 
   - unit, by address and not read: the SAU4's WIN_$DO_IO, its one

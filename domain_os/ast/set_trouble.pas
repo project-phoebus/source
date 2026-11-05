@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E071EA  AST_$SET_TROUBLE
+    sau7  0x3C407E44  AST_$SET_TROUBLE
     sau9  0x3C408644  AST_$SET_TROUBLE
 
   - Run from DXM_$UNWIRED_Q with the UID AST_$SAVE_CLOBBERED_UID queued:

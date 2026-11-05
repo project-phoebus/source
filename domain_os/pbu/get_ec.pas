@@ -3,6 +3,8 @@
   Image addresses:
     sau3  0x00E590A2  PBU_$GET_EC
     sau5  0x00E59272  PBU_$GET_EC
+    sau6  0x78060F32  PBU_$GET_EC
+    sau7  0x3C4699C0  PBU_$GET_EC
     sau8  0x03C618CE  PBU_$GET_EC
 
   - which 0 is the unit's eventcount (the one its interrupts advance),

@@ -1,6 +1,7 @@
 { AST_$REMOVE_PAGE - take a page out of its segment's page map.
 
   Image addresses:
+    sau7  0x3C407C80  AST_$REMOVE_PAGE
     sau8  0x03C07474  AST_$REMOVE_PAGE
     sau9  0x3C408480  AST_$REMOVE_PAGE
 

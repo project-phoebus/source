@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E3E002  FLP_$CINIT
     sau4  0x0F845FBC  FLP_$CINIT
+    sau7  0x3C44E1A2  FLP_$CINIT
     sau8  0x03C460CA  FLP_$CINIT
 
   - The driver is registered with DISK only after SPECIFY succeeded.
@@ -46,7 +47,7 @@ begin
       flp_b_1f2 := false;
       flp_$motor_on := false;
       dor := 8;
-      for i := 1 to 100 do
+      for i := 1 to flp_reset_hold do
         delay := delay + 1;
       dor := 16#0C;
       dig_in := 0;

@@ -1,6 +1,7 @@
 { ring_$copy_rx - copy a received packet out of the controller.
 
   Image addresses:
+    sau7  0x3C48E58A  ring_$copy_rx (module-local)
     sau8  0x03C81D8A  ring_$copy_rx (module-local)
     sau9  0x3C47D97C  ring_$copy_rx (module-local)
 

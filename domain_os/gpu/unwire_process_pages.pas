@@ -3,6 +3,7 @@
 
   Image addresses:
     sau5  0x00E73902  gpu_$unwire_process_pages (module-local)
+    sau6  0x7807A816  gpu_$unwire_process_pages (module-local)
 
   - The circular list is walked back from its head; each page is
     released by gpu_$unwire_page, told as tell says.

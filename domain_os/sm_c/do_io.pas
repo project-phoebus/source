@@ -4,6 +4,7 @@
     sau3  0x00E6F81E  SM_C_$DO_IO
     sau4  0x0F87C5D2  SM_C_$DO_IO
     sau5  0x00E75386  SM_C_$DO_IO
+    sau6  0x7807C082  SM_C_$DO_IO
 
   - Runs under the controller's ML lock (its DCTE's disk_error_que_hi);
     a format request goes to sm_c_$format, a chain of writes is sorted.

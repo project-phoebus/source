@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E69ADC  TPAD_$SET_PUNCH_IMPACT
     sau4  0x0F8735A2  TPAD_$SET_PUNCH_IMPACT
+    sau6  0x780726FE  TPAD_$SET_PUNCH_IMPACT
+    sau7  0x3C47D076  TPAD_$SET_PUNCH_IMPACT
 
   - The result is the unit's old threshold (0 for a bad unit).
     TPAD_$DATA sends an edge event when a clamped motion reaches the

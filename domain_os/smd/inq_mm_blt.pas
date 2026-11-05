@@ -4,6 +4,7 @@
     sau2  0x00E6EE0C  SMD_$INQ_MM_BLT
     sau4  0x0F879550  SMD_$INQ_MM_BLT
     sau5  0x00E711BC  SMD_$INQ_MM_BLT
+    sau6  0x78078522  SMD_$INQ_MM_BLT
 
   - The result is true with `blt_main_memory' (base/config.ins.pas),
     false otherwise.

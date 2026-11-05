@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E16E94  TIME_$Q_SCAN_QUEUE
     sau4  0x0F81784C  TIME_$Q_SCAN_QUEUE
+    sau6  0x780178E4  TIME_$Q_SCAN_QUEUE
+    sau7  0x3C4188D0  TIME_$Q_SCAN_QUEUE
 
   - Under the queue's spin lock each expired head element is taken off;
     a repeating one is put back at its expiry plus its interval.

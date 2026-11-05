@@ -1,6 +1,7 @@
 { ring_$setup_tx - copy a packet into the controller's transmit area.
 
   Image addresses:
+    sau7  0x3C48E3DE  ring_$setup_tx (module-local)
     sau8  0x03C81BDE  ring_$setup_tx (module-local)
     sau9  0x3C47D7DE  ring_$setup_tx (module-local)
 

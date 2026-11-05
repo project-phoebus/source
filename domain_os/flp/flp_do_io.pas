@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E3DDC6  FLP_DO_IO
     sau4  0x0F845DB0  FLP_DO_IO
+    sau7  0x3C44DDE2  FLP_DO_IO
     sau8  0x03C45D74  FLP_DO_IO
 
   - The controller's ML lock (its DCTE's disk_error_que_hi) is held
@@ -48,6 +49,9 @@ begin
   flp_l_168 := 0;
   flp_$overrun_rec.count := flp_$overrun_rec.count + 1;
   mmu_$install(req.ppn, addr(flp_page), 0, 16#16);
+%if floppy_iomap %then
+  mmu_$cache_inhibit_va(addr(flp_page));
+%endif
   if not locked then
     ml_$lock(flp_ctlr_table[vol.dev_info^.controller].dcte^.lock);
   if flp_hw_addr^.dig_in > 127 then
@@ -81,12 +85,30 @@ begin
         dir := 0
       else
         dir := 1;
+%if floppy_iomap %then
+      { the page into the I/O map region, for the first try }
+      pa := flp_map_base;
+      if done = 0 then begin
+        iomap_$map(3, pa, req.ppn, 0, 1, 0, st);
+        if st.all <> status_$ok then begin
+          status := st.all;
+          goto 20;
+        end;
+      end;
+      dma_$start_ncheck(2, 1024, pa, dir, 0, st);
+      if st.all <> status_$ok then begin
+        status := st.all;
+        iomap_$unmap(3, pa, 1);
+        goto 20;
+      end;
+%else
       pa := lshft(req.ppn, 10);
       dma_$start_ncheck(2, 1024, pa, dir, 0, st);
       if st.all <> status_$ok then begin
         status := st.all;
         goto 20;
       end;
+%endif
       if flp_hw_addr^.dig_in > 127 then
         flp_disk_change[vol.dev_unit] := true;
 
@@ -112,6 +134,10 @@ begin
         else
           flp_rw_cmd[0] := flp_base_cmd + 5;
         status := excs(flp_rw_cmd, 9, vol);
+%if floppy_iomap %then
+        if (status = status_$ok) and (done = 0) then
+          iomap_$unmap(3, pa, 1);
+%endif
       end;
       dma_$stop(2, residue, st);
 

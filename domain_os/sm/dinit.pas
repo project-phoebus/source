@@ -4,6 +4,7 @@
     sau3  0x00E6E0B4  SM_$DINIT
     sau4  0x0F877804  SM_$DINIT
     sau5  0x00E6F40C  SM_$DINIT
+    sau6  0x7807685C  SM_$DINIT
 
   - The driver is wired and the command block mapped first; an
     MMU_$VTOP failure crashes the system.

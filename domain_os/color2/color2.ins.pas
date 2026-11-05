@@ -27,6 +27,13 @@ var
   { COLOR2_$INT_EC (map symbol in COLOR2_ASM's hand-written data): the
     eventcount the board's interrupt advances. }
   color2_$int_ec: extern ec_$eventcount_t;
+%if gpu_own_vectors %then
+
+  { COLOR2_DONE_VEC (the TRAP_PAGE's map symbol, 16#290: vector 16#A4):
+    the board's interrupt vector, which COLOR2_$INT_INIT points at
+    COLOR2_$INT_DECODE. }
+  color2_done_vec: extern univ_ptr;
+%endif
 
   { COLOR3_$CR_CONTENTS (map symbol in SMD's hand-written SMD_WIRED
     data, smd/m68k/wired_data.s): the copy of the DN570's control word

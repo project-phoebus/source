@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0ADB0  MEM_$PARITY_LOG
+    sau7  0x3C40C66C  MEM_$PARITY_LOG
     sau8  0x03C0BC60  MEM_$PARITY_LOG
     sau9  0x3C40CC3C  MEM_$PARITY_LOG
 
@@ -13,6 +14,12 @@
   - With `mem_board_jumpers' the board, 1 to 4, is the one the memory
     configuration from the SIO's input port puts the address's MB above
     the first in, and a page record matches the address's low 24 bits.
+  - With `mem_jumpers_16mb' the memory starts at 16 MB, the
+    configurations' boards are four times as large, and a page record
+    matches the address's low 26 bits; on a board with the physical
+    cache (ROADRUNNER) the board is that of a configuration's first
+    half or second, as the configuration has one or two, and address
+    bit 2 gives the next board.
   - With no record for the page, the first record with the lowest count
     (an empty one, if any) is taken over with a count of 1.
 
@@ -39,6 +46,9 @@ var
   index: integer;
   min_index: integer;
   min_count: integer;
+%if mem_jumpers_16mb %then
+  hi: boolean;
+%endif
 %if mem_board_jumpers %then
   page_id: integer32;
 %elseif not mem_ccr_board_size %then
@@ -63,6 +73,96 @@ begin
     the original's other limits longwords (constants of type integer32,
     an expression of a longword constant) is not known. }
 
+%if mem_jumpers_16mb %then
+  mb := rshft(phys_addr.all - mem_base, 20);
+  config := ord(sio.ipr_opcr) & mem_config_mask;
+  if roadrunner then begin
+    hi := phys_addr.bit2.bit_2;
+    case config of
+      16#14, 16#64:
+        begin
+          if hi then
+            board := 2
+          else
+            board := 1;
+        end;
+      16#60:
+        begin
+          if mb < 8 then
+            board := 1
+          else
+            board := 3;
+          if hi then
+            board := board + 1;
+        end;
+      16#20, 4:
+        begin
+          if mb < 16 then
+            board := 1
+          else
+            board := 3;
+          if hi then
+            board := board + 1;
+        end;
+      otherwise
+        begin
+          board := 1;
+        end;
+    end;
+  end
+  else
+    case config of
+      16#44, 16#54:
+        board := 1;
+      16#60, 16#50, 16#64:
+        if mb < 4 then
+          board := 1
+        else if mb < 8 then
+          board := 2
+        else if mb < 12 then
+          board := 3
+        else
+          board := 4;
+      16#20, 16#30, 16#14:
+        if mb < 8 then
+          board := 1
+        else if mb < 16 then
+          board := 2
+        else if mb < 24 then
+          board := 3
+        else
+          board := 4;
+      16#10, 16#40, 16#70:
+        if mb < 8 then
+          board := 1
+        else if mb < 12 then
+          board := 2
+        else if mb < 16 then
+          board := 3
+        else
+          board := 4;
+      4, 0:
+        if mb < 8 then
+          board := 1
+        else if mb < 16 then
+          board := 2
+        else if mb < 20 then
+          board := 3
+        else
+          board := 4;
+      16#24:
+        if mb < 8 then
+          board := 1
+        else if mb < 16 then
+          board := 2
+        else if mb < 24 then
+          board := 3
+        else
+          board := 4;
+      otherwise
+        board := 1;
+    end;
+%else
   mb := rshft(phys_addr.all - 16#100000, 20);
   config := ord(sio.ipr_opcr) & mem_config_mask;
   case config of
@@ -116,6 +216,7 @@ begin
     otherwise
       board := 1;
   end;
+%endif
 %else
   if phys_addr.all < mem_board_boundary then
     board := mem_board_low
@@ -125,7 +226,9 @@ begin
 
   mem_$mem_rec.board_errors[board] := mem_$mem_rec.board_errors[board] + 1;
 
-%if mem_board_jumpers %then
+%if mem_jumpers_16mb %then
+  page_id := phys_addr.bits26.bits_25_0;
+%elseif mem_board_jumpers %then
   page_id := phys_addr.bits.bits_23_0;
 %elseif not mem_ccr_board_size %then
   page_id := phys_addr.byte_1 & 16#3F;
@@ -137,6 +240,8 @@ begin
       exit;
 %if mem_ccr_board_size %then
     if mem_$mem_rec.page_errors[index].addr.all = phys_addr.all then begin
+%elseif mem_jumpers_16mb %then
+    if mem_$mem_rec.page_errors[index].addr.bits26.bits_25_0 = page_id then begin
 %elseif mem_board_jumpers %then
     if mem_$mem_rec.page_errors[index].addr.bits.bits_23_0 = page_id then begin
 %else

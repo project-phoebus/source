@@ -23,13 +23,24 @@ const
     the vectors 16#90..16#9F and a second range, 16#F0..16#FF, whose
     vectors are moved down by the gap between the ranges
     (sysbus_$first_vector_2 - sysbus_$last_vector) before the first
-    vector is subtracted. }
+    vector is subtracted.  With `sysbus_vectors_88': the same with the
+    vectors 16#88..16#9F and 16#F0..16#F7, so 16#F0 is level 23, as
+    16#9F is; the vector table has 32 levels. }
 %if sysbus_vectors_90 %then
   sysbus_$first_vector = 16#90;
   sysbus_$last_vector = 16#9F;
   sysbus_$first_vector_2 = 16#F0;
   sysbus_$last_vector_2 = 16#FF;
   sysbus_$max_level = 31;
+%elseif sysbus_vectors_88 %then
+  sysbus_$first_vector = 16#88;
+  sysbus_$last_vector = 16#9F;
+  sysbus_$first_vector_2 = 16#F0;
+  sysbus_$last_vector_2 = 16#F7;
+  sysbus_$max_level = 31;
+
+  { The highest entry of SYSBUS_$DUP_VEC (8 entries). }
+  sysbus_$max_dup = 7;
 %else
   sysbus_$first_vector = 16#A0;
   sysbus_$last_vector = 16#AF;
@@ -38,7 +49,8 @@ const
   sysbus_$first_hi_level = 8;
 
 type
-  { A system bus level, 0..15 (0..31 with `sysbus_vectors_90').  The
+  { A system bus level, 0..15 (0..31 with `sysbus_vectors_90' or
+    `sysbus_vectors_88').  The
     SAU9 image compares it with 8 unsigned, the form of a non-negative
     subrange. }
   sysbus_$level_t = 0..sysbus_$max_level;
@@ -51,10 +63,18 @@ type
     options(val_param);
 
   { An entry of SYSBUS_$INT_VEC, 8 bytes: the handler and its argument
-    (the routines index the vector by the level scaled by 8). }
+    (the routines index the vector by the level scaled by 8).  With
+    `sysbus_vectors_88' 12 bytes (scaled by 12): dup_slot is the entry
+    of SYSBUS_$DUP_VEC that holds the level's second handler, which
+    SYSBUS_$DEFINE_INT stores when it gives the level one; the
+    SYSBUS_$DUP_VEC entries are of the same type, their dup_slot
+    unused. }
   sysbus_$int_vec_entry_t = record
     handler: sysbus_$handler_t;           { 0x00 }
     handler_arg: univ_ptr;                { 0x04 }
+%if sysbus_vectors_88 %then
+    dup_slot: integer32;                  { 0x08 }
+%endif
   end;
 
   { A one-byte set (ref 3.15.5): the levels of one of the controller's
@@ -110,6 +130,15 @@ var
     Defined in sysbus/atbus_.pas. }
   sysbus_$int_vec: extern array[0..sysbus_$max_level] of
                      sysbus_$int_vec_entry_t;
+%if sysbus_vectors_88 %then
+
+  { SYSBUS_$DUP_VEC (map symbol, the block's start with
+    `sysbus_vectors_88', before SYSBUS_$INT_VEC): the levels' second
+    handlers and their arguments, taken in turn by SYSBUS_$DEFINE_INT;
+    all zero in the image.  Defined in sysbus/atbus_.pas. }
+  sysbus_$dup_vec: extern array[0..sysbus_$max_dup] of
+                     sysbus_$int_vec_entry_t;
+%endif
 
   { UTIL_PIC and UTIL_PIO: map symbols of the SAU9's I/O definitions,
     another unit's variables. }

@@ -173,16 +173,22 @@ const
     (WIN_DCTE, FLP_DCTE, RING_DCTE, SMD_DCTE_0, SMD_DCTE_1), the SAU3's
     three (RING_DCTE, SMD_DCTE_0, SMD_DCTE_1: no Winchester), the SAU9's
     28 (its kind-2 DCTEs, `named_dctes'), the SAU8's 17 (its nine, with
-    the floppy's, and the display drivers' eight).  Only these six lists
-    are written (TODO(sau) in io/dctes.pas). }
+    the floppy's, and the display drivers' eight), the SAU7's 24 (the
+    SAU8's, the two mailbox Winchesters' and the SCSI adapter's, and the
+    display drivers' twelve), the SAU6's nine (two Ethernets, two tapes,
+    two SMDs, the ring, two Winchesters). }
 %if named_dctes %then
-%if floppy_disk %then
+%if win_mailbox_ctlr %then
+  io_$dev_dctes_last = 24;
+%elseif floppy_disk %then
   io_$dev_dctes_last = 17;
 %else
   io_$dev_dctes_last = 28;
 %endif
 %elseif smd_disk %then
-%if winchester_config %then
+%if win6_ct6_board %then
+  io_$dev_dctes_last = 9;
+%elseif winchester_config %then
   io_$dev_dctes_last = 5;
 %else
   io_$dev_dctes_last = 3;
@@ -293,8 +299,17 @@ type
 
 const
   { The member IO_$ALLOC_MAP tests: with it, the unit's map space
-    reaches 16#100000 (1 MB), without it 16#10000 (64 KB). }
+    reaches 16#100000 (1 MB), without it 16#10000 (64 KB); with
+    `io_atbus_map_windows' an AT bus unit's region ends at 16#A0000
+    with it, at 16#90000 without. }
   io_$attr_wide_iomap = 1;
+%if io_atbus_map_windows %then
+
+  { With `io_atbus_map_windows', member 0: the unit masters the AT bus
+    itself (the SCSI and mailbox Winchester adapters, the 802.5 rings),
+    and IO_$ALLOC_MAP takes its region from the map's first 16#80000. }
+  io_$attr_bus_master = 0;
+%endif
 
 type
   { An I/O map region a unit holds (the SAUs with the PBU): a node of
@@ -630,6 +645,22 @@ type
 function ct_$cinit(var dcte: dcte_t): integer32; extern;
 %if ct_qic02 %then
 function ct_$int(in dcte: dcte_t): boolean; extern;
+%endif
+%endif
+
+%if win6_ct6_board %then
+{ WIN6_$CINIT and CT6_$CINIT: WIN6_DCTE's and CTAPE6_DCTE's csrsytr
+  (io/dctes.pas), the second Winchester and tape controller's drivers'
+  initialization routines.  Only their addresses are used here; their
+  headings are CT_$CINIT's form. }
+function win6_$cinit(var dcte: dcte_t): integer32; extern;
+function ct6_$cinit(var dcte: dcte_t): integer32; extern;
+%if ct_qic02 %then
+
+{ CT6_$INT (ct/ct6_int.pas): the second controller's tape completion
+  interrupt, which CT6_$CINIT defines with the DCTE as its argument;
+  CT_$INT's form. }
+function ct6_$int(in dcte: dcte_t): boolean; extern;
 %endif
 %endif
 

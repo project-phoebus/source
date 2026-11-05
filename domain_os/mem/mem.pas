@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E22930  MEM_ data (WIRED_DATA, 0x5C bytes)
     sau4  0x0F824CB4  MEM_ data (WIRED_DATA, 0x64 bytes)
+    sau6  0x780254A4  MEM_ data (WIRED_DATA, 0x5C bytes)
+    sau7  0x3C427BD8  MEM_ data (WIRED_DATA, 0x5C bytes)
     sau8  0x03C24288  MEM_ data (WIRED_DATA, 0x5C bytes)
     sau9  0x3C4256C0  MEM_ data (WIRED_DATA, 0x5C bytes)
 
@@ -10,13 +12,15 @@
   MEM_ code segment in WIRED_PROC (0xB8 bytes, MEM_$PARITY_LOG; the
   SAU9's 0x104 bytes and the SAU8's 0x250, MEM_$INIT and
   MEM_$PARITY_LOG; the SAU4's 0x214, MEM_$INIT and MEM_$ECCC_LOG, with
-  `ecc_memory' and without `memory_parity') and its
+  `ecc_memory' and without `memory_parity'; the SAU6's 0x198, MEM_$INIT
+  and MEM_$ECCC6_LOG, with `ecc6_memory') and its
   MEM_ data segment in WIRED_DATA (0x5C bytes, MEM_$SIZE and
   MEM_$MEM_REC).  (The MEM_LITES code and data segments are another
   module, not this one.)
 
   The data, 0x5C bytes, zero but for MEM_$MEM_REC's first two words,
-  both 2 (the SAU9's first word 16#2B; the SAU8's second 0); PARITY's
+  both 2 (the SAU9's first word 16#2B; the SAU8's second 0; the SAU7's
+  first 16#2A and second 0; the SAU6's first 3 and second 0); PARITY's
   block follows:
 
     +0x00  MEM_$SIZE     4     the SAU9's MEM_$INIT reads it
@@ -46,6 +50,13 @@ module mem_, wired_proc, wired_data;
 %if mem_ccr_board_size %then
 %include 'mmu/mmu.ins.pas';
 %endif
+%if ecc6_memory %then
+%include 'ml/ml.ins.pas';
+%include 'ec/ec.ins.pas';
+%include 'time/time.ins.pas';
+%include 'log/log.ins.pas';
+%include 'io/io.ins.pas';                   { TESTPAGE }
+%endif
 %if ecc_memory %then
 %include 'ml/ml.ins.pas';
 %include 'ec/ec.ins.pas';
@@ -61,6 +72,9 @@ module mem_, wired_proc, wired_data;
 %include 'time/time.ins.pas';
 %include 'sio/sio.ins.pas';
 %include 'sio2681/sio2681.ins.pas';
+%if mem_jumpers_16mb %then
+%include 'mmu/mmu.ins.pas';                 { ROADRUNNER }
+%endif
 
 var
   { SIO (map symbol of the I/O definitions, without `$'): the 2681
@@ -71,6 +85,11 @@ var
 const
   { The input port's bits that give the memory configuration. }
   mem_config_mask = 16#74;
+%if mem_jumpers_16mb %then
+
+  { The memory's first address. }
+  mem_base = 16#1000000;
+%endif
 %endif
 
 %if mem_ccr_board_size %then
@@ -99,11 +118,14 @@ var
 
 %endif
 define
-%if mem_ccr_board_size or mem_board_jumpers or ecc_memory %then
+%if mem_ccr_board_size or mem_board_jumpers or ecc_memory or ecc6_memory %then
   mem_$init;
 %endif
 %if ecc_memory %then
   mem_$eccc_log;
+%endif
+%if ecc6_memory %then
+  mem_$eccc6_log;
 %endif
 %if memory_parity %then
   mem_$parity_log;
@@ -111,8 +133,12 @@ define
   mem_$size;
 %if ecc_memory %then
   mem_$mem_rec := [w_00 := 1];
+%elseif ecc6_memory %then
+  mem_$mem_rec := [w_00 := 3];
 %elseif mem_ccr_board_size %then
   mem_$mem_rec := [w_00 := 16#2B, n_boards := 2];
+%elseif mem_jumpers_16mb %then
+  mem_$mem_rec := [w_00 := 16#2A];
 %elseif mem_board_jumpers %then
   mem_$mem_rec := [w_00 := 2];
 %else
@@ -120,11 +146,14 @@ define
 %endif
 
 { ---- WIRED_PROC ---- }
-%if mem_ccr_board_size or mem_board_jumpers or ecc_memory %then
+%if mem_ccr_board_size or mem_board_jumpers or ecc_memory or ecc6_memory %then
 %include 'mem/init.pas';                    { MEM_$INIT }
 %endif
 %if ecc_memory %then
 %include 'mem/eccc_log.pas';                { MEM_$ECCC_LOG }
+%endif
+%if ecc6_memory %then
+%include 'mem/eccc6_log.pas';               { MEM_$ECCC6_LOG }
 %endif
 %if memory_parity %then
 %include 'mem/parity_log.pas';              { MEM_$PARITY_LOG }

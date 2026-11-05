@@ -2,6 +2,8 @@
   interrupt level.
 
   Image addresses:
+    sau6  0x7808A9C4  ethernet_demux_int
+    sau7  0x3C494F50  ethernet_demux_int
     sau8  0x03C8874C  ethernet_demux_int
     sau9  0x3C48434C  ethernet_demux_int
 
@@ -15,7 +17,7 @@
   - The result is false when the packet must be seen at process level:
     its channel is the system's (MAC_OS_$DEMUX's).
   - A packet no channel takes, or a full socket's, gives its pages
-    back; a full socket counts in the eighth statistic.
+    back; a full socket counts in the eth_stat_not_delivered count.
 
   Status stored: none.
 }
@@ -79,7 +81,8 @@ begin
       done := false;
     end
     else
-      u^.stats.counts[8] := u^.stats.counts[8] + 1;
+      u^.stats.counts[eth_stat_not_delivered] :=
+        u^.stats.counts[eth_stat_not_delivered] + 1;
     discard(set_sr(old_sr));
   end;
 drop:

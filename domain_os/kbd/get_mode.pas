@@ -2,6 +2,8 @@
 
   Image addresses:
     sau2  0x00E1CA62  kbd_$get_mode (module-local)
+    sau6  0x7801E952  kbd_$get_mode (module-local)
+    sau7  0x3C420C3E  kbd_$get_mode (module-local)
 
   - The result is the key's index in kbd_$mode_table, 0 when the key is
     not there.

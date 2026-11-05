@@ -2,6 +2,8 @@
   socket.
 
   Image addresses:
+    sau6  0x780881C2  ethernet_demux
+    sau7  0x3C49266A  ethernet_demux
     sau8  0x03C85E66  ethernet_demux
     sau9  0x3C481A66  ethernet_demux
 
@@ -12,7 +14,7 @@
     Domain packets.  Another packet goes to the channel whose range has
     its type: a channel the system opened through MAC_OS_$DEMUX (an
     all-ones destination is local), a user channel's socket through
-    SOCK_$PUT (a refusal counted, the eighth count).
+    SOCK_$PUT (a refusal counted, eth_stat_not_delivered).
   - A packet that finds no taker has its pages returned.
 
   Status stored: none.
@@ -81,7 +83,8 @@ begin
       time_$abs_clock(info.src_addr);
       if sock_$put(sock, info, false, 4, u^.cnum) then
         return;
-      u^.stats.counts[8] := u^.stats.counts[8] + 1;
+      u^.stats.counts[eth_stat_not_delivered] :=
+        u^.stats.counts[eth_stat_not_delivered] + 1;
     end;
   end;
 discard:

@@ -1,3 +1,54 @@
+%if scsi_mailbox_ctlr %then
+{ SCSI_$DO_COMMAND_PHYS - start a command on physical pages.
+
+  Image addresses:
+    sau7  0x3C4B8860  SCSI_$DO_COMMAND_PHYS
+
+  - With the mailbox host adapter: the command is posted with the first
+    page's address as the data's (scsi_post_cmd) under
+    scsi_$exclusion_lock, with the device's next command id, which the
+    device keeps when the command was posted.
+
+  Status stored:
+    scsi_get_tinfo's status: the handle is not the caller's
+    status_$scsi_bad_length: len or the pages past scsi_$max_transfer
+    scsi_post_cmd's status: otherwise
+}
+
+procedure scsi_$do_command_phys(in handle: scsi_$handle_t;
+                                in cdb: scsi_$cdb_t;
+                                in pages: scsi_$phys_list_t;
+                                in npages: pinteger;
+                                in len: linteger;
+                                in dir: integer;
+                                out id: integer32;
+                                out status: status_$t);
+var
+  t: scsi_tinfo_ptr_t;
+  st: status_$t;
+  pa: integer32;
+  next: integer32;
+begin
+  t := scsi_get_tinfo(handle.all, status);
+  if status.all <> status_$ok then
+    return;
+  if (len > scsi_$max_transfer)
+     or else (integer32(npages) * 1024 > scsi_$max_transfer) then begin
+    status.all := status_$scsi_bad_length;
+    return;
+  end;
+  st := status;
+  ml_$exclusion_start(scsi_$exclusion_lock);
+  next := t^.next_id + 1;
+  pa := pages[1];
+  scsi_post_cmd(t^, cdb, pa, len, dir, next, st);
+  if st.all = status_$ok then
+    t^.next_id := next;
+  ml_$exclusion_stop(scsi_$exclusion_lock);
+  status := st;
+  id := next;
+end;
+%else
 { SCSI_$DO_COMMAND_PHYS - start a command on physical pages.
 
   Image addresses:
@@ -106,3 +157,4 @@ begin
   end;
   status := st;
 end;
+%endif

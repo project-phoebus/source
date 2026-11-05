@@ -1,6 +1,7 @@
 { AST_$CACHE_INHIBIT_PPN - stop caching a physical page.
 
   Image addresses:
+    sau7  0x3C408096  AST_$CACHE_INHIBIT_PPN
     sau9  0x3C408896  AST_$CACHE_INHIBIT_PPN
 
   - Under the PMAP lock: the page's descriptor in its segment's page map

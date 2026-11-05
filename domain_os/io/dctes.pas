@@ -6,6 +6,8 @@
     sau3  0x00E2B608  DCTES data (WIRED_DATA, 0xD0 bytes)
     sau4  0x0F82F3E0  DCTES data (WIRED_DATA, 0x168 bytes)
     sau5  0x00E2DB28  DCTES data (WIRED_DATA, 0x158 bytes)
+    sau6  0x78030BC4  DCTES data (WIRED_DATA, 0x268 bytes)
+    sau7  0x3C433850  DCTES data (WIRED_DATA, 0x3A4 bytes)
     sau8  0x03C2ED18  DCTES data (WIRED_DATA, 0x2A4 bytes)
     sau9  0x3C430FB4  DCTES data (WIRED_DATA, 0x774 bytes)
 
@@ -44,23 +46,32 @@
   and after them the display drivers' DCTEs, which their own data
   segments hold (`color4_driver', `color5_driver', `mono_driver').
 
+  The SAU7's are the SAU8's and three more: WIN7_DCTE_1 and WIN7_DCTE_0
+  (`win_mailbox_ctlr'), the mailbox Winchester controllers' of kind 3,
+  their requests' attributes bit 0 set, before WIN8_DCTE, and
+  SCSI7_DCTE (`scsi_mailbox_ctlr'), the SCSI host adapter's of kind 2,
+  unnamed, with its I/O descriptor, after it.  DEV_DCTES lists
+  SCSI7_DCTE, WIN8_DCTE, WIN7_DCTE_0 and WIN7_DCTE_1 first, then the
+  SAU8's from FLP_DCTE, and among the display drivers' DCTEs COLOR6's
+  three units' first (`color6_driver') and COLOR7's last
+  (`color7_driver').  The SAU9's DCTEs of the SCSI targets and its
+  SCSI bus's are the NCR 53C90 driver's, not the mailbox adapter's.
+
   RING_DCTE's vector is 16#1B on the SAU2 and SAU3 (SYSBUS_$INIT
   installs it), 0 on the SAU5, 16#90 on the SAU4 (`sysbus_vectors_90',
-  WIN_DCTE's too).  The DCTEs are static_dcte_t, dcte_t with a univ_ptr init
+  WIN_DCTE's too), 16#88 on the SAU6 (`sysbus_vectors_88': WIN_DCTE's
+  and CTAPE_DCTE's 16#8C, WIN6_DCTE's and CTAPE6_DCTE's 16#90, the
+  Ethernets' 16#F5 and 16#F6).
+
+  The SAU6's are kind 1, nine of them: two Ethernets (`ethernet_driver'
+  without `named_dctes', their register pages ETHERNET1 and ETHERNET2),
+  CTAPE6_DCTE and WIN6_DCTE (`win6_ct6_board', the WIN6 page), and the
+  SAU5's CTAPE_DCTE, SMD_DCTE_1, SMD_DCTE_0, RING_DCTE and WIN_DCTE.  The DCTEs are static_dcte_t, dcte_t with a univ_ptr init
   routine: dpc refuses the routines' `addr' as dcte_t's routine pointer.
 
   Check: tools/pascal_check.sh.
 }
 
-{ TODO(sau) the DCTES blocks of the SAUs not translated
-
-  Only the SAU2's, SAU3's, SAU4's, SAU5's, SAU8's and SAU9's blocks are
-  written.  The others differ beyond the parts used here: the SAU6's
-  RING_DCTE vector (16#88), the SAU6's Ethernet and second
-  Winchester and tape DCTEs, the SAU7's kind-2 and kind-3 DCTEs (0x3A4
-  bytes: the SAU8's forms, with WIN7_DCTE_1, WIN7_DCTE_0 and SCSI7_DCTE
-  more).  io_$dev_dctes_last (io/io.ins.pas) is chosen for the written
-  lists only. }
 module dctes, , wired_data;
 
 %include 'base/base.ins.pas';
@@ -96,8 +107,10 @@ module dctes, , wired_data;
 %include 'sm_c/sm_c.ins.pas';                 { SM_C_$CINIT }
 %include 'ring/ring.ins.pas';
 %include 'ring/ring_driver.ins.pas';
-%if named_dctes %then
+%if named_dctes or ethernet_driver %then
 %include 'ethernet/ethernet.ins.pas';
+%endif
+%if named_dctes %then
 %include 'timer/timer.ins.pas';
 %endif
 
@@ -168,6 +181,9 @@ function win_scsi_$cinit(var dcte: dcte_t): integer32; extern;
 %if sio16550_lines %then
 function sio16550_$init(var dcte: dcte_t): integer32; extern;
 %endif
+%if scsi_mailbox_ctlr %then
+function scsi_$cinit(var dcte: dcte_t): integer32; extern;
+%endif
 
 var
   { The units' I/O descriptors (map symbols of IO_DESC,
@@ -181,7 +197,9 @@ var
 %if ring8_controller %then
   ring2_io_desc, ring1_io_desc: extern char;
 %endif
-%if scsi_driver %then
+%if scsi_mailbox_ctlr %then
+  scsi_io_desc: extern char;
+%elseif scsi_driver %then
   scsi9_io_desc: extern char;
 %endif
 %if sio16550_lines %then
@@ -196,13 +214,19 @@ var
 %if floppy_disk %then
   flop: extern char;
 %endif
+%if win_mailbox_ctlr %then
+  win2: extern char;
+%endif
 %if winchester_ctlr %then
   win: extern char;
 %endif
 
   { The display drivers' DCTEs (map symbols of their own data segments,
-    COLOR4_DCTE, COLOR5_DCTE, MONO_DCTE), which DEV_DCTES lists.  Only
-    their addresses are used. }
+    COLOR6_DCTE, COLOR4_DCTE, COLOR5_DCTE, MONO_DCTE, COLOR7_DCTE), which
+    DEV_DCTES lists.  Only their addresses are used. }
+%if color6_driver %then
+  color6_$unit_1, color6_$unit_2, color6_$unit_3: extern char;
+%endif
 %if color4_driver %then
   color4_$unit_2, color4_$unit_1: extern char;
 %endif
@@ -212,6 +236,9 @@ var
 %if mono_driver %then
   mono_$unit_big1, mono_$unit_small1, mono_$unit_small1a,
     mono_$unit_small2: extern char;
+%endif
+%if color7_driver %then
+  color7_$dcte: extern char;
 %endif
 
 { The module's objects, every one a map symbol defined here (ref 7.2.1,
@@ -291,8 +318,29 @@ var
      nextp := nil, csrsytr := addr(ct_$cinit),
      disk_dinit := addr(tape_io_desc), disk_error_que := 16#00010000];
 %endif
+%if win_mailbox_ctlr %then
+  win7_dcte_1: define static_dcte3_t :=   { +0x210 on the SAU7 }
+    [kind := 3, length := 76, ctype := io_ctype_win, cnum := 1,
+     nextp := nil, csrsytr := addr(win7_$cinit),
+     int := [id := [vector := 16#F], has_int := true],
+     csr_va := addr(win2), csr_pa := 16#1A8, csr_pages := 1,
+     has_csr := true, tag := 2, bus := io_$bus_atbus, attrs := [0],
+     disk_error_que := 16#00170000];
+  pad_win7_1: integer32;                  { +0x25C on the SAU7: as
+                                            pad_flp }
+  win7_dcte_0: define static_dcte3_t :=   { +0x260 on the SAU7 }
+    [kind := 3, length := 76, ctype := io_ctype_win, cnum := 0,
+     nextp := nil, csrsytr := addr(win7_$cinit),
+     int := [id := [vector := 16#E], has_int := true],
+     csr_va := addr(win), csr_pa := 16#1A0, csr_pages := 1,
+     has_csr := true, tag := 2, bus := io_$bus_atbus, attrs := [0],
+     disk_error_que := 16#00170000];
+  pad_win7_0: integer32;                  { +0x2AC on the SAU7: as
+                                            pad_flp }
+%endif
 %if winchester_ctlr %then
-  win8_dcte: define static_dcte3_t :=     { +0x210 on the SAU8 }
+  win8_dcte: define static_dcte3_t :=     { +0x210 on the SAU8; +0x2B0
+                                            on the SAU7 }
     [kind := 3, length := 76, ctype := io_ctype_win, cnum := 0,
      nextp := nil, csrsytr := addr(win_$cinit),
      int := [id := [vector := 16#E], has_int := true],
@@ -300,7 +348,15 @@ var
      has_csr := true, tag := 2, bus := io_$bus_atbus,
      disk_error_que := 16#00170000];
 %endif
-%if ct_scsi %then
+%if scsi_mailbox_ctlr %then
+  pad_win8: integer32;                    { +0x2FC on the SAU7: as
+                                            pad_flp }
+  scsi7_dcte: define static_dcte_t :=     { +0x300 on the SAU7 }
+    [kind := 2, length := 64, ctype := io_ctype_none, cnum := 0,
+     nextp := nil, csrsytr := addr(scsi_$cinit),
+     disk_dinit := addr(scsi_io_desc)];
+%endif
+%if ct_scsi and not scsi_mailbox_ctlr %then
   scsi_ctape_dcte_7: define static_dcte_t := { +0x180 }
     [kind := 2, length := 64, ctype := io_ctype_ctape, cnum := 7,
      nextp := nil, csrsytr := addr(ct_$cinit),
@@ -408,7 +464,7 @@ var
                      ' ', chr(0), chr(0), chr(0), chr(0), chr(0)],
      disk_error_que := 16#00170000];
 %endif
-%if scsi_driver %then
+%if scsi_driver and not scsi_mailbox_ctlr %then
   scsi9_dcte: define static_dcte_t :=     { +0x580 }
     [kind := 2, length := 64, ctype := io_ctype_none, cnum := 0,
      nextp := nil, csrsytr := addr(scsi_$init),
@@ -464,7 +520,7 @@ define
 %if timer_dcte %then
                 addr(timer_dcte),
 %endif
-%if scsi_driver %then
+%if scsi_driver and not scsi_mailbox_ctlr %then
                 addr(scsi9_dcte),
 %endif
 %if win_scsi_disk %then
@@ -477,7 +533,7 @@ define
                 addr(win_scsi_dcte_1),
                 addr(win_scsi_dcte_0),
 %endif
-%if ct_scsi %then
+%if ct_scsi and not scsi_mailbox_ctlr %then
                 addr(scsi_ctape_dcte_0),
                 addr(scsi_ctape_dcte_1),
                 addr(scsi_ctape_dcte_2),
@@ -487,8 +543,15 @@ define
                 addr(scsi_ctape_dcte_6),
                 addr(scsi_ctape_dcte_7),
 %endif
+%if scsi_mailbox_ctlr %then
+                addr(scsi7_dcte),
+%endif
 %if winchester_ctlr %then
                 addr(win8_dcte),
+%endif
+%if win_mailbox_ctlr %then
+                addr(win7_dcte_0),
+                addr(win7_dcte_1),
 %endif
 %if floppy_disk %then
                 addr(flp_dcte),
@@ -508,6 +571,11 @@ define
                 addr(ring_8025_dcte_0),
                 addr(ring_8025_dcte_1),
 %endif
+%if color6_driver %then
+                addr(color6_$unit_1),
+                addr(color6_$unit_2),
+                addr(color6_$unit_3),
+%endif
 %if color4_driver %then
                 addr(color4_$unit_1),
                 addr(color4_$unit_2),
@@ -522,8 +590,12 @@ define
                 addr(mono_$unit_small1a),
                 addr(mono_$unit_small2),
 %endif
+%if color7_driver %then
+                addr(color7_$dcte),
+%endif
                 nil];
-                                          { +0x700; +0x25C on the SAU8 }
+                                          { +0x700; +0x25C on the SAU8;
+                                            +0x340 on the SAU7 }
 %else
 var
   { The I/O pages the DCTEs name (map symbols of IODEFS,
@@ -543,17 +615,45 @@ var
 %if ct_qic02 %then
   tape: extern char;
 %endif
+%if ethernet_driver %then
+  ethernet2, ethernet1: extern char;
+%endif
+%if win6_ct6_board %then
+  tape6: extern char;
+  win6: extern char;
+%endif
 
 { The module's objects, every one a map symbol defined here (ref 7.2.1,
   Method 1, and 7.2.2, Method 2, for DEV_DCTES, declared extern in
   io/io.ins.pas), in the order of the block. }
 var
+%if ethernet_driver %then
+  eth_dcte_1: define static_dcte_t :=     { +0x00 on the SAU6 }
+    [kind := 1, length := 64, ctype := io_ctype_ethernet, cnum := 0,
+     nextp := nil, csrsytr := addr(ethernet_$init),
+     disk_dinit := addr(ethernet2), disk_error_que := 16#001700F6];
+  eth_dcte_0: define static_dcte_t :=     { +0x40 on the SAU6 }
+    [kind := 1, length := 64, ctype := io_ctype_ethernet, cnum := 0,
+     nextp := nil, csrsytr := addr(ethernet_$init),
+     disk_dinit := addr(ethernet1), disk_error_que := 16#001700F5];
+%endif
+%if win6_ct6_board %then
+  ctape6_dcte: define static_dcte_t :=    { +0x80 on the SAU6 }
+    [kind := 1, length := 64, ctype := io_ctype_ctape, cnum := 0,
+     nextp := nil, csrsytr := addr(ct6_$cinit),
+     disk_dinit := addr(tape6), disk_error_que := 16#00170090];
+%endif
 %if ct_qic02 %then
-  ctape_dcte: define static_dcte_t :=     { +0x00 on the SAU5 }
+  ctape_dcte: define static_dcte_t :=     { +0x00 on the SAU5; +0xC0 on
+                                            the SAU6 }
     [kind := 1, length := 64, ctype := io_ctype_ctape, cnum := 0,
      nextp := nil, csrsytr := addr(ct_$cinit),
      disk_dinit := addr(tape), disk_do_io := addr(ct_$int),
+%if sysbus_vectors_88 %then
+     disk_error_que := 16#0017008C];
+%else
      disk_error_que := 16#00170000];
+%endif
 %endif
 %if smd_disk %then
   smd_dcte_1: define static_dcte_t :=     { +0x40 on the SAU5; +0x00 on
@@ -580,6 +680,8 @@ var
 %endif
 %if sysbus_vectors_90 %then
      disk_error_que := 16#00180090];
+%elseif sysbus_vectors_88 %then
+     disk_error_que := 16#00180088];
 %elseif sysbus_routines %then
      disk_error_que := 16#0018001B];
 %else
@@ -604,13 +706,22 @@ var
      disk_dinit := addr(disk), disk_do_io := addr(flp_$int),
      disk_error_que := 16#00170000];
 %endif
+%if win6_ct6_board %then
+  win6_dcte: define static_dcte_t :=      { +0x1C0 on the SAU6 }
+    [kind := 1, length := 64, ctype := io_ctype_win, cnum := 0,
+     nextp := nil, csrsytr := addr(win6_$cinit),
+     disk_dinit := addr(win6), disk_error_que := 16#00170090];
+%endif
 %if winchester_config %then
-  win_dcte: define static_dcte_t :=       { +0x80; +0x100 on the SAU5 }
+  win_dcte: define static_dcte_t :=       { +0x80; +0x100 on the SAU5;
+                                            +0x200 on the SAU6 }
     [kind := 1, length := 64, ctype := io_ctype_win, cnum := 0,
      nextp := nil, csrsytr := addr(win_$cinit),
      disk_dinit := addr(win), disk_do_io := addr(win_$int),
 %if sysbus_vectors_90 %then
      disk_error_que := 16#00170090];
+%elseif sysbus_vectors_88 %then
+     disk_error_que := 16#0017008C];
 %else
      disk_error_que := 16#00170000];
 %endif
@@ -622,6 +733,9 @@ define
 %if winchester_config %then
                 addr(win_dcte),
 %endif
+%if win6_ct6_board %then
+                addr(win6_dcte),
+%endif
 %if floppy_disk %then
                 addr(flp_dcte),
 %endif
@@ -631,6 +745,12 @@ define
 %endif
 %if ct_qic02 %then
                 addr(ctape_dcte),
+%endif
+%if win6_ct6_board %then
+                addr(ctape6_dcte),
+%endif
+%if ethernet_driver %then
+                addr(eth_dcte_0), addr(eth_dcte_1),
 %endif
                 nil];
                                           { +0xC0; +0x140 on the SAU5;

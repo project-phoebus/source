@@ -2,6 +2,7 @@
 { RESET_DRIVE - reset the tape adapter.
 
   Image addresses:
+    sau7  0x3C485966  RESET_DRIVE
     sau8  0x03C7A59E  RESET_DRIVE
 
   - With the AT bus adapter (`ct_atbus_qic02'): its DMA is reset and
@@ -36,6 +37,7 @@ end;
 
   Image addresses:
     sau5  0x00E771B2  RESET_DRIVE
+    sau6  0x7807DF42  RESET_DRIVE
 
   - Up to three tries of the reset command and a 480-tick wait (no
     quit); success or a warning ends it, as does "controller timeout".

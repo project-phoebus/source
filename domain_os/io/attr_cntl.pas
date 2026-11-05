@@ -4,6 +4,8 @@
     sau3  0x00E19A72  IO_$ATTR_CNTL
     sau4  0x0F81B62A  IO_$ATTR_CNTL
     sau5  0x00E1AD22  IO_$ATTR_CNTL
+    sau6  0x7801C2C8  IO_$ATTR_CNTL
+    sau7  0x3C41E52C  IO_$ATTR_CNTL
     sau8  0x03C1BB48  IO_$ATTR_CNTL
 
   - The slot's attributes go into old_attrs and are replaced by

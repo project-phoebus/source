@@ -4,6 +4,8 @@
     sau2  0x00E6EFF0  SMD_$DM_COND_EVENT_WAIT
     sau4  0x0F879734  SMD_$DM_COND_EVENT_WAIT
     sau5  0x00E713A0  SMD_$DM_COND_EVENT_WAIT
+    sau6  0x780786FC  SMD_$DM_COND_EVENT_WAIT
+    sau7  0x3C4820D0  SMD_$DM_COND_EVENT_WAIT
     sau9  0x3C4757F0  SMD_$DM_COND_EVENT_WAIT
 
   - Never waits: the first event found is returned.  In order: a borrow

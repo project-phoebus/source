@@ -3,6 +3,8 @@
   Image addresses:
     sau3  0x00E5A054  PBU_$READ_CSR
     sau5  0x00E5A500  PBU_$READ_CSR
+    sau6  0x78062154  PBU_$READ_CSR
+    sau7  0x3C46ACF0  PBU_$READ_CSR
     sau8  0x03C629E8  PBU_$READ_CSR
 
   - The CSR is passed by address, and its address is the one read: a

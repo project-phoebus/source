@@ -1,6 +1,7 @@
 { RING_8025_$PROC2_CLEANUP - close every channel an address space holds.
 
   Image addresses:
+    sau7  0x3C4998AC  RING_8025_$PROC2_CLEANUP
     sau8  0x03C8CE78  RING_8025_$PROC2_CLEANUP
     sau9  0x3C488A7C  RING_8025_$PROC2_CLEANUP
 

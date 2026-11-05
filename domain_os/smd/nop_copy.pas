@@ -1,6 +1,7 @@
 { SMD_$NOP_COPY - the default for a device's font copy into hidden memory.
 
   Image addresses:
+    sau7  0x3C421A0E  SMD_$NOP_COPY
     sau9  0x3C420126  SMD_$NOP_COPY
 
   - Succeeds and returns 0; the font is not read.

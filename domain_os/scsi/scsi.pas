@@ -2,6 +2,8 @@
 
   Image addresses:
     sau2  0x00E88804  SCSI_ data (SCSI_WIRED_DATA, 0x4 bytes)
+    sau7  0x3C4B97F4  SCSI_ data (SCSI_WIRED_DATA, 0x6B8 bytes)
+    sau7  0x3C4412EC  SCSI_ data (OS_INIT_DATA, 0x4 bytes)
     sau9  0x3C4A7240  SCSI_ data (SCSI_WIRED_DATA, 0x374 bytes)
     sau9  0x3C43CF9C  SCSI_ data (OS_INIT_DATA, 0x4 bytes)
 
@@ -18,7 +20,17 @@
   SCSI_WIRED_DATA (0x374 bytes) and a 4-byte block in OS_INIT_DATA (zero,
   never addressed; the OS_INIT_PROC routines' A5 is its end).  The
   SCSI_ASM segments, SCSI_$HP_WRITE and SCSI_$HP_READ, are hand assembly
-  (scsi/sau9/scsi_asm.s).  See the TODO(sau) below.
+  (scsi/sau9/scsi_asm.s).
+
+  With the mailbox host adapter (`scsi_mailbox_ctlr'), on the SAU7: the
+  map's SCSI_ code segment in OS_INIT_PROC (0x4B4 bytes: SCSI_$CINIT and
+  scsi_init_ppn_owners), SCSI_WIRED_PROC (0x17F4 bytes: eleven
+  module-local routines, SCSI_$ABORT_OPERATION, a twelfth,
+  SCSI_$DO_COMMAND_PHYS .. SCSI_$SETUP with SCSI_$INT, three more, and
+  SCSI_$UNWIRE .. SCSI_$DO_SYS_DEVICE_CMD), its data segment in
+  SCSI_WIRED_DATA (0x6B8 bytes, below) and the 4-byte block in
+  OS_INIT_DATA.  SCSI_$CINIT is the controller's DCTE's init routine;
+  there is no SCSI_$INIT and no SCSI_ASM.
 
   The heading names SCSI_WIRED_PROC and SCSI_WIRED_DATA (the LOG
   shape); the OS_INIT_PROC routines are headed `[section(os_init_proc,
@@ -42,6 +54,22 @@
     +0x36E  scsi_wired           the module's pages are wired
     +0x370  scsi_$present
     +0x371  (3 bytes of rounding)
+
+  With the mailbox host adapter the data block (zero but the string):
+
+    +0x000  scsi_$tinfo_list     the devices, 8 of 72 bytes
+    +0x240  scsi_$cb             the bus, 1072 bytes
+    +0x670  scsi_wired_pages     the module's wired pages, 11
+    +0x69C  scsi_lock            ML_$SPIN_LOCK's lock
+    +0x6A0  scsi_$spurious_ints
+    +0x6A4  scsi_cnts
+    +0x6A6  scsi_open_count      the devices set up
+    +0x6A8  scsi_wired_count     the module's wired pages' count
+    +0x6AA  unused_6aa           2 bytes nothing addresses (a stand-in)
+    +0x6AC  scsi_wired           the module's pages are wired
+    +0x6AE  scsi_$present
+    +0x6B0  unused_6b0           'apollo', which nothing addresses
+    +0x6B6  (2 bytes of rounding)
 
   The routines live in one fragment file each (scsi/<name>.pas), in
   image order within each section.
@@ -73,17 +101,12 @@ module scsi_, scsi_wired_proc, scsi_wired_data;
 %include 'os/os.ins.pas';
 %endif
 %include 'scsi/scsi.ins.pas';
-%if scsi_driver %then
+%if scsi_mailbox_ctlr %then
+%include 'iomap/iomap.ins.pas';
+%include 'dma/dma.ins.pas';
+%include 'scsi/scsi_mbox.ins.pas';
+%elseif scsi_driver %then
 %include 'scsi/scsi_c90.ins.pas';
-
-{ TODO(sau) the SAU7 SCSI code
-
-  The module's code below is the SAU9's, the 53C90 driver.  The SAU7's
-  SCSI_ module (code 0x1CA8 bytes in SCSI_WIRED_PROC, 0x6B8 bytes of
-  data) drives another controller (the map's SCSI_MAILBOXES and
-  SCSI_SCBS regions, SCSI_$INT and SCSI_$TINFO_LIST): tools/sau_catalog.py
-  finds every routine the two share different.  The SAU7 needs its own
-  part and form when it is translated. }
 %endif
 
 { The global routines and variables this module defines (ref 7.3.4 and
@@ -92,7 +115,39 @@ module scsi_, scsi_wired_proc, scsi_wired_data;
 define
   scsi_$cinit;
   scsi_$free_asid;
-%if scsi_driver %then
+%if scsi_mailbox_ctlr %then
+  scsi_$abort_operation;
+  scsi_$do_command_phys;
+  scsi_$do_command;
+  scsi_$set_sys_device;
+  scsi_$get_ec;
+  scsi_$get_info;
+  scsi_$int;
+  scsi_$release;
+  scsi_$reset_device;
+  scsi_$setup;
+  scsi_$unwire;
+  scsi_$wait;
+  scsi_$wire;
+  scsi_$do_sys_device_cmd;
+  scsi_$tinfo_list;                             { +0x000 }
+  scsi_$cb;                                     { +0x240 }
+var
+  scsi_wired_pages: array[1..11] of integer32;  { +0x670 }
+  scsi_lock: integer32;                         { +0x69C }
+define
+  scsi_$spurious_ints;                          { +0x6A0 }
+  scsi_cnts;                                    { +0x6A4 }
+var
+  scsi_open_count: integer;                     { +0x6A6 }
+  scsi_wired_count: integer;                    { +0x6A8 }
+  unused_6aa: integer;                          { +0x6AA: stand-in }
+  scsi_wired: boolean;                          { +0x6AC }
+define
+  scsi_$present;                                { +0x6AE }
+var
+  unused_6b0: array[1..6] of char := 'apollo';  { +0x6B0 }
+%elseif scsi_driver %then
   scsi_$init;
   scsi_$abort_operation;
   scsi_$do_command_phys;
@@ -131,10 +186,60 @@ var
   scsi_open_count: integer;                     { +0x36A }
   scsi_wired_count: integer;                    { +0x36C }
   scsi_wired: boolean;                          { +0x36E }
-%endif
 define
   scsi_$present;                                { +0x370 }
+%else
+define
+  scsi_$present;                                { +0x000 }
+%endif
 
+%if scsi_mailbox_ctlr %then
+{ The module-local routines called before their bodies. }
+{ body: scsi/init_ppn_owners.pas }
+procedure scsi_init_ppn_owners; forward; internal;
+{ body: scsi/wait_cmd_ready.pas }
+function scsi_wait_cmd_ready(var cb: scsi_mb_cb_t): boolean;
+  forward; internal;
+{ body: scsi/unwire_all.pas }
+procedure scsi_unwire_all(dev: integer); forward; internal;
+
+{ ---- OS_INIT_PROC ---- }
+%include 'scsi/cinit.pas';                  { SCSI_$CINIT        }
+%include 'scsi/init_ppn_owners.pas';        { scsi_init_ppn_owners }
+
+{ ---- SCSI_WIRED_PROC ---- }
+%include 'scsi/va_to_ppn.pas';              { scsi_va_to_ppn (at the
+                                              map's SCSI_$PROC_START) }
+%include 'scsi/get_tinfo.pas';              { scsi_get_tinfo     }
+%include 'scsi/get_slot.pas';               { scsi_get_slot      }
+%include 'scsi/map_vue.pas';                { scsi_map_vue       }
+%include 'scsi/wait_cmd_ready.pas';         { scsi_wait_cmd_ready }
+%include 'scsi/send_reset.pas';             { scsi_send_reset    }
+%include 'scsi/wire_driver.pas';            { scsi_wire_driver   }
+%include 'scsi/unwire_driver.pas';          { scsi_unwire_driver }
+%include 'scsi/alloc_iova.pas';             { scsi_alloc_iova    }
+%include 'scsi/free_iova.pas';              { scsi_free_iova     }
+%include 'scsi/map_buffer.pas';             { scsi_map_buffer    }
+%include 'scsi/abort_operation.pas';        { SCSI_$ABORT_OPERATION }
+%include 'scsi/post_cmd.pas';               { scsi_post_cmd      }
+%include 'scsi/do_command_phys.pas';        { SCSI_$DO_COMMAND_PHYS }
+%include 'scsi/do_command.pas';             { SCSI_$DO_COMMAND   }
+%include 'scsi/free_asid.pas';              { SCSI_$FREE_ASID    }
+%include 'scsi/set_sys_device.pas';         { SCSI_$SET_SYS_DEVICE }
+%include 'scsi/get_ec.pas';                 { SCSI_$GET_EC       }
+%include 'scsi/get_info.pas';               { SCSI_$GET_INFO     }
+%include 'scsi/int.pas';                    { SCSI_$INT          }
+%include 'scsi/release.pas';                { SCSI_$RELEASE      }
+%include 'scsi/reset_device.pas';           { SCSI_$RESET_DEVICE }
+%include 'scsi/setup.pas';                  { SCSI_$SETUP        }
+%include 'scsi/wire_page.pas';              { scsi_wire_page     }
+%include 'scsi/unwire_page.pas';            { scsi_unwire_page   }
+%include 'scsi/unwire_all.pas';             { scsi_unwire_all    }
+%include 'scsi/unwire.pas';                 { SCSI_$UNWIRE       }
+%include 'scsi/wait.pas';                   { SCSI_$WAIT         }
+%include 'scsi/wire.pas';                   { SCSI_$WIRE         }
+%include 'scsi/do_sys_device_cmd.pas';      { SCSI_$DO_SYS_DEVICE_CMD }
+%else
 %if scsi_driver %then
 { The module-local routines called before their bodies. }
 { body: scsi/init_ppn_owners.pas }
@@ -216,4 +321,5 @@ procedure scsi_start_next(cb: scsi_cb_ptr_t); forward; internal;
 %include 'scsi/start_abort.pas';            { scsi_start_abort   }
 %include 'scsi/start_next.pas';             { scsi_start_next    }
 %include 'scsi/do_sys_device_cmd.pas';      { SCSI_$DO_SYS_DEVICE_CMD }
+%endif
 %endif

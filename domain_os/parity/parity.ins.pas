@@ -99,12 +99,18 @@ type
       address).
     - bit_10: an error with it set is only logged, as one of a DMA
       channel's pages is.
+    - bit_14, bit_9: with `parity_cache_check', the error's longword
+      is the second of the memory's 8-byte word (on a ROADRUNNER
+      board); an AT bus channel check (fault_$io_chan_chk).
     - all: the whole word, which a store of 0 clears. }
   parity_$cpu_status_t = packed record
     case integer of
-      1: (bits_15_11: 0..31;              { bits 15..11 }
+      1: (bit_15: boolean;                { bit 15 }
+          bit_14: boolean;                { bit 14 }
+          bits_13_11: 0..7;               { bits 13..11 }
           bit_10: boolean;                { bit 10 }
-          bits_9_8: 0..3;                 { bits 9..8 }
+          bit_9: boolean;                 { bit 9 }
+          bit_8: boolean;                 { bit 8 }
           lane_0_err: boolean;            { bit 7 }
           lane_1_err: boolean;            { bit 6 }
           lane_2_err: boolean;            { bit 5 }
@@ -113,10 +119,12 @@ type
       2: (all: pinteger);
   end;
 
-  { PARITY_$INFO, 0x14 bytes (the map's next symbol, MISS_STATUS, gives
-    the size).
+  { PARITY_$INFO, 0x14 bytes, 0x16 with `parity_cache_check' (the
+    map's next symbol, MISS_STATUS, gives the size).
     - err_status: the CPU status register's copy.
-    - err_data: the half of the failing longword the lane is in. }
+    - err_data: the half of the failing longword the lane is in.
+    - err_longword: 1 when the error is in the second longword of the
+      memory's 8-byte word, else 0. }
   parity_$info_t = record
     spurious_count: integer;              { 0x00 }
     chk_in_progress: boolean;             { 0x02 }
@@ -125,7 +133,25 @@ type
     err: parity_$err_addrs_t;             { 0x08, 0x0C }
     err_status: parity_$cpu_status_t;     { 0x10 }
     err_data: pinteger;                   { 0x12 }
+%if parity_cache_check %then
+    err_longword: integer;                { 0x14 }
+%endif
   end;
+
+%if parity_cache_check %then
+  { The physical cache's register word (MMU + 16#200, which
+    CACHE_$ENABLE_PHYSICAL and CACHE_$DISABLE_PHYSICAL write): bits 15,
+    14, 13 and 9 each an error of the cache that PARITY_$CHK crashes the
+    system on (fault_$cache_parity). }
+  parity_$cache_status_t = packed record
+    bit_15: boolean;                      { bit 15 }
+    bit_14: boolean;                      { bit 14 }
+    bit_13: boolean;                      { bit 13 }
+    bits_12_10: 0..7;                     { bits 12..10 }
+    bit_9: boolean;                       { bit 9 }
+    bits_8_0: 0..511;                     { bits 8..0 }
+  end;
+%endif
 
   { PARITY_$INFO as PARITY_$CHK reaches it, `[device]' (ref 3.15.3):
     every access a load or store of its own, the zero and true stores

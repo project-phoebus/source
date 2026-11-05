@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E06B1E  AST_$GET_SEG_MAP
     sau4  0x0F806EBA  AST_$GET_SEG_MAP
+    sau6  0x78007134  AST_$GET_SEG_MAP
+    sau7  0x3C4075AC  AST_$GET_SEG_MAP
     sau8  0x03C06DA0  AST_$GET_SEG_MAP
     sau9  0x3C407DAC  AST_$GET_SEG_MAP
 

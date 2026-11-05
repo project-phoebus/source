@@ -5,6 +5,8 @@
     sau2  0x00E6E0D4  SMD_$INQ_KBD_CURSOR
     sau4  0x0F87885C  SMD_$INQ_KBD_CURSOR
     sau5  0x00E70538  SMD_$INQ_KBD_CURSOR
+    sau6  0x780778D4  SMD_$INQ_KBD_CURSOR
+    sau7  0x3C4812FA  SMD_$INQ_KBD_CURSOR
     sau9  0x3C474A1A  SMD_$INQ_KBD_CURSOR
 
   - The result is whether the cursor is visible.

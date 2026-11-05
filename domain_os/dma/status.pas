@@ -1,6 +1,7 @@
 { DMA_$STATUS - whether a DMA channel's transfer has finished.
 
   Image addresses:
+    sau7  0x3C40B99C  DMA_$STATUS
     sau8  0x03C0B048  DMA_$STATUS
 
   - Under the DMA lock: the channel's controller status joins the

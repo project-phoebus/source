@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E0AA04  FIM_$GET_FIM_ADDR
     sau4  0x0F80B14C  FIM_$GET_FIM_ADDR
+    sau6  0x7800B2C2  FIM_$GET_FIM_ADDR
+    sau7  0x3C40C056  FIM_$GET_FIM_ADDR
 
   Status stored: none.
 }

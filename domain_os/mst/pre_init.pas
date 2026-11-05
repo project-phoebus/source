@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E309F4  MST_$PRE_INIT
     sau4  0x0F834060  MST_$PRE_INIT
+    sau6  0x7803964C  MST_$PRE_INIT
+    sau7  0x3C4395B8  MST_$PRE_INIT
     sau8  0x03C33A58  MST_$PRE_INIT
     sau9  0x3C436A34  MST_$PRE_INIT
 
@@ -25,7 +27,7 @@ var
   words: integer;
   unused_8: integer32;                    { stand-in }
 begin
-%if large_address_space or vm_8192_segs %then
+%if large_address_space or vm_8192_segs or vm_65536_segs %then
   { the regions are constants: each ASID's bases into MST, BST, SMAPS
     and RARS }
   for asid := 0 to 57 do
@@ -35,7 +37,7 @@ begin
   for asid := 0 to 57 do
     smap_asid_base[asid] := asid * mst_$seg_tn;
   for asid := 0 to 57 do
-    rars_asid_base[asid] := asid * mst_region_members;
+    rars_asid_base[asid] := asid * mst_rars_asid_entries;
 %elseif run_time_layout %then
   { the PMMU's layout in place of the default one }
   if mmu_$have_pmmu then begin

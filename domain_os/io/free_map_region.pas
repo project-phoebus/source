@@ -4,6 +4,8 @@
     sau3  0x00E19FC4  IO_$FREE_MAP_REGION
     sau4  0x0F81BB72  IO_$FREE_MAP_REGION
     sau5  0x00E1B28E  IO_$FREE_MAP_REGION
+    sau6  0x7801C830  IO_$FREE_MAP_REGION
+    sau7  0x3C41EB4C  IO_$FREE_MAP_REGION
     sau8  0x03C1BF66  IO_$FREE_MAP_REGION
 
   - The region of the unit's list that starts at iova is freed

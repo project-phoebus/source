@@ -1,7 +1,13 @@
 |
-| win/sau8/win_asm.s - WIN_ASM, WIN_$FILL_CTL_BUF and WIN_$EMPTY_CTL_BUF:
+| win/m68k/win_asm.s - WIN_ASM, WIN_$FILL_CTL_BUF and WIN_$EMPTY_CTL_BUF:
 | move a sector's header and data between memory and the Winchester
-| controller's data port by program
+| controller's data port by program (m68k; the SAU7, SAU8)
+|
+| The map's WIN_ASM (0x4C bytes, WIRED_PROC) is in the maps of the SAUs
+| with the AT bus Winchester controller only (`win_atbus_ctlr',
+| base/config.ins.pas); the other SAUs' maps have no WIN_ASM, so the file
+| assembles to nothing there.  The SAU7's segment is byte for byte the
+| SAU8's.  The address and byte columns are the SAU8 image's.
 |
 | SAU8 map: "I 3C1AF50 WIN_ASM size = 4C" (WIRED_PROC), WIN_$FILL_CTL_BUF
 | at its start, WIN_$EMPTY_CTL_BUF at +0x26.
@@ -18,10 +24,10 @@
 | FILL writes the 16 header words, then the 512 data words, to the port
 | (a word register, not stepped); EMPTY reads them from it.
 |
-| Byte check: assembled with `m68k-elf-as -m68020 -m68881' and compared
-| with the image's 0x4C bytes (no relocation); the build has no SAU8
-| target yet.  The address and byte columns are the SAU8 image's.
-|
+        .include "base/config.inc"
+
+        .if win_atbus_ctlr
+
         .section ".text.WIN_$FILL_CTL_BUF","ax",@progbits
         .even
 
@@ -57,3 +63,5 @@ WIN_$EMPTY_CTL_BUF:                     | 0x03C1AF76
 4:      move.w  (%a1),(%a0)+            | 3c1af94  30d1
         dbf     %d0,4b                  | 3c1af96  51c8 fffc
         rts                             | 3c1af9a  4e75
+
+        .endif

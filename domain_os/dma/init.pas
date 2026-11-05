@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0A362  DMA_$INIT
+    sau7  0x3C4378D2  DMA_$INIT
     sau8  0x03C320BE  DMA_$INIT
 
   - The MC68450's four channels; with the AT bus's DMA channels

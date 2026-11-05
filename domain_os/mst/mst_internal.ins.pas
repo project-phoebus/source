@@ -31,6 +31,10 @@ const
   mst_private_b_count = 256;
   mst_$seg_mem_top = 8192;
   mst_$seg_tn = 7680;
+%elseif vm_65536_segs %then
+  mst_private_b_count = 256;
+  mst_$seg_mem_top = 65536;
+  mst_$seg_tn = 61184;
 %elseif run_time_layout %then
   mst_private_b_count = 64;
 %else
@@ -49,7 +53,9 @@ type
     region registers, 32 regions. }
 %if run_time_layout %then
   mst_region_t = 0..127;
-%elseif region_mmu %then
+%elseif vm_65536_segs %then
+  mst_region_t = 0..255;
+%elseif region_registers %then
   mst_region_t = 0..31;
 %else
   mst_region_t = 0..255;
@@ -57,9 +63,13 @@ type
   mst_region_set_t = set of mst_region_t;
 
   { An ASID's BST pages (MST_$BST_PAGES, 16 bytes, or with the layout
-    chosen at boot or the 8192 segments a longword). }
+    chosen at boot or the 8192 segments a longword; with the 65536
+    segments 30 bytes, one member for each of the 239 pages of an ASID's
+    links). }
 %if run_time_layout or vm_8192_segs %then
   mst_bst_page_set_t = set of 0..31;
+%elseif vm_65536_segs %then
+  mst_bst_page_set_t = set of 0..238;
 %else
   mst_bst_page_set_t = set of 0..127;
 %endif
@@ -75,7 +85,11 @@ const
   mst_region_segs = 64;
   mst_region_members = 128;
   mst_seg_groups = 116;
-%elseif region_mmu %then
+%elseif vm_65536_segs %then
+  mst_region_segs = 256;
+  mst_region_members = 256;
+  mst_seg_groups = mst_$seg_tn div mst_region_segs;
+%elseif region_registers %then
   mst_region_segs = mst_$seg_mem_top div 32;
   mst_region_members = 32;
   mst_seg_groups = mst_$seg_tn div mst_region_segs;
@@ -85,11 +99,22 @@ const
   mst_seg_groups = mst_$seg_tn div mst_region_segs;
 %endif
 
+  { The RARS entries from one ASID's first to the next's
+    (RARS_ASID_BASE, MST_$PRE_INIT): a region's each, or with the 65536
+    segments 512, two pages, of which the regions take the first. }
+%if vm_65536_segs %then
+  mst_rars_asid_entries = 512;
+%else
+  mst_rars_asid_entries = mst_region_members;
+%endif
+
   { The special segments (MST_$MAP_SPECIAL): the top 16 of private B,
     segments mst_$seg_global_b - 16 .. mst_$seg_global_b - 1; with the
     8192 segments the top 9. }
 %if vm_8192_segs %then
   mst_special_segs = 9;
+%elseif vm_65536_segs %then
+  mst_special_segs = 10;
 %else
   mst_special_segs = 16;
 %endif
@@ -111,7 +136,7 @@ const
   status_$mst_invalid_segment_count = 16#00040010;
 %endif
 
-%if large_address_space or vm_8192_segs %then
+%if large_address_space or vm_8192_segs or vm_65536_segs %then
 const
 
   { The regions every address space has active: global A (237, 238)
@@ -157,13 +182,13 @@ var
   mst_$asid_lock: extern ml_$exclusion_t;
   mst_asid_base: extern mst_asid_base_t;
   mst_$touch_count: extern pinteger;
-%if not (large_address_space or vm_8192_segs) %then
+%if not (large_address_space or vm_8192_segs or vm_65536_segs) %then
   mst_$seg_mem_top: extern pinteger;
 %endif
-%if not (large_address_space or vm_8192_segs) %then
+%if not (large_address_space or vm_8192_segs or vm_65536_segs) %then
   mst_$seg_tn: extern pinteger;
 %endif
-%if not (large_address_space or vm_8192_segs) %then
+%if not (large_address_space or vm_8192_segs or vm_65536_segs) %then
   mst_$seg_high: extern pinteger;
   mst_$seg_global_b_offset: extern pinteger;
   mst_$seg_private_b_offset: extern pinteger;
@@ -220,6 +245,18 @@ const
   mst_$seg_private_b_end = 7935;
   mst_$seg_private_a_end = 7423;
   mst_$seg_global_a_end = 7679;
+%elseif vm_65536_segs %then
+const
+  { The rest of the 65536 segments' layout, constants: global B's offset
+    in the MST words 61184, the canned mappings' top 65395 (4211 above
+    that offset), private B's offset 256, the last segments of private A
+    60927, of global A 61183 and of private B 61439. }
+  mst_$seg_global_b_offset = 61184;
+  mst_$seg_high = 65395;
+  mst_$seg_private_b_offset = 256;
+  mst_$seg_private_b_end = 61439;
+  mst_$seg_private_a_end = 60927;
+  mst_$seg_global_a_end = 61183;
 %endif
 
 %if large_vm %then
@@ -234,7 +271,8 @@ type
     - b, its bits as booleans (copy_on_write and writable name
       protection bits 2 and 0, as mst_flags_t's do);
     - bits, the longword as a set (member 31 the valid bit);
-    - all, the longword. }
+    - all, the longword;
+    - low, its low word as a set (mst_$va_to_aste adds member 0). }
   mst_smap_prot_t = packed record
     valid: boolean;                       { bit 31 }
     prot: 0..31;                          { bits 30..26 }
@@ -255,6 +293,8 @@ type
       2: (b: mst_smap_bits_t);
       3: (bits: set of 0..31);
       4: (all: integer32);
+      5: (unused_00: integer;
+          low: set of 0..15);
   end;
 
   { A region register in RARS, a longword: the valid and global bits
@@ -333,6 +373,9 @@ var
 %elseif vm_8192_segs %then
   smaps: extern array[0..445439] of mst_smap_t;
   bst: extern array[0..445439] of mst_$pmap_link_t;
+%elseif vm_65536_segs %then
+  smaps: extern array[0..3548671] of mst_smap_t;
+  bst: extern array[0..3548671] of mst_$pmap_link_t;
 %else
   smaps: extern array[0..1767935] of mst_smap_t;
   bst: extern array[0..1767935] of mst_$pmap_link_t;
@@ -366,7 +409,7 @@ var
   { RARS (map symbol without `$' at SMAPS_END, VM_TABLES): each ASID's
     root entries from its RARS_ASID_BASE, one per region; MST_$INIT
     and MST_$ALLOC_ASID copy ASID 0's to a new ASID's. }
-  rars: extern array[0..(mst_max_asid + 1) * mst_region_members - 1] of
+  rars: extern array[0..(mst_max_asid + 1) * mst_rars_asid_entries - 1] of
           mst_rars_t;
 %endif
 %if run_time_layout %then
@@ -375,7 +418,7 @@ var
     (MST_$INIT sets page 0 alone, MST_$ALLOC_ASID adds a new ASID's).
     With the region registers RARS is 8 pages: a word. }
   mst_$rar_pages: extern set of 0..31;
-%elseif region_mmu %then
+%elseif region_registers %then
   mst_$rar_pages: extern set of 0..7;
 %endif
 
@@ -497,6 +540,8 @@ var
     (MST_$TOUCH). }
 %if mst_7168_words %then
   mst: extern array[0..7167] of pinteger;
+%elseif mst_55808_words %then
+  mst: extern array[0..55807] of pinteger;
 %elseif large_vm %then
   mst: extern array[0..27647] of pinteger;
 %else
@@ -510,6 +555,8 @@ var
     VM_TABLES. }
 %if vm_8192_segs %then
   mste_pages: extern array[1..819] of mst_page_t;
+%elseif mst_pages_tiered %then
+  mste_pages: extern array[1..9420] of mst_page_t;
 %elseif large_vm %then
   mste_pages: extern array[1..9600] of mst_page_t;
 %else

@@ -1,6 +1,7 @@
 { SMD_$NOP2 - the default for a device routine that takes only a status.
 
   Image addresses:
+    sau7  0x3C421A00  SMD_$NOP2
     sau9  0x3C420118  SMD_$NOP2
 
   - The default of the vector's install_disp, dissoc and busy_wait

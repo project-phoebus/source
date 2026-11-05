@@ -1,6 +1,7 @@
 { SMD_$DEVICE_INFO - ask a unit's device for information.
 
   Image addresses:
+    sau7  0x3C482F46  SMD_$DEVICE_INFO
     sau9  0x3C476666  SMD_$DEVICE_INFO
 
   - The unit's device does the work.

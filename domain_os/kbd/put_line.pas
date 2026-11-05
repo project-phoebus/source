@@ -2,6 +2,8 @@
 
   Image addresses:
     sau2  0x00E1CA8A  kbd_$put_line (module-local)
+    sau6  0x7801EA10  kbd_$put_line (module-local)
+    sau7  0x3C420CFC  kbd_$put_line (module-local)
     sau9  0x3C41F64C  kbd_$put_line (module-local)
 
   - An empty procedure but with `kbd_commands'; the parameters are its

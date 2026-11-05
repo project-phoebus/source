@@ -4,6 +4,8 @@
     sau2  0x00E700AA  SMD_$MAP_DISPLAY_MEMORY
     sau4  0x0F87A9B6  SMD_$MAP_DISPLAY_MEMORY
     sau5  0x00E725D6  SMD_$MAP_DISPLAY_MEMORY
+    sau6  0x780798B4  SMD_$MAP_DISPLAY_MEMORY
+    sau7  0x3C482DF0  SMD_$MAP_DISPLAY_MEMORY
     sau9  0x3C476510  SMD_$MAP_DISPLAY_MEMORY
 
   - Not implemented; the first four parameters are not read.  With

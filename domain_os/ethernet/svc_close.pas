@@ -1,6 +1,8 @@
 { ETHERNET_$SVC_CLOSE - close a user channel.
 
   Image addresses:
+    sau6  0x7808907A  ETHERNET_$SVC_CLOSE
+    sau7  0x3C493784  ETHERNET_$SVC_CLOSE
     sau8  0x03C86F80  ETHERNET_$SVC_CLOSE
     sau9  0x3C482B80  ETHERNET_$SVC_CLOSE
 
@@ -12,7 +14,7 @@
   - Under the unit's lock the close is uncounted: the last user stops
     the receive process; when only the Domain user is left the 82586
     goes back to receive mode 2.  A failure to reload or reconfigure
-    counts in the unit's seventh statistic and is not returned.
+    counts in the unit's eth_stat_errors count and is not returned.
 
   Status stored:
     status_$ok: the channel was closed
@@ -71,7 +73,7 @@ begin
     ethernet_load_mcast(u, status);
     if status.all <> status_$ok then
       with u^ do
-        stats.counts[7] := stats.counts[7] + 1;
+        stats.counts[eth_stat_errors] := stats.counts[eth_stat_errors] + 1;
   end;
   ml_$exclusion_stop(u^.excl_1098);
 
@@ -84,7 +86,7 @@ begin
     ethernet_configure(u, false, status);
     if status.all <> status_$ok then
       with u^ do
-        stats.counts[7] := stats.counts[7] + 1;
+        stats.counts[eth_stat_errors] := stats.counts[eth_stat_errors] + 1;
   end;
   ml_$exclusion_stop(u^.lock);
   status.all := status_$ok;

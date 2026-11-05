@@ -5,6 +5,10 @@
     sau2  0x00E82458  SIO data (.DATA, 0x4 bytes)
     sau4  0x0F830F48  SIO data (WIRED_DATA, 0x8 bytes)
     sau4  0x0F890BCC  SIO data (.DATA, 0x4 bytes)
+    sau6  0x780329F8  SIO data (WIRED_DATA, 0x8 bytes)
+    sau6  0x7809CB30  SIO data (.DATA, 0x4 bytes)
+    sau7  0x3C4357C0  SIO data (WIRED_DATA, 0x8 bytes)
+    sau7  0x3C4AB74C  SIO data (.DATA, 0x4 bytes)
 
   One compilation unit, `module sio;': the map's SIO code segments in
   WIRED_PROC (SIO_$I_RCV .. SIO_$I_INHIBIT_XMIT, headed

@@ -1,6 +1,7 @@
 { MONO_$DISSOC - dissociate the board from the current process.
 
   Image addresses:
+    sau7  0x3C48458A  MONO_$DISSOC
     sau8  0x03C79E36  MONO_$DISSOC
 
   - Only the owner gives the board up; its registers stay mapped in its

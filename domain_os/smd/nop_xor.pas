@@ -1,6 +1,7 @@
 { SMD_$NOP_XOR - the default for a device's cursor drawing.
 
   Image addresses:
+    sau7  0x3C421A20  SMD_$NOP_XOR
     sau9  0x3C420138  SMD_$NOP_XOR
 
   - Draws nothing and returns true.

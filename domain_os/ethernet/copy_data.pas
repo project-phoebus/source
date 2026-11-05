@@ -1,6 +1,8 @@
 { ethernet_copy_data - gather bytes from a caller's buffer vector.
 
   Image addresses:
+    sau6  0x780894DA  ethernet_copy_data
+    sau7  0x3C493BE2  ethernet_copy_data
     sau8  0x03C873DE  ethernet_copy_data
     sau9  0x3C482FDE  ethernet_copy_data
 

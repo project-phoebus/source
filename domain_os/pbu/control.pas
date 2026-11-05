@@ -3,6 +3,8 @@
   Image addresses:
     sau3  0x00E58CE2  PBU_$CONTROL
     sau5  0x00E58E8E  PBU_$CONTROL
+    sau6  0x78060BB8  PBU_$CONTROL
+    sau7  0x3C46970C  PBU_$CONTROL
     sau8  0x03C61726  PBU_$CONTROL
 
   - The answer is [0] while the unit's control has wide clear (with

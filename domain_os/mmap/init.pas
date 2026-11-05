@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E3193E  MMAP_$INIT
     sau4  0x0F835096  MMAP_$INIT
+    sau6  0x7803A732  MMAP_$INIT
+    sau7  0x3C43A5AE  MMAP_$INIT
     sau8  0x03C34CE6  MMAP_$INIT
     sau9  0x3C437A2A  MMAP_$INIT
 

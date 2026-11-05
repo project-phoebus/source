@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E09E48  area_$free_seg_table (module-local)
     sau4  0x0F80A676  area_$free_seg_table (module-local)
+    sau6  0x7800A7CE  area_$free_seg_table (module-local)
+    sau7  0x3C40B106  area_$free_seg_table (module-local)
     sau9  0x3C40B906  area_$free_seg_table (module-local)
 
   - Under the AST lock the table's page is unmapped and freed when it is

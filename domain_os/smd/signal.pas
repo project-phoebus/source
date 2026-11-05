@@ -4,6 +4,8 @@
     sau2  0x00E6F1DA  SMD_$SIGNAL
     sau4  0x0F879924  SMD_$SIGNAL
     sau5  0x00E71590  SMD_$SIGNAL
+    sau6  0x780788EE  SMD_$SIGNAL
+    sau7  0x3C48227A  SMD_$SIGNAL
     sau9  0x3C47599A  SMD_$SIGNAL
 
   - The ring's room is tested under the SMD request lock; a full ring is

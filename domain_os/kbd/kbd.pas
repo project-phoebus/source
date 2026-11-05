@@ -3,6 +3,10 @@
   Image addresses:
     sau2  0x00E2DDE4  KBD data (WIRED_DATA, 0xD4 bytes)
     sau3  0x00E2C9C0  KBD data (WIRED_DATA, 0x64 bytes)
+    sau6  0x78032A00  KBD data (WIRED_DATA, 0x108 bytes)
+    sau6  0x780A0C8C  KBD data (DATA$, 0x14 bytes)
+    sau7  0x3C4357C8  KBD data (WIRED_DATA, 0x108 bytes)
+    sau7  0x3C4AF628  KBD data (DATA$, 0x14 bytes)
     sau9  0x3C433274  KBD data (WIRED_DATA, 0x108 bytes)
     sau9  0x3C49E084  KBD data (DATA$, 0x14 bytes)
 

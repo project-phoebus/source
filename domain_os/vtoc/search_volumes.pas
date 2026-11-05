@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E01BEE  vtoc_$search_volumes (module-local, AST_)
     sau4  0x0F802006  vtoc_$search_volumes (module-local, AST_)
+    sau6  0x78002394  vtoc_$search_volumes (module-local, AST_)
     sau9  0x3C402FAA  vtoc_$search_volumes (module-local, AST_)
 
   - On a node not entirely diskless, VTOC_$LOOKUP on volumes 1..6 (not

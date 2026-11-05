@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E0AA24  FIM_$INIT_ASID
     sau4  0x0F80B16C  FIM_$INIT_ASID
+    sau6  0x7800B2E0  FIM_$INIT_ASID
+    sau7  0x3C40C074  FIM_$INIT_ASID
 
   Status stored: none.
 }

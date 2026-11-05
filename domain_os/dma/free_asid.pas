@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E0A454  DMA_$FREE_ASID
     sau5  0x00E0A328  DMA_$FREE_ASID
+    sau7  0x3C40BA3E  DMA_$FREE_ASID
     sau8  0x03C0B0EA  DMA_$FREE_ASID
 
   - With the AT bus's DMA channels (`atbus_dma') every channel the

@@ -118,8 +118,10 @@ PCREL_TITLE = ('identical modulo PC-relative displacements: the same code, only 
                'PC-relative operand reaching an equivalent target at another distance; '
                'not in Routines identical')
 SIM_TITLE = ('mean similarity (0-1) of the compared routines that are not identical: '
-             'difflib SequenceMatcher ratio of our bytes and the image\'s, relocated fields '
-             'zeroed on both sides; the routine count in parentheses')
+             'an exact alignment of our instructions and the image\'s, positions (branch '
+             'targets and sizes, PC-relative displacements) left out and addresses named '
+             'by map symbol, a register-only difference counting half; the routine count '
+             'in parentheses')
 
 
 def sim_cell(mean, n, title=''):

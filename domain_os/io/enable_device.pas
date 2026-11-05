@@ -5,6 +5,8 @@
     sau3  0x00E198EC  IO_$ENABLE_DEVICE
     sau4  0x0F81B4BC  IO_$ENABLE_DEVICE
     sau5  0x00E1AB9C  IO_$ENABLE_DEVICE
+    sau6  0x7801C158  IO_$ENABLE_DEVICE
+    sau7  0x3C41E3BC  IO_$ENABLE_DEVICE
     sau8  0x03C1B9D8  IO_$ENABLE_DEVICE
 
   - The bus's enable_device routine with the unit's interrupt id, when

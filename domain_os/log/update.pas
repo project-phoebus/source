@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E1760C  LOG_$UPDATE
     sau4  0x0F817FC4  LOG_$UPDATE
+    sau6  0x780180E0  LOG_$UPDATE
+    sau7  0x3C4190CC  LOG_$UPDATE
     sau8  0x03C1857C  LOG_$UPDATE
 
   - The result is the wired page's handle when the log is open and

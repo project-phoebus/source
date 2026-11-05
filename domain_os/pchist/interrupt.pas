@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E1A1F6  PCHIST_$INTERRUPT
     sau4  0x0F81AE5E  PCHIST_$INTERRUPT
+    sau6  0x7801BB38  PCHIST_$INTERRUPT
+    sau7  0x3C41DD9C  PCHIST_$INTERRUPT
 
   - PCHIST_$COUNT in mode 1.
 

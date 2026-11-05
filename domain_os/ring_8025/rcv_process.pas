@@ -1,6 +1,7 @@
 { ring_8025_rcv_process - a unit's receive process.
 
   Image addresses:
+    sau7  0x3C499ED4  ring_8025_rcv_process
     sau8  0x03C8D460  ring_8025_rcv_process
     sau9  0x3C489170  ring_8025_rcv_process
 
@@ -115,6 +116,9 @@ begin
   ring_8025_close(u);
 %if ring_8025_dma_channel %then
   dma_$stop(u^.dma_channel, count, st);
+%endif
+%if ring_8025_iomap %then
+  io_$free_map(u^.io_unit, st);
 %endif
   u^.regs^.sifcmd := r8025_sifcmd_interrupt;
   io_$disable_device(u^.io_unit, st);

@@ -3,6 +3,8 @@
   Image addresses:
     sau3  0x00E59C4A  PBU2_$WIRE
     sau5  0x00E59EAE  PBU2_$WIRE
+    sau6  0x78061B36  PBU2_$WIRE
+    sau7  0x3C46A492  PBU2_$WIRE
     sau8  0x03C6235A  PBU2_$WIRE
 
   - Under the exclusion lock each page is wired for the unit

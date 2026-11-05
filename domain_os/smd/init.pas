@@ -4,6 +4,8 @@
     sau2  0x00E34D2C  SMD_$INIT
     sau4  0x0F838038  SMD_$INIT
     sau5  0x00E36F04  SMD_$INIT
+    sau6  0x7803E60C  SMD_$INIT
+    sau7  0x3C43E4A8  SMD_$INIT
     sau9  0x3C43B478  SMD_$INIT
 
   - Each unit (one here) gets its font table, hidden-memory list, display
@@ -13,7 +15,9 @@
     block's second font table and free list, unit 2 the first.
   - With `gpu_driver' the graphics board's id chooses unit 1's display
     (the DN580's or the DN570's) and no unit is probed; with
-    `color_board' a silent unit 2 is probed as the color board.
+    `color_board' a silent unit 2 is probed as the color board.  With
+    `gpu_displays_only' no unit is ever probed: unit 1's record without
+    the board is the default kind's, and the units keep their types.
   - With `blt_main_memory' unit 1's main-memory BLT pages start at the
     I/O map's entry 128, unit 2's at 96.
   - With `display_devices' each of the eight units takes the device
@@ -33,7 +37,9 @@
   gives the routine as written 12 bytes.  The SAU5's frame is 0x34
   bytes: gdev_probe at -6, probe_data's home at -4 (the image keeps it
   in a register and stores it there around each TESTPAGE), the `with'
-  pointer at -0x34; the rest is not explained either. }
+  pointer at -0x34; the rest is not explained either.  The SAU6's is
+  0x2C bytes, gdev_probe at -6 (so probe_data's word at -4 is still
+  there, unaddressed), the `with' pointer in a register. }
 
 [section(os_init_proc, os_init_data)]
 procedure smd_$init;
@@ -124,7 +130,11 @@ begin
   ec_$init(smd_$wired_data.ec_2);
 
 %if two_display_units %then
+%if gpu_displays_only %then
+  disp_kind := 0;
+%else
   disp_kind := 1;
+%endif
 %if gpu_driver %then
   { the graphics board, when one answers, and its kind of display }
   if testpage(1, addr(kolor_ctl), gdev_probe) then
@@ -140,7 +150,11 @@ begin
 
   { unit 1's record }
   case disp_kind of
+%if gpu_displays_only %then
+    0: begin
+%else
     0, 1: begin
+%endif
       smd_$wired_data.unit[1].font_table := addr(unit1_fonts);
       smd_$wired_data.unit[1].hdm_list := addr(unit1_hdm_list);
       smd_$wired_data.unit[1].display_base := addr(disp1_mem);
@@ -209,7 +223,9 @@ begin
       owner_asid := 0;
       borrowed_asid := 0;
 
-%if two_display_units %then
+%if gpu_displays_only %then
+      { the display's type is the graphics board's, set above }
+%elseif two_display_units %then
       { a controller that answers tells its display's type; unit 2 may
         be the color board's }
 %if gpu_driver %then

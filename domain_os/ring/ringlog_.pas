@@ -2,6 +2,8 @@
 
   Image addresses:
     sau2  0x00E2C32C  RINGLOG_ data (WIRED_DATA, 0x3C bytes)
+    sau6  0x78030504  RINGLOG_ data (WIRED_DATA, 0x3C bytes)
+    sau7  0x3C432CA0  RINGLOG_ data (WIRED_DATA, 0x3C bytes)
     sau8  0x03C2E5C8  RINGLOG_ data (WIRED_DATA, 0x3C bytes)
 
   One compilation unit in two code sections and one data section: the

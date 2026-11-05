@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E3E268  EXCS
     sau4  0x0F84624E  EXCS
+    sau7  0x3C44E5BA  EXCS
     sau8  0x03C46486  EXCS
 
   - While command retries remain, an error spends one and becomes

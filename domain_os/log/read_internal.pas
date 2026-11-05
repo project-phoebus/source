@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E17778  log_$read_internal (module-local)
     sau4  0x0F818130  log_$read_internal (module-local)
+    sau6  0x78018244  log_$read_internal (module-local)
+    sau7  0x3C419230  log_$read_internal (module-local)
 
   - The length is the whole page (1024 bytes) or max_len rounded down to
     even, cut at the page's end; no page mapped, or a start past the

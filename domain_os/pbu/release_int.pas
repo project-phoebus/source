@@ -3,6 +3,8 @@
   Image addresses:
     sau3  0x00E59288  PBU_$RELEASE_INT
     sau5  0x00E59458  PBU_$RELEASE_INT
+    sau6  0x78061116  PBU_$RELEASE_INT
+    sau7  0x3C469BA4  PBU_$RELEASE_INT
     sau8  0x03C61AB2  PBU_$RELEASE_INT
 
   - Undoes PBU_$ACQUIRE_INT: a unit the caller may use, or a publicly

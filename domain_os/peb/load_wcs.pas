@@ -6,6 +6,11 @@
     sau2  0x00E31EC8  peb_$load_wcs_check_err (nested)
     sau5  0x00E33530  PEB_$LOAD_WCS
     sau5  0x00E33420  peb_$load_wcs_check_err (nested)
+    sau6  0x7803AC38  PEB_$LOAD_WCS
+    sau6  0x7803AB2C  peb_$load_wcs_check_err (nested)
+    sau7  0x3C43AAFC  PEB_$LOAD_WCS
+    sau7  0x3C43A9C0  peb_$load_wcs_check_err (nested)
+    sau7  0x3C43AA74  peb_$load_wcs_check_fpa_err (nested)
     sau9  0x3C437EE8  PEB_$LOAD_WCS
     sau9  0x3C437E32  peb_$load_wcs_check_err (nested)
 
@@ -16,7 +21,13 @@
     the system).
   - After each step the nested check prints a warning and ends the
     routine when the step failed.
-  - Without `peb_board' (base/config.ins.pas) only the save area's arm.
+  - Without `peb_board' (base/config.ins.pas) only the save area's arm;
+    with `peb_fpx' the check disables an FPX's save area as it does the
+    68881's.
+  - With `fpa_board' the floating-point accelerator comes first: a
+    version other than the one supported disables it; then its 8892-byte
+    save area is mapped as the 68881's is (FPA_$SAVEP), its own nested
+    check disabling it on a failed step.
 
   Status stored: none.
 }
@@ -33,7 +44,14 @@
   SAU9 frame has room for one local of up to 4 bytes below status (32
   bytes: file_uid, header, maps_length, lock_info, map_info, status and
   that one), 4 bytes less than this source gives: there the loop has one
-  local, not an index and a pointer.  Not settled. }
+  local, not an index and a pointer.  The SAU7's frame (36 bytes, its
+  csr at -12 in header's place) is short by the same 4 bytes, and its
+  accelerator arm has the same loop, 9 steps for the 8892 bytes.  Not
+  settled.
+
+  TODO(pascal) the SAU7's version test: the image extracts the FPCSR's
+  version field from csr into D1, after storing the function's result
+  from D0; dpc extracts it into D0. }
 
 [section(os_init_proc, os_init_data)]
 procedure peb_$load_wcs;
@@ -48,6 +66,9 @@ var
   verify: peb_$wcs_entry_t;
 %endif
   file_uid: uid_$t;
+%if fpa_board %then
+  csr: fpa_$csr_t;
+%endif
   header: peb_$wcs_header_ptr_t;
   maps_length: integer32;
 %if peb_board %then
@@ -80,6 +101,15 @@ var
         fp_$savep := nil;
         trap_page[11] := addr(fim_$uii);
       end
+%if peb_fpx %then
+      else if peb_$info.savep_flag then begin
+        { no FPX save area }
+        peb_$info.savep_flag := false;
+        vfmt_$write2(' FPA savearea -- FPA is disabled.%.', 0, 0);
+        fp_$savep := nil;
+        trap_page[11] := addr(fim_$uii);
+      end
+%endif
 %if peb_board %then
       else
         vfmt_$write5(' "%a" -- %lh%/PEB is disabled.%.',
@@ -93,7 +123,66 @@ var
       peb_$load_wcs_check_err := false;
   end;
 
+%if fpa_board %then
+  { peb_$load_wcs_check_fpa_err: warn of a failed step of the
+    accelerator's save area, nested. }
+  function peb_$load_wcs_check_fpa_err(in msg: univ vfmt_$string_t): boolean;
+  begin
+    if status.code <> 0 then begin
+      { the warning }
+      vfmt_$write2('%/%/%/Warning: Unable to %$', 0, 0);
+      vfmt_$write2(msg, 0, 0);
+
+      if peb_$info.flag_1d then begin
+        { no accelerator save area }
+        peb_$info.flag_1d := false;
+        vfmt_$write2(' FPA savearea -- FPA is disabled.%.', 0, 0);
+        fpa_$savep := nil;
+      end;
+
+      peb_$load_wcs_check_fpa_err := true;
+    end
+    else
+      peb_$load_wcs_check_fpa_err := false;
+  end;
+%endif
+
 begin
+%if fpa_board %then
+  if peb_$info.flag_1d then begin
+    { the accelerator's version }
+    csr := fim_$fp_get_fpcsr;
+    if csr.version <> fpa_$version_supported then begin
+      vfmt_$write2('%/Warning: FPA version not supported by this operating system revision.%.', 0, 0);
+      vfmt_$write2('FPA is disabled.%.', 0, 0);
+      peb_$info.flag_1d := false;
+    end;
+
+    if peb_$info.flag_1d then begin
+      { the accelerator's save area's file }
+      file_$create(uid_$nil, file_uid, status);
+      if peb_$load_wcs_check_fpa_err('create file for fpa save area%$') then
+        return;
+
+      file_$lock(file_uid, 0, 4, false, lock_info, status);
+      if peb_$load_wcs_check_fpa_err('lock file for%$') then
+        return;
+
+      { the area }
+      maps_length := 8892;
+      fpa_$savep := mst_$maps(0, true, file_uid, 0, maps_length, 16#16, 0,
+                              true, map_info, status);
+      if peb_$load_wcs_check_fpa_err('map file for%$') then
+        return;
+
+      { see the TODO(pascal) above }
+      save_area := fpa_$savep;
+      for i := 1 to 9 do
+        save_area := addr(save_area^[1]);
+    end;
+  end;
+
+%endif
   if peb_$info.m68881_save_flag or else peb_$info.savep_flag then begin
     { the FP save area's file }
     file_$create(uid_$nil, file_uid, status);

@@ -1,6 +1,7 @@
 { SMD_$NOP_LITE - the default for a device's lights: nothing.
 
   Image addresses:
+    sau7  0x3C421A2C  SMD_$NOP_LITE
     sau9  0x3C420144  SMD_$NOP_LITE
 
   Status stored: none.

@@ -2,6 +2,8 @@
   receive into.
 
   Image addresses:
+    sau6  0x78086BF0  ethernet_get_rcv_bufs
+    sau7  0x3C49152A  ethernet_get_rcv_bufs
     sau8  0x03C84D26  ethernet_get_rcv_bufs
     sau9  0x3C480926  ethernet_get_rcv_bufs
 

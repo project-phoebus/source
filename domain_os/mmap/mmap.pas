@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E23284  MMAP_ data (WIRED_DATA, 0xAA8 bytes)
     sau4  0x0F82560C  MMAP_ data (WIRED_DATA, 0xAA8 bytes)
+    sau6  0x78025DF4  MMAP_ data (WIRED_DATA, 0xAA8 bytes)
+    sau7  0x3C42854C  MMAP_ data (WIRED_DATA, 0xAA8 bytes)
     sau8  0x03C24BFC  MMAP_ data (WIRED_DATA, 0xAA8 bytes)
     sau9  0x3C42619C  MMAP_ data (WIRED_DATA, 0xAA8 bytes)
 

@@ -4,6 +4,8 @@
     sau3  0x00E19F46  IO_$FREE_MAP
     sau4  0x0F81BAF4  IO_$FREE_MAP
     sau5  0x00E1B210  IO_$FREE_MAP
+    sau6  0x7801C7B2  IO_$FREE_MAP
+    sau7  0x3C41EACE  IO_$FREE_MAP
     sau8  0x03C1BF54  IO_$FREE_MAP
 
   - Each region of the unit's list, the head first, is freed (IO_$FREE;

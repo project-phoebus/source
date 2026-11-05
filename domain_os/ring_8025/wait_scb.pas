@@ -1,6 +1,7 @@
 { ring_8025_wait_scb - wait for the controller to finish a command.
 
   Image addresses:
+    sau7  0x3C49600A  ring_8025_wait_scb
     sau8  0x03C89706  ring_8025_wait_scb
     sau9  0x3C4852EA  ring_8025_wait_scb
 

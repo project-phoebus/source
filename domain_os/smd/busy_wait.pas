@@ -4,6 +4,8 @@
     sau2  0x00E1D89E  SMD_$BUSY_WAIT
     sau4  0x0F81EC5C  SMD_$BUSY_WAIT
     sau5  0x00E1E65E  SMD_$BUSY_WAIT
+    sau6  0x7801FBFC  SMD_$BUSY_WAIT
+    sau7  0x3C421B1A  SMD_$BUSY_WAIT
     sau9  0x3C420232  SMD_$BUSY_WAIT
 
   - The display is never busy here; param1 is not read.  With

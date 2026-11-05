@@ -4,6 +4,7 @@
     sau2  0x00E7584E  ring_$setup_tx_dma (module-local)
     sau4  0x0F883006  ring_$setup_tx_dma (module-local)
     sau5  0x00E7CB60  ring_$setup_tx_dma (module-local)
+    sau6  0x78083F48  ring_$setup_tx_dma (module-local)
 
   - Channel 2 is given the header and, with data, the data as its
     chained second block, and started.

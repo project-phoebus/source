@@ -1,6 +1,7 @@
 { ct_scsi_control - start a tape motion or control command on the drive.
 
   Image addresses:
+    sau7  0x3C4852A0  ct_scsi_control (module-local)
     sau9  0x3C4779E4  ct_scsi_control (module-local)
 
   - op is a CT_$CONTROL operation (ct_$op_space_fwd .. ct_$op_reset) or

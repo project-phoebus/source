@@ -192,7 +192,8 @@ and 0x370 (OS_INIT_PROC); the data blocks are the SAU2's sizes.
   source serves both layouts; the arms (`%if pmmu_page_maps`) are where
   the code differs: the PFT's used and modified bits become the
   descriptor's, MMU_$REMOVE becomes clearing the resident bit and
-  MMU_$PURGE, and the disk address merges become stores to `vpn`.
+  MMU_$PURGE, and the disk address stores to `fentry.fm_daddr` become
+  stores to `vpn`.
 - The pageable pages are 16#10000..16#1FFFF (`mmap_$first_ppn`,
   `mmap_$last_ppn`, `mmap/mmap.ins.pas`).
 - Seven routines exist only there (the table above).  None of AST_'s
@@ -219,6 +220,17 @@ Its AST_ segments are 0x68C4 bytes (WIRED_PROC) and 0x370
 (OS_INIT_PROC), the data blocks the SAU2's sizes.  Every other routine
 is the SAU9's code with these constants; none is hand assembly.
 
+## The SAU7
+
+The SAU7 (DN3500, DN3550, DN4000, DN4500) has the SAU9's VM parts
+(`large_vm`, `vm_5760_astes`, `pmap_threads`, `pmmu_page_maps`,
+`pmap_cache_inhibit`) with its own pageable pages, 16#4000..16#BFFF
+(`mmap_ppns_4000_bfff`, `mmap/mmap.ins.pas`).  Its AST_ segments are the
+SAU9's sizes (0x69E0 bytes in WIRED_PROC, 0x370 in OS_INIT_PROC), its
+data blocks too, and every routine is the SAU9's code with MMAP's
+offsets and that range: no routine has a sau7 arm, and none is hand
+assembly.
+
 ## The SAU4
 
 The SAU4 (DN460, DN660, DSP160) builds the large layout with
@@ -241,8 +253,9 @@ bytes (WIRED_PROC) and 0x408 (OS_INIT_PROC), the WIRED_DATA block
   MMU_$REMOVE and MMU_$REMOVE_LIST, MMU_$INSTALL_LIST not called) and
   the SAU2's arms for the entry's shape (`%if pmmu_page_maps` alone).
 - AST_$ACTIVATE_ASTE_CANNED and ast_$lookup_or_create_aste clear the
-  flags 15..11 one by one; AST_$TOUCH_AREA reads up to 4 pages in a
-  run (`region_mmu`).
+  flags 15..11 one by one (`region_mmu`).  AST_$TOUCH_AREA reads up to
+  4 pages in a run, as on every large-layout SAU (`large_vm`: the SAU6,
+  SAU7, SAU8 and SAU9 images have it too).
 - The MMAP entries' disk addresses are 22 bits, the SAU2's
   (`mmap/mmap.ins.pas`, under `pmmu_page_maps`).
 - AST_$ASSOC_IOPPN and AST_$REMOVE_IOPPN are in the map (also the
@@ -253,6 +266,34 @@ bytes (WIRED_PROC) and 0x408 (OS_INIT_PROC), the WIRED_DATA block
 - Under `-cpu 460` AST_$GET_SEG_MAP's two divisions are the machine's
   unsigned divide; its `mod` still calls the run-time.  None of AST_'s
   SAU4 routines is hand assembly.
+
+## The SAU6
+
+The SAU6 (DN560T, DN570T, DN580T, DN590T) builds the large layout with
+the SAU4's parts but `vm_5760_astes` and without `region_registers`
+(the region MMU's tables in memory), in the SAU8's and SAU9's 68020
+code (`-cpu mathchip`).  Its AST_ segments are 0x64EC bytes
+(WIRED_PROC) and 0x400 (OS_INIT_PROC), the WIRED_DATA block 0x490
+bytes (the SAU4's, the same bytes), the OS_INIT_DATA block 4.
+
+- The tables hold 5760 ASTEs and 1280 AOTEs (`vm_5760_astes`, the
+  SAU9's bounds in AST_$INIT and AST_$ADD_ASTES); the map's AST
+  (0x27600 bytes, 28 each) and AST_PMAPS (0xB4000 bytes, 128 each)
+  agree.
+- Every routine is the SAU4's logic: the region MMU's entry shape and
+  flag bits, the PFT's work done in the entry, AST_$TOUCH_AREA's run of
+  at most 4 pages, the one-by-one flag clears of
+  AST_$ACTIVATE_ASTE_CANNED and ast_$lookup_or_create_aste.  The
+  pageable pages are 16#4000..16#FFFF (`mmap_ppns_4000`,
+  `mmap/mmap.ins.pas`).
+- The page-map entry's low 23 bits are read and stored as the packed
+  field `fentry.fm_daddr` and bits 21..0 as `dentry.daddr`, on every
+  SAU without page descriptors: the SAU6 image extracts and inserts
+  them as bit fields, and the 68010 images' masks and their clear and
+  unmasked OR are the same fields' 68010 forms.
+- AST_$ADD_ASTES does not call MMU_$CACHE_INHIBIT_VA (no
+  `pmap_cache_inhibit`).  None of AST_'s SAU6 routines is hand
+  assembly.
 
 ## Insert files
 

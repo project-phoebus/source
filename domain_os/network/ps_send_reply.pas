@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E10510  network_$ps_send_reply (nested)
     sau4  0x0F810E90  network_$ps_send_reply (nested)
+    sau6  0x78010E5C  network_$ps_send_reply (nested)
+    sau7  0x3C412374  network_$ps_send_reply (nested)
     sau8  0x03C11824  network_$ps_send_reply (nested)
     sau9  0x3C412938  network_$ps_send_reply (nested)
 

@@ -5,6 +5,7 @@
     sau3  0x00E2AC4C  IO_ data (WIRED_DATA, 0x9BC bytes)
     sau4  0x0F82EA24  IO_ data (WIRED_DATA, 0x9BC bytes)
     sau5  0x00E2D4A4  IO_ data (WIRED_DATA, 0x684 bytes)
+    sau6  0x78030540  IO_ data (WIRED_DATA, 0x684 bytes)
     sau8  0x03C2E604  IO_ data (WIRED_DATA, 0x5B4 bytes)
     sau9  0x3C430840  IO_ data (WIRED_DATA, 0x5B4 bytes)
 

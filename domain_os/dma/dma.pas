@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E1E9F0  DMA_ data (WIRED_DATA, 0x4 bytes)
+    sau7  0x3C422F44  DMA_ data (WIRED_DATA, 0x1C bytes)
     sau8  0x03C202E8  DMA_ data (WIRED_DATA, 0x18 bytes)
 
   One compilation unit, one code segment and one data segment: the map's
@@ -33,6 +34,16 @@
   With them the heading names WIRED_PROC and WIRED_DATA: the routines
   there reach the block through A5, DMA_$INIT by its absolute address.
 
+  With `atbus_dma_iomap' (the SAU7) the block is 0x1C bytes:
+
+    +0x00  dma_owner    as above
+    +0x10  dma_lock     as above
+    +0x14  dma_io_wait  the CPU status register's word, read into it
+                        between the controllers' accesses
+    +0x16  dma_cascade  the cascade channels enabled in the master
+                        enable register
+    +0x18  dma_done     as above
+
   Build: dpc -I domain_os domain_os/dma/dma.pas.  Check:
   tools/pascal_check.sh.
 }
@@ -62,7 +73,13 @@ var
     dma_free, dma_free, dma_free, dma_free, 0, dma_free, dma_free,
     dma_free];                            { +0x00 }
   dma_lock: integer32;                    { +0x10 }
+%if atbus_dma_iomap %then
+  dma_io_wait: pinteger;                  { +0x14 }
+  dma_cascade: dma_$cascade_set_t;        { +0x16 }
+  dma_done: integer;                      { +0x18 }
+%else
   dma_done: integer;                      { +0x14 }
+%endif
 %endif
 
 { The global routines this module defines (ref 7.3.4, Method 2), in map

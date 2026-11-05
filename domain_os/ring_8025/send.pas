@@ -1,6 +1,7 @@
 { RING_8025_$SEND - send a Domain packet.
 
   Image addresses:
+    sau7  0x3C49815C  RING_8025_$SEND
     sau8  0x03C8B778  RING_8025_$SEND
     sau9  0x3C48737C  RING_8025_$SEND
 
@@ -94,14 +95,28 @@ begin
 
   { the pieces: the headers, the Domain header, the data }
   ml_$exclusion_start(ring8025_ucb[socket].xmit_lock);
+%if ring_8025_iomap %then
+  pieces[1].pa := ring_8025_vtop(
+                    integer32(addr(ring8025_$aux_da.ctl[socket].xmit_hdr)),
+                    r8025_xmit_hdr_room,
+                    ring8025_ucb[socket].iomap_page + r8025_map_ctl);
+  pieces[1].cnt.len := rlen + 22;
+  pieces[2].pa := ring_8025_map_pa(hdr_pa, ring8025_ucb[socket].iomap_page);
+%else
   pieces[1].pa := ring_8025_vtop(
                     integer32(addr(ring8025_$aux_da.ctl[socket].xmit_hdr)));
   pieces[1].cnt.len := rlen + 22;
   pieces[2].pa := hdr_pa;
+%endif
   pieces[2].cnt.len := hdr_len;
   count := 2;
   if data_len <> 0 then begin
+%if ring_8025_iomap %then
+    pieces[3].pa := ring_8025_map_pa(data_pages[1],
+                                     ring8025_ucb[socket].iomap_page + 1);
+%else
     pieces[3].pa := data_pages[1];
+%endif
     pieces[3].cnt.len := data_len;
     count := 3;
   end;

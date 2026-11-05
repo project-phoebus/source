@@ -2,9 +2,12 @@
 
   Image addresses:
     sau2  0x00E087BA  area_$remote_sync (nested)
-    sau4  0x0F808B3C  area_$remote_sync (nested)
     sau2  0x00E08816  area_$resize (module-local)
+    sau4  0x0F808B3C  area_$remote_sync (nested)
     sau4  0x0F808B98  area_$resize (module-local)
+    sau6  0x78008D96  area_$resize (module-local)
+    sau7  0x3C409632  area_$remote_sync (nested)
+    sau7  0x3C40968E  area_$resize (module-local)
     sau8  0x03C08D16  area_$remote_sync (nested)
     sau8  0x03C08D72  area_$resize (module-local)
     sau9  0x3C409E32  area_$remote_sync (nested)
@@ -69,6 +72,8 @@ var
     Image addresses:
       sau2  0x00E087BA  area_$remote_sync (nested)
       sau4  0x0F808B3C  area_$remote_sync (nested)
+    sau6  0x78008D3A  area_$remote_sync (nested)
+      sau7  0x3C409632  area_$remote_sync (nested)
       sau8  0x03C08D16  area_$remote_sync (nested)
       sau9  0x3C409E32  area_$remote_sync (nested)
 

@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E2F1D4  AST_$ACTIVATE_ASTE_CANNED
     sau4  0x0F8325D4  AST_$ACTIVATE_ASTE_CANNED
+    sau6  0x780379D0  AST_$ACTIVATE_ASTE_CANNED
+    sau7  0x3C4375D0  AST_$ACTIVATE_ASTE_CANNED
     sau9  0x3C434DD0  AST_$ACTIVATE_ASTE_CANNED
 
   - Under the AST lock the UID's AOTE is found (none crashes the

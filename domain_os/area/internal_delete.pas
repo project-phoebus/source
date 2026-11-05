@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E07B50  area_$internal_delete (module-local)
     sau4  0x0F807E3C  area_$internal_delete (module-local)
+    sau6  0x78008082  area_$internal_delete (module-local)
+    sau7  0x3C408976  area_$internal_delete (module-local)
     sau9  0x3C409176  area_$internal_delete (module-local)
 
   - An active entry's area is shrunk to zero (area_$resize), its remote

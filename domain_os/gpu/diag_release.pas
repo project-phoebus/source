@@ -2,6 +2,7 @@
 
   Image addresses:
     sau5  0x00E73FC4  GPU_$DIAG_RELEASE
+    sau6  0x7807AF3C  GPU_$DIAG_RELEASE
 
   - Nothing is done unless in diagnostic mode, for the process that
     holds the processor.

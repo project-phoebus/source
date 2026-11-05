@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E05400  AST_$SET_ATTR
     sau4  0x0F8057AC  AST_$SET_ATTR
+    sau6  0x78005A4C  AST_$SET_ATTR
+    sau7  0x3C405EAA  AST_$SET_ATTR
     sau9  0x3C4066AA  AST_$SET_ATTR
 
   - As AST_$SET_ATTRIBUTE, with the caller's flag as `wait' and the

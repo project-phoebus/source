@@ -4,6 +4,7 @@
     sau2  0x00E668D8  TERM_$WRITE
     sau3  0x00E67842  TERM_$WRITE
     sau4  0x0F8703CC  TERM_$WRITE
+    sau7  0x3C479F54  TERM_$WRITE
 
   - TTY_$K_PUT with no options.
 

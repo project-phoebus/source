@@ -4,6 +4,8 @@
     sau3  0x00E82448  PBU data (.DATA, 0x5C bytes)
     sau4  0x0F88F4B0  PBU data (.DATA, 0x58 bytes)
     sau5  0x00E88048  PBU data (.DATA, 0x5C bytes)
+    sau6  0x7809B450  PBU data (.DATA, 0x5C bytes)
+    sau7  0x3C4AA06C  PBU data (.DATA, 0x58 bytes)
     sau8  0x03C9986C  PBU data (.DATA, 0x58 bytes)
 
   Configured out of the SAU2 and SAU9 kernels: there one compilation
@@ -39,11 +41,24 @@
   map space (`io_regions': pbu_clear_iomap is not there, and the map
   routines are stubs).
 
+  On the SAU7 0x1CAC bytes of code: the SAU8's routines with the I/O map
+  space (`io_regions', pbu_clear_iomap through IOMAP_$UNMAP,
+  `pbu_iomap_unmap', word entries, `word_iomap'), the page owners from
+  16#4000 (`pbu_ppns_4000'), the contiguous buffer's pages
+  cache-inhibited (`pmap_cache_inhibit'), and PBU_$SETUP and
+  PBU_$FREE_MAP clearing a byte of the unit's DMA mappings
+  (`pbu_dma_iomap', pbu/pbu_map.pas).
+
+  On the SAU6 0x1F7C bytes of code: the SAU5's routines with the large
+  virtual memory's I/O page mapping (`large_vm'), the page owners from
+  16#4000 to 16#FFFF (`mmap_ppns_4000'), the turbo boards' VME windows
+  (`pbu_vme_windows': PBU2_$ASSOC, PBU_$SETUP) and the I/O map page
+  field's mask (`pbu_iomap_page_mask', pbu/pbu_map.pas).
   Not part of the module (pbu_driver):
 
   - PBU_ASM, the PBU page's hand-written data and routines (SM_$CB,
     PBU_$MCB, PBU_$INT_COM, PBU_$TRAP6, PBU_$DCTES, PBU_$DCTE_TABLE,
-    PBU_$ENABLE_DEVICE ...): pbu/sau5/pbu_asm.s;
+    PBU_$ENABLE_DEVICE ...): pbu/sau5/pbu_asm.s, pbu/sau6/pbu_asm.s;
   - PBU_MAP, the map's module of PBU2_$MAP, PBU2_$UNMAP and the DMA
     entries, in PBU_WIRED_PROC (pbu/pbu_map.pas);
   - EC2_PBU (pbu/ec2_pbu.pas), on every SAU;
@@ -85,11 +100,17 @@ module pbu;
 %include 'as/as.ins.pas';
 %include 'proc1/proc1.ins.pas';
 %include 'proc2/proc2.ins.pas';
+%if pbu_vme_windows %then
+%include 'smd/smd.ins.pas';
+%endif
 %if pbu_atbus_units %then
 %include 'file/file.ins.pas';
 %include 'ast/ast.ins.pas';
 %include 'time/time.ins.pas';
 %endif
+%endif
+%if pbu_iomap_unmap %then
+%include 'iomap/iomap.ins.pas';
 %endif
 %include 'pbu/pbu.ins.pas';
 %if pbu_driver %then
@@ -98,18 +119,6 @@ module pbu;
 %endif
 
 %if pbu_driver %then
-{ TODO(sau) the SAU6 and SAU7 PBU code
-
-  The module's code below is the SAU5's, the SAU3's, the SAU4's and the
-  SAU8's.  27
-  of the 32 PBU routines differ between the SAUs with the driver
-  (tools/sau_catalog.py), and the code segments differ in size (0x1ADC
-  on the SAU3, 0x1938 on the SAU4, 0x1FC0 on the SAU5, 0x1F7C on the
-  SAU6, 0x1CAC on the SAU7, 0x18F0 on the SAU8): the other SAUs need
-  their own forms, with their own parts, when they are translated.  The
-  SAU7's is the SAU8's but for its I/O map space (`io_regions'), its
-  cache-inhibited pages (`pmap_cache_inhibit') and PBU_$SETUP's DMA
-  mapping records (PBU_$MAPPED_INFO). }
 
 var
   pbu_wired_pages: array[1..pbu_max_wired_pages] of integer32;  { +0x00 }

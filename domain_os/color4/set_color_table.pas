@@ -1,6 +1,7 @@
 { COLOR4_$SET_COLOR_TABLE - load entries of the color lookup table.
 
   Image addresses:
+    sau7  0x3C483FF4  COLOR4_$SET_COLOR_TABLE
     sau8  0x03C798A0  COLOR4_$SET_COLOR_TABLE
 
   - count entries from first, through the board's registers

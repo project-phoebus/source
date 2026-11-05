@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E16654  TIME_$WAIT2
     sau4  0x0F817034  TIME_$WAIT2
+    sau6  0x780170D0  TIME_$WAIT2
+    sau7  0x3C4180BC  TIME_$WAIT2
     sau8  0x03C1756C  TIME_$WAIT2
     sau9  0x3C4186D8  TIME_$WAIT2
 

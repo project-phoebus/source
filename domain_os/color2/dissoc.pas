@@ -3,6 +3,7 @@
 
   Image addresses:
     sau5  0x00E7321E  COLOR2_$DISSOC
+    sau6  0x7807A130  COLOR2_$DISSOC
 
   - Only for the display's owner: the board is waited for and the
     display has no owner.  COLOR2_$BUSY_WAIT's status is ignored.

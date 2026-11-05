@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E062FA  ast_$invalidate_with_wait (nested)
     sau4  0x0F806694  ast_$invalidate_with_wait (nested)
+    sau6  0x78006922  ast_$invalidate_with_wait (nested)
+    sau7  0x3C406D86  ast_$invalidate_with_wait (nested)
     sau9  0x3C407586  ast_$invalidate_with_wait (nested)
 
   Assume we're called with the AST lock held.
@@ -92,8 +94,7 @@
             entry^.vpn := mmap[ppn].disk_addr.all;
             entry^.hi_flags := entry^.hi_flags + [15];
 %else
-            entry^.all := entry^.all & 16#FF800000;
-            entry^.all := entry^.all ! mmap[ppn].disk_addr.all;
+            entry^.fentry.fm_daddr := linteger(mmap[ppn].disk_addr.all);
             entry^.flags := entry^.flags + [6];
 %endif
             mmap_$free_remove(mmap[ppn], ppn);

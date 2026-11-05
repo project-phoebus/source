@@ -2,6 +2,8 @@
 
   Image addresses:
     sau2  0x00E0FAE6  NETWORK_$WRITE
+    sau6  0x7801044C  NETWORK_$WRITE
+    sau7  0x3C411964  NETWORK_$WRITE
     sau8  0x03C10E14  NETWORK_$WRITE
 
   - count pages from physical page ppn go as page-out requests of the

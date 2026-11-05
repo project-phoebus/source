@@ -5,6 +5,7 @@
     sau2  0x00E19776  WIN_$DO_IO
     sau4  0x0F81A0B0  WIN_$DO_IO
     sau5  0x00E19C2C  WIN_$DO_IO
+    sau6  0x7801A060  WIN_$DO_IO
 
   - A format request goes to win_$format_track.  Under the module's
     lock the ANSI form runs up to 24 passes of seek and transfer, a seek
@@ -43,7 +44,9 @@ var
   retries: integer;
   dma_retries: integer;
   dc_retries: integer;
+%if memory_parity %then
   parity_err: boolean;
+%endif
 begin
   p := addr(req);
   result := false;
@@ -119,10 +122,14 @@ begin
         status := status_$disk_controller_busy;
     end
     else if status = status_$memory_parity_error_during_disk_write then begin
+%if memory_parity %then
       parity_err := parity_$chk_io(rshft(win_cur_req^.phys, 10),
                                    win_cur_req^.ppn) <> 0;
       if parity_err then
         exit;
+%else
+      exit;
+%endif
     end
     else if status = status_$disk_data_check then begin
       if win_cur_req^.owner_op.chksum then

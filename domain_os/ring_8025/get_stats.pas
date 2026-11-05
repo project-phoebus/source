@@ -1,6 +1,7 @@
 { RING_8025_$GET_STATS - return a unit's statistics.
 
   Image addresses:
+    sau7  0x3C49838E  RING_8025_$GET_STATS
     sau8  0x03C8B97E  RING_8025_$GET_STATS
     sau9  0x3C487582  RING_8025_$GET_STATS
 

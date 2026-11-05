@@ -3,6 +3,8 @@
   Image addresses:
     sau3  0x00E58EFA  PBU_$FREE
     sau5  0x00E590C8  PBU_$FREE
+    sau6  0x78060D94  PBU_$FREE
+    sau7  0x3C4697EA  PBU_$FREE
     sau8  0x03C617DA  PBU_$FREE
 
   - Under the exclusion lock: IO_$FREE of the space at iova (a failure

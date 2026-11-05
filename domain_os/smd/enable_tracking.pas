@@ -4,6 +4,8 @@
     sau2  0x00E6E45C  SMD_$ENABLE_TRACKING
     sau4  0x0F878BF2  SMD_$ENABLE_TRACKING
     sau5  0x00E708DE  SMD_$ENABLE_TRACKING
+    sau6  0x78077C68  SMD_$ENABLE_TRACKING
+    sau7  0x3C481742  SMD_$ENABLE_TRACKING
     sau9  0x3C474E62  SMD_$ENABLE_TRACKING
 
   - window_id is the cursor number to track with; param2 is not read.

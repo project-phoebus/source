@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E74B3C  MST_$FREE_ASID
     sau4  0x0F8822C8  MST_$FREE_ASID
+    sau6  0x7808312C  MST_$FREE_ASID
+    sau7  0x3C48B2BA  MST_$FREE_ASID
     sau8  0x03C7F550  MST_$FREE_ASID
     sau9  0x3C47C616  MST_$FREE_ASID
 
@@ -50,7 +52,7 @@ begin
   if status.all = status_$ok then begin
     area_$free_asid(asid);
     ml_$lock(ml_$mst_asid_lock);
-%if large_address_space or vm_8192_segs %then
+%if large_address_space or vm_8192_segs or vm_65536_segs %then
     private := mst_$regions_active[asid] * mst_private_regions;
     if private <> [] then begin
       group := 0;

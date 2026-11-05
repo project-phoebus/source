@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E44AAE  MST_$GET_PRIVATE_SIZE
     sau4  0x0F84CF16  MST_$GET_PRIVATE_SIZE
+    sau6  0x7804C228  MST_$GET_PRIVATE_SIZE
+    sau7  0x3C45501C  MST_$GET_PRIVATE_SIZE
     sau8  0x03C4D0AC  MST_$GET_PRIVATE_SIZE
     sau9  0x3C44C21C  MST_$GET_PRIVATE_SIZE
 
@@ -26,7 +28,7 @@ procedure mst_$get_private_size(in asid: pinteger;
                                 out status_ret: status_$t);
 const
   { private A's MST words }
-%if large_address_space or vm_8192_segs %then
+%if large_address_space or vm_8192_segs or vm_65536_segs %then
   private_a_words = mst_$private_a_size div 64;
 %elseif run_time_layout %then
   private_a_words = 25;

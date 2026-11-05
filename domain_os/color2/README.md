@@ -43,8 +43,29 @@ control block KOLOR_CTL is SMD's declaration
 COLOR2 uses), and the display memories SMD's (DISP_MEM_2KX1K,
 DISP1_MEM); `color2.pas` includes those files.
 
+## The SAU6
+
+The SAU6's map has the SAU5's segments but .TEXT, 0x4E4 bytes, and
+COLOR2_ASM's other code.  Two arms:
+
+- COLOR2_$INT_INIT (`gpu_own_vectors`): COLOR2_$INT_DECODE goes in the
+  board's own vector, COLOR2_DONE_VEC, where the SAU5 calls COLOR_ASM's
+  COLOR_$VECTOR_INIT (the SAU6 has no COLOR module).
+- COLOR2_$ASSOC (`vm_regions`, the region MMU's): the board's 64 pages
+  mapped into the caller's special segment with MST_$MAP_SPECIAL and
+  MMU_$INSTALL_SPECIAL (from page 16#1240 for the DN580, 16#180 for the
+  DN570), and ctl that segment's address, as COLOR_$ASSOC does on the
+  SAU4.
+
+The other routines are the SAU5's source; the SAU6's code differs only
+in the 68020's code generation, registers and the I/O addresses.
+COLOR2_ASM is `sau6/color2_asm.s`: COLOR2_$INT_DECODE is entered by
+its vector, raises the IPL, switches to the interrupt stack and
+advances COLOR2_$INT_EC through PROC1_$INT_ADVANCE.  Its 0x24 bytes were
+checked against the image by assembling the file with `m68k-elf-as
+-m68020 -m68881` and linking it at the map's addresses.
+
 ## Open items
 
-- TODO(sau): the SAU6's COLOR2 code, and its COLOR2_$INT_INIT, which
-  cannot call COLOR_ASM's COLOR_$VECTOR_INIT there (`color2.pas`,
-  `int_init.pas`).
+- TODO(sau): the SAU6 link needs COLOR2_DONE_VEC (the TRAP_PAGE's
+  16#290) as an absolute symbol.

@@ -1,6 +1,7 @@
 { ring_$set_ccb - give the controller a unit's command block.
 
   Image addresses:
+    sau7  0x3C48DE0C  ring_$set_ccb (module-local)
     sau8  0x03C8160C  ring_$set_ccb (module-local)
     sau9  0x3C47D20C  ring_$set_ccb (module-local)
 

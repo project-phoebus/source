@@ -61,7 +61,9 @@
 | The SAU4's passes MMU_$MCR_CHANGE 0x10F (`mcr_change_low_bits': its
 | MMU_$MCR_CHANGE flips the low four bits of an argument from 0xFF up
 | without the shift; mmu/sau4/mmu_asm.s) where the SAU2 passes 7; that
-| line carries the SAU4 image's address.
+| line carries the SAU4 image's address.  The SAU6's passes 1
+| (`mcr_change_bit_0'); its other lines are the SAU2's (the SAU6 image's
+| handler, 0x7802E62C, is the SAU2's code with its own addresses).
 |
 | The image spells `cmp.l' / `sub.l #1000000,D0' as CMP/SUB <ea>=#imm;
 | they are `.short' opcode words with their immediates here.
@@ -257,6 +259,8 @@ TIME_$TIMER_HANDLER:
         move.w  #2,(%a0)                        | e2b1e6  30bc 0002
         .if mcr_change_low_bits
         move.w  #0x10f,-(%sp)                   | sau4 f82d89e  3f3c 010f
+        .elseif mcr_change_bit_0
+        move.w  #1,-(%sp)                       | sau6 7802e6e6  3f3c 0001
         .else
         move.w  #7,-(%sp)                       | e2b1ea  3f3c 0007
         .endif

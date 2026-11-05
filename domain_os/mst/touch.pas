@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E0DD40  MST_$TOUCH
     sau4  0x0F80E384  MST_$TOUCH
+    sau6  0x7800E4AC  MST_$TOUCH
+    sau7  0x3C40F848  MST_$TOUCH
     sau8  0x03C0ED44  MST_$TOUCH
     sau9  0x3C40FE10  MST_$TOUCH
 
@@ -184,7 +186,14 @@ begin
       smap^.table := (smap^.table & 15) + aste^.pmap_pa;
       smap^.lim.limit := 31;
       if asid = 0 then smap^.flags := smap^.flags + [9];
-%if not smap_shared_global %then
+%if smap_shared_global_68851 %then
+      { the bit set for a global segment is cleared at once on the
+        MC68030; the MC68851 keeps it }
+      if m68030 then begin
+        smap^.flags := smap^.flags - [9];
+        smap^.flags := smap^.flags + [10..15];
+      end;
+%elseif not smap_shared_global %then
       { the bit set for a global segment is cleared at once }
       smap^.flags := smap^.flags - [9];
       smap^.flags := smap^.flags + [10..15];

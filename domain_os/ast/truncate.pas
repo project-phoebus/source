@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E05C40  AST_$TRUNCATE
     sau4  0x0F805FDE  AST_$TRUNCATE
+    sau6  0x78006278  AST_$TRUNCATE
+    sau7  0x3C4066D6  AST_$TRUNCATE
     sau8  0x03C05ECA  AST_$TRUNCATE
     sau9  0x3C406ED6  AST_$TRUNCATE
 
@@ -191,8 +193,7 @@ begin
 %if pmmu_page_maps %then
             vpn := disk_addr.all;
 %else
-            all := all & 16#FF800000;
-            all := all ! disk_addr.all;
+            fentry.fm_daddr := linteger(disk_addr.all);
 %endif
             mmap_$free_remove(mmap[ppn], ppn);
           end;
@@ -206,10 +207,10 @@ begin
           aste^.flags := aste^.flags + [13];
         end;
 %else
-        if (all & 16#7FFFFF) <> 0 then begin
-          blocks[nblocks + 1] := all & 16#3FFFFF;
+        if fentry.fm_daddr <> 0 then begin
+          blocks[nblocks + 1] := dentry.daddr;
           nblocks := nblocks + 1;
-          all := all & 16#FF800000;
+          fentry.fm_daddr := 0;
           aste^.flags := aste^.flags + [13];
         end;
 %endif

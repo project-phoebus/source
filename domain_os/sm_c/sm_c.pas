@@ -5,6 +5,7 @@
     sau3  0x00E2CBE4  SM_C data (WIRED_DATA, 0x98 bytes)
     sau4  0x0F8311B4  SM_C data (WIRED_DATA, 0x98 bytes)
     sau5  0x00E2F3B4  SM_C data (WIRED_DATA, 0x98 bytes)
+    sau6  0x78032CBC  SM_C data (WIRED_DATA, 0x98 bytes)
 
   One compilation unit, one code segment and one data segment: on the
   SAU5 the map's SM_C code segment in .TEXT (0xD5C bytes: eight

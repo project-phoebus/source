@@ -1,6 +1,7 @@
 { ethernet_get_pcb - take a command block from the adapter.
 
   Image addresses:
+    sau7  0x3C491274  ethernet_get_pcb
     sau8  0x03C84A74  ethernet_get_pcb
     sau9  0x3C480674  ethernet_get_pcb
 
@@ -24,7 +25,11 @@ function ethernet_get_pcb(u: ethernet_$unit_ptr_t; pcb: ethernet_$pcb_ptr_t;
   internal;
 var
   i: pinteger;
+%if ethernet_long_polls %then
+  t: integer32;
+%else
   t: pinteger;
+%endif
   s: ethernet_$asr_t;
   last: pinteger;
 begin

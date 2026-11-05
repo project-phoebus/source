@@ -2,6 +2,8 @@
 
   Image addresses:
     sau2  0x00E0F45E  NETWORK_$SET_SERVICE
+    sau6  0x7800FDCE  NETWORK_$SET_SERVICE
+    sau7  0x3C4112E6  NETWORK_$SET_SERVICE
     sau8  0x03C10796  NETWORK_$SET_SERVICE
 
   - Under the module's spin lock: operation 0 adds the value's services,

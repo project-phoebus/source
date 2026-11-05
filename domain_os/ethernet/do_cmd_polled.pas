@@ -2,6 +2,7 @@
   reply.
 
   Image addresses:
+    sau7  0x3C491642  ethernet_do_cmd_polled
     sau8  0x03C84E3E  ethernet_do_cmd_polled
     sau9  0x3C480A3E  ethernet_do_cmd_polled
 

@@ -2,6 +2,8 @@
   that a range continues.
 
   Image addresses:
+    sau6  0x780880CA  ethernet_find_adjacent
+    sau7  0x3C492572  ethernet_find_adjacent
     sau8  0x03C85D6E  ethernet_find_adjacent
     sau9  0x3C48196E  ethernet_find_adjacent
 

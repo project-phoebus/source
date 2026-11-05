@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E14A70  PROC1_$TS_END_CALLBACK
     sau4  0x0F8152E4  PROC1_$TS_END_CALLBACK
+    sau6  0x78015220  PROC1_$TS_END_CALLBACK
+    sau7  0x3C416778  PROC1_$TS_END_CALLBACK
 
   - The timeslice element's callback; its datum is the pid.
   - With interrupts off, the null process (pid 2) gets the timeslice -1;

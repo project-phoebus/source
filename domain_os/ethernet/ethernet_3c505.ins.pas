@@ -10,6 +10,12 @@
   descriptive.  Include base/base.ins.pas, ec/ec.ins.pas, ml/ml.ins.pas,
   io/io.ins.pas, uid/uid.ins.pas, di/di.ins.pas, mac_os/mac_os.ins.pas
   and xns/xns_idp.ins.pas (xns_$host_t) before it.
+
+  With `ethernet_vme', the other form: the driver of the Ethernet
+  controller on the VME bus.  Its registers, the slots of its command
+  and reply rings, the unit's block in the shared section
+  ETHERNET_VME_$SH and its form of the unit record are declared here
+  under that part; the names of that form are all descriptive.
 }
 
 const
@@ -41,12 +47,23 @@ const
     reset and a downloaded program's start (ethernet_reset,
     ethernet_execute), a reply byte (ethernet_get_pcb), a command byte
     and the adapter's answer to a command block (ethernet_send_pcb).
-    Fewer with `ethernet_short_polls'. }
-%if ethernet_short_polls %then
+    Fewer with `ethernet_short_polls', more with `ethernet_long_polls'.
+    With `ethernet_vme': the controller's reset (ethernet_reset) and
+    its command register's emptying before a command byte
+    (ethernet_kick). }
+%if ethernet_vme %then
+  eth_reset_polls = 2000000;
+  eth_cmd_byte_polls = 1000000;
+%elseif ethernet_short_polls %then
   eth_reset_polls = 3000000;
   eth_reply_byte_polls = 35000;
   eth_cmd_byte_polls = 20000;
   eth_cmd_answer_polls = 125000;
+%elseif ethernet_long_polls %then
+  eth_reset_polls = 7500000;
+  eth_reply_byte_polls = 87500;
+  eth_cmd_byte_polls = 50000;
+  eth_cmd_answer_polls = 312500;
 %else
   eth_reset_polls = 4200000;
   eth_reply_byte_polls = 50000;
@@ -94,8 +111,13 @@ const
   { The socket of a channel the system opened (as the ring's). }
   eth_os_socket = 16#E1;
 
-  { The version of a channel's open arguments the driver takes at most. }
+  { The version of a channel's open arguments the driver takes at most
+    (with `ethernet_vme', 1). }
+%if ethernet_vme %then
+  eth_open_version = 1;
+%else
   eth_open_version = 2;
+%endif
 
   { The Ethernet types of Domain packets and of ARP packets. }
   eth_type_domain = 16#8019;
@@ -127,6 +149,74 @@ const
   eth_arp_lifetime = 2400;
   eth_arp_max_tries = 20;
 
+  { The counts of a unit's statistics (ethernet_$stats_t): the
+    adapter's own first (ethernet_read_stats; with `ethernet_vme', the
+    interrupt routine adds the controller's), then the driver's: an
+    operation that failed, a received packet no socket took, an
+    interrupt or reply the driver did not expect, a transmit that
+    failed (status_$eth_transmit_failed).  eth_stats_len: the bytes
+    of ethernet_$stats_t. }
+%if ethernet_vme %then
+  eth_stats_len = 50;
+  eth_stat_counts = 12;
+  eth_stat_errors = 9;
+  eth_stat_not_delivered = 10;
+  eth_stat_unexpected = 11;
+  eth_stat_xmit_failed = 12;
+%else
+  eth_stats_len = 42;
+  eth_stat_counts = 10;
+  eth_stat_errors = 7;
+  eth_stat_not_delivered = 8;
+  eth_stat_unexpected = 9;
+  eth_stat_xmit_failed = 10;
+%endif
+
+%if ethernet_vme %then
+  { The VME controller's status register's bits (ethernet_$regs_t's
+    csr, read): ready, set once a reset is done; busy, set while the
+    command register holds a byte the controller has not taken. }
+  eth_vme_csr_ready = 0;
+  eth_vme_csr_busy = 3;
+
+  { The slots of each ring, and the room of a receive and of a transmit
+    buffer in the shared block. }
+  eth_vme_ring_slots = 8;
+  eth_vme_rcv_buf_len = 1518;
+  eth_vme_xmit_buf_len = 1514;
+
+  { A ring slot's owner bits (ethernet_$vme_slot_t's owner): a command
+    slot is posted with eth_vme_slot_ctlr added to eth_vme_slot_busy and
+    is the host's again once the controller has cleared
+    eth_vme_slot_busy; a reply slot is handed back with both set, holds
+    a reply once the controller has cleared eth_vme_slot_ctlr, and the
+    reply is good when eth_vme_slot_busy and eth_vme_slot_error are
+    clear too. }
+  eth_vme_slot_ctlr = 0;
+  eth_vme_slot_busy = 1;
+  eth_vme_slot_error = 2;
+
+  { Physical memory the controller reaches: from eth_vme_dma_base below
+    eth_vme_dma_limit, at its address less eth_vme_dma_base with the top
+    byte eth_vme_bus_space (ethernet_$vme_bus_t). }
+  eth_vme_dma_base = 16#1000000;
+  eth_vme_dma_limit = 16#2000000;
+  eth_vme_bus_space = 16#1B;
+
+  { The controller's requests (a slot's request byte; a reply carries
+    its request's).  eth_vme_cmd_x08, _x0a and _x0e are requests whose
+    meaning is not known: x08 is given once when a unit starts, x0a
+    sets a mode, its parameter and value in the slot (ethernet_configure
+    and the start), x0e has a length of its own only (ethernet_start_cmd). }
+  eth_vme_cmd_x08 = 8;
+  eth_vme_cmd_set_address = 9;
+  eth_vme_cmd_x0a = 10;
+  eth_vme_cmd_read_stats = 11;
+  eth_vme_cmd_transmit = 12;
+  eth_vme_cmd_receive = 13;
+  eth_vme_cmd_x0e = 14;
+%endif
+
 type
   { A byte of the adapter, read or written as a number. }
   ethernet_$byte_t = [byte] 0..255;
@@ -134,6 +224,21 @@ type
   { The adapter status register's byte as a set (above, eth_asr_*). }
   ethernet_$asr_t = set of 0..7;
 
+%if ethernet_vme %then
+  { The VME controller's registers, bytes at odd addresses: the reset
+    register (any write resets the controller) and the status register,
+    read as a number or as its bits (eth_vme_csr_*), which is the
+    command register when written.  `[device]': every reference is a
+    bus cycle. }
+  ethernet_$regs_t = [device] packed record
+    unused_00: char;                      { 0x00 }
+    reset: ethernet_$byte_t;              { 0x01 }
+    unused_02: char;                      { 0x02 }
+    case integer of
+      1: (csr: ethernet_$byte_t);         { 0x03 }
+      2: (csr_bits: ethernet_$asr_t);     { 0x03 }
+  end;
+%else
   { The adapter's registers on the AT bus, each port a byte or word 2
     bytes from the last: the command register (both directions), the
     status register, the data register (16 bits; only the hand-written
@@ -147,6 +252,7 @@ type
     data: integer;                        { 0x04 }
     control: ethernet_$byte_t;            { 0x06 }
   end;
+%endif
   ethernet_$regs_ptr_t = ^ethernet_$regs_t;
 
   { An Ethernet address, six bytes in two packed 24-bit halves, or its
@@ -299,6 +405,15 @@ type
   end;
   ethernet_$xmit_list_t = array[1..16] of ethernet_$xmit_piece_t;
   ethernet_$xmit_list_ptr_t = ^ethernet_$xmit_list_t;
+%if ethernet_vme %then
+
+  { With `ethernet_vme', the pieces' physical addresses, parallel to the
+    list: a piece at eth_vme_dma_limit or above (as every caller gives)
+    is copied into the transmit buffer, one below it is given to the
+    controller where it is.  80 bytes, as its callers' frames have it. }
+  ethernet_$xmit_pa_list_t = array[1..20] of integer32;
+  ethernet_$xmit_pa_list_ptr_t = ^ethernet_$xmit_pa_list_t;
+%endif
 
   { An element of a caller's buffer vector, 6 bytes: its address and
     length. }
@@ -360,19 +475,25 @@ type
   end;
 
   { An entry of a unit's multicast list, 8 bytes: its users (0: the
-    entry is free) and the address. }
+    entry is free) and the address.  With `ethernet_vme', 10 bytes: then
+    the controller's address entry it is loaded in (the list's entry
+    number plus 2; 0: not loaded). }
   ethernet_$mcast_t = record
     count: integer;                       { 0x00 }
     addr: ethernet_$addr_t;               { 0x02 }
+%if ethernet_vme %then
+    loaded: integer;                      { 0x08 }
+%endif
   end;
   ethernet_$mcast_list_t = array[1..15] of ethernet_$mcast_t;
   ethernet_$mcast_list_ptr_t = ^ethernet_$mcast_list_t;
 
   { A unit's statistics, 42 bytes, as ETHERNET_$GET_STATS returns them:
-    a version (1), then ten counts. }
+    a version (1), then ten counts (eth_stat_*); with `ethernet_vme',
+    50 bytes, twelve counts. }
   ethernet_$stats_t = record
     version: integer;                     { 0x00 }
-    counts: array[1..10] of integer32;    { 0x02 }
+    counts: array[1..eth_stat_counts] of integer32;   { 0x02 }
   end;
   ethernet_$stats_ptr_t = ^ethernet_$stats_t;
 
@@ -405,10 +526,111 @@ type
       7: (station: ethernet_$addr_t);     { 0x00 }
   end;
 
+%if ethernet_vme %then
+  { A bus address as the controller takes it: a longword, its top byte
+    eth_vme_bus_space. }
+  ethernet_$vme_bus_t = record
+    case integer of
+      1: (all: integer32);                { 0x00 }
+      2: (space: ethernet_$byte_t);       { 0x00 }
+  end;
+
+  { A piece of a packet to transmit as a command slot gives it, 6 bytes:
+    its length and bus address. }
+  ethernet_$vme_frag_t = record
+    len: integer;                         { 0x00 }
+    bus: integer32;                       { 0x02 }
+  end;
+
+  { A slot of the VME controller's command or reply ring, 64 bytes: the
+    offset of the next slot as the controller sees it, the owner bits
+    (eth_vme_slot_*), the length of the request after the link word, the
+    request's identifier (the reply eventcount's awaited value), the
+    request (eth_vme_cmd_*) and, in a reply, its result; then the
+    request's own: a parameter and a value or count, a length and a bus
+    address (eth_vme_cmd_receive), an Ethernet address
+    (eth_vme_cmd_set_address), the count and bus address of the
+    controller's statistics (eth_vme_cmd_read_stats), the pieces of a
+    packet to transmit (eth_vme_cmd_transmit). }
+  ethernet_$vme_slot_t = [device] record
+    link: integer;                        { 0x00 }
+    byte_02: ethernet_$byte_t;            { 0x02 }
+    owner: [byte] set of 0..7;            { 0x03 }
+    len: integer;                         { 0x04 }
+    word_06: integer;                     { 0x06 }
+    id: integer32;                        { 0x08 }
+    request: ethernet_$byte_t;            { 0x0C }
+    result: ethernet_$byte_t;             { 0x0D }
+    case integer of
+      1: (param: ethernet_$byte_t;        { 0x0E }
+          value: ethernet_$byte_t;        { 0x0F }
+          data_len: integer;              { 0x10 }
+          buf: integer32);                { 0x12 }
+      2: (param_2: ethernet_$byte_t;      { 0x0E }
+          value_2: ethernet_$byte_t;      { 0x0F }
+          hw_addr: ethernet_$addr_t);     { 0x10 }
+      3: (param_3: ethernet_$byte_t;      { 0x0E }
+          value_3: ethernet_$byte_t;      { 0x0F }
+          stats_count: integer;           { 0x10 }
+          unused_12: integer;             { 0x12 }
+          stats_bus: integer32);          { 0x14 }
+      4: (bytes: array[14..63] of ethernet_$byte_t);   { 0x0E }
+      5: (param_5: ethernet_$byte_t;      { 0x0E }
+          frag_count: ethernet_$byte_t;   { 0x0F }
+          frags: array[1..8] of ethernet_$vme_frag_t);  { 0x10 }
+  end;
+
+  { A ring: a word the controller reads first, then the slots. }
+  ethernet_$vme_ring_t = record
+    head: integer;                        { 0x000 }
+    slots: array[1..eth_vme_ring_slots] of ethernet_$vme_slot_t;  { 0x002 }
+  end;
+  ethernet_$vme_ring_ptr_t = ^ethernet_$vme_ring_t;
+
+  { The controller's statistics as its eth_vme_cmd_read_stats reply
+    leaves them, eight counts; the interrupt routine adds all but the
+    fourth to the unit's first eight. }
+  ethernet_$vme_stats_t = array[1..8] of integer32;
+  ethernet_$vme_stats_ptr_t = ^ethernet_$vme_stats_t;
+
+  { The block a unit starts the controller with, 80 bytes, as bytes,
+    words or longwords (ethernet_setup fills it; the controller writes
+    its byte 6, 16#FF until it has taken the block, then 0).
+    `[device]': the controller reads and writes it. }
+  ethernet_$vme_cfg_t = [device] record
+    case integer of
+      1: (bytes: array[0..79] of ethernet_$byte_t);
+      2: (words: array[0..39] of integer);
+      3: (longs: array[0..19] of integer32);
+  end;
+
+  { A unit's block of the shared section ETHERNET_VME_$SH, 0x1C24
+    bytes: the start block, the command and reply rings, the
+    controller's statistics and the two receive and two transmit
+    buffers. }
+  ethernet_$vme_sh_t = record
+    cfg: ethernet_$vme_cfg_t;             { 0x0000 }
+    cmd_ring: ethernet_$vme_ring_t;       { 0x0050 }
+    reply_ring: ethernet_$vme_ring_t;     { 0x0252 }
+    stats: ethernet_$vme_stats_t;         { 0x0454 }
+    rcv_buf: array[1..2, 1..eth_vme_rcv_buf_len] of char;   { 0x0474 }
+    xmit_buf: array[1..2, 1..eth_vme_xmit_buf_len] of char; { 0x1050 }
+  end;
+  ethernet_$vme_sh_ptr_t = ^ethernet_$vme_sh_t;
+%endif
+
   { A unit's record, 0x12B8 bytes, ETHER_UCB's element (the map's
     ETHER_UCB section, 0x2570 bytes, holds the two units).  The fields
     are those the translated routines reach; the unused_ fields hold the
-    places of the rest (the TODO(pascal) below). }
+    places of the rest (the TODO(pascal) below).  With `ethernet_vme',
+    0x1338 bytes (ETHER_UCB 0x2670): the same to the multicast list,
+    whose entries are longer, then the VME form's own fields: the
+    mapped pages of the packet being sent and received, the receive
+    buffers' lengths, the reply's request, status and identifier, the
+    transmit wait's eventcount and lock, the rings' and buffers' indices
+    (each the next slot or buffer to use and the last one done), the
+    buffers' busy flags, and the shared block's addresses as the host
+    and as the controller sees them. }
   ethernet_$unit_t = record
     flags: ethernet_$unit_flags_t;        { 0x000 }
     station: ethernet_$addr_t;            { 0x002 }
@@ -443,6 +665,49 @@ type
     ranges: ethernet_$range_list_t;       { 0x1110: the channels' types }
     range_count: pinteger;                { 0x11D0 }
     mcast: ethernet_$mcast_list_t;        { 0x11D2 }
+%if ethernet_vme %then
+    mcast_count: pinteger;                { 0x1268: entries in use }
+    wired: boolean;                       { 0x126A: its pages are wired }
+    unused_126b: char;                    { 0x126B }
+    di_elem: di_$q_elem_t;                { 0x126C: the deferred work's }
+    idle_defers: integer;                 { 0x127C: deferred calls with
+                                            nothing to do }
+    unused_127e: integer;                 { 0x127E }
+    xmit_map_va: integer32;               { 0x1280: NETBUF_$GETVA's }
+    rcv_map_va: integer32;                { 0x1284   pages }
+    rcv_len: array[1..2] of integer;      { 0x1288: the buffers' packets }
+    reply_cmd: integer;                   { 0x128C: the request awaited }
+    reply_status: integer;                { 0x128E: its reply's status }
+    reply_id: integer32;                  { 0x1290: its identifier }
+    xmit_wait_ec: ec_$eventcount_t;       { 0x1294: a transmit buffer
+                                            freed }
+    xmit_lock: ml_$exclusion_t;           { 0x12A0: one transmit at a
+                                            time }
+    unused_12b2: integer;                 { 0x12B2 }
+    xmit_idx: pinteger;                   { 0x12B4 }
+    xmit_done: pinteger;                  { 0x12B6 }
+    rcv_idx: pinteger;                    { 0x12B8 }
+    rcv_done: pinteger;                   { 0x12BA }
+    cmd_idx: pinteger;                    { 0x12BC }
+    cmd_done: pinteger;                   { 0x12BE }
+    ring_12c0: integer;                   { 0x12C0 }
+    reply_idx: pinteger;                  { 0x12C2 }
+    xmit_busy: array[1..2] of boolean;    { 0x12C4 }
+    rcv_busy: array[1..2] of boolean;     { 0x12C6 }
+    sh: ethernet_$vme_sh_ptr_t;           { 0x12C8: the shared block }
+    cmd_ring: ethernet_$vme_ring_ptr_t;   { 0x12CC }
+    reply_ring: ethernet_$vme_ring_ptr_t; { 0x12D0 }
+    ctl_stats: ethernet_$vme_stats_ptr_t; { 0x12D4 }
+    ctl_stats_bus: integer32;             { 0x12D8 }
+    rcv_va: array[1..2] of univ_ptr;      { 0x12DC: the buffers, and }
+    rcv_bus: array[1..2] of integer32;    { 0x12E4   their bus addresses }
+    xmit_va: array[1..2] of univ_ptr;     { 0x12EC }
+    xmit_bus: array[1..2] of integer32;   { 0x12F4 }
+    xmit_dat: array[1..2] of integer32;   { 0x12FC: the data pages sent
+                                            from, returned when done }
+    stats: ethernet_$stats_t;             { 0x1304 }
+    unused_1336: integer;                 { 0x1336 }
+%else
     mcast_count: pinteger;                { 0x124A: entries in use }
     wired: boolean;                       { 0x124C: its pages are wired }
     unused_124d: char;                    { 0x124D }
@@ -463,6 +728,7 @@ type
     ec_1280: ec_$eventcount_t;            { 0x1280 }
     stats: ethernet_$stats_t;             { 0x128C }
     unused_12b6: integer;                 { 0x12B6 }
+%endif
   end;
   ethernet_$unit_ptr_t = ^ethernet_$unit_t;
 
@@ -484,6 +750,11 @@ const
   eth_unit_rcv_pending = 6;
   eth_unit_cmd_pending = 7;
   eth_unit_program = 8;
+  { With `ethernet_vme' (no program is downloaded): member 8 while a
+    transmit buffer is busy, member 9 while a sender waits for one
+    (xmit_wait_ec). }
+  eth_unit_xmit_busy = 8;
+  eth_unit_xmit_wait = 9;
 
   { A unit's receive state (rcv_state): idle; a packet to read (the
     command lock was held at interrupt level); a packet in the pages, to
@@ -596,6 +867,12 @@ var
     ETHERNET_$INIT copies it into the driver record's UID. }
   ethernet_$network_uid: extern uid_$t;
 
+%if ethernet_vme %then
+  { ETHERNET_VME_$NETWORK_UID (map symbol in the same run): the VME
+    form's network UID, which its ETHERNET_$INIT copies instead. }
+  ethernet_vme_$network_uid: extern uid_$t;
+%endif
+
 { TODO(pascal) MMU's SAU9 headings belong in mmu/mmu.ins.pas
 
   The SAU9's MMU_$REMOVE takes a word after its longword, 0 at the
@@ -613,6 +890,13 @@ var
 procedure mmu_$remove(va: integer32; flags: integer);
   options(extern, val_param);
 
+%if ethernet_vme %then
+{ MMU_$VTOP (hand-written): the page number of a virtual address, the
+  address by value. }
+function mmu_$vtop(va: integer32; out status: status_$t): integer32;
+  options(extern, val_param);
+
+%endif
 { MMU_$INSTALL (hand-written): the page number and the virtual address,
   longwords, then the ASID and the protection, all by value. }
 procedure mmu_$install(ppn: integer32; va: univ_ptr; asid: integer;

@@ -1,6 +1,7 @@
 { ethernet_send_pcb - give the adapter a command block.
 
   Image addresses:
+    sau7  0x3C491332  ethernet_send_pcb
     sau8  0x03C84B2E  ethernet_send_pcb
     sau9  0x3C48072E  ethernet_send_pcb
 
@@ -23,7 +24,11 @@ function ethernet_send_pcb(u: ethernet_$unit_ptr_t; pcb: ethernet_$pcb_ptr_t;
 var
   len: integer;
   i: integer;
+%if ethernet_long_polls %then
+  t: pinteger;
+%else
   t: integer;
+%endif
   cnt: integer32;
   s: ethernet_$asr_t;
 begin

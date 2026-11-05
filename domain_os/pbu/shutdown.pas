@@ -3,6 +3,8 @@
   Image addresses:
     sau3  0x00E59932  PBU_$SHUTDOWN
     sau5  0x00E59B9E  PBU_$SHUTDOWN
+    sau6  0x78061852  PBU_$SHUTDOWN
+    sau7  0x3C46A1B2  PBU_$SHUTDOWN
     sau8  0x03C62088  PBU_$SHUTDOWN
 
   - Every set-up unit with an owner and no kernel driver is set down,

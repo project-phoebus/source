@@ -1,6 +1,7 @@
 { ring_8025_xmit_halt - stop the adapter's transmitter.
 
   Image addresses:
+    sau7  0x3C4962F6  ring_8025_xmit_halt
     sau8  0x03C899CE  ring_8025_xmit_halt
     sau9  0x3C4855B2  ring_8025_xmit_halt
 

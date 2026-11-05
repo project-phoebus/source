@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E147FA  PROC1_$SUSPEND
     sau4  0x0F81506E  PROC1_$SUSPEND
+    sau6  0x78014FBA  PROC1_$SUSPEND
+    sau7  0x3C416512  PROC1_$SUSPEND
 
   - With interrupts off PROC1_$TRY_TO_SUSPEND suspends the process or
     marks it, and the dispatcher runs (and sets the priority).

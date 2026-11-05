@@ -5,6 +5,7 @@
     sau2  0x00E19576  SEEK
     sau4  0x0F819A74  seek (module-local)
     sau5  0x00E19AE6  SEEK
+    sau6  0x78019F1A  SEEK
 
   - The ANSI form, up to two tries: the head selected and checked, the
     cylinder sought; a caller that does not wait gets -1 at once, one

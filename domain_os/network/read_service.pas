@@ -2,6 +2,8 @@
 
   Image addresses:
     sau2  0x00E71D7C  NETWORK_$READ_SERVICE
+    sau6  0x78080208  NETWORK_$READ_SERVICE
+    sau7  0x3C4883B4  NETWORK_$READ_SERVICE
     sau8  0x03C7C630  NETWORK_$READ_SERVICE
 
   - While the network service is active the whole service record is

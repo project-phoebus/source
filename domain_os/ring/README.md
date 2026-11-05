@@ -197,6 +197,30 @@ bytes (RING_DATA 0x5D0, OS_INIT_DATA 4, RING_WIRED 0xAC):
 
 RING_$RCV0 and RING_$RCV1 do not load A5 in the SAU5 image (their worker
 does), where the SAU2's do; the source is the same.
+
+The SAU6's RING is the SAU5's source with `ring_controller_dma', without
+`ring_vector_regs' and `ring_owner_test_reversed' (RING_$SVC_WRITE tests
+the owner as the SAU2 does) and without `memory_parity', with three
+parts of its own; its blocks are the SAU5's sizes and bytes (RING_DATA
+0x5D0, OS_INIT_DATA 4, RING_WIRED 0xAC, RINGLOG_ 0x3C) and its RING_PROC
+segment is 0x291C bytes:
+
+- `ring_id_not_found': RING_$GET_ID (`get_id.pas') answers 1 for
+  status_$io_controller_not_found too;
+- `ring_sysbus_vector': ring_$init_internal (`init_internal.pas')
+  defines RING_$INT for the DCTE's vector with SYSBUS_$DEFINE_INT and
+  sets the three vector registers;
+- `ring_lights_8_4': RING_$SENDP's transmit light and RING_$INT's
+  receive light are 16#8 and 16#4 (`sendp.pas', `int.pas');
+- without `memory_parity' a transmit bus error is not checked with
+  PARITY_$CHK_IO (`sendp.pas') and a receive bus error does not crash
+  the system (ring_$validate_receive, `rcv_from_unit_priv.pas'): both
+  are counted.
+
+The rest, RINGLOG_ included, is the SAU5's source; against the SAU9's
+code the routines that do not touch the controller differ only in the
+unit record's offsets (the SAU9's 0x4A4-byte records) and in code
+generation.
 RING_$IOCTL differs from the SAU2's only in call displacements.
 
 The SAU3's RING is the SAU2's source, with the SAU2's DMA controller
@@ -267,6 +291,13 @@ OS_INIT_DATA 4; RING_WIRED 0xAC (the SAU2's bytes).
 - ring_$clear_dma_channel and its calls are not compiled;
 - the rest is the SAU2's source, the block's offsets 16 lower from the
   wire list on.
+
+The SAU7's RING is the SAU8's source but for one part,
+`ring_pkt_index_reversed`: ring_$open_internal (`open_internal.pas`)
+indexes a channel's new packet-type entries with the table's count
+first.  Its node id PROM and RING2 are at other I/O addresses; the
+blocks (RING_DATA, OS_INIT_DATA, RING_WIRED, RINGLOG_) and RING_ASM are
+the SAU8's bytes.
 
 ## Open items
 

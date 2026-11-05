@@ -4,6 +4,7 @@
     sau3  0x00E70898  MT_$CONTROL
     sau4  0x0F87D610  MT_$CONTROL
     sau5  0x00E76402  MT_$CONTROL
+    sau6  0x7807D0B0  MT_$CONTROL
 
   - func (0..8) selects the operation (mt/mt.ins.pas); function 8
     starts a batch (mt_op_go).

@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E1491E  PROC1_$VT_INT
     sau4  0x0F815192  PROC1_$VT_INT
+    sau6  0x780150D2  PROC1_$VT_INT
+    sau7  0x3C41662A  PROC1_$VT_INT
 
   - The virtual timer word is added to the CPU clock and cleared; the
     CPU clock is returned.

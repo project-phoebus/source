@@ -4,6 +4,8 @@
     sau2  0x00E6D6B8  OS_$GET_EC
     sau3  0x00E6DAC0  OS_$GET_EC
     sau4  0x0F87723C  OS_$GET_EC
+    sau6  0x780762BC  OS_$GET_EC
+    sau7  0x3C480BE4  OS_$GET_EC
     sau8  0x03C76AA8  OS_$GET_EC
 
   - param_1 is not read.

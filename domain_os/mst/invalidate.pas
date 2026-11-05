@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E441CA  MST_$INVALIDATE
     sau4  0x0F84C490  MST_$INVALIDATE
+    sau6  0x7804B7EC  MST_$INVALIDATE
+    sau7  0x3C4545E4  MST_$INVALIDATE
     sau8  0x03C4C648  MST_$INVALIDATE
     sau9  0x3C44B7E4  MST_$INVALIDATE
 
@@ -82,7 +84,7 @@ begin
     status.all := status_$mst_invalid_length;
     return;
   end;
-%if large_address_space or vm_8192_segs %then
+%if large_address_space or vm_8192_segs or vm_65536_segs %then
   if lshft(linteger(mst_unmap_privi_first_refused), 15) <= end_va then
     goto illegal;
 %elseif run_time_layout %then

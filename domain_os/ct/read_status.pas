@@ -1,6 +1,7 @@
 { ct_read_status - read the tape drive's six status bytes and decode them.
 
   Image addresses:
+    sau7  0x3C485638  ct_read_status (module-local)
     sau8  0x03C7A26E  ct_read_status (module-local)
 
   - Each byte is taken when the adapter shows ready and acknowledged

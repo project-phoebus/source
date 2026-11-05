@@ -2,6 +2,8 @@
 
   Image addresses:
     sau2  0x00E0F414  NETWORK_$RTNHDR
+    sau6  0x7800FD84  NETWORK_$RTNHDR
+    sau7  0x3C41129C  NETWORK_$RTNHDR
     sau8  0x03C1074C  NETWORK_$RTNHDR
 
   - The module's own header page is given back by releasing the network

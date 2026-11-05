@@ -95,6 +95,26 @@ PROCEDURE$ 0xE0 bytes) and blocks (0xC8 and 8 bytes) are the SAU2's code
 and bytes at the SAU3's addresses; the only source difference is
 SIO6509_$INIT's (`../sio6509/init.pas`).
 
+## The SAU6
+
+The SAU6 (`sio2681_four_lines`, `kbd_tone`, `kbd_type_sysrev`) has the
+SAU4's routines, SIO2681_$TONE among them for the type 2 keyboard's
+speaker, and no 6509: WIRED_PROC 0x5F0 bytes, OS_INIT_PROC 0x12C,
+PROCEDURE$ 0xA8, WIRED_DATA 0xA8 and OS_INIT_DATA 8.  SIO2681_$INIT does
+not acquire a PBU interrupt.  The hand-written SIO_INT segment (0x58
+bytes) is the SAU4's.
+
+## The SAU7
+
+The SAU7 (`sio2681_four_lines`, `kbd_tone`, `sio2681_pbu_int`) has the
+SAU8's routines (SIO2681_$XMIT and _$INQ_LINE the SAU6's) and no
+SIO2681_$TONE: WIRED_PROC 0x588 bytes, OS_INIT_PROC 0x1A4, PROCEDURE$
+0xA8, WIRED_DATA 0xA8, OS_INIT_DATA 8.  SIO2681_$INIT
+(`sio2681_chip_2_pbu_8`) puts the second chip's registers 16#100 bytes
+after the first's, and a chip given vector 2 has its stub in SIO_VEC2
+and is acquired as PBU unit 8.  The hand-written SIO_INT segment (0x68
+bytes) is `m68k/int_rte.s` with these parts.
+
 ## Open items
 
 Form:

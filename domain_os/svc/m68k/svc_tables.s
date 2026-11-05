@@ -476,7 +476,7 @@ SVC_$TRAP3_TABLE:            | 0xE7B67A, 155 entries
         svc_display SMD_$ADD_TRK_RECT       | 0x65
         svc_display SMD_$DEL_TRK_RECT       | 0x66
         svc_display SMD_$SET_KBD_TYPE       | 0x67
-        .long   SVC_$UNIMPLEMENTED          | 0x68
+        svc_entry win6_ct6_board, WIN6_$GET_ERROR_INFO | 0x68 (SVC_$UNIMPLEMENTED without the part)
         .long   FILE_$SET_AUDITED           | 0x69
         .long   PROC2_$ACKNOWLEDGE          | 0x6A
         .long   PROC2_$GET_MY_UPIDS         | 0x6B

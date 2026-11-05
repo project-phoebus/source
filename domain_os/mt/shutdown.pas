@@ -5,6 +5,7 @@
     sau3  0x00E6FB98  mt_$shutdown
     sau4  0x0F87C910  mt_$shutdown
     sau5  0x00E75700  mt_$shutdown
+    sau6  0x7807C3C8  mt_$shutdown
 
   - The controller is stopped only when its PBU device is enabled
     (PBU_$DISABLE_DEVICE's status ignored), and the pages unwired only

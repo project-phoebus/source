@@ -190,6 +190,18 @@ const
   mmap_$table_pages = 128;
   mmap_$boot_ws_max = 16384;
   mmap_$lppn_seed = 16#3FFF;
+%elseif mmap_ppns_4000 %then
+  mmap_$first_ppn = 16#4000;
+  mmap_$last_ppn = 16#FFFF;
+  mmap_$table_pages = 768;
+  mmap_$boot_ws_max = 65536;
+  mmap_$lppn_seed = 16#FFFF;
+%elseif mmap_ppns_4000_bfff %then
+  mmap_$first_ppn = 16#4000;
+  mmap_$last_ppn = 16#BFFF;
+  mmap_$table_pages = 512;
+  mmap_$boot_ws_max = 65536;
+  mmap_$lppn_seed = 16#FFFF;
 %elseif mmap_ppns_200_3fff %then
   mmap_$first_ppn = 16#200;
   mmap_$last_ppn = 16#3FFF;
@@ -219,7 +231,9 @@ var
     bytes later, 3584 entries, 16#200..16#FFF; on the SAU9 OS_PMAPS
     follows 0x100000 bytes later, 65536 entries, 16#10000..16#1FFFF; on
     the SAU8 OS_PMAPS follows 0x20000 bytes later, 8192 entries,
-    16#400..16#23FF.  Not the MMAP_ module's: OS_PMAPS has no code
+    16#400..16#23FF; on the SAU6 0xC0000 bytes later, 49152 entries,
+    16#4000..16#FFFF; on the SAU7 0x80000 bytes later, 32768 entries,
+    16#4000..16#BFFF.  Not the MMAP_ module's: OS_PMAPS has no code
     segment, and MMAP_$INIT fills it. }
   mmap: extern array[mmap_$first_ppn..mmap_$last_ppn] of mmap_$mmape_t;
 

@@ -1,6 +1,7 @@
 { RING_8025_$LOAD - the driver record's detach entry.
 
   Image addresses:
+    sau7  0x3C498142  RING_8025_$LOAD
     sau8  0x03C8B75E  RING_8025_$LOAD
     sau9  0x3C487362  RING_8025_$LOAD
 

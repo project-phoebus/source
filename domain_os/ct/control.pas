@@ -2,6 +2,8 @@
 { CT_$CONTROL - perform a tape motion or control operation.
 
   Image addresses:
+    sau7  0x3C48687C  ct_scsi_control_op (nested)
+    sau7  0x3C4869EE  CT_$CONTROL
     sau9  0x3C478018  ct_scsi_control_op (nested)
     sau9  0x3C47818A  CT_$CONTROL
 
@@ -15,6 +17,9 @@
   - The frame holds the QIC-02 arm's locals, cmd, write_ok and counted
     (the SAU5's; the SAU7's copy keeps its command word at -8), which
     this arm does not use.
+  - With the QIC-02 driver as well (`ct_qic02'), a drive not set up on
+    the SCSI bus is the AT bus adapter's, and the AT bus driver's
+    operation follows (the other arm's).
 
   Status stored:
     status_$ok: the operation was started, or (load) the tape may be
@@ -89,8 +94,122 @@ var
 
 begin
   status.all := ct_check_unit(unit);
+%if ct_qic02 %then
+  if status.all <> 0 then
+    return;
+  if ct_scsi_state = ct_scsi_present then begin
+    ct_scsi_control_op;
+    return;
+  end;
+  write_ok := ct_write_ok;
+  counted := false;
+  case op of
+    ct_$op_load: begin
+      case ct_state of
+        ct_state_none: begin
+            ct_reading := true;
+            status.all := do_ctl_cmd(ct_cmd_read_status, 1);
+            if status.all <> 0 then
+              return;
+            status.all := ct_wait(960, true);
+            return;
+          end;
+        ct_state_read: begin
+            status.all := status_$ct_tape_in_read_mode;
+            return;
+          end;
+        ct_state_write: begin
+            status.all := status_$ct_tape_in_write_mode;
+            return;
+          end;
+      end;
+    end;
+    ct_$op_space_fwd: begin
+        ct_reading := true;
+        cmd := ct_cmd_space_fwd;
+        counted := true;
+        write_ok := false;
+      end;
+    ct_$op_space_rev: begin
+        ct_reading := true;
+        cmd := ct_cmd_space_rev;
+        counted := true;
+        write_ok := false;
+      end;
+    ct_$op_file_fwd: begin
+        ct_reading := true;
+        cmd := ct_cmd_file_fwd;
+        write_ok := false;
+        counted := true;
+        ct_restart := true;
+      end;
+    ct_$op_file_rev: begin
+        ct_reading := true;
+        cmd := ct_cmd_file_rev;
+        counted := true;
+        write_ok := false;
+      end;
+    ct_$op_write_filemark: begin
+        if not ct_write_ok then begin
+          status.all := status_$ct_illegal_drive_command;
+          return;
+        end;
+        cmd := ct_cmd_write_filemark;
+        ct_reading := false;
+        counted := true;
+        ct_restart := true;
+      end;
+    ct_$op_erase: begin
+        cmd := ct_cmd_erase;
+        ct_reading := false;
+        write_ok := true;
+      end;
+    ct_$op_retension: begin
+        cmd := ct_cmd_retension;
+        ct_reading := true;
+        write_ok := true;
+      end;
+    ct_$op_rewind: begin
+        if not ct_restart then begin
+          reset_drive;
+          status.all := ct_wait(960, false);
+          if status.all <> status_$ct_tape_power_on_reset then
+            return;
+          status.all := 0;
+          ct_restart := true;
+        end;
+        ct_eot_seen := false;
+        ct_reading := true;
+        cmd := ct_cmd_rewind;
+        write_ok := true;
+      end;
+    ct_$op_reset: begin
+        reset_drive;
+        status.all := ct_wait(960, true);
+        ct_write_ok := false;
+        return;
+      end;
+    otherwise begin
+        status.all := status_$ct_unrecognized_action_type;
+        return;
+      end;
+  end;
+
+  if counted then
+    if (count <= 0) or else (count > 32) then begin
+      status.all := status_$ct_invalid_operation_count;
+      return;
+    end;
+  if counted then
+    status.all := do_ctl_cmd(cmd, count)
+  else
+    status.all := do_ctl_cmd(cmd, 1);
+  if status.all = 0 then
+    ct_write_ok := write_ok;
+%else
   if (status.all = 0) and then (ct_scsi_state = ct_scsi_present) then
     ct_scsi_control_op;
+%endif
 end;
 %elseif ct_atbus_qic02 %then
 { CT_$CONTROL - perform a tape motion or control operation.
@@ -244,6 +363,7 @@ end;
 
   Image addresses:
     sau5  0x00E77850  CT_$CONTROL
+    sau6  0x7807EAAC  CT_$CONTROL
 
   - The operation (ct/ct.ins.pas's ct_$op_ constants) chooses the
     command, the direction, whether the count applies, and whether the
@@ -251,6 +371,10 @@ end;
   - The command is started with DO_CTL_CMD and not waited for (CT_$WAIT
     waits); when it starts, the writable mark takes the operation's
     value.
+  - With the second controller (`win6_ct6_board') the load is given with
+    the load mark (ct6_loading) set, a rewind clears ct_eot_seen, and
+    before the command a read under way is ended by a reset and a write
+    under way by a filemark (each waited for, 960 ticks without quit).
 
   Status stored:
     status_$ok: the command was started (or the load ended)
@@ -279,6 +403,9 @@ begin
     ct_$op_load: begin
       case ct_state of
         ct_state_none: begin
+%if win6_ct6_board %then
+            ct6_loading := true;
+%endif
             ct_reading := true;
             status.all := do_ctl_cmd(ct_cmd_load, 1);
             if status.all <> 0 then
@@ -340,6 +467,9 @@ begin
         write_ok := true;
       end;
     ct_$op_rewind: begin
+%if win6_ct6_board %then
+        ct_eot_seen := false;
+%endif
         ct_reading := true;
         cmd := ct_cmd_rewind;
         write_ok := true;
@@ -355,6 +485,23 @@ begin
       end;
   end;
 
+%if win6_ct6_board %then
+  { a transfer under way on the second controller: ended first }
+  if ct6_page <> nil then
+    if ct_state = ct_state_read then begin
+      reset_drive;
+      status.all := ct_wait(960, false);
+    end
+    else if ct_state = ct_state_write then
+      if cmd <> ct_cmd_write_filemark then begin
+        ct_reading := false;
+        counted := false;
+        status.all := do_ctl_cmd(ct_cmd_write_filemark, 1);
+        status.all := ct_wait(960, false);
+        write_ok := true;
+      end;
+
+%endif
   if counted then
     if (count <= 0) or else (count > 32) then begin
       status.all := status_$ct_invalid_operation_count;

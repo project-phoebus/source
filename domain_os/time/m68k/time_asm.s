@@ -103,6 +103,11 @@
 | word after the MCR countdown is the timer handler's flag
 | (`timer_int_pic'); those lines carry the SAU8 image's addresses.
 |
+| The SAU6's calendar is the SAU8's clock chip: its TIME_ASM (`D 7802E34C
+| TIME_ASM size = 430') is the SAU8's code without the timer handler's
+| flag word (no `timer_int_pic'), so TIME_$TIMER_HANDLER is on a
+| longword without the word ahead of it.
+|
 | Not on the SAUs with the timers of the TIMER block and the indexed
 | clock chip (`timer_dcte', `calendar_indexed_rtc', base/config.ins.pas):
 | their TIME_ASM is another segment (the SAU9's time/sau9/time_asm.s).
@@ -564,8 +569,15 @@ TIME_$DI_VT:                            | 0xE2B10E
         .space  16
 TIME_$DI_RTE:                           | 0xE2B11E
         .space  16
+| The word that keeps TIME_$TIMER_HANDLER on a longword: not on the SAU3
+| (its body 0x10 bytes shorter) nor on the SAU6 (the clock chip's body
+| without the SAU8's timer flag word).
         .if !calendar_own_page
+        .if timer_int_pic
+        .word   0                       | sau8 0x3C2D08E, before TIME_$TIMER_HANDLER
+        .elseif !calendar_mapped_rtc
         .word   0                       | 0xE2B12E, before TIME_$TIMER_HANDLER
+        .endif
         .endif
 
         .endif

@@ -3,6 +3,7 @@
 
   Image addresses:
     sau5  0x00E73744  gpu_$wait_pio_timed (module-local)
+    sau6  0x7807A658  gpu_$wait_pio_timed (module-local)
 
   - The status word is read until the clock passes ticks from now, and
     once more; gpu_stat is the last one read.

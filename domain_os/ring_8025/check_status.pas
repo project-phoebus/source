@@ -1,6 +1,7 @@
 { ring_8025_check_status - crash the system on a status that is not ok.
 
   Image addresses:
+    sau7  0x3C495868  ring_8025_check_status
     sau8  0x03C89068  ring_8025_check_status
     sau9  0x3C484C68  ring_8025_check_status
 

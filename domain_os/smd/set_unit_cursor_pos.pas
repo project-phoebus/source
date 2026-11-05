@@ -4,6 +4,8 @@
     sau2  0x00E6E788  SMD_$SET_UNIT_CURSOR_POS
     sau4  0x0F878F1A  SMD_$SET_UNIT_CURSOR_POS
     sau5  0x00E70C06  SMD_$SET_UNIT_CURSOR_POS
+    sau6  0x78077F7A  SMD_$SET_UNIT_CURSOR_POS
+    sau7  0x3C481A5C  SMD_$SET_UNIT_CURSOR_POS
     sau9  0x3C47517C  SMD_$SET_UNIT_CURSOR_POS
 
   - A change of the current unit is counted; TPAD is told the unit and

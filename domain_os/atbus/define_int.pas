@@ -1,8 +1,9 @@
 { ATBUS_$DEFINE_INT - define an AT bus interrupt's handler.
 
   Image addresses:
-    sau9  0x3C40C770  ATBUS_$DEFINE_INT
+    sau7  0x3C40C1C0  ATBUS_$DEFINE_INT
     sau8  0x03C0B86C  ATBUS_$DEFINE_INT
+    sau9  0x3C40C770  ATBUS_$DEFINE_INT
 
   - An interrupt above 15 crashes the system.  The handler goes on the
     interrupt's system bus level (SYSBUS_$DEFINE_INT), the interrupt

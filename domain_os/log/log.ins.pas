@@ -24,11 +24,13 @@ const
   log_$pending_magic = -16#543210FF;
 
   { Entry types.  LOG_$INIT logs 0 and 5; LOG_$SHUTDN 4; MEM_$ECCC_LOG
-    2, a corrected memory error. }
+    2, a corrected memory error; MEM_$ECCC6_LOG 7, a corrected memory
+    error with the board's registers. }
   log_$type_init = 0;
   log_$type_ecc_error = 2;
   log_$type_shutdown = 4;
   log_$type_crash = 5;
+  log_$type_ecc6_error = 7;
   { IO_$LOG_SELF_TESTS logs 15: a controller whose PROM self-test
     failed. }
   log_$type_self_test = 15;

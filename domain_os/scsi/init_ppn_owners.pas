@@ -1,6 +1,7 @@
 { scsi_init_ppn_owners - map and clear the page owners table.
 
   Image addresses:
+    sau7  0x3C440170  scsi_init_ppn_owners
     sau9  0x3C43BACA  scsi_init_ppn_owners
 
   - Only the part of SCSI_$PPN_OWNERS that covers physical memory

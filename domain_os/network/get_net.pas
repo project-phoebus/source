@@ -2,6 +2,8 @@
 
   Image addresses:
     sau2  0x00E0F2CC  NETWORK_$GET_NET
+    sau6  0x7800FC4E  NETWORK_$GET_NET
+    sau7  0x3C411166  NETWORK_$GET_NET
     sau8  0x03C10616  NETWORK_$GET_NET
 
   - Index 0 is this node's own network and gives network 0; otherwise

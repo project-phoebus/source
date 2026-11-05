@@ -3,9 +3,12 @@
 
   Image addresses:
     sau2  0x00E082A8  area_$free_slot_segments (nested)
-    sau4  0x0F808626  area_$free_slot_segments (nested)
     sau2  0x00E085A6  area_$free_segments (module-local)
+    sau4  0x0F808626  area_$free_slot_segments (nested)
     sau4  0x0F808928  area_$free_segments (module-local)
+    sau6  0x78008B42  area_$free_segments (module-local)
+    sau7  0x3C409144  area_$free_slot_segments (nested)
+    sau7  0x3C40943A  area_$free_segments (module-local)
     sau8  0x03C08828  area_$free_slot_segments (nested)
     sau8  0x03C08B1E  area_$free_segments (module-local)
     sau9  0x3C409944  area_$free_slot_segments (nested)
@@ -54,6 +57,8 @@ var
     Image addresses:
       sau2  0x00E082A8  area_$free_slot_segments (nested)
       sau4  0x0F808626  area_$free_slot_segments (nested)
+    sau6  0x7800884C  area_$free_slot_segments (nested)
+      sau7  0x3C409144  area_$free_slot_segments (nested)
       sau8  0x03C08828  area_$free_slot_segments (nested)
       sau9  0x3C409944  area_$free_slot_segments (nested)
 

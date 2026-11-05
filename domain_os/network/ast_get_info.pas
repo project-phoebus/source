@@ -2,6 +2,8 @@
 
   Image addresses:
     sau2  0x00E1026C  NETWORK_$AST_GET_INFO
+    sau6  0x78010BC0  NETWORK_$AST_GET_INFO
+    sau7  0x3C4120D8  NETWORK_$AST_GET_INFO
     sau8  0x03C11588  NETWORK_$AST_GET_INFO
 
   - The client half of request 6 (reply 7), to the node at

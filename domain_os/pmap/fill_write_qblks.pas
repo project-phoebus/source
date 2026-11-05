@@ -4,6 +4,7 @@
   Image addresses:
     sau2  0x00E1327E  pmap_$fill_write_qblks
     sau4  0x0F813B78  pmap_$fill_write_qblks (module-local)
+    sau7  0x3C415018  pmap_$fill_write_qblks
     sau9  0x3C4155DC  pmap_$fill_write_qblks
 
   - A page with no disk address gets one from BAT_$ALLOCATE, with every

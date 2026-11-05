@@ -1,6 +1,7 @@
 { RING_8025_$OPEN_OS - open a system channel for MAC_OS.
 
   Image addresses:
+    sau7  0x3C4999CA  RING_8025_$OPEN_OS
     sau8  0x03C8CF96  RING_8025_$OPEN_OS
     sau9  0x3C488B9A  RING_8025_$OPEN_OS
 

@@ -1,6 +1,7 @@
 { ct_status_cmd - give the tape drive the read status command.
 
   Image addresses:
+    sau7  0x3C4855BC  ct_status_cmd (module-local)
     sau8  0x03C7A1F0  ct_status_cmd (module-local)
 
   - The command byte is written with the request, and once the adapter

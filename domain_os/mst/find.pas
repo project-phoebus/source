@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E0E11E  MST_$FIND
     sau4  0x0F80EAA6  MST_$FIND
+    sau6  0x7800EB96  MST_$FIND
+    sau7  0x3C410090  MST_$FIND
     sau8  0x03C0F55C  MST_$FIND
     sau9  0x3C410648  MST_$FIND
 

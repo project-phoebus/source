@@ -1,6 +1,7 @@
 { SMD_$NOP_DEVINFO - the default for a device's information.
 
   Image addresses:
+    sau7  0x3C480CB2  SMD_$NOP_DEVINFO
     sau9  0x3C4743D2  SMD_$NOP_DEVINFO
 
   - Clears the third argument.

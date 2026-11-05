@@ -4,6 +4,8 @@
     sau2  0x00E6F584  SMD_$BORROW_DISPLAY
     sau4  0x0F879DD0  SMD_$BORROW_DISPLAY
     sau5  0x00E719A8  SMD_$BORROW_DISPLAY
+    sau6  0x78078CF2  SMD_$BORROW_DISPLAY
+    sau7  0x3C4824D6  SMD_$BORROW_DISPLAY
     sau9  0x3C475BF6  SMD_$BORROW_DISPLAY
 
   - Under the SMD respond lock, a screen manager that owns the unit is

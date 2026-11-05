@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E1C73E  SIO_$I_DCD_CHANGE
     sau4  0x0F81D952  SIO_$I_DCD_CHANGE
+    sau6  0x7801E63E  SIO_$I_DCD_CHANGE
+    sau7  0x3C42092A  SIO_$I_DCD_CHANGE
 
   - A carrier lost on a line that hangs up on DCD loss calls its DCD
     handler; a carrier present restarts the transmission.

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau5  0x00E19B6C  RETRY_DATA_CHECK
+    sau6  0x78019FA0  RETRY_DATA_CHECK
 
   - From the third pass of nine retries, a read with error code 10 on a
     controller of revision 2 or later is corrected from the ECC

@@ -1,6 +1,7 @@
 { COLOR5_$LIGHTS - draw the lights.
 
   Image addresses:
+    sau7  0x3C48C780  COLOR5_$LIGHTS
     sau8  0x03C80A9C  COLOR5_$LIGHTS
 
   - Sixteen lights, one per bit of pattern (bit 15 first), each a word

@@ -1,3 +1,32 @@
+%if scsi_mailbox_ctlr %then
+{ SCSI_$FREE_ASID - free a process's SCSI resources.
+
+  Image addresses:
+    sau7  0x3C4B8A9C  SCSI_$FREE_ASID
+
+  - With the mailbox host adapter: releases every device record in use
+    that the current process owns, but the system devices; the address
+    space number is not read.
+
+  Status stored: none.
+}
+
+procedure scsi_$free_asid(in asid: integer);
+var
+  i: integer;
+  h: scsi_$handle_t;
+  st: status_$t;
+begin
+  h.all := 0;
+  for i := 0 to scsi_max_dev do
+    with scsi_$tinfo_list[i] do
+      if (scsi_tf_in_use in flags) and (owner = proc1_$current)
+         and not (scsi_tf_sys in flags) then begin
+        h.dev := i;
+        scsi_$release(h, st);
+      end;
+end;
+%else
 { SCSI_$FREE_ASID - free a process's SCSI resources.
 
   Image addresses:
@@ -36,4 +65,5 @@ end;
 procedure scsi_$free_asid(in asid: integer);
 begin
 end;
+%endif
 %endif

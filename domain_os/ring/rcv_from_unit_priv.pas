@@ -7,10 +7,15 @@
     sau4  0x0F88366C  ring_$validate_receive (nested)
     sau5  0x00E7D30C  RING_$RCV_FROM_UNIT_PRIV (module-local)
     sau5  0x00E7D0A8  ring_$validate_receive (nested)
+    sau6  0x780846B0  RING_$RCV_FROM_UNIT_PRIV (module-local)
+    sau7  0x3C48F01E  RING_$RCV_FROM_UNIT_PRIV (module-local)
     sau8  0x03C8281E  RING_$RCV_FROM_UNIT_PRIV (module-local)
     sau9  0x3C47E410  RING_$RCV_FROM_UNIT_PRIV (module-local)
+    sau7  0x3C48EC96  ring_$rearm_rx (nested)
     sau8  0x03C82496  ring_$rearm_rx (nested)
     sau9  0x3C47E088  ring_$rearm_rx (nested)
+    sau6  0x7808445E  ring_$validate_receive (nested)
+    sau7  0x3C48ED40  ring_$validate_receive (nested)
     sau8  0x03C82540  ring_$validate_receive (nested)
     sau9  0x3C47E132  ring_$validate_receive (nested)
 
@@ -502,7 +507,9 @@ var
             ring_$swdiag_data.rcvtim := ring_$swdiag_data.rcvtim + 1;
         end
         else if 6 in rcv_status then begin
+%if memory_parity %then
           crash_system(status_$network_receive_bus_error);
+%endif
           rcvbus := rcvbus + 1;
         end
         else if 5 in rcv_status then begin

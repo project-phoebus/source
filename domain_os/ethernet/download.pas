@@ -1,6 +1,7 @@
 { ethernet_download - load a program file into the adapter.
 
   Image addresses:
+    sau7  0x3C491A64  ethernet_download
     sau8  0x03C85260  ethernet_download
     sau9  0x3C480E60  ethernet_download
 

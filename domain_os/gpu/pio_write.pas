@@ -3,6 +3,7 @@
 
   Image addresses:
     sau5  0x00E737A2  gpu_$pio_write (module-local)
+    sau6  0x7807A6B6  gpu_$pio_write (module-local)
 
   - Each word waits for the processor; the first also needs the status
     word's ready bit (5).

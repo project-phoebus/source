@@ -36,6 +36,14 @@ COLOR5_$END_WIRED_PROC (the first symbol of the section after
 COLOR5_WIRED_PROC) are layout marks, not objects of these modules; the
 vector's code area ends at COLOR5_$END_WIRED_PROC.
 
+### The SAU7
+
+The SAU7's COLOR5 and COLOR5_DCTE segments have the SAU8's sizes, code
+and data at other addresses: the instructions are the same but for their
+address operands, the data blocks the same bytes but for their address
+cells.  The SAU7 build is the SAU8's source; every fragment has its
+`sau7` address row.
+
 ## Routines and their fragments
 
 | routine | fragment |

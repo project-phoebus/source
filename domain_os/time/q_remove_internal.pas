@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E16B70  time_$q_remove_internal (module-local)
     sau4  0x0F817528  time_$q_remove_internal (module-local)
+    sau6  0x780175C0  time_$q_remove_internal (module-local)
+    sau7  0x3C4185AC  time_$q_remove_internal (module-local)
 
   Assume we're called with the queue's spin lock held.
 

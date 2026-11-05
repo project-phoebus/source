@@ -4,6 +4,8 @@
     sau2  0x00E6DA3A  SMD_$FREE_HDM
     sau4  0x0F878126  SMD_$FREE_HDM
     sau5  0x00E6FDCA  SMD_$FREE_HDM
+    sau6  0x780771A6  SMD_$FREE_HDM
+    sau7  0x3C481034  SMD_$FREE_HDM
     sau9  0x3C474754  SMD_$FREE_HDM
 
   - The position is turned back into an offset, SMD_$ALLOC_HDM's inverse

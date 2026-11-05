@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E07D06  AREA_$DELETE_FROM
     sau4  0x0F807FF2  AREA_$DELETE_FROM
+    sau6  0x78008236  AREA_$DELETE_FROM
+    sau7  0x3C408B2A  AREA_$DELETE_FROM
     sau9  0x3C40932A  AREA_$DELETE_FROM
 
   - Under the area lock, after waiting out any operation in transition,

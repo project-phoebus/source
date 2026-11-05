@@ -5,6 +5,8 @@
     sau2  0x00E1DC00  OS_WIRED_START data (WIRED_DATA, 0xC bytes)
     sau3  0x00E1CC00  OS_WIRED_START data (WIRED_DATA, 0xC bytes)
     sau4  0x0F81F000  OS_WIRED_START data (WIRED_DATA, 0xC bytes)
+    sau6  0x78020000  OS_WIRED_START data (WIRED_DATA, 0xC bytes)
+    sau7  0x3C422000  OS_WIRED_START data (WIRED_DATA, 0xC bytes)
 
   A unit with data only: the map's OS_WIRED_START data segment in
   WIRED_DATA (0xC bytes, the map symbols OS_$SHUTDOWN_EC and

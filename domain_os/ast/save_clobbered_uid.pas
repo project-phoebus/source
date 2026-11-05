@@ -3,6 +3,7 @@
 
   Image addresses:
     sau2  0x00E07220  AST_$SAVE_CLOBBERED_UID
+    sau7  0x3C407E7A  AST_$SAVE_CLOBBERED_UID
     sau9  0x3C40867A  AST_$SAVE_CLOBBERED_UID
 
   - The UID is kept in ast_$clobbered_uid, and AST_$SET_TROUBLE queued

@@ -4,6 +4,8 @@
     sau2  0x00E6EC10  SMD_$REL_DISPLAY
     sau4  0x0F8793C0  SMD_$REL_DISPLAY
     sau5  0x00E71094  SMD_$REL_DISPLAY
+    sau6  0x780783FA  SMD_$REL_DISPLAY
+    sau7  0x3C481EBC  SMD_$REL_DISPLAY
     sau9  0x3C4755DC  SMD_$REL_DISPLAY
 
   - In lock state 4 (a scroll in progress) SMD_$CONTINUE_SCROLL takes the

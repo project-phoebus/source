@@ -2,6 +2,8 @@
 
   Image addresses:
     sau2  0x00E0F120  network_$phys_copy (module-local)
+    sau6  0x7800FAA0  network_$phys_copy (module-local)
+    sau7  0x3C410FB8  network_$phys_copy (module-local)
     sau8  0x03C10468  network_$phys_copy (module-local)
     sau9  0x3C41157C  network_$phys_copy (module-local)
 

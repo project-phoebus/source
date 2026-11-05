@@ -2,6 +2,8 @@
 
   Image addresses:
     sau2  0x00E77382  ring_$copy_to_user (module-local)
+    sau6  0x7808596E  ring_$copy_to_user (module-local)
+    sau7  0x3C490446  ring_$copy_to_user (module-local)
     sau8  0x03C83C46  ring_$copy_to_user (module-local)
 
   - ring_$copy_data's code, the copy's direction reversed.

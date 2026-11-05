@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E1AD18  SUMA_$RCV
+    sau6  0x7801CC6C  SUMA_$RCV
 
   - The bitpad sends packets of five bytes: byte 0, the sync byte, has
     bit 6 set and the identification bits; bytes 1 to 4 give six bits

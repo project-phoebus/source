@@ -2,6 +2,8 @@
   start the line.
 
   Image addresses:
+    sau6  0x7801E984  kbd_$txbuf_put (module-local)
+    sau7  0x3C420C70  kbd_$txbuf_put (module-local)
     sau9  0x3C41F5C0  kbd_$txbuf_put (module-local)
 
   - Copies as many of the count characters as the buffer has room for,

@@ -1,6 +1,7 @@
 { SMD_$NOP_MAP - the default for a device's display memory map.
 
   Image addresses:
+    sau7  0x3C480C60  SMD_$NOP_MAP
     sau9  0x3C474380  SMD_$NOP_MAP
 
   - Maps nothing: the address is nil.

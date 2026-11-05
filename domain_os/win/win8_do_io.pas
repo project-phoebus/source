@@ -2,6 +2,7 @@
   manufacturer's bad spots, or run a chain of read and write requests.
 
   Image addresses:
+    sau7  0x3C41CF02  WIN8_$DO_IO
     sau8  0x03C1A556  WIN8_$DO_IO
 
   - Under the controller's ML lock.  A chain runs in runs of

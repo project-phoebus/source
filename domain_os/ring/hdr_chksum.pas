@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E762CA  HDR_CHKSUM
     sau4  0x0F883B4C  HDR_CHKSUM
+    sau6  0x78084906  HDR_CHKSUM
+    sau7  0x3C48F39C  HDR_CHKSUM
     sau8  0x03C82B9C  HDR_CHKSUM
     sau9  0x3C47E78E  HDR_CHKSUM
 

@@ -41,10 +41,11 @@ const
     tests after a transfer: the bus timeout, bit 5 of the MMU status
     register's byte (Domain Engineering Handbook ch. 7); with the DNx60's
     MMU (`region_mmu') the bus timeout of its CPIO status register, bit 7
-    (ch. 9-4).
-    TODO(sau) the SAU6's MT_$SIO tests the status word's sign (member 15):
-    its own constant when it is translated. }
-%if region_mmu %then
+    (ch. 9-4); with the turbo boards' MMU (`mmu_status_bit_6') the status
+    word's member 15, its sign. }
+%if mmu_status_bit_6 %then
+  mt_mmu_bus_timeout = 15;
+%elseif region_mmu %then
   mt_mmu_bus_timeout = 7;
 %else
   mt_mmu_bus_timeout = 5;

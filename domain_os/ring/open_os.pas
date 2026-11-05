@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E77BA0  RING_$OPEN_OS
     sau3  0x00E79390  RING_$OPEN_OS
+    sau6  0x7808618C  RING_$OPEN_OS
+    sau7  0x3C490C6C  RING_$OPEN_OS
     sau8  0x03C8446C  RING_$OPEN_OS
 
   - At most 16 packet-type ranges, opened with the system's socket.

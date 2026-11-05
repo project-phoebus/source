@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E0E1BC  MST_$WIRE
     sau4  0x0F80EB44  MST_$WIRE
+    sau6  0x7800EBDC  MST_$WIRE
+    sau7  0x3C4100D8  MST_$WIRE
     sau8  0x03C0F5A4  MST_$WIRE
     sau9  0x3C410690  MST_$WIRE
 

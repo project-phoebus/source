@@ -1,3 +1,35 @@
+%if scsi_mailbox_ctlr %then
+{ SCSI_$GET_EC - return a device's eventcount.
+
+  Image addresses:
+    sau7  0x3C4B8B48  SCSI_$GET_EC
+
+  - With the mailbox host adapter: only eventcount 0, the device's
+    commands' ends, registered with EC2_.
+
+  Status stored:
+    status_$ok: the eventcount was returned
+    status_$scsi_bad_parameter: which is not 0
+    scsi_get_tinfo's status: the handle is not the caller's
+    ec2_$register_ec1's status, its fail bit set: it failed
+}
+
+procedure scsi_$get_ec(in handle: scsi_$handle_t; in which: integer;
+                       out ec: ec2_$ptr_t; out status: status_$t);
+var
+  t: scsi_tinfo_ptr_t;
+begin
+  if which <> 0 then
+    status.all := status_$scsi_bad_parameter
+  else begin
+    t := scsi_get_tinfo(handle.all, status);
+    if status.all = status_$ok then begin
+      ec := ec2_$register_ec1(addr(t^.done_ec), status);
+      status.fail := status.all <> status_$ok;
+    end;
+  end;
+end;
+%else
 { SCSI_$GET_EC - return a device's eventcount.
 
   Image addresses:
@@ -41,3 +73,4 @@ begin
     status.fail := status.all <> status_$ok;
   end;
 end;
+%endif

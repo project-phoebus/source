@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E4386C  MST_$MAP
     sau4  0x0F84B942  MST_$MAP
+    sau6  0x7804ACB6  MST_$MAP
+    sau7  0x3C453A34  MST_$MAP
     sau8  0x03C4BA72  MST_$MAP
     sau9  0x3C44AC34  MST_$MAP
 

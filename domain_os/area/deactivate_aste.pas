@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E09EF4  AREA_$DEACTIVATE_ASTE
     sau4  0x0F80A728  AREA_$DEACTIVATE_ASTE
+    sau6  0x7800A87C  AREA_$DEACTIVATE_ASTE
+    sau7  0x3C40B1B4  AREA_$DEACTIVATE_ASTE
     sau9  0x3C40B9B4  AREA_$DEACTIVATE_ASTE
 
   - Under the AST lock the segment's slot cell is found (in the entry,

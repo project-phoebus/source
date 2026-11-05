@@ -4,6 +4,8 @@
     sau2  0x00E32EBA  TERM_$INIT
     sau3  0x00E315A4  TERM_$INIT
     sau4  0x0F836060  TERM_$INIT
+    sau6  0x7803C350  TERM_$INIT
+    sau7  0x3C43C394  TERM_$INIT
     sau8  0x03C3685C  TERM_$INIT
     sau9  0x3C43986C  TERM_$INIT
 
@@ -25,7 +27,11 @@
     flags are set and it is recorded as the console's channel;
     TERM_$MAX_DTTE becomes 2.
   - With `sio2681_four_lines' the console and three serial lines are two
-    SIO2681s' channels, each chip set up after its two lines.
+    SIO2681s' channels, each chip set up after its two lines; the first
+    chip's interrupt vector is 2 and the second's 1, or each chip's own
+    number with `sio2681_vec_by_chip'.  With `kbd_type_sysrev' or
+    `kbd_reset_chan_a' channel A is recorded as the console's channel
+    too.
   - Then only line 1 or 2 gets the all-ones baud rates in mode 1;
     TERM_$MAX_DTTE becomes 4.
   - With `sio16550_lines' the serial driver sets the lines up (SIO_$INIT
@@ -139,9 +145,15 @@ var
   serial_vtable: static term_$serial_vtable_t :=
     [nil, nil, nil, nil, nil, addr(sio2681_$xmit), addr(sio2681_$set_line),
      addr(sio2681_$inq_line), addr(sio2681_$set_break)];  { +0x00 }
+%if sio2681_acr_timer %then
+  sio2681_config: static sio2681_$config_t :=
+    [-16#7100, -16#900, -16#7100, 0, -16#1600, -16#900, -16#7100];
+                                                          { +0x24 }
+%else
   sio2681_config: static sio2681_$config_t :=
     [-16#7100, -16#900, -16#7100, 0, -16#7100, -16#900, -16#7100];
                                                           { +0x24 }
+%endif
   minus_one: integer32;
   drain_p: univ_ptr;
   tty_p: univ_ptr;
@@ -152,8 +164,8 @@ var
   sio3_p: univ_ptr;
   i: integer;
   unused_2a: array[1..4] of integer;      { see the TODO }
-  int_vec_1: integer;                     { the second chip's }
-  int_vec_2: integer;                     { the first chip's }
+  second_chip_vec: integer;               { the second chip's vector }
+  first_chip_vec: integer;                { the first chip's vector }
 begin
   minus_one := -1;
 
@@ -164,8 +176,13 @@ begin
     dtte[i].tty_handler := nil;
     dtte[i].ptr_30 := nil;
   end;
-  int_vec_2 := 2;
-  int_vec_1 := 1;
+%if sio2681_vec_by_chip %then
+  first_chip_vec := 1;
+  second_chip_vec := 2;
+%else
+  first_chip_vec := 2;
+  second_chip_vec := 1;
+%endif
 
   { ---- the console line, the first chip's channel A ---- }
 
@@ -212,12 +229,16 @@ begin
   { the first chip and its two channels }
   sio3_p := addr(sio_descs[2]);
   sio2_p := addr(sio_descs[1]);
-  sio2681_$init(int_vec_2, 1, tone_$channel, sio2_p, sio_descs[1].params,
-                term_$serial_chan_b, sio3_p, sio_descs[2].params,
-                term_$sio2681_chip, sio2681_config[5]);
+  sio2681_$init(first_chip_vec, 1, tone_$channel, sio2_p,
+                sio_descs[1].params, term_$serial_chan_b, sio3_p,
+                sio_descs[2].params, term_$sio2681_chip, sio2681_config[5]);
 
   { channel A's flags }
   tone_$channel.reserved_14 := [1, 2];
+%if kbd_type_sysrev or kbd_reset_chan_a %then
+  { the console's channel for KBD_$RESET }
+  term_$console_chan_ptr := addr(tone_$channel);
+%endif
 
   { ---- the second serial line, the second chip's channel A ---- }
 
@@ -250,7 +271,7 @@ begin
   { the second chip and its two channels }
   sio3_p := addr(sio_descs[4]);
   sio2_p := addr(sio_descs[3]);
-  sio2681_$init(int_vec_1, 2, term_$serial_chan_a2, sio2_p,
+  sio2681_$init(second_chip_vec, 2, term_$serial_chan_a2, sio2_p,
                 sio_descs[3].params, term_$serial_chan_b2, sio3_p,
                 sio_descs[4].params, term_$sio2681_chip_2, sio2681_config);
 

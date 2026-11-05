@@ -1,6 +1,7 @@
 { MONO_$INSTALL_DISP_MEM - make the display memory a canned object.
 
   Image addresses:
+    sau7  0x3C43F03A  MONO_$INSTALL_DISP_MEM
     sau8  0x03C38F76  MONO_$INSTALL_DISP_MEM
 
   - The display's UID, its memory's address and its size (line_bits *

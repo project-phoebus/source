@@ -1,6 +1,7 @@
 { SMD_$NOP_UNMAP - the default for a device's display memory unmap.
 
   Image addresses:
+    sau7  0x3C480C74  SMD_$NOP_UNMAP
     sau9  0x3C474394  SMD_$NOP_UNMAP
 
   Status stored:

@@ -4,6 +4,7 @@
   Image addresses:
     sau2  0x00E19276  win_$check_disk_status (module-local)
     sau5  0x00E19708  win_$check_disk_status
+    sau6  0x78019B74  win_$check_disk_status
 
   - The ANSI controller's form: the status word goes to WIN_$CSTAT; a
     completed command's error bits give the primary status, the general

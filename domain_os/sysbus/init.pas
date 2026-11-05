@@ -4,10 +4,12 @@
     sau2  0x00E0AB28  SYSBUS_$INIT
     sau3  0x00E0AC18  SYSBUS_$INIT
     sau4  0x0F80B3C2  SYSBUS_$INIT
+    sau6  0x7800B590  SYSBUS_$INIT
     sau9  0x3C40C6D0  SYSBUS_$INIT
 
   - With `sysbus_int_vec': SYSBUS_$INT goes on the vectors 16#A0..16#AF
-    (16#90..16#9F and 16#F0..16#FF with `sysbus_vectors_90') and every
+    (16#90..16#9F and 16#F0..16#FF with `sysbus_vectors_90', 16#88..16#9F
+    and 16#F0..16#F7 with `sysbus_vectors_88') and every
     level gets SYSBUS_$UNDEF_INT; with `util_pic' the
     controller is then set up, every level disabled and its pending
     interrupts cleared.
@@ -21,12 +23,6 @@
   Status stored: none.
 }
 
-{ TODO(sau) SYSBUS_$INIT on the SAU6
-
-  The SAU6's traps its SYSBUS_$INT's two ranges of vectors
-  (sysbus/int.pas) and sets 24 entries.  To be written as a conditional
-  arm when that SAU is translated. }
-
 %if sysbus_int_vec %then
 [section(wired_proc, wired_data)]
 procedure sysbus_$init;
@@ -36,7 +32,7 @@ var
 begin
   for vector := sysbus_$first_vector to sysbus_$last_vector do
     io_$trap(vector, addr(sysbus_$int));
-%if sysbus_vectors_90 %then
+%if sysbus_vectors_90 or sysbus_vectors_88 %then
   for vector := sysbus_$first_vector_2 to sysbus_$last_vector_2 do
     io_$trap(vector, addr(sysbus_$int));
 %endif

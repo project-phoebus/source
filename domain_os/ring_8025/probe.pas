@@ -1,6 +1,7 @@
 { ring_8025_probe - find out whether a unit's adapter answers.
 
   Image addresses:
+    sau7  0x3C495C5A  ring_8025_probe
     sau8  0x03C89372  ring_8025_probe
     sau9  0x3C484F72  ring_8025_probe
 

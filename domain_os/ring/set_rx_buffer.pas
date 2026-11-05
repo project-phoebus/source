@@ -1,6 +1,7 @@
 { ring_$set_rx_buffer - give the controller the buffer to receive into.
 
   Image addresses:
+    sau7  0x3C48DDAE  ring_$set_rx_buffer (module-local)
     sau8  0x03C815AE  ring_$set_rx_buffer (module-local)
     sau9  0x3C47D1AE  ring_$set_rx_buffer (module-local)
 

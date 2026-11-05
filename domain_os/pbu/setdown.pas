@@ -3,6 +3,8 @@
   Image addresses:
     sau3  0x00E592E4  PBU_$SETDOWN
     sau5  0x00E594B4  PBU_$SETDOWN
+    sau6  0x78061170  PBU_$SETDOWN
+    sau7  0x3C469C0E  PBU_$SETDOWN
     sau8  0x03C61B1C  PBU_$SETDOWN
 
   - Under the exclusion lock, every set-up unit of the unit's bus that

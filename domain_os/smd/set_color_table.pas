@@ -1,6 +1,7 @@
 { SMD_$SET_COLOR_TABLE - set a unit's color table.
 
   Image addresses:
+    sau7  0x3C483112  SMD_$SET_COLOR_TABLE
     sau9  0x3C476832  SMD_$SET_COLOR_TABLE
 
   - The unit's device does the work.

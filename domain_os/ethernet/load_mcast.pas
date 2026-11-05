@@ -1,6 +1,8 @@
 { ethernet_load_mcast - load the unit's multicast list into the adapter.
 
   Image addresses:
+    sau6  0x78088482  ethernet_load_mcast
+    sau7  0x3C49291A  ethernet_load_mcast
     sau8  0x03C86116  ethernet_load_mcast
     sau9  0x3C481D16  ethernet_load_mcast
 
@@ -11,12 +13,97 @@
   - A reply with a nonzero result word is an error.  The empty list's
     reply word is checked only when its command failed.
   - The first step that fails ends it.
+  - With `ethernet_vme': the controller holds the addresses in entries
+    of its own, the list's entry i in the controller's i + 2.  A free
+    entry still loaded is taken out; an entry in use not yet loaded is
+    given its address (crashing the system when it is zero) and turned
+    on.  Every entry is tried; the first failure's status is kept.
 
   Status stored:
     ethernet_do_cmd's status: a command or its reply failed
     status_$eth_adapter_hardware_error: a reply's result was not 0
+    with `ethernet_vme': the first failing request's status, else the
+      last request's
 }
 
+%if ethernet_vme %then
+procedure ethernet_load_mcast(u: ethernet_$unit_ptr_t; out status: status_$t);
+  internal;
+var
+  first: status_$t;
+  i: integer;
+begin
+  first.all := status_$ok;
+  for i := 1 to 15 do
+    if u^.mcast[i].count = 0 then begin
+      if u^.mcast[i].loaded <> 0 then begin
+        { a free entry still loaded: take it out }
+        ml_$exclusion_start(u^.cmd_lock);
+        with u^.cmd_ring^.slots[u^.cmd_idx] do begin
+          request := eth_vme_cmd_x0a;
+          param := 1;
+          value := i + 2;
+        end;
+        ethernet_start_cmd(u, status);
+        if status.all = status_$ok then begin
+          u^.cmd_idx := (u^.cmd_idx mod eth_vme_ring_slots) + 1;
+          ethernet_wait_cmd(u, status);
+        end
+        else
+          u^.flags := u^.flags - [eth_unit_cmd_pending];
+        ml_$exclusion_stop(u^.cmd_lock);
+        if (status.all <> status_$ok) and then (first.all = status_$ok) then
+          first := status;
+        u^.mcast[i].loaded := 0;
+      end;
+    end
+    else if u^.mcast[i].loaded = 0 then begin
+      { an entry in use not loaded yet: its address, then turned on }
+      ml_$exclusion_start(u^.cmd_lock);
+      with u^.cmd_ring^.slots[u^.cmd_idx] do begin
+        request := eth_vme_cmd_set_address;
+        param_2 := 1;
+        value_2 := i + 2;
+        hw_addr := u^.mcast[i].addr;
+        if (hw_addr.high = 0) and then (hw_addr.low = 0) then
+          crash_system(status_$eth_illegal_dest_address);
+      end;
+      ethernet_start_cmd(u, status);
+      if status.all = status_$ok then begin
+        u^.cmd_idx := (u^.cmd_idx mod eth_vme_ring_slots) + 1;
+        ethernet_wait_cmd(u, status);
+      end
+      else
+        u^.flags := u^.flags - [eth_unit_cmd_pending];
+      ml_$exclusion_stop(u^.cmd_lock);
+      if status.all <> status_$ok then
+        if first.all = status_$ok then
+          first := status;
+      if status.all = status_$ok then begin
+        ml_$exclusion_start(u^.cmd_lock);
+        with u^.cmd_ring^.slots[u^.cmd_idx] do begin
+          request := eth_vme_cmd_x0a;
+          param := 5;
+          value := i + 2;
+        end;
+        ethernet_start_cmd(u, status);
+        if status.all = status_$ok then begin
+          u^.cmd_idx := (u^.cmd_idx mod eth_vme_ring_slots) + 1;
+          ethernet_wait_cmd(u, status);
+        end
+        else
+          u^.flags := u^.flags - [eth_unit_cmd_pending];
+        ml_$exclusion_stop(u^.cmd_lock);
+        if status.all = status_$ok then
+          u^.mcast[i].loaded := i + 2
+        else if first.all = status_$ok then
+          first := status;
+      end;
+    end;
+  if first.all <> status_$ok then
+    status := first;
+end;
+%else
 procedure ethernet_load_mcast(u: ethernet_$unit_ptr_t; out status: status_$t);
   internal;
 var
@@ -92,3 +179,4 @@ begin
     if pcb.words[1] <> 0 then
       status.all := status_$eth_adapter_hardware_error;
 end;
+%endif

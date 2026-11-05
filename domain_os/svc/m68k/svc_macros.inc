@@ -53,13 +53,16 @@
 | SAU8: 0x39C0000) the cells are in the fixup table, which COLD applies
 | for the MC68851's layout, so they are references to PROT.  The SAU4's
 | 8192-segment space (`vm_8192_segs') ends the user's at 0xF7C0000, a
-| literal.
+| literal, and the SAU6's 65536-segment space (`vm_65536_segs') at
+| 0x77FC0000.
 
         .include "base/config.inc"
         .if large_address_space
         .equ    PROT_LITERAL, 0x3BFC0000
         .elseif vm_8192_segs
         .equ    PROT_LITERAL, 0x0F7C0000
+        .elseif vm_65536_segs
+        .equ    PROT_LITERAL, 0x77FC0000
         .elseif run_time_layout
         .equ    PROT_LITERAL, PROT
         .else

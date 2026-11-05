@@ -1,6 +1,7 @@
 { pbu_map_dma_error - make a DMA manager's status the PBU's.
 
   Image addresses:
+    sau7  0x3C4B66F2  pbu_map_dma_error (module-local)
     sau8  0x03CA56F2  pbu_map_dma_error (module-local)
 
   - Only with the AT bus's units (`pbu_atbus_units'): each of the DMA

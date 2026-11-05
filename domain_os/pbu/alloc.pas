@@ -3,6 +3,8 @@
   Image addresses:
     sau3  0x00E5895E  PBU_$ALLOC
     sau5  0x00E5895E  PBU_$ALLOC
+    sau6  0x780605CE  PBU_$ALLOC
+    sau7  0x3C4693CE  PBU_$ALLOC
     sau8  0x03C61482  PBU_$ALLOC
 
   - IO_$ALLOC for the unit's I/O unit, npages pages, at iova when fixed;

@@ -1,6 +1,7 @@
 { MONO_$END_WIRED_PROC - mark the end of the driver's wired code.
 
   Image addresses:
+    sau7  0x3C48DB90  MONO_$END_WIRED_PROC
     sau8  0x03C812A0  MONO_$END_WIRED_PROC
 
   - An empty procedure, the last of the wired section: its address ends

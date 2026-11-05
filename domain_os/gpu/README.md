@@ -34,6 +34,27 @@ The driver's types, the hardware and the GPU_ASM objects are
 `gpu_internal.ins.pas` (included by `gpu.pas` only); the global
 headings and the statuses `gpu.ins.pas`.
 
+### The SAU6
+
+The SAU6's GPU segments: OS_INIT_PROC 0x1A4 bytes, .TEXT 0x11AC, .DATA
+0x5DC, and GPU_ASM 0x60 (GPU_$DONE_INT and GPU_$PAGE_INT for the SAU5's
+GPU_$INTERRUPT).  The SAU5's source with three parts
+(base/config.ins.pas):
+
+- `gpu_own_vectors`: GPU_$COLD_INIT puts GPU_$DONE_INT and
+  GPU_$PAGE_INT in GPU_DONE_VEC and GPU_PAGE_VEC; the handlers
+  (`sau6/gpu_asm.s`) raise the IPL, switch to the interrupt stack and
+  advance their eventcounts through PROC1_$INT_ADVANCE.
+- `gpu_reset_registers`: gpu_$reset, and GPU_$COLD_INIT after its two
+  writes, write the registers 16#71BA and 16#2007.
+- `mmap_ppns_4000`: the physical page table runs from page 16#4000 to
+  16#FFFF (0x90000 bytes, the size GPU_$INIT maps).
+
+The other routines differ from the SAU5's only in the 68020's code
+generation, registers and the I/O addresses.  GPU_ASM's 0x60 bytes were
+checked against the image by assembling `sau6/gpu_asm.s` with
+`m68k-elf-as -m68020 -m68881` and linking it at the map's addresses.
+
 ## Routines and their fragments
 
 | routine | fragment |
@@ -59,6 +80,7 @@ headings and the statuses `gpu.ins.pas`.
 | GPU_$CMND | `cmnd.pas` |
 | GPU_$DIAG_WIRE | `diag_wire.pas` |
 | GPU_$INTERRUPT | none: hand assembly (`sau5/gpu_asm.s`) |
+| GPU_$DONE_INT, GPU_$PAGE_INT (`gpu_own_vectors`) | none: hand assembly (`sau6/gpu_asm.s`) |
 | (data) GPU_ASM | none: hand assembly (`sau5/gpu_asm.s`) |
 
 ## Open items
@@ -72,6 +94,8 @@ headings and the statuses `gpu.ins.pas`.
   ("illegal values for physical page use limits", "DMA command
   execution error") do not fit the SAU5 code's uses (a PIO error bit;
   GPU_$SET_PAGE_LIMITS's bad limits); the names follow the texts.
+- TODO(sau): the SAU6 link needs GPU_DONE_VEC and GPU_PAGE_VEC (the
+  TRAP_PAGE's 16#280 and 16#284) as absolute symbols.
 - TODO(merge) in `gpu_internal.ins.pas`: COLOR2_$INT_EC belongs in a
   COLOR2 insert.
 

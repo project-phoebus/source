@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E1CEAC  KBD_$PUT
     sau3  0x00E1C04C  KBD_$PUT
+    sau6  0x7801EFAA  KBD_$PUT
+    sau7  0x3C421296  KBD_$PUT
 
   - kbd_$put_line, an empty procedure on the SAU2, does the writing.
   - Without `display_driver' there is no keyboard: the call is refused.

@@ -4,6 +4,8 @@
     sau2  0x00E6E8D6  smd_$enqueue_event (module-local)
     sau4  0x0F879068  smd_$enqueue_event (module-local)
     sau5  0x00E70D54  smd_$enqueue_event (module-local)
+    sau6  0x780780C8  smd_$enqueue_event (module-local)
+    sau7  0x3C481BAA  smd_$enqueue_event (module-local)
     sau9  0x3C4752CA  smd_$enqueue_event (module-local)
 
   - The event is dropped when the ring is full; else DTTE line 0's

@@ -31,7 +31,17 @@ PEB_$LOAD_WCS for the save area, its nested check) and data, PEB_WIRED's
 .TEXT segment of 0x60 bytes (PEB_$TOUCH a constant false, PEB_$GET_INFO),
 PEB_WIRED_END, and PEB_$PROC_CLEANUP empty; no PEB_ASM, no PEB_$REGS.
 The board's routines and `m68k/int.s` are compiled only with
-`peb_board`.
+`peb_board`.  The SAU6's PEB is the SAU9's form with the FPX
+floating-point accelerator (`peb_fpx`): FPX_EXISTS is PEB_UNWIRED's
+first byte (M68881_EXISTS at +2), PEB_$INIT tests it first, and
+PEB_$LOAD_WCS's check disables the FPX's save area as it does the
+68881's.  The SAU7's is the SAU9's form with the floating-point
+accelerator (`fpa_board`, FIM's hand-written FPA code): FPX_EXISTS and
+M68881_EXISTS as on the SAU6, PEB_$INIT probes the accelerator's control
+and status register when FPX_EXISTS is set (PEB_$INFO's flag_1d), and
+PEB_$LOAD_WCS first checks the accelerator's version and maps its
+8892-byte save area (FPA_$SAVEP) under a second nested check,
+peb_$load_wcs_check_fpa_err, then the 68881's as on the SAU9.
 
 Data (every block zero in the image):
 
@@ -55,7 +65,8 @@ Routines: thirteen globals (every PEB_ map symbol of the compiled code
 segments); three module-local (`internal`, no map symbol):
 peb_$write_wcs, peb_$read_wcs and peb_$cleanup_internal (the last loads
 A5 itself: its caller is in another section); one nested,
-PEB_$LOAD_WCS's check (it reads its static link).  PEB_$INT is hand
+PEB_$LOAD_WCS's check (it reads its static link), and with
+`fpa_board` a second, the accelerator's check.  PEB_$INT is hand
 assembly.
 
 ## Routines and their fragments
@@ -68,6 +79,7 @@ assembly.
 | peb_$write_wcs | `write_wcs.pas` (with the page selection inline) |
 | peb_$read_wcs | `read_wcs.pas` |
 | peb_$load_wcs_check_err | `load_wcs.pas` (nested in PEB_$LOAD_WCS, before it in the image) |
+| peb_$load_wcs_check_fpa_err | `load_wcs.pas` (with `fpa_board`: nested in PEB_$LOAD_WCS, after the first) |
 | PEB_$LOAD_WCS | `load_wcs.pas` |
 | PEB_$ASSOC | `assoc.pas` |
 | PEB_$DISSOC | `dissoc.pas` |

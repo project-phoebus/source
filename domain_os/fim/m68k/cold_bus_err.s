@@ -26,19 +26,30 @@
  * (FIM_FAULT_CLASS_ACCESS).  0x00120034 is "unexpected bus error during
  * system initialization" (stcodes 10.2).
  *
+ * The SAU6's reads the MMU's word at +0xE first (`mmu_status_bit_6';
+ * `D 7803F004 FIM_WIRED size = 2C': 6 bytes more and the rounding).
+ *
  * Byte gate (tools/asm_compare.py): identical to the image modulo
  * relocations.
  */
 
+        .include "base/config.inc"
+
         .extern BUS_ERROR_SWITCH        /* fim/m68k/bus_err.s, map 0xE218CC */
         .extern JMP_TO_BUS_ERR          /* fim/m68k/bus_err.s, image 0xE218CA */
         .extern FIM_$COM                /* fim/m68k/com.s, map 0xE213A4 */
+        .if mmu_status_bit_6
+        .extern MMU                     /* I/O definitions */
+        .endif
 
         .section ".text.FIM_$COLD_BUS_ERR","ax",@progbits
         .even
 
         .global FIM_$COLD_BUS_ERR
 FIM_$COLD_BUS_ERR:
+        .if mmu_status_bit_6
+        tst.w   (MMU+0xe).l                     /* sau6 7803f004  4a79 7fff b40e */
+        .endif
         tst.l   (BUS_ERROR_SWITCH).l            /* e35004  4ab9 00e2 18cc */
         beq.b   .Lcbe_com                       /* e3500a  6706 */
         jmp     (JMP_TO_BUS_ERR).l              /* e3500c  4ef9 00e2 18ca */
@@ -50,3 +61,6 @@ FIM_$COLD_BUS_ERR:
         .long   0x00120034                      /* e35020  status */
         .short  0x000A                          /* e35024  signal */
         .short  0x3000                          /* e35026  class */
+        .if mmu_status_bit_6
+        .short  0                               /* sau6 7803f02e  the segment rounded to a longword */
+        .endif

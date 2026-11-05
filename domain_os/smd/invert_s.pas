@@ -4,6 +4,7 @@
     sau2  0x00E6DDA6  SMD_$INVERT_S
     sau4  0x0F8784CA  SMD_$INVERT_S
     sau5  0x00E701AE  SMD_$INVERT_S
+    sau6  0x7807754C  SMD_$INVERT_S
 
   - The display is acquired while SMD_$INVERT_DISP inverts the unit's
     display memory.

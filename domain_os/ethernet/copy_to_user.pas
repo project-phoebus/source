@@ -1,6 +1,8 @@
 { ethernet_copy_to_user - scatter bytes into a caller's buffer vector.
 
   Image addresses:
+    sau6  0x78089210  ethernet_copy_to_user
+    sau7  0x3C493918  ethernet_copy_to_user
     sau8  0x03C87114  ethernet_copy_to_user
     sau9  0x3C482D14  ethernet_copy_to_user
 

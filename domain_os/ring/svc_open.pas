@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E76DF2  RING_$SVC_OPEN
     sau3  0x00E785E2  RING_$SVC_OPEN
+    sau6  0x780853F2  RING_$SVC_OPEN
+    sau7  0x3C48FECA  RING_$SVC_OPEN
     sau8  0x03C836CA  RING_$SVC_OPEN
 
   Status stored:

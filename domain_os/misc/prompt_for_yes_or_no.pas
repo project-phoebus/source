@@ -5,6 +5,8 @@
     sau2  0x00E33778  prompt_for_yes_or_no (module-local)
     sau3  0x00E31BC0  prompt_for_yes_or_no (module-local)
     sau4  0x0F8369BC  prompt_for_yes_or_no (module-local)
+    sau6  0x7803CC34  prompt_for_yes_or_no (module-local)
+    sau7  0x3C43CCC8  prompt_for_yes_or_no (module-local)
     sau8  0x03C36FB8  prompt_for_yes_or_no
 
   - Up to six characters from terminal line 1; a first character Y or y

@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E12D38  pmap_$wait_in_transit
     sau4  0x0F813670  pmap_$wait_in_transit (module-local)
+    sau7  0x3C414AF0  pmap_$wait_in_transit
     sau9  0x3C4150B4  pmap_$wait_in_transit
 
   Assume we're called with the PMAP lock held.

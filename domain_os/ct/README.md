@@ -13,7 +13,18 @@ forms:
 - the QIC-02 driver of an AT bus adapter (`ct_qic02` with
   `ct_atbus_qic02`): the adapter's ports, the drive's six status bytes,
   a DMA_ channel and a PBU unit's interrupt, translated from the SAU8
-  image.
+  image;
+- both drivers in one module (`ct_scsi` with `ct_qic02` and
+  `ct_atbus_qic02`): each global runs the SCSI driver's code for a drive
+  CT_$ACQUIRE found on the SCSI bus and the AT bus adapter's otherwise,
+  the adapter's DMA through the AT bus's I/O map (`ct_iomap`),
+  translated from the SAU7 image;
+- the QIC-02 driver of the turbo boards (`ct_qic02` with
+  `ct_vectored_ctlr`, `ct_wait_ends_busy`, `ct_owner_test_reversed` and
+  `win6_ct6_board`): the controller interrupts on its DCTE's vector, and
+  a second controller on the WIN6 page, found by CT6_$CINIT, takes the
+  tape's commands in the WIN6_ driver's command blocks (CT6_$INT ends
+  them), translated from the SAU6 image.
 
 ## Layout
 
@@ -31,6 +42,24 @@ bytes.  The shared fragments hold its arms under `ct_atbus_qic02`
 (`%elseif` after the SCSI arm); ct_wait_ready, ct_status_cmd and
 ct_read_status are its own.
 | .DATA (default) | none | CT data, 0xD18 bytes | CT data, 0xD8C bytes | the driver's variables and the QIC-02 drive status table | module variables |
+
+The SAU6's segments: CT in .TEXT, 0x1464 bytes (the SAU5's routines
+with ct6_map_cmd and ct6_decode_status after ct_check_unit and CT6_$INT
+after CT_$ACQUIRE); CT in OS_INIT_PROC, 0x174 bytes (CT_$CINIT,
+CT6_$CINIT); CT data, 0xD64 bytes (`ct.pas`).  The QIC-02 fragments hold
+the second controller's arms under `win6_ct6_board`, each a test of
+ct6_page at run time.
+
+The SAU7's segments: CT in .TEXT, 0x2684 bytes (the SAU9's module-local
+routines and SCSI_WAIT, then the SAU8's from ct_wait_ready to
+ct_transfer with ct_bus_address before it, the globals with the SCSI
+driver's nested routines, CT_$INT); CT in OS_INIT_PROC, 0xE4 bytes
+(CT_$CINIT); CT data, 0x15B8 bytes, both forms' variables in one order
+(`ct.pas`).  The SCSI arms of the globals' fragments hold the QIC-02
+code under `%if ct_qic02` (an `else` of the SCSI driver's test); CT_WAIT
+and ct_transfer have arms under `ct_iomap`, CT_$CINIT one for both
+drivers, and ct_scsi_reset's delay loop is `ct_reset_delay` (the
+SAU9's).
 
 The SAU2 build compiles the `%else` of `ct_driver` (CT_$RELEASE's empty
 body) to the image's 4 bytes.  The map's CT_END_ADDR segment is hand
@@ -54,6 +83,8 @@ have fragments of their own, but for `touch_pages.pas`,
 | ct_touch_pages (at the map's CT_$PROC_START) | `touch_pages.pas` |
 | ct_unwire_pages | `unwire_pages.pas` |
 | ct_check_unit | `check_unit.pas` |
+| ct6_map_cmd (QIC-02, second controller) | `ct6_map_cmd.pas` |
+| ct6_decode_status (QIC-02, second controller) | `ct6_decode_status.pas` |
 | ct_decode_status (QIC-02) | `decode_status.pas` |
 | ct_wait_ready (AT bus adapter) | `wait_ready.pas` |
 | ct_status_cmd (AT bus adapter) | `status_cmd.pas` |
@@ -61,6 +92,7 @@ have fragments of their own, but for `touch_pages.pas`,
 | CT_WAIT (QIC-02) | `ct_wait.pas` |
 | RESET_DRIVE (QIC-02) | `reset_drive.pas` |
 | DO_CTL_CMD (QIC-02) | `do_ctl_cmd.pas` |
+| ct_bus_address (I/O map) | `bus_address.pas` |
 | ct_transfer (QIC-02) | `transfer.pas` |
 | ct_to_24 (SCSI) | `to_24.pas` |
 | ct_from_24 (SCSI) | `from_24.pas` |
@@ -71,6 +103,7 @@ have fragments of their own, but for `touch_pages.pas`,
 | ct_scsi_transfer, its nested build_entry and do_xfer (SCSI) | `scsi_transfer.pas` |
 | ct_scsi_control (SCSI) | `scsi_control.pas` |
 | CT_$ACQUIRE (SCSI: nested ct_scsi_open) | `acquire.pas` |
+| CT6_$INT (QIC-02, second controller) | `ct6_int.pas` |
 | CT_$CONTROL (SCSI: nested ct_scsi_control_op) | `control.pas` |
 | CT_$DIAG (SCSI: nested ct_scsi_diag) | `diag.pas` |
 | CT_$READ | `read.pas` |
@@ -79,6 +112,7 @@ have fragments of their own, but for `touch_pages.pas`,
 | CT_$WRITE | `write.pas` |
 | CT_$INT (QIC-02) | `int.pas` |
 | CT_$CINIT | `cinit.pas` |
+| CT6_$CINIT (QIC-02, second controller) | `ct6_cinit.pas` |
 | CT_$PROC_END | none: hand assembly, `m68k/end_addr.s` |
 
 `ct.ins.pas` holds CT_$RELEASE's heading (every SAU), under `ct_driver`
@@ -87,7 +121,10 @@ CT_$CONTROL's operations and CT_$DIAG's modes, the window's and the
 lists' types, the wired range's markers, and the globals' headings, and
 under `ct_scsi` the SCSI tape driver's constants (its SCSI commands, its
 own control operations, its time-outs), the sense and mode answers'
-types, and SCSI_WAIT's heading.  Some of those are declared elsewhere
+types, and SCSI_WAIT's heading.  The second controller's constants and
+types (its command block and page, its command map's entry) are
+`ct.pas`'s, under `win6_ct6_board`, which only the module uses; CT6_$INT's
+and CT6_$CINIT's headings are `../io/io.ins.pas`'s.  Some of those are declared elsewhere
 until the merge: CT_$CINIT
 and CT_$INT in `../io/io.ins.pas` (CT_$INT under `ct_qic02`),
 CT_$ACQUIRE, CT_$CONTROL, CT_$READ, CT_$WAIT and two statuses in
@@ -95,7 +132,4 @@ CT_$ACQUIRE, CT_$CONTROL, CT_$READ, CT_$WAIT and two statuses in
 
 ## Open items
 
-- TODO(sau): the SAU6..SAU8 CT code (`ct.pas`): the SAU6 and SAU8 have
-  QIC-02 drivers of their own forms, the SAU7 both drivers, its globals
-  testing for the SCSI drive first.
 - TODO(merge): the headings' home (above).

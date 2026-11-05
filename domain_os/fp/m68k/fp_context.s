@@ -64,6 +64,10 @@
  * With `fpu_enable_cpu_control' (the SAU8) they set and clear bit 2 of
  * the CPU control register (MMU + 0x101) and of its copy, MMU_$PID_PRIV's
  * low byte, at IPL 7; those lines carry the SAU8 image's addresses.
+ * With `fpa_board' (the SAU7: FP_$GET_FP 0x3C426E44, FP_$PUT_FP
+ * 0x3C426EB2) each first does the same for the floating-point
+ * accelerator when FPA_$SAVEP is set (fpa_$get_fp, fpa_$put_fp,
+ * fim/sau7/fpa.s); those lines carry the SAU7 image's addresses.
  *
  * Not on the SAUs whose floating-point registers are the CPU's own
  * (`fp_state_in_cpu', base/config.ins.pas): the SAU4's FP_$GET_FP and
@@ -90,7 +94,12 @@
 
 
         .include "base/config.inc"
-        .if !fp_state_in_cpu
+        .if !fp_state_in_cpu && !fpu_enable_mmu_9   /* the SAU6's: fim/sau6/fp.s */
+        .if fpa_board
+        .extern FPA_$SAVEP              /* fp/m68k/savep.s */
+        .extern fpa_$get_fp             /* fim/sau7/fpa.s */
+        .extern fpa_$put_fp             /* fim/sau7/fpa.s */
+        .endif
 
         .section ".text.fp_$switch_owner","ax",@progbits
         .even
@@ -211,6 +220,12 @@ fp_$save_state:
  * ==================================================================== */
         .global FP_$GET_FP
 FP_$GET_FP:
+        .if fpa_board
+        move.l  (FPA_$SAVEP:w,%pc),%d0  /* sau7 3c426e44  203a f548 */
+        beq.s   .Lgf_no_fpa             /* sau7 3c426e48  6704  no accelerator */
+        bsr.w   fpa_$get_fp             /* sau7 3c426e4a  6100 faea */
+.Lgf_no_fpa:
+        .endif
         pea     (FP_$EXCLUSION:w,%pc)      /* 00e21d48  48 7a fb 8c -> 0xE218D6 */
         jsr     (ML_$EXCLUSION_START).l /* 00e21d4c  0x00E20DF8 */
         addq.l  #4, %sp                 /* 00e21d52 */
@@ -267,6 +282,12 @@ fp_$check_owner:
  * ==================================================================== */
         .global FP_$PUT_FP
 FP_$PUT_FP:
+        .if fpa_board
+        move.l  (FPA_$SAVEP:w,%pc),%d0  /* sau7 3c426eb2  203a f4da */
+        beq.s   .Lpf_no_fpa             /* sau7 3c426eb6  6704  no accelerator */
+        bsr.w   fpa_$put_fp             /* sau7 3c426eb8  6100 fae4 */
+.Lpf_no_fpa:
+        .endif
         pea     (FP_$EXCLUSION:w,%pc)      /* 00e21d94 */
         jsr     (ML_$EXCLUSION_START).l /* 00e21d98 */
         addq.l  #4, %sp                 /* 00e21d9e */

@@ -5,6 +5,7 @@
     sau3  0x00E70B24  MT_$RELEASE
     sau4  0x0F87D89C  MT_$RELEASE
     sau5  0x00E7668E  MT_$RELEASE
+    sau6  0x7807D33A  MT_$RELEASE
 
   - With the driver (`mt_driver', base/config.ins.pas), under the MT
     lock: the unit, or units 0 through 4 for -1, each given up when the

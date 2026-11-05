@@ -4,6 +4,7 @@
     sau3  0x00E2E0FC  MBUS_$INIT
     sau4  0x0F83295C  MBUS_$INIT
     sau5  0x00E308FC  MBUS_$INIT
+    sau6  0x78037D4C  MBUS_$INIT
 
   - Levels 7..15 keep a nil handler until MBUS_$DEFINE_INT gives them
     one; the handlers' arguments are left as they are.
@@ -13,18 +14,13 @@
     the adapter's third register is left alone.
   - With `mbus_vectored_adapter' each level's vector goes to MBUS_$INT,
     the probe writes the acknowledge register and MBUS_$HIGH_OK is false.
+  - With `mbus_vectored_enable' the vectors of levels 0..6 go to
+    MBUS_$INT first, and the third register gets 16#1B05.
   - MBUS_$PRESENT is the adapter's answer to the probe; PBU_$INIT reads
     it and MBUS_$HIGH_OK afterwards.
 
   Status stored: none.
 }
-
-{ TODO(sau) MBUS_$INIT on the SAU6
-
-  The SAU6's MBUS_$INIT installs MBUS_$INT with IO_$TRAP for each of
-  seven levels' own vectors (16#B0 plus the level) and stores 16#1B05
-  in the third register.  To be written as a conditional arm when that
-  image is translated. }
 
 [section(os_init_proc, os_init_data)]
 procedure mbus_$init;
@@ -52,6 +48,12 @@ begin
     ctl^.int_mask := [0..7];
   end;
 %else
+%if mbus_vectored_enable %then
+  { each of the first seven levels' vector }
+  for i := 0 to 6 do
+    io_$trap(mbus_$first_vector + i, addr(mbus_$int));
+
+%endif
 %if mbus_polled_adapter %then
   io_$trap(mbus_$int_vector, addr(mbus_$int));
 
@@ -78,7 +80,11 @@ begin
 %else
     mbus_$high_ok := true;
     ctl^.int_enable := [];
+%if mbus_vectored_enable %then
+    ctl^.word_04 := 16#1B05;
+%else
     ctl^.word_04 := 16#3D05;
+%endif
     ctl^.word_00 := csr ! 16#213;
 %endif
   end;

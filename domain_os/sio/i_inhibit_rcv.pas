@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E1C94A  SIO_$I_INHIBIT_RCV
     sau4  0x0F81DB5E  SIO_$I_INHIBIT_RCV
+    sau6  0x7801E840  SIO_$I_INHIBIT_RCV
+    sau7  0x3C420B2C  SIO_$I_INHIBIT_RCV
 
   - On a line with software flow control the receiver-enabled member is
     cleared or set and the driver's set_params entry applies it (its

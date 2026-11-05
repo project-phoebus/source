@@ -4,6 +4,7 @@
     sau3  0x00E6E278  SM_$GET_STATS
     sau4  0x0F8779C0  SM_$GET_STATS
     sau5  0x00E6F5D0  SM_$GET_STATS
+    sau6  0x78076A20  SM_$GET_STATS
 
   - The 22 bytes of the command block's drive record.  The controller
     number is not read.

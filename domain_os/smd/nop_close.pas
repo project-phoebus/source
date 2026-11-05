@@ -1,6 +1,7 @@
 { SMD_$NOP_CLOSE - the default for a device's close for an address space: nothing.
 
   Image addresses:
+    sau7  0x3C480CD8  SMD_$NOP_CLOSE
     sau9  0x3C4743F8  SMD_$NOP_CLOSE
 
   Status stored: none.

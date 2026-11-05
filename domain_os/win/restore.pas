@@ -2,6 +2,7 @@
 
   Image addresses:
     sau5  0x00E199EC  RESTORE
+    sau6  0x78019E20  RESTORE
 
   - The first descriptor is set to the drive and the restore command
     given, up to three times; the descriptor and the current request are

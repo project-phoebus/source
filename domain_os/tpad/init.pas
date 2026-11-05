@@ -3,12 +3,16 @@
   Image addresses:
     sau2  0x00E33570  TPAD_$INIT
     sau4  0x0F8367B4  TPAD_$INIT
+    sau6  0x7803CA28  TPAD_$INIT
+    sau7  0x3C43CACC  TPAD_$INIT
 
   - Unit 1 becomes the current unit.  Each display unit present gets its
     width and height less one as its maximum cursor limits and its
     scales, and its conversion factors (1024 for a scale of 0).
   - The cursor starts at (512, 400), the touchpad maximum at 1500, the
-    device type tpad_$unknown.
+    device type tpad_$unknown.  With `tpad_block_head'
+    (base/config.ins.pas) the maximum is 4096, or 1500 when the byte at
+    +5 of the block's head is true.
   - The module's .DATA block is reached by its address (tpad/tpad.pas).
 
   Status stored: none.
@@ -81,6 +85,12 @@ begin
   tpad_$button_state := 0;
   tpad_$accum_x := 0;
   tpad_$accum_y := 0;
+%if tpad_block_head %then
+  tpad_$touchpad_max := 4096;
+  if tpad_head.flag_5 then
+    tpad_$touchpad_max := 1500;
+%else
   tpad_$touchpad_max := 1500;
+%endif
   tpad_$dev_type := tpad_$unknown;
 end;

@@ -1,6 +1,8 @@
 { ethernet_arp_resolve - the Ethernet address to send a node's packets to.
 
   Image addresses:
+    sau6  0x78087FD8  ethernet_arp_resolve
+    sau7  0x3C492480  ethernet_arp_resolve
     sau8  0x03C85C7C  ethernet_arp_resolve
     sau9  0x3C48187C  ethernet_arp_resolve
 

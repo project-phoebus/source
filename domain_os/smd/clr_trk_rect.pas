@@ -4,6 +4,8 @@
     sau2  0x00E6E718  SMD_$CLR_TRK_RECT
     sau4  0x0F878EAA  SMD_$CLR_TRK_RECT
     sau5  0x00E70B96  SMD_$CLR_TRK_RECT
+    sau6  0x78077F0A  SMD_$CLR_TRK_RECT
+    sau7  0x3C4819EC  SMD_$CLR_TRK_RECT
     sau9  0x3C47510C  SMD_$CLR_TRK_RECT
 
   - The cursor is redrawn at the display's own position after the

@@ -4,6 +4,7 @@
     sau2  0x00E6681C  TERM_$READ
     sau3  0x00E67786  TERM_$READ
     sau4  0x0F870310  TERM_$READ
+    sau7  0x3C479E98  TERM_$READ
 
   - TTY_$K_GET on the real line, conditionally when its DTTE flag is
     set; the result is the count read.

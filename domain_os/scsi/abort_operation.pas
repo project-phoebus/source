@@ -1,3 +1,32 @@
+%if scsi_mailbox_ctlr %then
+{ SCSI_$ABORT_OPERATION - abort a device's command in progress.
+
+  Image addresses:
+    sau7  0x3C4B85E0  SCSI_$ABORT_OPERATION
+
+  - With the mailbox host adapter: the adapter resets the device (kind
+    1, scsi_send_reset) under scsi_$exclusion_lock.
+
+  Status stored:
+    scsi_get_tinfo's status: the handle is not the caller's
+    scsi_send_reset's status: otherwise
+}
+
+procedure scsi_$abort_operation(in handle: scsi_$handle_t;
+                                out status: status_$t);
+var
+  t: scsi_tinfo_ptr_t;
+  st: status_$t;
+begin
+  t := scsi_get_tinfo(handle.all, status);
+  if status.all = status_$ok then begin
+    ml_$exclusion_start(scsi_$exclusion_lock);
+    scsi_send_reset(t, 1, st);
+    ml_$exclusion_stop(scsi_$exclusion_lock);
+    status := st;
+  end;
+end;
+%else
 { SCSI_$ABORT_OPERATION - abort a device's command in progress.
 
   Image addresses:
@@ -66,3 +95,4 @@ begin
                        st));
   status := st;
 end;
+%endif

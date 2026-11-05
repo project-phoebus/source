@@ -1,6 +1,7 @@
 { MST_$BST_TO_VA - the virtual address at which a page map is mapped.
 
   Image addresses:
+    sau7  0x3C40FD9C  MST_$BST_TO_VA
     sau8  0x03C0F284  MST_$BST_TO_VA
     sau9  0x3C41035C  MST_$BST_TO_VA
 

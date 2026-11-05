@@ -5,6 +5,10 @@
     sau2  0x00E85718  PCHIST_UNWIRED_D (overlay section, 0x938 bytes)
     sau4  0x0F82E8C0  PCHIST data (WIRED_DATA, 0x128 bytes)
     sau4  0x0F893D60  PCHIST_UNWIRED_D (overlay section, 0x938 bytes)
+    sau6  0x780303DC  PCHIST data (WIRED_DATA, 0x128 bytes)
+    sau6  0x780A0CA4  PCHIST_UNWIRED_D (overlay section, 0x938 bytes)
+    sau7  0x3C432B78  PCHIST data (WIRED_DATA, 0x128 bytes)
+    sau7  0x3C4AF640  PCHIST_UNWIRED_D (overlay section, 0x938 bytes)
 
   One compilation unit, in three code sections and one data section of
   its own, with an overlay section besides: the map's PCHIST code

@@ -2,6 +2,8 @@
 
   Image addresses:
     sau2  0x00E261AC  RING_WIRED data (WIRED_DATA, 0xAC bytes)
+    sau6  0x78029568  RING_WIRED data (WIRED_DATA, 0xAC bytes)
+    sau7  0x3C42BDE0  RING_WIRED data (WIRED_DATA, 0xAC bytes)
     sau8  0x03C28254  RING_WIRED data (WIRED_DATA, 0xAC bytes)
 
   A map module of data only: the map's RING_WIRED data segment in

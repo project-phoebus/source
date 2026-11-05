@@ -4,6 +4,8 @@
     sau2  0x00E75400  ring_$process_rx_packet (module-local)
     sau4  0x0F882C00  ring_$process_rx_packet (module-local)
     sau5  0x00E7C800  ring_$process_rx_packet (module-local)
+    sau6  0x78083C00  ring_$process_rx_packet (module-local)
+    sau7  0x3C48DEE6  ring_$process_rx_packet (module-local)
     sau8  0x03C816E6  ring_$process_rx_packet (module-local)
     sau9  0x3C47D2E6  ring_$process_rx_packet (module-local)
 

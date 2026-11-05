@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E013A0  ast_$purify_aote (module-local)
     sau4  0x0F8017B0  ast_$purify_aote (module-local)
+    sau6  0x78001B84  ast_$purify_aote (module-local)
+    sau7  0x3C401F9C  ast_$purify_aote (module-local)
     sau9  0x3C40279C  ast_$purify_aote (module-local)
 
   Assume we're called with the AST lock held.

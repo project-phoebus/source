@@ -13,7 +13,7 @@ SAU3..SAU8), translated from the SAU5, SAU3 and SAU8 images.
 | `pbu.pas` | PBU | .DATA | none | 0x5C bytes, as the SAU5's | 0x5C bytes: the PBU page's wired pages, their count, the default transfer control |
 | `ec2_pbu.pas`, `module ec2_pbu, pbu_wired_proc, pbu_wired_data;` | EC2_PBU | PBU_WIRED_PROC, PBU_WIRED_DATA | 0x60 + 0x300 bytes | the same | the same |
 | `pbu_map.pas`, `module pbu_map, pbu_wired_proc, pbu_wired_data;` | PBU_MAP | PBU_WIRED_PROC, PBU_WIRED_DATA | none (empty object) | 0x450 bytes, the SAU5's routines with word I/O map entries; 0xC bytes of data | 0x44C bytes: two module-local routines, the DMA entries, PBU2_$MAP, PBU2_$UNMAP, PBU_$WAIT; 0xC bytes of data |
-| `sau3/pbu_asm.s`, `sau5/pbu_asm.s` | PBU_ASM | PBU_PAGE (data) | none | 0x7A4 bytes, hand assembly: the SAU5's with 8 units and PBU_$GET_STATUS | 0x770 bytes, hand assembly: SM_$CB, PBU_$MCB, PBU_$INT_COM, PBU_$TRAP6, PBU_$DCTES, PBU_$DCTE_TABLE and the DCTEs, PBU_$ENABLE_DEVICE ... |
+| `sau3/pbu_asm.s`, `sau5/pbu_asm.s`, `sau6/pbu_asm.s` | PBU_ASM | PBU_PAGE (data) | none | 0x7A4 bytes, hand assembly: the SAU5's with 8 units and PBU_$GET_STATUS | 0x770 bytes, hand assembly: SM_$CB, PBU_$MCB, PBU_$INT_COM, PBU_$TRAP6, PBU_$DCTES, PBU_$DCTE_TABLE and the DCTEs, PBU_$ENABLE_DEVICE ... |
 
 EC2_PBU has a 0x300-byte data segment in PBU_WIRED_DATA: EC2_$PBU_ECS
 (32 records of 0x18 bytes, zero), a `define`d variable (extern in
@@ -30,7 +30,8 @@ linker script's, when there is one.
 `<sub>/<sub>.pas`, every other `.pas` of a subsystem with a line
 starting `module `.  `sau5/pbu_asm.s` is assembled by the Makefile's
 `*/$(TARGET_SAU)/*.s` for a SAU5 build only, `sau3/pbu_asm.s` for a
-SAU3 build, `sau4/pbu_asm.s` for a SAU4 build; the bytes of each were checked against its image by linking
+SAU3 build, `sau4/pbu_asm.s` for a SAU4 build, `sau6/pbu_asm.s` for a
+SAU6 build; the bytes of each were checked against its image by linking
 it alone at its address.
 
 The SAU3's PBU is the SAU5's source with the parts of
@@ -57,7 +58,38 @@ pbu_default_ctl), no I/O map space (`io_regions`: no pbu_clear_iomap,
 PBU2_$ALLOCATE_MAP, PBU_$FREE_MAP, PBU2_$WIRE_MAP, PBU2_$MAP and
 PBU2_$UNMAP stubs), no storage module (`smd_disk`), the PBU page wired
 by OS_$INIT (`pbu_wire_at_boot`), PBU_$PPN_OWNERS from page 16#400
-(`mmap_ppns_400`).
+(`mmap_ppns_400`).  Its PBU_ASM is `m68k/pbu_asm.s` (under
+`pbu_atbus_units`), which the SAU7's shares.
+
+The SAU7's PBU (0x1CAC bytes of code; PBU_MAP 0xA84, its data 0xA0C)
+compiles the SAU8's source with the I/O map space (`io_regions`) and
+its word entries (`word_iomap`: PBU2_$WIRE_MAP, PBU2_$MAP and
+PBU2_$UNMAP are the SAU4's forms), the cache-inhibited pages
+(`pmap_cache_inhibit`: PBU_$WIRE_SPECIAL's contiguous buffer, and a
+stand-in in PBU2_$UNWIRE's frame), PBU_$PPN_OWNERS a word per page from
+16#4000 (`pbu_ppns_4000`), pbu_clear_iomap through IOMAP_$UNMAP
+(`pbu_iomap_unmap`), and the DMA through the unit's I/O map space
+(`pbu_dma_iomap`): PBU_$DMA_START maps the buffer with PBU2_$MAP and
+keeps the mapping in PBU_$MAPPED_INFO (16 units of 8 channel records,
+`pbu_$mapped_info_t`, a defined variable of `pbu_map.pas` at +4 of its
+data), PBU_$DMA_STOP unmaps it, PBU2_$DMA_START is a body of its own,
+PBU2_$MAP and PBU2_$UNMAP take a unit with attr_set at page-aligned
+addresses, and PBU_$SETUP and PBU_$FREE_MAP clear a byte of the unit's
+records.  PBU_$WIRE_PBU and pbu_access_csr are the SAU8's code.
+
+The SAU6's PBU (0x1F7C bytes of code, 0x5C of data; PBU_MAP 0x42C;
+PBU_ASM 0x770) is the SAU5's source with the large virtual memory's I/O
+page mapping (`large_vm`, the SAU4's forms of PBU2_$ASSOC, PBU_$SETUP,
+PBU_$SETDOWN, PBU_$DISSOC and PBU2_$UNWIRE), PBU_$PPN_OWNERS a word per
+page from 16#4000 to 16#FFFF (`mmap_ppns_4000`), the turbo boards' VME
+windows (`pbu_vme_windows`: PBU2_$ASSOC's further windows, one of them
+smaller with a GPU display, and PBU_$SETUP's CSR pages in the short
+space, mapped from 16#300000), and pbu_map_owned_ppn's answer masked to
+the I/O map entry's 14-bit page field (`pbu_iomap_page_mask`).  The
+other routines are the SAU5's source in 68020 code.  `sau6/pbu_asm.s`
+is the SAU5's PBU_ASM for the region-register MMU, as the SAU4's: no
+MMU_$PID_PRIV, the diagnostic frame's DCTE at +0x3C, PBU_$TRAP6 on a
+longword, its own end of user space.
 
 The SAU4's PBU (0x1938 bytes of code, 0x58 of data; PBU_MAP 0x434;
 PBU_ASM 0x744) is the SAU3's source with its parts: the large virtual
@@ -126,6 +158,7 @@ SAU3's PBU_ASM for the DNx60's MMU and PBU control register.
 | PBU2_$UNMAP | `pbu2_unmap.pas` |
 | PBU_$WAIT | `wait.pas` |
 | (data) | PBU_$DCTE_INT_PTR, PBU_$VME_DISABLE_COUNT are `pbu_map.pas`'s defined variables |
+| (data) | PBU_$MAPPED_INFO (SAU7) is `pbu_map.pas`'s defined variable |
 | (data) | PBU_$NONSYS_DEVICE (SAU8) is `pbu.pas`'s defined variable |
 | PBU_$PAGE_START, SM_$CB, SM_$CNT, PBU_$MCB | none: hand assembly, `sau5/pbu_asm.s` |
 | PBU_$INT_COM, PBU_$ADVANCE_ONLY, PBU_$IGNORE_INT, PBU_$USER_SPACE_DRIVER | none: hand assembly, `sau5/pbu_asm.s` |
@@ -133,6 +166,7 @@ SAU3's PBU_ASM for the DNx60's MMU and PBU control register.
 | SM_BLK_HDR, PBU_$DCTES, PBU_$DCTE_TABLE | none: hand assembly, `sau5/pbu_asm.s` |
 | PBU_$DEVICE_INTERRUPTING, PBU_$DISABLE_DEVICE, PBU_$ENABLE_DEVICE | none: hand assembly, `sau5/pbu_asm.s` |
 | PBU_ASM on the SAU3, PBU_$GET_STATUS | none: hand assembly, `sau3/pbu_asm.s` |
+| PBU_ASM on the SAU4 and SAU6 | none: hand assembly, `sau4/pbu_asm.s`, `sau6/pbu_asm.s` |
 | (data) | EC2_$PBU_ECS is `ec2_pbu.pas`'s defined variable |
 
 `pbu.ins.pas`, the home of every PBU declaration: the statuses, the
@@ -169,9 +203,3 @@ EC2_PBU has no conformance unit.
 - The SAU5 DDF, DCTE and control layouts are inferred from the code
   (pbu.ins.pas), the SAU3's control and I/O map entry likewise.
 - PBU_$WIRE_SPECIAL's SAU3 body: the TODO(pascal) in `wire_special.pas`.
-
-### TODO(sau)
-
-- The SAU6 and SAU7 PBU and PBU_MAP code, each SAU's own
-  (`pbu.pas`, `pbu_map.pas`);
-  PBU_TABLES' size on the SAU7 (`pbu.ins.pas`).

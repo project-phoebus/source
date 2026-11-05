@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E24D44  PMAP_ data (WIRED_DATA, 0x7A4 bytes)
     sau4  0x0F8271E0  PMAP_ data (WIRED_DATA, 0x7A4 bytes)
+    sau6  0x78028100  PMAP_ data (WIRED_DATA, 0x7A4 bytes)
+    sau7  0x3C42A978  PMAP_ data (WIRED_DATA, 0x7A4 bytes)
     sau8  0x03C26DEC  PMAP_ data (WIRED_DATA, 0x7A4 bytes)
     sau9  0x3C428544  PMAP_ data (WIRED_DATA, 0x7A4 bytes)
 

@@ -2,6 +2,8 @@
 
   Image addresses:
     sau5  0x00E76F10  ct_unwire_pages (module-local)
+    sau6  0x7807DBAC  ct_unwire_pages (module-local)
+    sau7  0x3C48549A  ct_unwire_pages (module-local)
     sau9  0x3C477BDE  ct_unwire_pages (module-local)
     sau8  0x03C7A0CC  ct_unwire_pages (module-local)
 

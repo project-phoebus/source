@@ -2,6 +2,7 @@
 
   Image addresses:
     sau5  0x00E736C4  gpu_$unlock (module-local)
+    sau6  0x7807A5DA  gpu_$unlock (module-local)
 
   - Only the holder gives it back; the lock's eventcount is advanced
     only when a process waits.

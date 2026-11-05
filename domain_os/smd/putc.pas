@@ -4,6 +4,8 @@
     sau2  0x00E1D89C  SMD_$PUTC
     sau4  0x0F81EC5A  SMD_$PUTC
     sau5  0x00E1E65C  SMD_$PUTC
+    sau6  0x7801FBFA  SMD_$PUTC
+    sau7  0x3C421AC4  SMD_$PUTC
     sau9  0x3C4201DC  SMD_$PUTC
 
   - An empty procedure, but with `display_devices' (base/config.ins.pas),

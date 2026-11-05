@@ -180,6 +180,16 @@ The rest of the SAU9's MMAP_ code is the SAU2's source compiled for the
   `pmmu_page_maps` arms of `trim_wsl.pas`, `ws_scan.pas` and
   `release_pages.pas` are its forms too; MMAP_$ALLOC_CONTIG is the
   SAU2's stub.
+- `mmap_ppns_4000` (SAU6): MMAP spans 16#4000..16#FFFF (49152 pages);
+  the table is 768 pages, the boot maximum 65536, the MMAP_$LPPN seed
+  16#FFFF; the links stay words.  The SAU6's page maps are the SAU4's
+  (`region_mmu`); no routine has a sau6 arm.
+
+- `mmap_ppns_4000_bfff` (SAU7): MMAP spans 16#4000..16#BFFF (32768
+  pages); the table is 512 pages, the boot maximum 65536, the
+  MMAP_$LPPN seed 16#FFFF; the links stay words.  With
+  `pmmu_page_maps` the SAU7's MMAP_ is the SAU8's source as it stands:
+  no routine has a sau7 arm.
 
 ## Open items
 

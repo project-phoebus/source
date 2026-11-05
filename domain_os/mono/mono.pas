@@ -1,6 +1,8 @@
 { mono/mono.pas - the MONO module, a monochrome display board's driver.
 
   Image addresses:
+    sau7  0x3C435C74  MONO data (WIRED_DATA, 0x20 bytes)
+    sau7  0x3C4ADE28  MONO data (.DATA, 0x8 bytes)
     sau8  0x03C30420  MONO data (WIRED_DATA, 0x20 bytes)
     sau8  0x03C9D434  MONO data (.DATA, 0x8 bytes)
 

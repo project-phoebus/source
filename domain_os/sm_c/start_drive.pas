@@ -4,6 +4,7 @@
     sau3  0x00E6F232  sm_c_$start_drive (module-local)
     sau4  0x0F87BFEA  sm_c_$start_drive (module-local)
     sau5  0x00E74D96  sm_c_$start_drive (module-local)
+    sau6  0x7807BAAA  sm_c_$start_drive (module-local)
 
   Assume we're called with the controller's ML lock held.
 

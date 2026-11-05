@@ -4,6 +4,8 @@
     sau2  0x00E701EE  SMD_$DISPLAY_LOGO
     sau4  0x0F87AB14  SMD_$DISPLAY_LOGO
     sau5  0x00E7272E  SMD_$DISPLAY_LOGO
+    sau6  0x78079A0A  SMD_$DISPLAY_LOGO
+    sau7  0x3C483176  SMD_$DISPLAY_LOGO
     sau9  0x3C476896  SMD_$DISPLAY_LOGO
 
   - The logo (150 rows of 32 words) goes to the first of units 1 and 2

@@ -1,6 +1,7 @@
 { MONO_$BLINK_CURSOR - blink the cursor once.
 
   Image addresses:
+    sau7  0x3C48D97A  MONO_$BLINK_CURSOR
     sau8  0x03C8108A  MONO_$BLINK_CURSOR
 
   - Unless flag 10 of the control word is set, the cursor is drawn or

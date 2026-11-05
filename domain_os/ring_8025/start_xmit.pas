@@ -1,6 +1,7 @@
 { ring_8025_start_xmit - start the adapter's transmitter.
 
   Image addresses:
+    sau7  0x3C4961A6  ring_8025_start_xmit
     sau8  0x03C89896  ring_8025_start_xmit
     sau9  0x3C48547A  ring_8025_start_xmit
 
@@ -20,7 +21,13 @@ begin
   u^.xmit_list := addr(ring8025_$aux_da.ctl[u^.cnum].xmit[1]);
   for i := 1 to r8025_xmit_lists do
     ring8025_$aux_da.ctl[u^.cnum].xmit[i].cstat := [];
+%if ring_8025_iomap %then
+  u^.scb^.parm := ring_8025_vtop(integer32(u^.xmit_list),
+                                 sizeof(ring_8025_$list_t),
+                                 u^.iomap_page + r8025_map_ctl);
+%else
   u^.scb^.parm := ring_8025_vtop(integer32(u^.xmit_list));
+%endif
   u^.scb^.cmd := r8025_cmd_transmit;
   u^.flags := u^.flags + [r8025_unit_scb_busy];
   u^.scb_wait_val := ec_$read(u^.scb_ec) + 1;

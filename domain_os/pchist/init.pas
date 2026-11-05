@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E32394  PCHIST_$INIT
     sau4  0x0F8354FC  PCHIST_$INIT
+    sau6  0x7803ADC8  PCHIST_$INIT
+    sau7  0x3C43AE10  PCHIST_$INIT
 
   - The lock is reached by its absolute address (another section's
     block).

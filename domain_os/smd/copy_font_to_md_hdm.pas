@@ -5,6 +5,8 @@
     sau2  0x00E1D750  SMD_$COPY_FONT_TO_MD_HDM
     sau4  0x0F81EA70  SMD_$COPY_FONT_TO_MD_HDM
     sau5  0x00E1E38C  SMD_$COPY_FONT_TO_MD_HDM
+    sau6  0x7801F9C0  SMD_$COPY_FONT_TO_MD_HDM
+    sau7  0x3C421A46  SMD_$COPY_FONT_TO_MD_HDM
     sau9  0x3C42015E  SMD_$COPY_FONT_TO_MD_HDM
 
   - With the display acquired, 39 rows of 14 words go to word column 50

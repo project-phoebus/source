@@ -2,6 +2,7 @@
 { DO_CTL_CMD - give the tape drive a command, ctl_count times.
 
   Image addresses:
+    sau7  0x3C4859D8  DO_CTL_CMD
     sau8  0x03C7A60E  DO_CTL_CMD
 
   - With the AT bus adapter (`ct_atbus_qic02'), under the controller's
@@ -10,7 +11,7 @@
     with the interrupts off, the drive must drop ready within 52800
     polls, and the interrupt is enabled (PBU_$ENABLE_DEVICE).  Each
     repetition but the last is waited for (CT_WAIT, 480 ticks, again
-    while it times out); ct_blocks counts the commands given.
+    while it times out); ct_xfer_count counts the commands given.
   - When the adapter shows an exception instead of ready, a read status
     command is given first, then the command again.
   - The result is 0: a failure is not passed on.
@@ -48,7 +49,7 @@ begin
   saved_cmd := 0;
   timeout := 16;
   status := 0;
-  ct_blocks := 0;
+  ct_xfer_count := 0;
   regs := ct_regs;
   if ct_cmd = ct_cmd_read_status then
     ct_ignore_exception := true
@@ -97,7 +98,7 @@ begin
       if st.all <> status_$ok then
         st.all := status_$ok;
     end;
-    ct_blocks := ct_blocks + 1;
+    ct_xfer_count := ct_xfer_count + 1;
   end;
 2:
   if ctl_count <> ct_count_unlocked then
@@ -118,23 +119,46 @@ end;
 
   Image addresses:
     sau5  0x00E77228  DO_CTL_CMD
+    sau6  0x7807DFB8  DO_CTL_CMD
 
   - Under the controller's lock (unless the count is ct_count_unlocked,
     one block without it), the count, the go byte and the command code
     go into the controller's window.
   - The command is marked outstanding with the eventcount value its
     interrupt will reach.
+  - With the second controller (`win6_ct6_board') the command goes in a
+    command block instead: one is taken (WIN6_$GET_IOPBS, tried again
+    every 8 ticks, 21 times in all), filled with the operation
+    ct6_map_cmd gives and the count, and started through the tape's
+    start mailbox once the controller has taken the last start (a
+    crash after 20 ticks).
 
   Returns:
-    0: always (the callers test it)
+    0: the command was started
+    status_$ct_controller_timeout: no command block came free
+    status_$ct_unrecognized_action_type: ct6_map_cmd failed
 
   Status stored: none.
 }
 
 function do_ctl_cmd(in ctl_cmd: integer; in ctl_count: integer): integer32;
+%if win6_ct6_board %then
+label
+  10, 20;
+%endif
 var
   n: integer;
   status: integer32;
+%if win6_ct6_board %then
+  first: integer;
+  last: integer;
+  idx: integer;
+  busy: boolean;
+  free: boolean;
+  r: integer;
+  op: integer;
+  deadline: integer32;
+%endif
 begin
   n := ctl_count;
   if n <> ct_count_unlocked then
@@ -146,6 +170,58 @@ begin
     ct_count := 1;
   ct_cmd := ctl_cmd;
   status := 0;
+%if win6_ct6_board %then
+  if ct6_page <> nil then begin
+    { a command block, waiting 8 ticks at a time for one }
+    busy := win6_$get_iopbs(1, first, last) <> 0;
+    idx := first;
+    if busy then begin
+      for r := 1 to 20 do begin
+        discard(ec_$wait(addr(time_$clockh_ec), addr(ec_$nil_ec),
+                         addr(ec_$nil_ec), time_$clockh + 8, 0, 0));
+        free := win6_$get_iopbs(1, first, last) = 0;
+        idx := first;
+        if free then
+          goto 10;
+      end;
+      do_ctl_cmd := status_$ct_controller_timeout;
+      goto 20;
+    end;
+10:
+    if not ct6_map_cmd(ctl_cmd, op) then begin
+      do_ctl_cmd := status_$ct_unrecognized_action_type;
+      goto 20;
+    end;
+    with ct6_page^.iopbs[idx] do begin
+      req := nil;
+      status := -1;
+      opu.op := op;
+      state.count := n;
+      state.kind := ct6_kind_started;
+      opu.unused_72 := 0;
+      opu.unit := 0;
+      buf := 0;
+      l_14 := 0;
+      l_18 := 0;
+      l_1c := 0;
+    end;
+
+    { the start, once the controller has taken the last one }
+    with ct6_page^ do begin
+      if tape_start.flag <> 0 then begin
+        deadline := time_$clockh + 20;
+        while tape_start.flag <> 0 do
+          if time_$clockh > deadline then begin
+            crash_system(status_$ct_controller_timeout);
+            exit;
+          end;
+      end;
+      tape_start_iopb := idx * win6_iopb_size;
+      tape_start.flag := 1;
+    end;
+  end
+  else
+%endif
   with ct_regs^ do begin
     count := n;
     go := 1;
@@ -155,6 +231,9 @@ begin
   ct_busy := true;
   ct_state := ct_state_none;
   do_ctl_cmd := status;
+%if win6_ct6_board %then
+20:
+%endif
   if ctl_count <> ct_count_unlocked then
     ml_$unlock(ct_dcte^.disk_error_que_hi);
 end;

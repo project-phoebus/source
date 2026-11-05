@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E698A0  TPAD_$SET_CURSOR
     sau4  0x0F873366  TPAD_$SET_CURSOR
+    sau6  0x780724C6  TPAD_$SET_CURSOR
+    sau7  0x3C47CE3A  TPAD_$SET_CURSOR
 
   - TPAD_$SET_UNIT_CURSOR for the current unit; its status is ignored.
 

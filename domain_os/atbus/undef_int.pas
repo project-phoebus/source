@@ -2,8 +2,9 @@
   defined: crash.
 
   Image addresses:
-    sau9  0x3C40C758  ATBUS_$UNDEF_INT
+    sau7  0x3C40C1A6  ATBUS_$UNDEF_INT
     sau8  0x03C0B852  ATBUS_$UNDEF_INT
+    sau9  0x3C40C758  ATBUS_$UNDEF_INT
 
   - CRASH_SYSTEM does not return, so the result false (not handled) is
     never reached; the argument is never read.

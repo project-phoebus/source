@@ -17,7 +17,11 @@ Two forms (`../base/config.ins.pas`):
   four device routines with `util_pic` (SAU9), and the block, the
   map's SYSBUS_$INT_VEC (0x80 bytes, zero); with `sysbus_vectors_90`
   (SAU4) the levels are 32, on the vectors 16#90..16#9F and
-  16#F0..16#FF (0x160 bytes of code, a block of 0x100 bytes);
+  16#F0..16#FF (0x160 bytes of code, a block of 0x100 bytes); with
+  `sysbus_vectors_88` (SAU6) 32 levels on 16#88..16#9F and
+  16#F0..16#F7, each with a second handler (0x1DC bytes of code, a
+  block of 0x1E4 bytes: SYSBUS_$DUP_VEC, SYSBUS_$INT_VEC at +0x60 and
+  the next free SYSBUS_$DUP_VEC entry, a word at +0x1E0);
 - without it (the SAU2's): DISK_INTERRUPT, RING_INTERRUPT,
   SYSBUS_$INIT, SYSBUS_$DEFINE_INT (0x118 bytes) and a block of 0x2C
   bytes, no map symbol inside.
@@ -75,10 +79,21 @@ Without `winchester_config` there is no DISK_INTERRUPT, and SYSBUS_$INIT
 traps the ring's vector and keeps only the ring's DCTE (`init.pas`);
 SYSBUS_$DEFINE_INT and RING_INTERRUPT are the SAU2's.
 
+## The SAU6
+
+The SAU6's SYSBUS_$INT_VEC entries are 12 bytes, the handler, its
+argument and the entry of SYSBUS_$DUP_VEC holding the level's second
+handler.  SYSBUS_$DEFINE_INT gives a level whose handler is defined the
+new one as its second, in the next free entry of SYSBUS_$DUP_VEC (eight
+entries; the count is not checked); SYSBUS_$INT calls the second
+handler when the first returns false.  The second range of vectors
+starts at level 23, as SYSBUS_$INT's and SYSBUS_$DEFINE_INT's
+expression has it on the SAU4: 16#F0 and 16#9F are both level 23.
+SYSBUS_$UNDEF_INT is the SAU4's and SAU9's code.
+
 ## Open items
 
-- TODO(sau): the SAU3's and SAU6's forms (`atbus_.pas`, `int.pas`,
-  `define_int.pas`, `init.pas`).
+- TODO(pascal): SYSBUS_$INT's 4 frame bytes on the SAU9 (`int.pas`).
 - TODO(pascal): the SAU2 block's two longwords nothing addresses
   (`atbus_.pas`).
 - The SAU9's routines take the id's vector into an `integer` local and

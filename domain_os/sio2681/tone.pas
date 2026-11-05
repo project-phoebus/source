@@ -4,6 +4,7 @@
     sau2  0x00E1D172  SIO2681_$TONE
     sau3  0x00E1C2E6  SIO2681_$TONE
     sau4  0x0F81E386  SIO2681_$TONE
+    sau6  0x7801F266  SIO2681_$TONE
 
   - Under the driver's spin lock bit 7 of the chip's output port shadow
     becomes the complement of enable; the shadow goes to the

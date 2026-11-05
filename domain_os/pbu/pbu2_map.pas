@@ -4,6 +4,8 @@
     sau3  0x00E89CA4  PBU2_$MAP
     sau4  0x0F897C44  PBU2_$MAP
     sau5  0x00E92068  PBU2_$MAP
+    sau6  0x780A7464  PBU2_$MAP
+    sau7  0x3C4B6D82  PBU2_$MAP
     sau8  0x03CA5B46  PBU2_$MAP
 
   - At interrupt level, from a user handler (PBU_$TRAP6); no lock.
@@ -12,7 +14,9 @@
     with word entries (`word_iomap') the page number alone, and a page
     not wired clears the entries before it.
   - The result is iova plus the buffer's offset in its page, unset when
-    a check fails.
+    a check fails; with the DMA through the I/O map space
+    (`pbu_dma_iomap') a unit with its attribute set (attr_set) gets
+    iova's page with the offset.
   - The fit test compares an offset with the space's end address; the
     page found not wired keeps its entry (page 0 with the control's
     bits).
@@ -98,7 +102,14 @@ begin
     end;
     va := va + 1024;
   end;
+%if pbu_dma_iomap %then
+  if dcte^.flags.attr_set then
+    pbu2_$map := (iova div 1024 * 1024) ! page_offset
+  else
+    pbu2_$map := page_offset + iova;
+%else
   pbu2_$map := page_offset + iova;
+%endif
 end;
 %else
 function pbu2_$map(in unit: integer; in buffer: univ pbu_$buffer_t;

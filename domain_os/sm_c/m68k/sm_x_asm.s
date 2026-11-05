@@ -27,7 +27,8 @@
 | storage module drivers' part, `smd_disk' (base/config.ins.pas); the
 | address and byte columns below are the SAU5 image's.  The bytes were
 | checked by assembling the file by hand against the SAU5 and SAU3
-| images.
+| images, and against the SAU6's (`m68k-elf-as -m68020', linked at the
+| map's address).
 |
         .include "base/config.inc"
 

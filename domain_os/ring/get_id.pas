@@ -4,12 +4,15 @@
     sau2  0x00E2FA28  RING_$GET_ID
     sau4  0x0F832F20  RING_$GET_ID
     sau5  0x00E30F48  RING_$GET_ID
+    sau6  0x78038348  RING_$GET_ID
+    sau7  0x3C437F20  RING_$GET_ID
     sau8  0x03C326F0  RING_$GET_ID
     sau9  0x3C435620  RING_$GET_ID
 
   - The id is formed from the three id bytes of the controller's
     registers (high, middle, low) and stored back at +8; 1 when the
-    controller is not in the system.
+    controller is not in the system (with `ring_id_not_found' also when
+    it is not found).
   - With `ring_board_dma' the id bytes are other registers, and the id
     is not stored back.
   - With `nodeid_prom' it is formed from the four bytes of the node id
@@ -74,7 +77,12 @@ begin
 
   dcte := io_$get_dcte(2, cnum, status);
 
+%if ring_id_not_found %then
+  if (status.all <> status_$io_controller_not_in_system)
+     and then (status.all <> status_$io_controller_not_found) then begin
+%else
   if status.all <> status_$io_controller_not_in_system then begin
+%endif
     regs := dcte^.disk_dinit;
 %if ring_board_dma %then
     id := regs^.id_0a * 16#10000 + regs^.id_0c * 256 + regs^.id_0e;

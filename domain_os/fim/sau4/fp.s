@@ -25,9 +25,11 @@
  *   fp_$regs_table  0x0F823362  58 * 64  FP0..FP7, 8 bytes each (double)
  *
  * and a pad word to FIM_$SPURIOUS_INT (0x0F8241E2).  The registers are
- * stored with `fmove.d FPn,(A0)+' (opmode 0x00) and loaded with the word
- * the image has, opmode 0x01 (`fint.d (A0)+,FPn' in the MC68881's
- * encoding).
+ * stored with `fmove.d FPn,(A0)+' (opmode 0x00) and loaded with opmode
+ * 0x01, the DNx60's FMOVE from memory: its FP opcode assignment has FINT
+ * and FMOVE the other way round from the MC68881's (the machine's FP
+ * diagnostics, fitest).  The listing's mnemonics are the MC68881's, so
+ * the loads read `fint.d'.
  *
  *   FIM_$FP_TRAP      at IPL 7 with SR bit 11 set (`ori.w #0xf00'), save
  *                     the FP ASID's FPSR, FPCR and registers, make the

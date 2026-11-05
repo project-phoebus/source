@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E00FBC  AST_$FREE_ASTE
     sau4  0x0F8013BE  AST_$FREE_ASTE
+    sau6  0x78001792  AST_$FREE_ASTE
+    sau7  0x3C401B9E  AST_$FREE_ASTE
     sau9  0x3C40239E  AST_$FREE_ASTE
 
   - The count of its kind (area, remote, local) is lowered, its AOTE

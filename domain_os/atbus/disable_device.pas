@@ -1,8 +1,9 @@
 { ATBUS_$DISABLE_DEVICE - stop an AT bus interrupt from interrupting.
 
   Image addresses:
-    sau9  0x3C40C8E8  ATBUS_$DISABLE_DEVICE
+    sau7  0x3C40C26E  ATBUS_$DISABLE_DEVICE
     sau8  0x03C0B91A  ATBUS_$DISABLE_DEVICE
+    sau9  0x3C40C8E8  ATBUS_$DISABLE_DEVICE
 
   - An interrupt above 15 crashes the system; so does one that is not
     the one defined on its level.  Its system bus level is disabled

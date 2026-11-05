@@ -31,6 +31,16 @@ endif
 ifeq ($(TARGET_SAU),sau8)
 ASFLAGS := -m68020 -m68851 -m68881
 endif
+# The SAU7 (DN3500, DN3550, DN4000, DN4500) is an MC68030, or an MC68020
+# with an MC68851 PMMU, and an MC68881: its hand assembly has the 68030's
+# PMMU instructions (pmove to TC/CRP/TT0, pflush) and, for the MC68020's
+# arms, the MC68851's pflushs and pmove from PCSR, which gas accepts for
+# the 68030 too.
+ifeq ($(TARGET_SAU),sau7)
+ASFLAGS := -m68030 -m68881
+endif
+# The SAU6 (DN560T, DN570T, DN580T, DN590T) is an MC68020 with an MC68881
+# and an MMU of its own (no MC68851 instructions): the default flags.
 # The SAU4 (DSP160, DN460, DN660) is a microcoded emulation of the MC68010
 # with no 68020 paths in its hand assembly: assembled for the 68010, so
 # gas keeps a PC-relative operand to another section at 16 bits, as the

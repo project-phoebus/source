@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E66738  TTY_$I_GET_DESC
     sau3  0x00E676AC  TTY_$I_GET_DESC
+    sau7  0x3C479DB4  TTY_$I_GET_DESC
 
   - For real line 0, the console, the discipline is set to
     term_$disc_enable_alt when the display TTY is not in use, and the

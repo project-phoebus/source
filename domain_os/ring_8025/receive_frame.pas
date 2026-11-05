@@ -2,8 +2,10 @@
   list.
 
   Image addresses:
+    sau7  0x3C49771C  copy_data (nested)
     sau8  0x03C8AD3C  copy_data (nested)
     sau9  0x3C486940  copy_data (nested)
+    sau7  0x3C497804  ring_8025_receive_frame
     sau8  0x03C8AE24  ring_8025_receive_frame
     sau9  0x3C486A28  ring_8025_receive_frame
 
@@ -177,7 +179,11 @@ begin
     len := len - rif_len;
     os_$data_copy(fp^, pkt_$bytes_ptr_t(h)^, 14);
     dst := h + 14;
+%if ring_8025_rif_sum_reversed %then
+    src := integer32(fp) + rif_len + 14;
+%else
     src := integer32(fp) + 14 + rif_len;
+%endif
     n := min(r8025_hdr_max, len);
     os_$data_copy(pkt_$bytes_ptr_t(src)^, pkt_$bytes_ptr_t(dst)^, n - 14);
     dlen := len - n;

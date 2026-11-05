@@ -2,6 +2,7 @@
   process.
 
   Image addresses:
+    sau7  0x3C484136  COLOR5_$ASSOC_CSRS
     sau8  0x03C799E2  COLOR5_$ASSOC_CSRS
 
   - When the current process in its current address space has them

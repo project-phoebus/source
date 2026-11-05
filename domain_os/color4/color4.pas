@@ -1,6 +1,9 @@
 { color4/color4.pas - the COLOR4 module, a color display board's driver.
 
   Image addresses:
+    sau7  0x3C435B2C  COLOR4 data (WIRED_DATA, 0x28 bytes)
+    sau7  0x3C440FFC  COLOR4 data (OS_INIT_DATA, 0x10 bytes)
+    sau7  0x3C4ADE1C  COLOR4 data (.DATA, 0x8 bytes)
     sau8  0x03C302D8  COLOR4 data (WIRED_DATA, 0x28 bytes)
     sau8  0x03C399A8  COLOR4 data (OS_INIT_DATA, 0x10 bytes)
     sau8  0x03C9D428  COLOR4 data (.DATA, 0x8 bytes)

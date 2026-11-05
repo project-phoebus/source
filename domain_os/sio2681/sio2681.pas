@@ -8,6 +8,10 @@
     sau3  0x00E335EC  SIO_IO data (OS_INIT_DATA, 0x8 bytes)
     sau4  0x0F831024  SIO_IO data (WIRED_DATA, 0xA8 bytes)
     sau4  0x0F8385C4  SIO_IO data (OS_INIT_DATA, 0x8 bytes)
+    sau6  0x78032B08  SIO_IO data (WIRED_DATA, 0xA8 bytes)
+    sau6  0x7803F1D0  SIO_IO data (OS_INIT_DATA, 0x8 bytes)
+    sau7  0x3C4358D0  SIO_IO data (WIRED_DATA, 0xA8 bytes)
+    sau7  0x3C440674  SIO_IO data (OS_INIT_DATA, 0x8 bytes)
     sau8  0x03C30158  SIO_IO data (WIRED_DATA, 0xA8 bytes)
     sau8  0x03C39670  SIO_IO data (OS_INIT_DATA, 0x8 bytes)
 
@@ -28,7 +32,8 @@
   With `console_sio2681' or `sio2681_four_lines' there is no SIO6509:
   its routines and its table at
   +0xA8 are left out (the WIRED_DATA block is then 0xA8 bytes); with
-  `kbd_tone' SIO2681_$TONE is (the keyboard sounds the tone).
+  `kbd_tone' SIO2681_$TONE is (the keyboard sounds the tone), unless
+  `kbd_type_sysrev' (either keyboard).
 
   The heading: `module sio_io, wired_proc, wired_data;'.  SIO2681_$INIT
   is headed `[section(os_init_proc, os_init_data)]' (the OS_INIT_DATA
@@ -91,7 +96,7 @@ module sio_io, wired_proc, wired_data;
 define
   sio2681_$int;
   sio2681_$set_break;
-%if not kbd_tone %then
+%if not kbd_tone or kbd_type_sysrev %then
   sio2681_$tone;
 %endif
   sio2681_$set_line;
@@ -184,7 +189,7 @@ var
 { ---- WIRED_PROC ---- }
 %include 'sio2681/int.pas';                 { SIO2681_$INT          }
 %include 'sio2681/set_break.pas';           { SIO2681_$SET_BREAK    }
-%if not kbd_tone %then
+%if not kbd_tone or kbd_type_sysrev %then
 %include 'sio2681/tone.pas';                { SIO2681_$TONE         }
 %endif
 %include 'sio2681/set_baud_rate.pas';       { sio2681_set_baud_rate }

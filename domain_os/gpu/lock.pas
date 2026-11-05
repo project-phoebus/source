@@ -2,6 +2,7 @@
 
   Image addresses:
     sau5  0x00E73590  gpu_$lock (module-local)
+    sau6  0x7807A4AC  gpu_$lock (module-local)
 
   - It waits with GPU_$ML_LOCK released, at most 100 clock ticks and
     until the process is told to quit; a quit is noted as seen.

@@ -1,6 +1,7 @@
 { RING_8025_$IOCTL - a unit's control request.
 
   Image addresses:
+    sau7  0x3C4984A0  RING_8025_$IOCTL
     sau8  0x03C8BA90  RING_8025_$IOCTL
     sau9  0x3C487694  RING_8025_$IOCTL
 

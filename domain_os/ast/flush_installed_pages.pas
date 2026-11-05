@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E03FBC  ast_$flush_installed_pages (nested)
     sau4  0x0F80439C  ast_$flush_installed_pages (nested)
+    sau6  0x780046A4  ast_$flush_installed_pages (nested)
+    sau7  0x3C404AF4  ast_$flush_installed_pages (nested)
     sau8  0x03C042E8  ast_$flush_installed_pages (nested)
     sau9  0x3C4052F4  ast_$flush_installed_pages (nested)
 

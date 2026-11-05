@@ -2,6 +2,9 @@
   descriptors, and the driver's wired data.
 
   Image addresses:
+    sau7  0x3C435C94  MONO_DCTE data (WIRED_DATA, 0x100 bytes)
+    sau7  0x3C4B9EAC  MONO_$WIRED_DATA overlay (0x2D8 bytes)
+    sau7  0x3C4BA184  MONO_END_DATA overlay (0x4 bytes)
     sau8  0x03C30440  MONO_DCTE data (WIRED_DATA, 0x100 bytes)
     sau8  0x03CA6008  MONO_$WIRED_DATA overlay (0x2D8 bytes)
     sau8  0x03CA62E0  MONO_END_DATA overlay (0x4 bytes)

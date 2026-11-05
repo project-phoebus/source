@@ -1,6 +1,8 @@
 { ETHERNET_$SVC_READ - receive a packet on a user channel.
 
   Image addresses:
+    sau6  0x78089296  ETHERNET_$SVC_READ
+    sau7  0x3C49399E  ETHERNET_$SVC_READ
     sau8  0x03C8719A  ETHERNET_$SVC_READ
     sau9  0x3C482D9A  ETHERNET_$SVC_READ
 

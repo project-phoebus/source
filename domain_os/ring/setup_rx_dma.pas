@@ -4,6 +4,7 @@
     sau2  0x00E758C4  ring_$setup_rx_dma (module-local)
     sau4  0x0F8830EA  ring_$setup_rx_dma (module-local)
     sau5  0x00E7CBCA  ring_$setup_rx_dma (module-local)
+    sau6  0x78083FB2  ring_$setup_rx_dma (module-local)
 
   - Channel 0 receives into the header buffer and channel 1 into the
     data buffer, 512 words each.

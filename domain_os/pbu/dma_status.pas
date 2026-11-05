@@ -3,6 +3,8 @@
   Image addresses:
     sau3  0x00E89C6A  PBU_$DMA_STATUS
     sau5  0x00E9202E  PBU_$DMA_STATUS
+    sau6  0x780A742A  PBU_$DMA_STATUS
+    sau7  0x3C4B6B6C  PBU_$DMA_STATUS
     sau8  0x03CA5AA2  PBU_$DMA_STATUS
 
   - On the AT bus (`pbu_atbus_units') the status of the unit's channel

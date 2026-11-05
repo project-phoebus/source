@@ -3,6 +3,7 @@
 
   Image addresses:
     sau5  0x00E73974  gpu_$wire_page (module-local)
+    sau6  0x7807A886  gpu_$wire_page (module-local)
 
   - Pages are released first: the process's down to one below its
     limit, then the table's from its head while no more than 256 (and no

@@ -155,8 +155,17 @@ const
 
   { The word CT_$CINIT writes to probe the controller's window (TESTPAGE
     kind 3); WIN_$CINIT's with the descriptor-list controller is the
-    same (win/win.ins.pas). }
+    same (win/win.ins.pas), the turbo boards' (`ct_vectored_ctlr')
+    another. }
+%if ct_vectored_ctlr %then
+  ct_probe_word = 16#1B05;
+
+  { The controller's status word's bit CT_$INT tests: the controller's
+    interrupt. }
+  ct_cstat_int = 16#200;
+%else
   ct_probe_word = 16#3D05;
+%endif
 
 type
   { The buffers of a transfer, one address per 512-byte block (CT_$READ,
@@ -303,7 +312,8 @@ function do_ctl_cmd(in ctl_cmd: integer; in ctl_count: integer): integer32;
 
 { CT_$CINIT and CT_$INT take io/io.ins.pas's dcte_t, and only IO_'s
   DCTES block names them: their headings are io/io.ins.pas's (under
-  ct_driver), which ct/ct.pas includes. }
+  ct_driver), which ct/ct.pas includes; so is CT6_$CINIT's (under
+  win6_ct6_board). }
 
 const
   status_$ct_tape_not_at_load_point = 16#0028FFFC;

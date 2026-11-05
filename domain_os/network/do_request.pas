@@ -2,6 +2,8 @@
 
   Image addresses:
     sau2  0x00E0F86C  network_$do_request (module-local)
+    sau6  0x780101D8  network_$do_request (module-local)
+    sau7  0x3C4116F0  network_$do_request (module-local)
     sau8  0x03C10BA0  network_$do_request (module-local)
 
   - On a socket of its own (no free socket crashes the system), the

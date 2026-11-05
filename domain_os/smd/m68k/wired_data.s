@@ -1,8 +1,8 @@
 /*
  * smd/m68k/wired_data.s - the data of the hand-written SMD_WIRED segment
- * (SAU2, SAU4, SAU5, SAU9)
+ * (SAU2, SAU4, SAU5, SAU6, SAU7, SAU9)
  *
- * The SAU2, SAU4, SAU5 and SAU9 images have the same data here except in
+ * The SAU2, SAU4, SAU5, SAU6, SAU7 and SAU9 images have the same data here except in
  * three places, which test base/config.ins.pas's parts:
  *   gpu_driver         after MATROX_$BOARD_INSTALLED, the SAU5's map
  *                      symbols COLOR3_$CR_CONTENTS and
@@ -12,8 +12,11 @@
  *                      The maps: SMD_$GRAPHIC_DEVICE_ID and
  *                      COLOR3_$CR_CONTENTS are SAU5 and SAU6 symbols
  *                      only (SMD_$INIT reads the first: config.ins.pas's
- *                      gpu_driver); the SAU6's run is 0x62 bytes, another
- *                      form, for its own arm when that SAU is built.
+ *                      gpu_driver); the SAU6's run, without
+ *                      `color_board', is 0x62 bytes: the same cells
+ *                      without the color board's command block (its
+ *                      head, its pattern words and its position
+ *                      command) and the two words before it.
  *                      With `color_board' alone (the SAU4) the run is
  *                      0x32 bytes: two zero words, then the SAU5's
  *                      command blocks from +0x31E.
@@ -26,10 +29,11 @@
  *   display_devices    the SAU9's segment (`D 3C42A720 SMD_WIRED size =
  *                      4D8') is the data run from SMD_$CURSOR_TABLE
  *                      alone: no code, so no MATROX_$BOARD_INSTALLED;
- *                      SMD_$DISPLAY_COM is 0x300 bytes, zero (the
- *                      SAU7's segment has the same size); the US table
- *                      ends the segment, with no zero word after it.
- *                      The other bytes are the SAU2's.
+ *                      SMD_$DISPLAY_COM is 0x300 bytes, zero; the US
+ *                      table ends the segment, with no zero word after
+ *                      it.  The other bytes are the SAU2's.  The SAU7's
+ *                      segment (`D 3C42CB54 SMD_WIRED size = 4D8') is
+ *                      the SAU9's.
  * The address and byte columns are the SAU2 image's, except on the lines
  * of the `.if' arms taken by the SAU5 or SAU4 alone, which carry that
  * image's addresses.  Every other byte is the same on both; the pointer cells
@@ -129,8 +133,10 @@ SMD_$GRAPHIC_DEVICE_ID:                         /* sau5 e2804e */
 /* +0x318: the DN580 board's mode word, saved. */
         .word   0                               /* sau5 e28090 */
 
+        .if color_board
 /* +0x31A: not referenced by the code. */
         .word   0, 0                            /* sau5 e28092 */
+        .endif
         .elseif color_board
 
 /* The SAU4's (its cursor body's base is SMD_$DISP2_INT, MATROX_$BOARD_
@@ -138,7 +144,7 @@ SMD_$GRAPHIC_DEVICE_ID:                         /* sau5 e2804e */
         .word   0, 0                            /* sau4 f8296a0 */
         .endif
 
-        .if gpu_driver + color_board
+        .if color_board
 /* +0x31E (the SAU4's +0x2E8): the controllers' cursor command block,
    which the SAU4's cursor body sends to the color board.  The erase
    form is its first 9 words, the draw form all 19; +0x320's high byte
@@ -146,15 +152,25 @@ SMD_$GRAPHIC_DEVICE_ID:                         /* sau5 e2804e */
    cursor body fills the zero words; the DN570's cursor commands use the
    same words from +0x324. */
         .word   0xf803, 0x02ff, 0x8000          /* sau5 e28096 */
+        .endif
+        .if gpu_driver + color_board
+/* Without `color_board' (the SAU6) the DN570's cursor command words
+   alone, from +0x324 after the mode word (sau6 7802a600): the same
+   words without the command block's head, its pattern words and its
+   position command. */
         .word   0, 0, 0, 0                      /* sau5 e2809c: +0x324, +0x328 */
         .word   0, 0                            /* sau5 e280a4: +0x32C the pattern's width, height */
+        .if color_board
         .word   0xf700, 0x2e22, 0x2222, 0xa080  /* sau5 e280a8 */
-        .word   0, 0x0400                       /* sau5 e280b0: +0x338 */
+        .endif
+        .word   0, 0x0400                       /* sau5 e280b0: +0x338 (sau6 +0x330) */
         .word   0, 0                            /* sau5 e280b4: +0x33C */
         .word   0, 0                            /* sau5 e280b8: +0x340 */
+        .if color_board
 
 /* +0x344: the controllers' cursor position command, 3 words. */
         .word   0, 0, 0                         /* sau5 e280bc */
+        .endif
         .endif
         .endif
 

@@ -4,6 +4,8 @@
     sau3  0x00E19C92  io_$free_region
     sau4  0x0F81B84A  io_$free_region
     sau5  0x00E1AF42  io_$free_region
+    sau6  0x7801C4E8  io_$free_region
+    sau7  0x3C41E74C  io_$free_region
     sau8  0x03C1BD68  io_$free_region
 
   - Under io_$exclusion the range starting at iova is removed and the

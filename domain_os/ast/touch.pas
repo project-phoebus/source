@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E030C0  AST_$TOUCH
     sau4  0x0F8034EE  AST_$TOUCH
+    sau6  0x78003824  AST_$TOUCH
+    sau7  0x3C403C14  AST_$TOUCH
     sau8  0x03C03408  AST_$TOUCH
     sau9  0x3C404414  AST_$TOUCH
 
@@ -170,7 +172,7 @@ begin
 %if pmmu_page_maps %then
   if (entry^.vpn = 0) and then
 %else
-  if ((entry^.all & 16#7FFFFF) = 0) and then
+  if (entry^.fentry.fm_daddr = 0) and then
 %endif
      not aote^.aote.loc.remote then begin
     run := 0;
@@ -188,7 +190,7 @@ begin
 %if pmmu_page_maps %then
     until ent^.vpn <> 0;
 %else
-    until (ent^.all & 16#7FFFFF) <> 0;
+    until ent^.fentry.fm_daddr <> 0;
 %endif
     ast_$setup_page_read(aste, entry^, page, run, ast_$word_set_t(flags),
                          status);
@@ -267,7 +269,7 @@ begin
 %if pmmu_page_maps %then
           disk_addr.all := ent^.vpn;
 %else
-          disk_addr.all := ent^.all & 16#7FFFFF;
+          disk_addr.all := ent^.fentry.fm_daddr;
 %endif
         end;
         ent^.vpn := ppn;

@@ -1,6 +1,7 @@
 { COLOR5_$IOINIT - find and set up a COLOR5 board at boot.
 
   Image addresses:
+    sau7  0x3C43EBF8  COLOR5_$IOINIT
     sau8  0x03C38B34  COLOR5_$IOINIT
 
   - The CSR pages and the display memory are each mapped (IO_$MAP_CSR)

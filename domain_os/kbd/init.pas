@@ -2,12 +2,16 @@
 
   Image addresses:
     sau2  0x00E33364  KBD_$INIT
+    sau6  0x7803C858  KBD_$INIT
+    sau7  0x3C43C89C  KBD_$INIT
     sau9  0x3C4399A0  KBD_$INIT
 
   - TERM_$TPAD_BUFFER is emptied and becomes the descriptor's; the
     keyboard type is "2", the key ring and transmit buffer empty (64
     bytes each, the ring 512 with `kbd_key_ring_512').
   - With `kbd_commands' the descriptor is recorded for KBD_$CRASH_INIT.
+  - With `kbd_type_sysrev' the type is "2" or "3", as the system revision
+    word's keyboard bit says.
 
   Status stored: none.
 }
@@ -30,7 +34,15 @@ begin
   kbd.pending_mode := 0;
   kbd.flags := [];
 
+%if kbd_type_sysrev %then
+  { the keyboard's type, from the system revision word }
+  if mmu.mem_err.sysrev.kbd_type_2 then
+    kbd_$set_type(kbd, '2', 1)
+  else
+    kbd_$set_type(kbd, '3', 1);
+%else
   kbd_$set_type(kbd, '2', 1);
+%endif
 %if kbd_commands %then
   kbd_$console_desc := addr(kbd);
 %endif

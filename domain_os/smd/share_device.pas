@@ -1,6 +1,7 @@
 { SMD_$SHARE_DEVICE - ask a unit's device to share the display.
 
   Image addresses:
+    sau7  0x3C482FA8  SMD_$SHARE_DEVICE
     sau9  0x3C4766C8  SMD_$SHARE_DEVICE
 
   - The unit's device does the work.

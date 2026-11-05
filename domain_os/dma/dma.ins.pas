@@ -124,12 +124,31 @@ type
   { DMA_$START's and DMA_$START_NCHECK's mode word: member 0
     auto-initialize, 1 address decrement, 2 cascade. }
   dma_$mode_t = set of 0..15;
+%if atbus_dma_iomap %then
+
+  { The cascade channels enabled in the master enable register, member
+    k for channel k (0..3) and k + 1 (5..7). }
+  dma_$cascade_set_t = set of 0..7;
+
+  { The master enable register's page, MAST_ENBL_REG of the I/O
+    definitions: the register's byte at +16#200, which DMA_$START_NCHECK
+    and DMA_$STOP write with the cascade channels' set. }
+  dma_$mast_enbl_t = [device] record
+    unused_000: array[0..16#1FF] of char;  { 0x000 }
+    enable: dma_$cascade_set_t;            { 0x200 }
+  end;
+%endif
 %endif
 
 var
 %if atbus_dma %then
   { DMA (map symbol without `$', IODEFS): the AT bus's DMA controllers. }
   dma: extern dma_$atbus_regs_t;
+%if atbus_dma_iomap %then
+
+  { MAST_ENBL_REG (map symbol without `$', IODEFS). }
+  mast_enbl_reg: extern dma_$mast_enbl_t;
+%endif
 %else
   { DMA (map symbol without `$', IODEFS): the controller's four
     channels, 0x40 bytes apart, from 0. }
@@ -165,6 +184,10 @@ const
                                           operation" }
   status_$dma_did_not_finish = 16#002E0005;
                                         { "operation did not finish" }
+%if atbus_dma_iomap %then
+  { DMA_$START's status: the database has no text for it. }
+  status_$dma_start_not_supported = 16#002E0006;
+%endif
 
   { A free channel's owner word (dma/dma.pas's dma_owner). }
   dma_free = -1;
@@ -179,6 +202,13 @@ const
   dma_mode_decrement = 16#20;
   dma_mode_cascade = 16#C0;
   dma_mask_set = 16#04;
+%if atbus_dma_iomap %then
+
+  { The I/O map's window of the AT bus's DMA, from 16#80000: the bus
+    address DMA_$START_NCHECK takes less it is what the controllers'
+    address registers take. }
+  dma_iomap_window = 16#80000;
+%endif
 
 { DMA_$START - program a DMA channel for a transfer from a virtual
   address: the channel, the byte count (1..1024, within the address's

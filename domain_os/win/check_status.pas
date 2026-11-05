@@ -2,6 +2,7 @@
   bytes of a failed command.
 
   Image addresses:
+    sau7  0x3C41CAD8  win_$check_status (module-local)
     sau8  0x03C1A13C  win_$check_status (module-local)
 
   - A completion byte with no error bit is success; with error bits but

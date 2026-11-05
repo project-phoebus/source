@@ -5,6 +5,8 @@
     sau2  0x00E6D7E2  smd_$reset_display_globals (module-local)
     sau4  0x0F877E7C  smd_$reset_display_globals (module-local)
     sau5  0x00E6FAF6  smd_$reset_display_globals (module-local)
+    sau6  0x78076EE4  smd_$reset_display_globals (module-local)
+    sau7  0x3C480D5A  smd_$reset_display_globals (module-local)
     sau9  0x3C47447A  smd_$reset_display_globals (module-local)
 
   - full also resets the saved locator position, the last button state,

@@ -1,6 +1,7 @@
 { MONO_$IOINIT - find and set up a MONO board at boot.
 
   Image addresses:
+    sau7  0x3C43EEA8  MONO_$IOINIT
     sau8  0x03C38DE4  MONO_$IOINIT
 
   - A unit whose state another descriptor has claimed already (its

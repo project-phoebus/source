@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E58A38  TIME_$SET_ITIMER_REAL_CALLBACK
     sau4  0x0F860EAC  TIME_$SET_ITIMER_REAL_CALLBACK
+    sau6  0x7805FDE8  TIME_$SET_ITIMER_REAL_CALLBACK
+    sau7  0x3C468BE8  TIME_$SET_ITIMER_REAL_CALLBACK
 
   - While the address space's real interval timer element's expiry is
     set, the process is signaled (signal 14, time_$itimer_real).

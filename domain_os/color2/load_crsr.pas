@@ -3,6 +3,7 @@
 
   Image addresses:
     sau5  0x00E732C0  COLOR2_$LOAD_CRSR
+    sau6  0x7807A1D2  COLOR2_$LOAD_CRSR
 
   - Under the SMD request lock (PROC1_$SET_LOCK), after the board is
     idle; a COLOR2_$BUSY_WAIT failure ends the routine.

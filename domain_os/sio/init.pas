@@ -4,6 +4,8 @@
     sau2  0x00E32BE0  SIO_$INIT
     sau3  0x00E31380  SIO_$INIT
     sau4  0x0F835D8C  SIO_$INIT
+    sau6  0x7803C0A0  SIO_$INIT
+    sau7  0x3C43C0E4  SIO_$INIT
     sau8  0x03C365AC  SIO_$INIT
     sau9  0x3C4395B4  SIO_$INIT
 

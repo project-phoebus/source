@@ -1,6 +1,7 @@
 { SMD_$NOP_LOCK - the default for a device's display lock.
 
   Image addresses:
+    sau7  0x3C480C56  SMD_$NOP_LOCK
     sau9  0x3C474376  SMD_$NOP_LOCK
 
   - Returns true: the display is the caller's.

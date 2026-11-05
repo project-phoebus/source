@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E16340  TIMER_$INIT
     sau4  0x0F816D20  TIMER_$INIT
+    sau6  0x78016DC4  TIMER_$INIT
+    sau7  0x3C417DB0  TIMER_$INIT
     sau8  0x03C17260  TIMER_$INIT
     sau9  0x3C418374  TIMER_$INIT
 

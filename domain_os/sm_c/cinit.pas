@@ -4,6 +4,7 @@
     sau3  0x00E6F33A  SM_C_$CINIT
     sau4  0x0F87C0F2  SM_C_$CINIT
     sau5  0x00E74E9E  SM_C_$CINIT
+    sau6  0x7807BBB2  SM_C_$CINIT
 
   - The result is status_$ok, or status_$io_controller_not_in_system
     when the PBU is absent, the probe fails or the interrupt cannot be

@@ -2,15 +2,16 @@
   token-ring driver.
 
   Image addresses:
+    sau7  0x3C4B3804  RING_8025 data (RING8025_DATA, 0x164 bytes)
     sau8  0x03CA2804  RING_8025 data (RING8025_DATA, 0x164 bytes)
     sau9  0x3C4A2404  RING_8025 data (RING8025_DATA, 0x168 bytes)
 
   One compilation unit, one code segment: the map's RING_8025 code
   segment in RING8025_PROC (0x4814 bytes on the SAU9, 0x471C on the
-  SAU8: module-local routines and the 21 map routines
+  SAU8, 0x49A4 on the SAU7: module-local routines and the 21 map routines
   RING_8025_$NULLSAP_HELPER .. RING_8025_$RCV1), and its data segment in RING8025_DATA (0x168
   bytes, below).  Two more sections hold the driver's objects:
-  RING8025_UCB (0x868 bytes, the two units' records) and
+  RING8025_UCB (0x868 bytes, 0x870 on the SAU7, the two units' records) and
   RING8025_$AUX_DA (0x8000 bytes, the units' receive and transmit
   areas), overlay sections declared below.
 
@@ -77,10 +78,13 @@ module ring_8025, ring8025_proc, ring8025_data;
 %if ring_8025_dma_channel %then
 %include 'dma/dma.ins.pas';
 %endif
+%if ring_8025_iomap %then
+%include 'iomap/iomap.ins.pas';
+%endif
 %include 'ring_8025/ring_8025.ins.pas';
 
 { The two units' records (the map's RING8025_UCB, a load section with
-  no module segment in it, 0x868 bytes) and the auxiliary area (the
+  no module segment in it, 0x868 bytes, 0x870 with `ring_8025_iomap') and the auxiliary area (the
   map's RING8025_$AUX_DA, 0x8000 bytes): overlay sections (ref 3.14
   p. 3-52; 7.2.4, Method 4). }
 var (ring8025_ucb)
@@ -125,6 +129,9 @@ var
 %include 'ring_8025/check_status.pas';     { ring_8025_check_status }
 %include 'ring_8025/wire_driver.pas';      { ring_8025_wire_driver }
 %include 'ring_8025/unwire_driver.pas';    { ring_8025_unwire_driver }
+%if ring_8025_iomap %then
+%include 'ring_8025/map_pa.pas';           { ring_8025_map_pa }
+%endif
 %include 'ring_8025/vtop.pas';             { ring_8025_vtop }
 %include 'ring_8025/probe.pas';            { ring_8025_probe }
 %include 'ring_8025/reset.pas';            { ring_8025_reset }

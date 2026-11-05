@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E58F64  TIME_$SET_CPU_LIMIT
     sau4  0x0F8613D8  TIME_$SET_CPU_LIMIT
+    sau6  0x7806030E  TIME_$SET_CPU_LIMIT
+    sau7  0x3C46910E  TIME_$SET_CPU_LIMIT
 
   - The limit's element is taken off the process's virtual-timer queue;
     a zero limit leaves it idle.  An absolute limit already past

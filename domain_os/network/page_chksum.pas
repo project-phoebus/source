@@ -2,6 +2,8 @@
 
   Image addresses:
     sau2  0x00E0F312  GET_CHKSUM
+    sau6  0x7800FC92  GET_CHKSUM
+    sau7  0x3C4111AA  GET_CHKSUM
     sau8  0x03C1065A  GET_CHKSUM
     sau9  0x3C41176E  GET_CHKSUM
 

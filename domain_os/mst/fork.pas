@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E739F8  MST_$FORK
     sau4  0x0F880F9C  MST_$FORK
+    sau6  0x78081E5C  MST_$FORK
+    sau7  0x3C489FFC  MST_$FORK
     sau8  0x03C7E278  MST_$FORK
     sau9  0x3C47B358  MST_$FORK
 

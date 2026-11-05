@@ -1,6 +1,7 @@
 { DMA_$START_NCHECK - start a DMA transfer for a physical address.
 
   Image addresses:
+    sau7  0x3C40B646  DMA_$START_NCHECK
     sau8  0x03C0AD98  DMA_$START_NCHECK
 
   - The channel is taken for the current address space under the DMA
@@ -12,12 +13,103 @@
     takes the address in words, their page register the address's bits
     16..23.
   - The channel is not checked: a caller gives 0..7.
+  - With `atbus_dma_iomap' the address is a bus address of the I/O
+    map's window from 16#80000: the address registers take it less the
+    window's base, and no page register is written.  A cascade channel
+    is not programmed but enabled in the master enable register.  The
+    CPU status register's word is read into dma_io_wait between the
+    controllers' accesses.
 
   Status stored:
     status_$ok: the transfer was started
     status_$dma_channel_in_use: the channel is taken
 }
 
+%if atbus_dma_iomap %then
+[section(wired_proc, wired_data)]
+procedure dma_$start_ncheck(channel: integer; count: integer;
+                            pa: integer32; direction: integer;
+                            mode: integer; out status: status_$t);
+  options(val_param);
+var
+  token: pinteger;
+  mode_byte: integer;
+  a: integer32;
+  bit: integer;
+  word_addr: integer32;
+begin
+  token := ml_$spin_lock(dma_lock);
+  if dma_owner[channel] <> dma_free then begin
+    status.all := status_$dma_channel_in_use;
+    ml_$spin_unlock(dma_lock, token);
+    return;
+  end;
+  dma_owner[channel] := proc1_$as_id;
+  ml_$spin_unlock(dma_lock, token);
+  status.all := status_$ok;
+
+  { The mode register's value. }
+  mode_byte := (channel & 3) ! dma_mode_single;
+  if direction = 0 then
+    mode_byte := mode_byte ! dma_mode_write
+  else
+    mode_byte := mode_byte ! dma_mode_read;
+  if 0 in dma_$mode_t(mode) then
+    mode_byte := mode_byte ! dma_mode_autoinit;
+  if 1 in dma_$mode_t(mode) then
+    mode_byte := mode_byte ! dma_mode_decrement;
+
+  { A cascade channel: enabled in the master enable register. }
+  if 2 in dma_$mode_t(mode) then begin
+    if channel > 4 then
+      bit := channel - 1
+    else
+      bit := channel;
+    dma_cascade := dma_cascade + [bit];
+    mast_enbl_reg.enable := dma_cascade;
+    status.all := status_$ok;
+    return;
+  end;
+
+  a := pa - dma_iomap_window;
+  token := ml_$spin_lock(dma_lock);
+  if channel < 4 then begin
+    dma_io_wait := mmu.csr;
+    dma.chan[channel].addr := pa;
+    dma_io_wait := mmu.csr;
+    dma.chan[channel].addr := rshft(pa, 8);
+    dma_io_wait := mmu.csr;
+    dma.clear_ff1 := 0;
+    dma_io_wait := mmu.csr;
+    dma.chan[channel].count := count - 1;
+    dma_io_wait := mmu.csr;
+    dma.chan[channel].count := rshft(count - 1, 8);
+    dma_io_wait := mmu.csr;
+    dma.mode1 := mode_byte;
+    dma_io_wait := mmu.csr;
+    dma.mask1 := mode_byte & 3;
+  end
+  else begin
+    dma.clear_ff2 := 0;
+    dma_io_wait := mmu.csr;
+    word_addr := rshft(a, 1);
+    dma.chan2[channel].addr := word_addr;
+    dma_io_wait := mmu.csr;
+    dma.chan2[channel].addr := rshft(word_addr, 8);
+    dma_io_wait := mmu.csr;
+    dma.clear_ff2 := 0;
+    dma_io_wait := mmu.csr;
+    dma.chan2[channel].count := count - 1;
+    dma_io_wait := mmu.csr;
+    dma.chan2[channel].count := rshft(count - 1, 8);
+    dma_io_wait := mmu.csr;
+    dma.mode2 := mode_byte;
+    dma_io_wait := mmu.csr;
+    dma.mask2 := mode_byte & 3;
+  end;
+  ml_$spin_unlock(dma_lock, token);
+end;
+%else
 [section(wired_proc, wired_data)]
 procedure dma_$start_ncheck(channel: integer; count: integer;
                             pa: integer32; direction: integer;
@@ -93,3 +185,4 @@ begin
   end;
   ml_$spin_unlock(dma_lock, token);
 end;
+%endif

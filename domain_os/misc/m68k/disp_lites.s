@@ -37,10 +37,24 @@
  * The SAU3 has no display: its DISP_LITES (`D E1D9FC DISP_LITES size =
  * 4') is a return and a zero word to the segment's end
  * (`display_lights_stub').
+ *
+ * The SAU6's (`D 78020F94 DISP_LITES size = D4') is the same code with
+ * its I/O space's addresses (`io_space_7ff'): the frame buffer at
+ * 0x7FFC0000 (DISP1_MEM) and the controller's word at 0x7FFFA400
+ * (DISP1).  Like the SAU2's they are literals, not references to the
+ * map's absolute symbols.
  */
 
         .include "base/config.inc"
         .if     display_lights
+
+        .if     io_space_7ff
+        .equ    LITES_MEM, 0x7ffc0000   /* sau6 78020fa6: DISP1_MEM */
+        .equ    LITES_CTL, 0x7fffa400   /* sau6 78020fb0: DISP1 */
+        .else
+        .equ    LITES_MEM, 0x00fc0000
+        .equ    LITES_CTL, 0x00ff9800
+        .endif
 
         .section ".text.DISP_LITES","ax",@progbits
         .globl  DISP_LITES
@@ -53,11 +67,11 @@ DISP_LITES:
         lsl.l   #7,%d0                  /* 00e1ea02  y * 0x80 */
         addq.l  #6,%d0                  /* 00e1ea04 */
         .short  0xd0bc                  /* 00e1ea06  add.l #0xfc0000,%d0: the image */
-        .long   0x00fc0000              /*           uses the ADD <ea>=#imm form (D0BC), */
+        .long   LITES_MEM               /*           uses the ADD <ea>=#imm form (D0BC), */
                                         /*           which gas spells ADDI (0680) */
         movea.l %d0,%a0                 /* 00e1ea0c */
         ori.w   #0x700,%sr              /* 00e1ea0e  IPL 7 */
-        tst.w   0x00ff9800              /* 00e1ea12  display controller */
+        tst.w   (LITES_CTL).l           /* 00e1ea12  display controller */
         bmi.w   Ldisp_lites_exit        /* 00e1ea18 */
         move.w  #-1,%d2                 /* 00e1ea1c  solid row */
         move.w  #-0x7fff,%d3            /* 00e1ea20  hollow row 0x8001 */

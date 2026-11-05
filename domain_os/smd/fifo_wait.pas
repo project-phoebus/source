@@ -1,6 +1,7 @@
 { SMD_$FIFO_WAIT - wait for every unit's display FIFO.
 
   Image addresses:
+    sau7  0x3C421BBE  SMD_$FIFO_WAIT
     sau9  0x3C4202D6  SMD_$FIFO_WAIT
 
   Status stored: none.

@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E17800  LOG_$READ
     sau4  0x0F8181B8  LOG_$READ
+    sau6  0x780182CC  LOG_$READ
+    sau7  0x3C4192B8  LOG_$READ
 
   - log_$read_internal with offset 0 and the length dereferenced.
 

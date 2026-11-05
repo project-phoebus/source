@@ -8,7 +8,14 @@
 # SAU8's load address 0x101C00, COLD 0xC00, DUMP 0x800) from
 # tools/check_rfc.py's tables keyed by SAU; and the SAU4's (--sau 4), whose
 # image has no fixup table: the kernel ends at the end of the file, and
-# the operands of COLD's fixup pass are not there
+# the operands of COLD's fixup pass are not there; and the SAU6's (--sau
+# 6), the same kind of image, whose map table VA is the whole longword and
+# whose display memories' PPNs COLD sets in the table itself; and the
+# boot-map SAUs (--sau 7, --sau 9), whose COLD has no map table:
+# OS_$COLD_START (os/cold.pas) maps the OS_COLD module's boot map, so
+# their json is the header (with the SAU7's 24-byte info block) and that
+# boot map, as tools/check_rfc.py --write-segments writes it (BOOT_FORM,
+# keyed by SAU)
 #
 # IODEFS_GUARD follows the bss 'loaded at' rule, not VA.
 #
@@ -63,6 +70,8 @@ MAP_HI_COUNT_PPN = 0x1018F0  # written by COLD at 0x1015CC
 # RELOC windows (COLD 0x1014C4..0x101538): (lo, hi, name) on the value
 # masked with 0x3FFFFFF; only applied when PROM byte 0x103 bit 1 is set.
 WINDOWS = check_rfc.WINDOWS[2]
+VA_MASK = 0x1FFFFFFF         # a map table VA's bits (the top 3: flags)
+COLD_PPN_WRITES = {}         # map table PPN cells COLD sets itself
 
 
 def select_sau(sau):
@@ -71,6 +80,7 @@ def select_sau(sau):
     global OP_ENTRY, MAP_TABLE, MAP_LO_COUNT, MAP_HI_COUNT_PPN, WINDOWS
     global LOAD, MOVE_TO_PPN, OP_RELOC_VA, OP_KERNEL_VA, OP_KERNEL_LOW
     global OP_SPLIT_LOW, OP_KERNEL_VA2, HAS_FIXUPS, OP_EXTRA
+    global VA_MASK, COLD_PPN_WRITES
     c = check_rfc
     c.select_sau(sau)
     LOAD, MOVE_TO_PPN = c.LOAD, c.MOVE_TO_PPN
@@ -85,15 +95,19 @@ def select_sau(sau):
     OP_KERNEL_VA2 = c.OP_KERNEL_VA2[sau]
     HAS_FIXUPS = c.HAS_FIXUPS.get(sau, True)
     OP_EXTRA = c.OP_EXTRA.get(sau, {})
+    VA_MASK = c.VA_MASKS.get(sau, 0x1FFFFFFF)
+    COLD_PPN_WRITES = c.COLD_PPN_WRITES.get(sau, {})
 
 
 def parse_map(path):
     segs = []
-    pat = re.compile(r'^([ID])\s*(\d+)\s+([0-9A-F]+)\s+(\S+)\s+loaded at\s+'
+    # fixed columns: kind, a 2-column section number, an 8-column address
+    # (an 8-digit address runs into the number: the SAU6's `D2378000800')
+    pat = re.compile(r'^([ID])([ \d]{2})([ 0-9A-F]{8})\s+(\S+)\s+loaded at\s+'
                      r'([0-9A-F]+), size = ([0-9A-F]+)')
     for line in open(path):
         m = pat.match(line)
-        if m:
+        if m and m.group(2).strip():
             segs.append(dict(kind=m.group(1), num=int(m.group(2)),
                              va=int(m.group(3), 16), name=m.group(4),
                              loaded_at=int(m.group(5), 16),
@@ -109,6 +123,13 @@ def main():
     ap.add_argument('--asm-ref')
     ap.add_argument('-o', '--output')
     a = ap.parse_args()
+    if a.sau in check_rfc.BOOT_FORM:
+        # the boot-map form: check_rfc's oracle writer
+        c = check_rfc
+        c.select_sau(a.sau)
+        c.select_boot_form(a.sau)
+        return c.write_segments9(argparse.Namespace(
+            orig=a.image, map=a.map, write_segments=a.output or '/dev/stdout'))
     select_sau(a.sau)
     d = open(a.image, 'rb').read()
     end_low = LOAD + len(d)
@@ -156,12 +177,16 @@ def main():
         ppn = be16(d, a_ + 2)
         if a_ == MAP_HI_COUNT_PPN:
             cnt, ppn = hi_cnt, info['move_to_ppn']
+        # PPNs COLD writes into the table before it maps it (the SAU6's
+        # display memories)
+        ppn = COLD_PPN_WRITES.get(a_ + 2, ppn)
         if cnt == 0:
             break
         va = be32(d, a_ + 4)
         entries.append(dict(at=hex(a_), count=cnt, ppn=hex(ppn),
-                            phys=hex(ppn << 10), va=hex(va & 0x1FFFFFFF),
-                            va_flags=hex(va >> 29), prot=hex(be16(d, a_ + 8)),
+                            phys=hex(ppn << 10), va=hex(va & VA_MASK),
+                            va_flags=hex((va & ~VA_MASK & 0xFFFFFFFF) >> 29),
+                            prot=hex(be16(d, a_ + 8)),
                             bytes=hex(cnt << 10)))
         a_ += 10
 
@@ -203,7 +228,7 @@ def main():
     segs = []
     for s in parse_map(a.map):
         va, size = s['va'], s['size']
-        if va < kva - 0x400:
+        if va < check_rfc.DUMP_VA:      # below DUMP (the 0x800-byte too)
             where = 'absolute (loaded at = VA, not in file)'
             low = None
         elif va < reloc_va:

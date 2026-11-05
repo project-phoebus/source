@@ -2,6 +2,7 @@
   control area and route cache, and its record.
 
   Image addresses:
+    sau7  0x3C495880  ring_8025_wire_driver
     sau8  0x03C89080  ring_8025_wire_driver
     sau9  0x3C484C80  ring_8025_wire_driver
 
@@ -12,8 +13,10 @@
   - The control area is backed by six contiguous physical pages,
     asked for up to 30 times a tick apart; the route cache by eight
     pages from WP_$CALLOC_LIST.  Each page is wired and installed at its
-    place in the auxiliary area.
-  - The unit's record is wired to its byte at 0x432.
+    place in the auxiliary area; with `ring_8025_iomap' the control
+    area's pages are made uncached.
+  - The unit's record is wired to its last word (at 0x432, or 0x436
+    with `ring_8025_iomap').
 
   Status stored:
     status_$ok: the unit is wired
@@ -65,6 +68,9 @@ begin
       for i := 1 to r8025_ctl_pages do begin
         wp_$wire(ctl_ppns[i]);
         mmu_$install(ctl_ppns[i], univ_ptr(va), 0, 16#16);
+%if ring_8025_iomap %then
+        mmu_$cache_inhibit_va(univ_ptr(va));
+%endif
         va := va + 1024;
       end;
       u^.ctl_wired := true;

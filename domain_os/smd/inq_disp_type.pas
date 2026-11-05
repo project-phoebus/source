@@ -5,6 +5,8 @@
     sau3  0x00E6E62E  SMD_$INQ_DISP_TYPE
     sau4  0x0F87855A  SMD_$INQ_DISP_TYPE
     sau5  0x00E7023C  SMD_$INQ_DISP_TYPE
+    sau6  0x780775DA  SMD_$INQ_DISP_TYPE
+    sau7  0x3C4812BA  SMD_$INQ_DISP_TYPE
     sau9  0x3C4749DA  SMD_$INQ_DISP_TYPE
 
   - An invalid unit's type is smd_$none.

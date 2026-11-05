@@ -1,6 +1,7 @@
 { COLOR4_$DISPLAY_LOGO - copy the boot logo into display memory.
 
   Image addresses:
+    sau7  0x3C483F16  COLOR4_$DISPLAY_LOGO
     sau8  0x03C797C2  COLOR4_$DISPLAY_LOGO
 
   - The display memory is mapped here for the copy and unmapped after

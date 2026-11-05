@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E5CFAC  PCHIST_$UNIX_PROFIL_ADDUPC
     sau4  0x0F866AB2  PCHIST_$UNIX_PROFIL_ADDUPC
+    sau6  0x78065EEC  PCHIST_$UNIX_PROFIL_ADDUPC
+    sau7  0x3C470856  PCHIST_$UNIX_PROFIL_ADDUPC
 
   - The pending pc (or the longword the overflow pointer points at) is
     taken and cleared.

@@ -5,6 +5,8 @@
   Image addresses:
     sau2  0x00E43E10  mst_$set_mstes (module-local)
     sau4  0x0F84BEE6  mst_$set_mstes (module-local)
+    sau6  0x7804B24C  mst_$set_mstes (module-local)
+    sau7  0x3C453FCA  mst_$set_mstes (module-local)
     sau8  0x03C4C00C  mst_$set_mstes (module-local)
     sau9  0x3C44B1CA  mst_$set_mstes (module-local)
 

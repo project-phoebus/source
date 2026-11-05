@@ -1,6 +1,7 @@
 { SMD_$NOP1 - the default for a device routine that takes only its descriptor.
 
   Image addresses:
+    sau7  0x3C480C50  SMD_$NOP1
     sau9  0x3C474370  SMD_$NOP1
 
   - The default of the vector's shutdown, cold_init and clear_screen

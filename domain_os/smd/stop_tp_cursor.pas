@@ -4,6 +4,8 @@
     sau2  0x00E6EACE  SMD_$STOP_TP_CURSOR
     sau4  0x0F879260  SMD_$STOP_TP_CURSOR
     sau5  0x00E70F4C  SMD_$STOP_TP_CURSOR
+    sau6  0x780782B6  SMD_$STOP_TP_CURSOR
+    sau7  0x3C481D9A  SMD_$STOP_TP_CURSOR
     sau9  0x3C4754BA  SMD_$STOP_TP_CURSOR
 
   - Under the SMD request lock the keyboard's characters go to the event

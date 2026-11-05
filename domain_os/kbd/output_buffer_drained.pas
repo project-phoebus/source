@@ -2,6 +2,8 @@
 
   Image addresses:
     sau2  0x00E1CE96  KBD_$OUTPUT_BUFFER_DRAINED
+    sau6  0x7801EF94  KBD_$OUTPUT_BUFFER_DRAINED
+    sau7  0x3C421280  KBD_$OUTPUT_BUFFER_DRAINED
 
   - The descriptor's eventcount is advanced without dispatching.
 

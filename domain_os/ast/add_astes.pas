@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E0118C  AST_$ADD_ASTES
     sau4  0x0F80158C  AST_$ADD_ASTES
+    sau6  0x78001960  AST_$ADD_ASTES
+    sau7  0x3C401D6C  AST_$ADD_ASTES
     sau8  0x03C0156C  AST_$ADD_ASTES
     sau9  0x3C40256C  AST_$ADD_ASTES
 

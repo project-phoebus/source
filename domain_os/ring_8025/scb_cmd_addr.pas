@@ -2,6 +2,7 @@
   functional address.
 
   Image addresses:
+    sau7  0x3C495FB0  ring_8025_scb_cmd_addr
     sau8  0x03C896AC  ring_8025_scb_cmd_addr
     sau9  0x3C485290  ring_8025_scb_cmd_addr
 

@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E448B0  MST_$UNMAP_PRIVI
     sau4  0x0F84CCB4  MST_$UNMAP_PRIVI
+    sau6  0x7804BFD2  MST_$UNMAP_PRIVI
+    sau7  0x3C454DC6  MST_$UNMAP_PRIVI
     sau8  0x03C4CE48  MST_$UNMAP_PRIVI
     sau9  0x3C44BFC6  MST_$UNMAP_PRIVI
 
@@ -55,7 +57,7 @@ var
 %endif
 begin
   va := linteger(start) & 16#FFFF8000;
-%if large_address_space or vm_8192_segs %then
+%if large_address_space or vm_8192_segs or vm_65536_segs %then
   if ((mode & mst_unmap_any_seg) = 0) and then
      (rshft(va, 15) >= mst_unmap_privi_first_refused) then
     goto illegal;
@@ -153,7 +155,7 @@ begin
       va := va + lshft(64 - linteger(seg & 16#3F), 15);
     end;
   end;
-%if pmmu_page_maps %then
+%if pmmu_page_maps or region_mmu %then
   mmu_$purge;
 %endif
   ml_$unlock(ml_$mst_asid_lock);

@@ -4,6 +4,8 @@
     sau2  0x00E6F192  SMD_$SET_BLANK_TIMEOUT
     sau4  0x0F8798DC  SMD_$SET_BLANK_TIMEOUT
     sau5  0x00E71548  SMD_$SET_BLANK_TIMEOUT
+    sau6  0x780788A6  SMD_$SET_BLANK_TIMEOUT
+    sau7  0x3C482232  SMD_$SET_BLANK_TIMEOUT
     sau9  0x3C475952  SMD_$SET_BLANK_TIMEOUT
 
   - Only the clock's high 32 bits are kept; the blink callback compares

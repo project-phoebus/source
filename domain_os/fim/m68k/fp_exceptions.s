@@ -151,6 +151,63 @@ FIM_$FP_SIG_NAN:
         .short  0x0008                          /* e2151a  signal 8 */
         .short  0xA004                          /* e2151c  class */
 
+        .if fpu_enable_mmu_9
+fim_fp_frame_pc:
+        rts                                     /* sau6 78023abe  4e75 */
+
+/* The SAU6's two more stubs (`fpu_enable_mmu_9'): FIM_$FP_PARITY, and
+   FIM_$FP_VEC_EXCEPTION, the FPU interface's exception, whose status the
+   interface's register 16#FFFFFC84 selects from the table after it
+   (its low byte: 16#30..16#36 the six exceptions above, 16#7F and any
+   other "fpx parity error", 16#00120038) before FIM_$SOFT_FAULT's tail
+   delivers it.  The longword after the table is "unknown fpa
+   exception", 16#00120039, which nothing reads. */
+        .section ".text.FIM_$FP_PARITY","ax",@progbits
+        .even
+        .global FIM_$FP_PARITY
+        .global FIM_$FP_VEC_EXCEPTION
+        .extern FIM_SOFT_FAULT_PUSH             /* fim/m68k/soft_fault.s */
+FIM_$FP_PARITY:
+        bsr.w   FIM_COMMON_FAULT                /* sau6 78023ac0  6100 fe7e */
+        .long   0x00120038                      /* sau6 78023ac4  status "fpx parity error" */
+        .short  0x0008                          /* sau6 78023ac8  signal 8 */
+        .short  0xA004                          /* sau6 78023aca  class */
+FIM_$FP_VEC_EXCEPTION:
+        move.w  #0xa004,-(%sp)                  /* sau6 78023acc  3f3c a004  class */
+        move.w  #8,-(%sp)                       /* sau6 78023ad0  3f3c 0008  signal 8 */
+        subq.w  #4,%sp                          /* sau6 78023ad4  594f  the status */
+        movem.l %d0-%d1/%a0,-(%sp)              /* sau6 78023ad6  48e7 c080 */
+        move.w  (0xfc84).w,%d0                  /* sau6 78023ada  3038 fc84 */
+        .short  0xc07c, 0x00ff                  /* sau6 78023ade  c07c 00ff  and.w #0xff,%d0, the <ea>=#imm form */
+        move.w  #7,%d1                          /* sau6 78023ae2  323c 0007 */
+        lea     (.Lfp_vec_table,%pc),%a0        /* sau6 78023ae6  41fa 0016 */
+.Lfp_vec_find:
+        cmp.w   (%a0)+,%d0                      /* sau6 78023aea  b058 */
+        addq.w  #4,%a0                          /* sau6 78023aec  5848 */
+        dbeq    %d1,.Lfp_vec_find               /* sau6 78023aee  57c9 fffa */
+        move.l  -(%a0),(12,%sp)                 /* sau6 78023af2  2f60 000c */
+        movem.l (%sp)+,%d0-%d1/%a0              /* sau6 78023af6  4cdf 0103 */
+        bra.w   FIM_SOFT_FAULT_PUSH             /* sau6 78023afa  6000 ff06 */
+.Lfp_vec_table:
+        .short  0x0030                          /* sau6 78023afe */
+        .long   0x0012002E                      /*   FP branch/set on unordered */
+        .short  0x0031
+        .long   0x00120022                      /*   inexact result */
+        .short  0x0032
+        .long   0x00120023                      /*   divide by zero */
+        .short  0x0033
+        .long   0x00120024                      /*   underflow */
+        .short  0x0034
+        .long   0x00120025                      /*   operand error */
+        .short  0x0035
+        .long   0x00120026                      /*   overflow */
+        .short  0x0036
+        .long   0x0012002F                      /*   signalling not-a-number */
+        .short  0x007F
+        .long   0x00120038                      /*   fpx parity error, and no match */
+        .long   0x00120039                      /* sau6 78023b2e  "unknown fpa exception" */
+        .short  0x0000                          /* sau6 78023b32  pad; FIM_$PRIV_VIOL is at 0x78023B34 */
+        .else
 fim_fp_frame_pc:
         cmpi.b  #0x90,(0xa,%sp)                 /* e2151e  0c2f 0090 000a: format 9 frame? */
         bne.b   .Lfp_frame_pc_done              /* e21524  6606 */
@@ -158,4 +215,5 @@ fim_fp_frame_pc:
 .Lfp_frame_pc_done:
         rts                                     /* e2152c */
         .short  0x0000                          /* e2152e  pad; FIM_$PRIV_VIOL is at 0xE21530 */
+        .endif
         .endif

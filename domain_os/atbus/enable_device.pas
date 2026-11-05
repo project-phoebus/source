@@ -1,8 +1,9 @@
 { ATBUS_$ENABLE_DEVICE - let an AT bus interrupt interrupt.
 
   Image addresses:
-    sau9  0x3C40C88C  ATBUS_$ENABLE_DEVICE
+    sau7  0x3C40C218  ATBUS_$ENABLE_DEVICE
     sau8  0x03C0B8C4  ATBUS_$ENABLE_DEVICE
+    sau9  0x3C40C88C  ATBUS_$ENABLE_DEVICE
 
   - An interrupt above 15 crashes the system; so does one that is not
     the one defined on its level.  Its system bus level is enabled

@@ -1,6 +1,7 @@
 { SMD_$NOP_COLOR - the default for a device's color table.
 
   Image addresses:
+    sau7  0x3C480CA4  SMD_$NOP_COLOR
     sau9  0x3C4743C4  SMD_$NOP_COLOR
 
   - Sets nothing.

@@ -4,6 +4,8 @@
     sau2  0x00E34F02  SMD_$INSTALL_DISP_MEM
     sau4  0x0F83830C  SMD_$INSTALL_DISP_MEM
     sau5  0x00E372B8  SMD_$INSTALL_DISP_MEM
+    sau6  0x7803E8F0  SMD_$INSTALL_DISP_MEM
+    sau7  0x3C43E6CA  SMD_$INSTALL_DISP_MEM
     sau9  0x3C43B69A  SMD_$INSTALL_DISP_MEM
 
   - Without `display_devices' an empty procedure.

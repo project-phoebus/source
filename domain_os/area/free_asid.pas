@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E07E80  AREA_$FREE_ASID
     sau4  0x0F80816C  AREA_$FREE_ASID
+    sau6  0x780083AA  AREA_$FREE_ASID
+    sau7  0x3C408C9E  AREA_$FREE_ASID
     sau9  0x3C40949E  AREA_$FREE_ASID
 
   - Under the area lock each entry of the address space's list loses its

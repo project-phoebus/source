@@ -5,6 +5,8 @@
     sau3  0x00E0A458  FIM_$BUILD_DF
     sau4  0x0F80ABE0  FIM_$BUILD_DF
     sau5  0x00E0A32C  FIM_$BUILD_DF
+    sau6  0x7800AD00  FIM_$BUILD_DF
+    sau7  0x3C40BA8C  FIM_$BUILD_DF
     sau8  0x03C0B138  FIM_$BUILD_DF
     sau9  0x3C40BE38  FIM_$BUILD_DF
 
@@ -25,7 +27,8 @@
   - The MC68010's bus error frame (format 8) is taken only with
     `pft_mmu'; with `pmmu_page_maps' the information's word is the MMU's
     bus status; the board's status replaces a PEB interrupt's only with
-    `peb_board'.
+    `peb_board'.  With `fim_fp_frame_margin' the user's stack keeps 1208
+    bytes of room, not 1024.
 
   Status stored: none.
 }
@@ -256,9 +259,10 @@ begin
   end
   else
 %endif
-  if (new_usp >= as_$global_a) or else (as_$private + 1024 > new_usp)
+  if (new_usp >= as_$global_a)
+     or else (as_$private + fim_usp_margin > new_usp)
      or else odd(new_usp) then
-    new_usp := as_$stack_low + 1024;
+    new_usp := as_$stack_low + fim_usp_margin;
 
 %if not fp_state_in_cpu %then
 %if pbu_driver %then

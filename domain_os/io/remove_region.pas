@@ -4,6 +4,8 @@
     sau3  0x00E19E3C  io_$remove_region
     sau4  0x0F81B9F4  io_$remove_region
     sau5  0x00E1B0F4  io_$remove_region
+    sau6  0x7801C696  io_$remove_region
+    sau7  0x3C41E98C  io_$remove_region
 
   - The node is unlinked from the slot's list and goes to the head of
     the free list (io_$region_free), also when it was not in the list.

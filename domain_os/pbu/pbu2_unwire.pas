@@ -3,6 +3,8 @@
   Image addresses:
     sau3  0x00E59996  PBU2_$UNWIRE
     sau5  0x00E59C06  PBU2_$UNWIRE
+    sau6  0x780618BA  PBU2_$UNWIRE
+    sau7  0x3C46A21A  PBU2_$UNWIRE
     sau8  0x03C620F0  PBU2_$UNWIRE
 
   - With touch each page is first referenced (its first word read and
@@ -68,3 +70,9 @@ begin
   end;
   ml_$exclusion_stop(pbu_$exclusion_lock);
 end;
+
+{ TODO(pascal) PBU2_$UNWIRE's frame on the SAU7
+
+  The SAU7 image's frame is 8 bytes larger than ours (link #-32 against
+  #-24); no instruction addresses those bytes, and no SAU's form of the
+  routine shows what they held. }

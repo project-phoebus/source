@@ -5,6 +5,8 @@
     sau3  0x00E19942  IO_$MAP_CSR
     sau4  0x0F81B512  IO_$MAP_CSR
     sau5  0x00E1ABF2  IO_$MAP_CSR
+    sau6  0x7801C1B0  IO_$MAP_CSR
+    sau7  0x3C41E414  IO_$MAP_CSR
     sau8  0x03C1BA30  IO_$MAP_CSR
     sau9  0x3C41D3E6  IO_$MAP_CSR
 

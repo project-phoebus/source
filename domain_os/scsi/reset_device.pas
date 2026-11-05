@@ -1,3 +1,33 @@
+%if scsi_mailbox_ctlr %then
+{ SCSI_$RESET_DEVICE - reset a device.
+
+  Image addresses:
+    sau7  0x3C4B8ECA  SCSI_$RESET_DEVICE
+
+  - With the mailbox host adapter: the adapter resets the device and the
+    bus (kind 2, scsi_send_reset) under scsi_$exclusion_lock.
+
+  Status stored:
+    scsi_get_tinfo's status: the handle is not the caller's
+    scsi_send_reset's status: otherwise
+}
+
+procedure scsi_$reset_device(in handle: scsi_$handle_t;
+                             out status: status_$t);
+var
+  t: scsi_tinfo_ptr_t;
+  st: status_$t;
+begin
+  t := scsi_get_tinfo(handle.all, status);
+  if status.all = status_$ok then begin
+    st := status;
+    ml_$exclusion_start(scsi_$exclusion_lock);
+    scsi_send_reset(t, 2, st);
+    ml_$exclusion_stop(scsi_$exclusion_lock);
+    status := st;
+  end;
+end;
+%else
 { SCSI_$RESET_DEVICE - reset a device.
 
   Image addresses:
@@ -96,3 +126,4 @@ begin
     status := st;
   end;
 end;
+%endif

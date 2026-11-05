@@ -2,6 +2,8 @@
 
   Image addresses:
     sau2  0x00E1CA8C  kbd_$set_type (module-local)
+    sau6  0x7801EA9C  kbd_$set_type (module-local)
+    sau7  0x3C420D88  kbd_$set_type (module-local)
 
   - At most two characters are kept; the translation table is chosen by
     the caller's second character whatever the length,

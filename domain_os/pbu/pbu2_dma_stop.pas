@@ -3,6 +3,8 @@
   Image addresses:
     sau3  0x00E89C8E  PBU2_$DMA_STOP
     sau5  0x00E92052  PBU2_$DMA_STOP
+    sau6  0x780A744E  PBU2_$DMA_STOP
+    sau7  0x3C4B6D6A  PBU2_$DMA_STOP
     sau8  0x03CA5B2E  PBU2_$DMA_STOP
 
   - PBU_$DMA_STOP with the same arguments, its result the result.

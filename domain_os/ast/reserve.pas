@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E0677E  AST_$RESERVE
     sau4  0x0F806B12  AST_$RESERVE
+    sau6  0x78006D96  AST_$RESERVE
+    sau7  0x3C407202  AST_$RESERVE
     sau9  0x3C407A02  AST_$RESERVE
 
   - Inhibited and under the AST lock, the object's AOTE is found (marked
@@ -93,7 +95,7 @@ begin
     begin
 %else
     if (ast_$pmap_installed in entry^.flags) or else
-       ((entry^.all & 16#7FFFFF) <> 0) then
+       (entry^.fentry.fm_daddr <> 0) then
     begin
 %endif
       entry := ast_$pmap_entry_ptr_t(integer32(entry) + 4);
@@ -115,7 +117,7 @@ begin
       until (last_in_seg - cur < run) or else
             (ast_$pmap_in_trans in ent^.flags) or else
             (ast_$pmap_installed in ent^.flags) or else
-            ((ent^.all & 16#7FFFFF) <> 0);
+            (ent^.fentry.fm_daddr <> 0);
 %endif
 
       ast_$setup_page_read(aste^, entry^, cur, run, [6], status);

@@ -6,6 +6,8 @@
     sau3  0x00E31C3C  OS_$INIT
     sau4  0x0F836A38  OS_$INIT
     sau5  0x00E357E8  OS_$INIT
+    sau6  0x7803CD62  OS_$INIT
+    sau7  0x3C43CDF6  OS_$INIT
     sau8  0x03C37034  OS_$INIT
     sau9  0x3C439E2E  OS_$INIT
 
@@ -26,8 +28,8 @@
             count), each followed by count handler addresses
     (+0x180 is OS_$BOOT_ERRCHK's static, os/boot_errchk.pas.)
 
-  The parts of other SAUs (base/config.ins.pas; the literal addresses
-  are the SAU5's I/O space's):
+  The parts of other SAUs (base/config.ins.pas; the display apertures
+  are os/os.pas's constants for the I/O space's place):
 
   - `vme_bus': three more vector cells, VME_$INT and VME_$ERR_INT for
     vectors 28 and 29; `pbu_driver': trap 6 is PBU_$TRAP6's.
@@ -66,25 +68,20 @@
     claimed after the checksum passes; `parity_trap_vector_30',
     `vector_seg_prot': the parity trap on vector 30 too, and the vector
     page protected by its segment.
+  - `vme_undef_vectors': vectors 128..255 VME_$UNDEF_INT's, no VME cells
+    in the table; `fpu_enable_mmu_9': the FPU parity error's cell;
+    `node_id_boot_record': without a ring controller the node id from
+    the boot record; `fpx_eco_check': an FPX needs the CPU board's ECO;
+    `vm_65536_segs': COLD's region's root entry cleared and global B's
+    two unused ranges' page maps freed, as with `large_address_space'.
+  - `boot_record_bus': the boot record's bus, from its controller word's
+    high byte, is OS_$BOOT_DEVICE's and VOLX_$MOUNT's; `nmi_vector_30',
+    `pic_vector_cells': the vector table's second NMI cell and the
+    interrupt controllers' nil cells; `physical_cache_enable': the
+    physical cache turned on after AUDIT_$INIT.
 
   Status stored: none.
 }
-
-{ TODO(sau) the vector table's count on the SAU6
-
-  The SAU6 has `vme_bus' and `fim_nmi' and a 44-cell table (its OS_$INIT
-  compares the index with 44), where the two parts' cells give 45: not
-  looked at. }
-
-{ TODO(sau) the forms of the SAU6 and SAU7 not compared
-
-  The arms of `pft_mmu', `large_vm', `crash_reboot', `ring_node_id',
-  `smd_display_memory', `calendar_service_mode' and `pmmu_page_maps'
-  follow the SAU9's and the SAU8's code, their banks the other SAUs'
-  maps and calls.  Not compared there: TIME_$INIT's argument without
-  the calendar probe on the SAU6 and SAU7 (the SAU9's, SAU8's, SAU4's
-  and SAU3's `true'), CAL_$VERIFY's two literals (the SAU9's and
-  SAU8's). }
 
 { TODO(pascal) OS_$INIT's frame
 
@@ -134,6 +131,10 @@ const
   { the SAU4's: without the coprocessor's, BSUN's and the signalling
     NaN's cells, with the MMU's six and the memory errors' four }
   os_init_vector_cells = 47;
+%elseif vme_undef_vectors %then
+  { the SAU6's: no VME cells, the non-maskable interrupt's two and the
+    FPU parity error's two }
+  os_init_vector_cells = 44;
 %elseif vme_bus %then
 %if fim_nmi %then
   os_init_vector_cells = 45;
@@ -141,7 +142,11 @@ const
   os_init_vector_cells = 43;
 %endif
 %else
-%if fim_nmi %then
+%if fim_nmi and nmi_vector_30 and pic_vector_cells %then
+  { the SAU7's: the non-maskable interrupt's on vector 30 too, and the
+    interrupt controllers' 14 cells }
+  os_init_vector_cells = 58;
+%elseif fim_nmi %then
   os_init_vector_cells = 42;
 %else
   os_init_vector_cells = 40;
@@ -217,11 +222,17 @@ var
 %endif
     [first_vector := 24, count := 1],             { +0x114 }
     [handler := addr(fim_$spurious_int)],
-%if vme_bus %then
+%if vme_bus and not vme_undef_vectors %then
     [first_vector := 28, count := 2],             { +0x11C, the later
                                                     cells 0xC further }
     [handler := addr(vme_$int)],
     [handler := addr(vme_$err_int)],
+%endif
+%if fim_nmi and nmi_vector_30 %then
+    [first_vector := 30, count := 1],             { the non-maskable
+                                                    interrupt on vector 30
+                                                    too }
+    [handler := addr(fim_$nmi)],
 %endif
 %if fim_nmi %then
     [first_vector := 31, count := 1],             { the non-maskable
@@ -265,6 +276,30 @@ var
     [handler := addr(fim_$fp_op_err)],
     [handler := addr(fim_$fp_ovrflo)],
     [handler := addr(fim_$fp_sig_nan)]            { +0x17C }
+%endif
+%if pic_vector_cells %then
+   ,[first_vector := 160, count := 4],            { the interrupt
+                                                    controllers' vectors,
+                                                    nil cells: left as
+                                                    they are }
+    [handler := nil],
+    [handler := nil],
+    [handler := nil],
+    [handler := nil],
+    [first_vector := 165, count := 2],
+    [handler := nil],
+    [handler := nil],
+    [first_vector := 168, count := 3],
+    [handler := nil],
+    [handler := nil],
+    [handler := nil],
+    [first_vector := 174, count := 1],
+    [handler := nil]
+%endif
+%if fpu_enable_mmu_9 %then
+   ,[first_vector := 127, count := 1],            { the FPU interface's
+                                                    parity error }
+    [handler := addr(fim_$fp_parity)]
 %endif
 %if mmu_fault_vectors %then
    ,[first_vector := 128, count := 5],            { the MMU's faults and
@@ -382,6 +417,11 @@ begin
   boot.unit := 1;
   cfg := prom_cfg;
 %endif
+%if boot_record_bus %then
+  { the bus from the controller word's high byte }
+  boot.bus := rshft(boot.ctlr, 8);
+  boot.ctlr_bus := chr(0);
+%endif
 
   pmap_$shutting_down_flag := false;
   mst_$pre_init;
@@ -402,10 +442,18 @@ begin
   mmu_$remove_special_seg(addr(cold), 0, true);
 %if large_address_space %then
   rars[rars_asid_base[0] + rshft(integer32(addr(cold)), 22)].all := 0;
+%elseif vm_65536_segs %then
+  rars[rars_asid_base[0] + rshft(integer32(addr(cold)), 23)].all := 0;
 %endif
 %endif
 
   mmap_$init(mmap_table);
+%if vme_undef_vectors %then
+
+  { the VME bus's vectors, until their handlers are defined }
+  for v := 128 to 255 do
+    trap_page[v] := addr(vme_$undef_int);
+%endif
 
   { the exception vectors from the table }
   i := 1;
@@ -451,7 +499,11 @@ begin
 
   with os_$boot_device do begin
     device := boot.device;
+%if boot_record_bus %then
+    reserved := boot.bus;
+%else
     reserved := 0;
+%endif
     ctlr := boot.ctlr;
     unit := boot.unit;
   end;
@@ -642,6 +694,14 @@ begin
 
 %if ring_node_id %then
   node_$me := ring_$get_id(0);
+%if node_id_boot_record %then
+  { no ring controller: the PROM's boot record's node id; no wider than
+    20 bits }
+  if node_$me = 1 then
+    node_$me := boot.node_id;
+  if (node_$me & 16#FFF00000) <> 0 then
+    crash_system(status_$network_no_nodeid_prom);
+%endif
 %endif
 %if lpr_driver %then
   lpr_$init;
@@ -730,6 +790,27 @@ begin
   dtty_$init(term_mode, term_ctrl);
   ec2_$init_s;
   print_build_time;
+%if fpx_eco_check %then
+
+  { an FPX on a CPU board without ECO 14078 (bit 2 of the system
+    revision word clear) stops a disked boot }
+  if not network_$diskless and then fpx_exists
+     and then not odd(mmu.mem_err.sysrev.bits_6_2) then begin
+    os_$print_init_error('%/%/%/%/%.');
+    os_$print_init_error(
+      'Unable to boot  this software  release with the current%.');
+    os_$print_init_error(
+      'CPU  board  revision  level.   Running  with   an   FPX%.');
+    os_$print_init_error(
+      'without the  required  CPU board ECO can result in data%.');
+    os_$print_init_error('corruption.%/%.');
+    os_$print_init_error(
+      'Please place a service call through the normal channels%.');
+    os_$print_init_error('and request ECO # 14078 for your CPU pcb.%/%.');
+    status.all := status_$os_cpu_board_below_minimum_revision_level;
+    crash_system(status);
+  end;
+%endif
 
   { the parity trap's vector (with `fim_nmi' vector 31 is the table's;
     none without `memory_parity'), then the object managers; the disk
@@ -764,11 +845,15 @@ begin
     { the bus a zero-word cell, the two flags one
       pooled `false' cell pushed once and copied; with
       `prom_config_record' the device, the bus and the controller are
-      OS_$BOOT_DEVICE's }
+      OS_$BOOT_DEVICE's, with `boot_record_bus' the bus the boot
+      record's }
 %if prom_config_record %then
     volx_$mount(os_$boot_device.device, os_$boot_device.reserved,
                 os_$boot_device.ctlr, lv_num, false, false, uid_$nil,
                 mount_dir_uid, status);
+%elseif boot_record_bus %then
+    volx_$mount(boot.device, boot.bus, boot.ctlr, lv_num, false, false,
+                uid_$nil, mount_dir_uid, status);
 %else
     volx_$mount(boot.device, 0, boot.ctlr, lv_num, false, false, uid_$nil,
                 mount_dir_uid, status);
@@ -788,6 +873,9 @@ begin
       volx_$mount(os_$boot_device.device, os_$boot_device.reserved,
                   os_$boot_device.ctlr, lv_num, true, false, uid_$nil,
                   mount_dir_uid, status);
+%elseif boot_record_bus %then
+      volx_$mount(boot.device, boot.bus, boot.ctlr, lv_num, true, false,
+                  uid_$nil, mount_dir_uid, status);
 %else
       volx_$mount(boot.device, 0, boot.ctlr, lv_num, true, false, uid_$nil,
                   mount_dir_uid, status);
@@ -938,6 +1026,14 @@ begin
                      true);
   os_$free_gap_pmaps(integer32(addr(iodefs_guard)), integer32(addr(iodefs)),
                      true);
+%elseif vm_65536_segs %then
+
+  { the page maps of global B's unused ranges: between the tables and
+    the low region, and between the low region and the I/O space }
+  os_$free_gap_pmaps(integer32(addr(vm_tables_end)), integer32(addr(os_low)),
+                     true);
+  os_$free_gap_pmaps(integer32(addr(os_low_end)), integer32(addr(iodefs)),
+                     true);
 %endif
 
   { the page frames of the boot table's entries freed, MMAP's pages;
@@ -980,18 +1076,18 @@ begin
   smd_$install_disp_mem;
 %else
   { the display, if one answers the probe; the
-    kind a pooled cell (1), the aperture 16#FC0000 one cell for both
+    kind a pooled cell (1), the aperture os_disp1_mem one cell for both
     calls, the size 16#20000 and touch constant cells }
 %if gpu_driver %then
   { the DN580's color display is at the second display's address; the
     two calls' tails merged }
   if smd_$graphic_device_id = smd_gdev_color2 then
-    os_$install_display_aste(display3_$uid, 16#FA0000, 16#40000, true)
-  else if testpage(1, univ_ptr(16#FC0000), probe_result) then
-    os_$install_display_aste(display1_$uid, 16#FC0000, 16#20000, true);
+    os_$install_display_aste(display3_$uid, os_disp2_mem, 16#40000, true)
+  else if testpage(1, univ_ptr(os_disp1_mem), probe_result) then
+    os_$install_display_aste(display1_$uid, os_disp1_mem, 16#20000, true);
 %else
-  if testpage(1, univ_ptr(16#FC0000), probe_result) then
-    os_$install_display_aste(display1_$uid, 16#FC0000, 16#20000, true);
+  if testpage(1, univ_ptr(os_disp1_mem), probe_result) then
+    os_$install_display_aste(display1_$uid, os_disp1_mem, 16#20000, true);
 %endif
 %if disp2_probe %then
 
@@ -1002,16 +1098,17 @@ begin
       disp2_present := false;
     otherwise
 %endif
-      disp2_present := testpage(1, univ_ptr(16#FA0000), probe_result);
+      disp2_present := testpage(1, univ_ptr(os_disp2_mem), probe_result);
 %if color_board %then
       if not disp2_present then
-        disp2_present := testpage(1, univ_ptr(16#FF6402), probe_result);
+        disp2_present := testpage(1, univ_ptr(os_color_board_reg),
+                                  probe_result);
 %endif
 %if gpu_driver %then
   end;
 %endif
   if disp2_present then
-    os_$install_display_aste(display2_$uid, 16#FA0000, 16#20000, true);
+    os_$install_display_aste(display2_$uid, os_disp2_mem, 16#20000, true);
 %endif
 %endif
 %endif
@@ -1380,6 +1477,10 @@ begin
 %endif
   pacct_$init;
   audit_$init;
+%if physical_cache_enable %then
+  if roadrunner then
+    cache_$enable_physical;
+%endif
 %if vector_alignment_check %then
 
   { every handler the table installed at a longword address }

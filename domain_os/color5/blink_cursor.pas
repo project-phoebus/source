@@ -1,6 +1,7 @@
 { COLOR5_$BLINK_CURSOR - blink the cursor once.
 
   Image addresses:
+    sau7  0x3C48C6FE  COLOR5_$BLINK_CURSOR
     sau8  0x03C80A1A  COLOR5_$BLINK_CURSOR
 
   - Unless flag 10 of the control word is set, the cursor is drawn or

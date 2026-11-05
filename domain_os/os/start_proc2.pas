@@ -5,6 +5,8 @@
     sau3  0x00E6D800  os_$start_proc2 (module-local)
     sau4  0x0F876D32  os_$start_proc2 (module-local)
     sau5  0x00E6E930  os_$start_proc2 (module-local)
+    sau6  0x78075D9E  os_$start_proc2 (module-local)
+    sau7  0x3C480716  os_$start_proc2 (module-local)
     sau8  0x03C765D2  os_$start_proc2
 
   - The pages from OS_INIT_START to OS_INIT_END, rounded up to a 32 KB

@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E1C6DA  SIO_$I_CTS_CHANGE
     sau4  0x0F81D8EE  SIO_$I_CTS_CHANGE
+    sau6  0x7801E5DA  SIO_$I_CTS_CHANGE
+    sau7  0x3C4208C6  SIO_$I_CTS_CHANGE
 
   - CTS asserted clears the CTS-blocked member and restarts the
     transmission; CTS dropped blocks a line with CTS flow control.

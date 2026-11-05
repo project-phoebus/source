@@ -2,8 +2,9 @@
   address translation.
 
   Image addresses:
-    sau9  0x3C4255C8  ATBUS_ data (WIRED_DATA, 0xF8 bytes)
+    sau7  0x3C427B38  ATBUS_ data (WIRED_DATA, 0xA0 bytes)
     sau8  0x03C241E8  ATBUS_ data (WIRED_DATA, 0xA0 bytes)
+    sau9  0x3C4255C8  ATBUS_ data (WIRED_DATA, 0xF8 bytes)
 
   One compilation unit, named ATBUS_ like the system bus's
   (sysbus/atbus_.pas), whose segments follow that unit's in the SAU9's

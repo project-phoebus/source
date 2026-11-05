@@ -4,6 +4,8 @@
     sau2  0x00E6F8D0  SMD_$MAP_DISPLAY_U
     sau4  0x0F87A184  SMD_$MAP_DISPLAY_U
     sau5  0x00E71D7A  SMD_$MAP_DISPLAY_U
+    sau6  0x7807909A  SMD_$MAP_DISPLAY_U
+    sau7  0x3C482844  SMD_$MAP_DISPLAY_U
     sau9  0x3C475F64  SMD_$MAP_DISPLAY_U
 
   - A display already mapped for the process is returned as it is.

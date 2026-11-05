@@ -123,6 +123,24 @@ deferred-interrupt routines `val_param'; the internal ones `internal'.
   eventcounts and values), `dxm` (DXM_$ADD_CALLBACK, the two queues),
   `timer`.
 
+## The SAU6
+
+The SAU6's TIME_, TIME_Q_ and TIME_UNWIRED are the SAU8's and SAU9's
+code; TIMER_$INIT is the SAU2's with the SAU6's TIMR.  The hand-written
+TIME_ASM is the SAU8's clock-chip calendar read (`calendar_mapped_rtc`)
+without the SAU8's timer flag word, so the word ahead of
+TIME_$TIMER_HANDLER is not there (`m68k/time_asm.s`); the timer handler
+is the SAU2's but passes MMU_$MCR_CHANGE 1 (`mcr_change_bit_0`,
+`m68k/timer_handler.s`).
+
+## The SAU7
+
+The SAU7's TIME_ (WIRED_PROC 0x774 bytes, OS_INIT_PROC 0xE4, the data
+block 0x1628), TIME_Q_ (0x4F8) and TIME_UNWIRED (0x6B8) are the SAU8's
+code, with the SAU7's TIMR in TIMER_$INIT: no SAU7 source.  The
+hand-written TIME_ASM (0x468 bytes) and ADD48 are the SAU8's but for
+the I/O pages' addresses (`calendar_mapped_rtc`, `timer_int_pic`).
+
 ## Open items
 
 ### Forms the image settles

@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E254E8  PROC1_ data (WIRED_DATA, 0xCC4 bytes)
     sau4  0x0F827984  PROC1_ data (WIRED_DATA, 0xCC4 bytes)
+    sau6  0x780288A4  PROC1_ data (WIRED_DATA, 0xCC4 bytes)
+    sau7  0x3C42B11C  PROC1_ data (WIRED_DATA, 0xCC4 bytes)
 
   One compilation unit, in two code sections and one data section: the
   map's PROC1_ code segments in WIRED_PROC (0xD88 bytes,

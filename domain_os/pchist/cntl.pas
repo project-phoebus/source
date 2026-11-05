@@ -7,6 +7,12 @@
     sau4  0x0F8668C6  PCHIST_$CNTL
     sau4  0x0F866812  pchist_$unwire_cleanup (nested)
     sau4  0x0F866876  pchist_$stop_profiling (nested)
+    sau6  0x78065CFE  PCHIST_$CNTL
+    sau6  0x78065C4E  pchist_$unwire_cleanup (nested)
+    sau6  0x78065CAE  pchist_$stop_profiling (nested)
+    sau7  0x3C47066A  PCHIST_$CNTL
+    sau7  0x3C4705BA  pchist_$unwire_cleanup (nested)
+    sau7  0x3C47061A  pchist_$stop_profiling (nested)
     sau8  0x03C66524  PCHIST_$CNTL
 
   - Commands 0 and 3 start a histogram: 256 bins over the range rounded
@@ -44,6 +50,8 @@ var
     Image addresses:
       sau2  0x00E5CD02  pchist_$unwire_cleanup (nested)
       sau4  0x0F866812  pchist_$unwire_cleanup (nested)
+      sau6  0x78065C4E  pchist_$unwire_cleanup (nested)
+      sau7  0x3C4705BA  pchist_$unwire_cleanup (nested)
 
     - Only when the histogram is on.  Nested in PCHIST_$CNTL, called by
       its sibling too; its loop index is the parent's i.
@@ -69,6 +77,8 @@ var
     Image addresses:
       sau2  0x00E5CD66  pchist_$stop_profiling (nested)
       sau4  0x0F866876  pchist_$stop_profiling (nested)
+      sau6  0x78065CAE  pchist_$stop_profiling (nested)
+      sau7  0x3C47061A  pchist_$stop_profiling (nested)
 
     - A counted system profiler is uncounted and, unless PCHIST_$CNTL
       was given command 3, the terminal manager told; the histogram is

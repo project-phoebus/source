@@ -3,6 +3,8 @@
   Image addresses:
     sau3  0x00E5A0AA  PBU_$WRITE_CSR
     sau5  0x00E5A556  PBU_$WRITE_CSR
+    sau6  0x780621AA  PBU_$WRITE_CSR
+    sau7  0x3C46AD46  PBU_$WRITE_CSR
     sau8  0x03C62A3E  PBU_$WRITE_CSR
 
   - The CSR is passed by address, and its address is the one written:

@@ -1,6 +1,8 @@
 { ETHERNET_$SVC_OPEN - open a user channel.
 
   Image addresses:
+    sau6  0x7808904A  ETHERNET_$SVC_OPEN
+    sau7  0x3C493754  ETHERNET_$SVC_OPEN
     sau8  0x03C86F50  ETHERNET_$SVC_OPEN
     sau9  0x3C482B50  ETHERNET_$SVC_OPEN
 

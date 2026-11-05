@@ -5,6 +5,8 @@
     sau3  0x00E32F18  DTTY_$INIT
     sau4  0x0F837E84  DTTY_$INIT
     sau5  0x00E36D18  DTTY_$INIT
+    sau6  0x7803E474  DTTY_$INIT
+    sau7  0x3C43E29C  DTTY_$INIT
     sau9  0x3C43B26C  DTTY_$INIT
 
   - The display TTY is used when mode is 1, or mode is 0 and the

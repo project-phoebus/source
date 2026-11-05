@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E439D4  MST_$REMAP
     sau4  0x0F84BAAA  MST_$REMAP
+    sau6  0x7804AE1E  MST_$REMAP
+    sau7  0x3C453B9C  MST_$REMAP
     sau8  0x03C4BBDA  MST_$REMAP
     sau9  0x3C44AD9C  MST_$REMAP
 

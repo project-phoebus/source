@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E72524  KBD_$SET_KBD_TYPE
     sau3  0x00E73B86  KBD_$SET_KBD_TYPE
+    sau6  0x78080A64  KBD_$SET_KBD_TYPE
+    sau7  0x3C488C04  KBD_$SET_KBD_TYPE
 
   - Without `display_driver' there is no keyboard: the call is refused.
 

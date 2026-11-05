@@ -4,6 +4,8 @@
     sau2  0x00E77C60  RING_$SEND_OS
     sau4  0x0F8854E0  RING_$SEND_OS
     sau3  0x00E79450  RING_$SEND_OS
+    sau6  0x7808624E  RING_$SEND_OS
+    sau7  0x3C490D2E  RING_$SEND_OS
     sau8  0x03C8452E  RING_$SEND_OS
 
   - The ring header goes in front of the caller's, in a fresh header

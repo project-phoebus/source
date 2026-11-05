@@ -4,6 +4,8 @@
     sau2  0x00E6F1B4  SMD_$INQ_BLANK_TIMEOUT
     sau4  0x0F8798FE  SMD_$INQ_BLANK_TIMEOUT
     sau5  0x00E7156A  SMD_$INQ_BLANK_TIMEOUT
+    sau6  0x780788C8  SMD_$INQ_BLANK_TIMEOUT
+    sau7  0x3C482254  SMD_$INQ_BLANK_TIMEOUT
     sau9  0x3C475974  SMD_$INQ_BLANK_TIMEOUT
 
   - The clock value's low word is 0; param1 is not read.

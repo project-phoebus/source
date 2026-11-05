@@ -1,6 +1,7 @@
 { COLOR4_$CLEAR_SCREEN - clear the screen.
 
   Image addresses:
+    sau7  0x3C483CE8  COLOR4_$CLEAR_SCREEN
     sau8  0x03C79594  COLOR4_$CLEAR_SCREEN
 
   - Does nothing: the descriptor is not read.

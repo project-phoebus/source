@@ -1,6 +1,8 @@
 { ethernet_open - open a channel on a unit for a set of packet types.
 
   Image addresses:
+    sau6  0x78088D78  ethernet_open
+    sau7  0x3C493432  ethernet_open
     sau8  0x03C86C2E  ethernet_open
     sau9  0x3C48282E  ethernet_open
 
@@ -14,10 +16,13 @@
     (os) or a new one.  On failure the open is uncounted: the last user
     stops the receive process, else a configuration this open made is
     undone.
+  - With `ethernet_vme': nothing is loaded or logged; the version taken
+    is 1.
 
   Status stored:
     status_$ok: the channel was opened
-    status_$eth_driver_version_mismatch: args.version is above 2
+    status_$eth_driver_version_mismatch: args.version is above
+      eth_open_version
     status_$eth_invalid_unit_num: unit is not 0 or 1
     ethernet_start_unit's status: the unit could not be brought on line
     ethernet_download's or ethernet_execute's status: the program failed
@@ -38,8 +43,10 @@ procedure ethernet_open(os: boolean; var unit: pinteger;
 label
   no_chan, done, finish;
 var
+%if not ethernet_vme %then
   rec: ethernet_$load_log_t;
   err: status_$t;
+%endif
   cfg_status: status_$t;
   start: integer;
   new_sock: pinteger;
@@ -66,6 +73,7 @@ begin
   ml_$exclusion_start(u^.lock);
   if u^.users = 0 then begin
     ethernet_start_unit(u, status);
+%if not ethernet_vme %then
     if status.all = status_$ok then begin
       ethernet_download(u, '/sys/ethernet8_microcode', 24, start, status);
       rec.step := eth_load_download;
@@ -83,9 +91,10 @@ begin
         rec.status := err;
         log_$add(eth_log_type, rec, 18);
         with u^ do
-          stats.counts[7] := stats.counts[7] + 1;
+          stats.counts[eth_stat_errors] := stats.counts[eth_stat_errors] + 1;
         status.all := status_$ok;
       end;
+%endif
   end
   else
     status.all := status_$ok;
@@ -103,7 +112,7 @@ begin
   end
   else begin
     with u^ do
-      stats.counts[7] := stats.counts[7] + 1;
+      stats.counts[eth_stat_errors] := stats.counts[eth_stat_errors] + 1;
     locked := true;
     goto finish;
   end;

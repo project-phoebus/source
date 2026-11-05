@@ -47,7 +47,9 @@ headings the driver calls (TODO(merge)).
 
 ## Open items
 
-- TODO(sau): the SAU6's own SM code.
+- The SAU6's SM is the SAU5's source with its parts (`long_iomap`, no
+  `memory_parity`): its code differs from the SAU4's only in the I/O
+  map entries, and from the SAU5's in the parity check.
 - The SAU4's SM is the SAU3's with `mbus_map_64k` (the command block at
   bus address 16#F400, IOMAP's entries 253 and 254), `word_iomap` and
   without `memory_parity`.

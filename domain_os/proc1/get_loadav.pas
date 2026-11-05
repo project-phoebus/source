@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E14BBA  PROC1_$GET_LOADAV
     sau4  0x0F81542E  PROC1_$GET_LOADAV
+    sau6  0x78015364  PROC1_$GET_LOADAV
+    sau7  0x3C4168BC  PROC1_$GET_LOADAV
 
   Status stored: none.
 }

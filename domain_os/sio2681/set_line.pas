@@ -4,6 +4,8 @@
     sau2  0x00E1D250  SIO2681_$SET_LINE
     sau3  0x00E1C3C4  SIO2681_$SET_LINE
     sau4  0x0F81E464  SIO2681_$SET_LINE
+    sau6  0x7801F334  SIO2681_$SET_LINE
+    sau7  0x3C4215B8  SIO2681_$SET_LINE
     sau8  0x03C1E970  SIO2681_$SET_LINE
 
   - Under the driver's spin lock the channel is disabled and reset, then
@@ -111,11 +113,19 @@ begin
   if change_mask * [5, 6] <> [] then
     with channel.chip^ do begin
       if 1 in channel.chan_flags then begin
+%if sio2681_modem_op3_op0 %then
+        config2.op3 := 3 in params.flags1;
+%else
         config2.op2 := 3 in params.flags1;
+%endif
         config2.op0 := 0 in params.flags1;
       end
       else begin
+%if sio2681_modem_op3_op0 %then
+        config2.op2 := 3 in params.flags1;
+%else
         config2.op3 := 3 in params.flags1;
+%endif
         config2.op1 := 0 in params.flags1;
       end;
       regs^.sopbc := config2.opr;

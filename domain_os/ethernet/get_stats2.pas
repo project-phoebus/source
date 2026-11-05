@@ -1,6 +1,8 @@
 { ETHERNET_$GET_STATS2 - return a unit's statistics, the second form.
 
   Image addresses:
+    sau6  0x78088C94  ETHERNET_$GET_STATS2
+    sau7  0x3C49334E  ETHERNET_$GET_STATS2
     sau8  0x03C86B4A  ETHERNET_$GET_STATS2
     sau9  0x3C48274A  ETHERNET_$GET_STATS2
 
@@ -11,7 +13,8 @@
   Status stored:
     status_$eth_invalid_unit_num: socket is not unit 0 or 1
     status_$eth_device_offline: the unit is not on line
-    status_$eth_invalid_stats_block: max_len is less than 42
+    status_$eth_invalid_stats_block: max_len is less than
+      eth_stats_len (42, with `ethernet_vme' 50)
     ethernet_read_stats's status: otherwise
 }
 
@@ -32,7 +35,7 @@ begin
     status_ret.all := status_$eth_device_offline;
     return;
   end;
-  if max_len < 42 then begin
+  if max_len < eth_stats_len then begin
     length_ret := 0;
     status_ret.all := status_$eth_invalid_stats_block;
     return;
@@ -42,6 +45,6 @@ begin
   if status_ret.all <> status_$ok then begin
     length_ret := 0;
     with u^ do
-      stats.counts[7] := stats.counts[7] + 1;
+      stats.counts[eth_stat_errors] := stats.counts[eth_stat_errors] + 1;
   end;
 end;

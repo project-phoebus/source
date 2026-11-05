@@ -5,6 +5,10 @@
     sau2  0x00E1CCC0  KBD_$RCV
     sau2  0x00E1CC10  kbd_$process_key (nested)
     sau2  0x00E1CC64  kbd_$translate_key (nested)
+    sau6  0x7801ED06  KBD_$RCV
+    sau7  0x3C420FF2  KBD_$RCV
+    sau7  0x3C420F42  kbd_$process_key (nested)
+    sau7  0x3C420F96  kbd_$translate_key (nested)
     sau9  0x3C41F942  KBD_$RCV
     sau9  0x3C41F892  kbd_$process_key (nested)
     sau9  0x3C41F8E6  kbd_$translate_key (nested)

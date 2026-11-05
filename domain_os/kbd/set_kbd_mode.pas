@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E72516  KBD_$SET_KBD_MODE
     sau3  0x00E73B74  KBD_$SET_KBD_MODE
+    sau6  0x780809FA  KBD_$SET_KBD_MODE
+    sau7  0x3C488B9A  KBD_$SET_KBD_MODE
     sau9  0x3C479F36  KBD_$SET_KBD_MODE
 
   - line and mode are not read but with `kbd_commands'.

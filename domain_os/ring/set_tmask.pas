@@ -4,6 +4,8 @@
     sau2  0x00E768E8  RING_$SET_TMASK
     sau4  0x0F884168  RING_$SET_TMASK
     sau3  0x00E780D8  RING_$SET_TMASK
+    sau6  0x78084EF8  RING_$SET_TMASK
+    sau7  0x3C48F9CE  RING_$SET_TMASK
     sau8  0x03C831CE  RING_$SET_TMASK
 
   - For each unit whose mask differs, as ring_$set_hw_mask, but counting

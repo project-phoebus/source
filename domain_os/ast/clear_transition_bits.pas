@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E0283C  ast_$clear_transition_bits (module-local)
     sau4  0x0F802C6A  ast_$clear_transition_bits (module-local)
+    sau6  0x78002FBC  ast_$clear_transition_bits (module-local)
+    sau7  0x3C4033AC  ast_$clear_transition_bits (module-local)
     sau9  0x3C403BAC  ast_$clear_transition_bits (module-local)
 
   - Each of the count entries loses its in-transition member; an

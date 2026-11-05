@@ -4,6 +4,7 @@
     sau2  0x00E6DF2A  SMD_$DRAW_BOX
     sau4  0x0F8786AA  SMD_$DRAW_BOX
     sau5  0x00E70386  SMD_$DRAW_BOX
+    sau6  0x78077722  SMD_$DRAW_BOX
 
   - The four sides are drawn with the display acquired, by the
     hand-written SMD_$HORIZ_LINE and SMD_$VERT_LINE.

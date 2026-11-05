@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E14C94  PROC1_$INIT_LOADAV
     sau4  0x0F815508  PROC1_$INIT_LOADAV
+    sau6  0x78015420  PROC1_$INIT_LOADAV
+    sau7  0x3C416978  PROC1_$INIT_LOADAV
 
   - A periodic real-time callback (PROC1_$LOADAV_CALLBACK) every
     1250000 ticks (5 seconds at 250 kHz), on TIME_$RTEQ.

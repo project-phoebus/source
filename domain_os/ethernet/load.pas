@@ -1,6 +1,7 @@
 { ETHERNET_$LOAD - load the adapter's program.
 
   Image addresses:
+    sau7  0x3C492F04  ETHERNET_$LOAD
     sau8  0x03C86700  ETHERNET_$LOAD
     sau9  0x3C482300  ETHERNET_$LOAD
 
@@ -8,7 +9,7 @@
     the downloaded program runs already, /sys/ethernet8_microcode is
     downloaded into the adapter and started.
   - A failure is logged (the network's UID, the unit, the status and the
-    step that failed), counted in the unit's seventh statistic and not
+    step that failed), counted in the unit's eth_stat_errors count and not
     returned: the adapter goes on without the program.
 
   Status stored:
@@ -46,7 +47,7 @@ begin
     rec.status := err;
     log_$add(eth_log_type, rec, 18);
     with u^ do
-      stats.counts[7] := stats.counts[7] + 1;
+      stats.counts[eth_stat_errors] := stats.counts[eth_stat_errors] + 1;
   end;
   status.all := status_$ok;
 end;

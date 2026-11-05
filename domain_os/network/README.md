@@ -68,7 +68,16 @@ and, in NETWORK_$GET_PKT_SIZE, in the order of a comparison's operands,
 where the SAU8 compares as the SAU2 does.  Nor do the SAU4's: against
 the SAU2's they differ in addresses, in the 28-byte ASTE's wire count
 (`large_vm'), in NETWORK_$GET_PKT_SIZE's operand order (as the SAU9's)
-and in code generation.
+and in code generation.  Nor do the SAU7's: against the SAU8's they
+differ only in addresses and in the memory map's base, which
+`mmap_ppns_4000_bfff` gives the MMAP array; its NETWORK_ASM segment is
+the SAU8's code.  Nor do the SAU6's: against the SAU9's they differ in
+addresses, in the memory map's base, which `mmap_ppns_4000` gives the
+MMAP array, and in the page-out's test of an anonymous object's UID in
+network_$process_paging_request, whose operands the SAU6 compares in
+the source's order (as the SAU2 and SAU4) where the SAU7, SAU8 and SAU9
+compare the other way round; its NETWORK_ASM segment is every SAU's
+code.
 
 `fetch_diskless_info.pas` is the OS module's module-local routine (the
 first of OS's OS_INIT_PROC segment): it stays here and is included by

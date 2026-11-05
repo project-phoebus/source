@@ -1,8 +1,12 @@
 { ETHERNET_$SVC_IOCTL - a user channel's control request.
 
   Image addresses:
+    sau6  0x7808998A  set_station (nested)
+    sau7  0x3C49404A  set_station (nested)
     sau8  0x03C87846  set_station (nested)
     sau9  0x3C483446  set_station (nested)
+    sau6  0x78089A9A  ETHERNET_$SVC_IOCTL
+    sau7  0x3C4940AA  ETHERNET_$SVC_IOCTL
     sau8  0x03C878A6  ETHERNET_$SVC_IOCTL
     sau9  0x3C4834A6  ETHERNET_$SVC_IOCTL
 
@@ -16,10 +20,13 @@
     ranges, merged with or cut out of the ranges it has; the statistics.
   - The multicast and range requests work under the channel lock; each
     range request checks every range before it changes any.
-  - A request that fails after its checks counts in the seventh
+  - A request that fails after its checks counts in eth_stat_errors
     statistic.
   - Adding no multicast addresses stores no status, and the status slot
     is then tested.
+  - With `ethernet_vme': the adapter's information is the start block's
+    word 1, and no status is stored for it; set_station gives the
+    controller the address and turns it on, two requests.
 
   Status stored:
     status_$ok: the request was done
@@ -36,9 +43,11 @@
     status_$eth_pkt_type_not_in_use: a range to drop is not within one
       of the channel's, or holds the Domain type
     status_$eth_no_channels: the ranges would be more than 32
-    status_$eth_invalid_stats_block: the statistics' room is under 42
+    status_$eth_invalid_stats_block: the statistics' room is under
+      eth_stats_len
       bytes
-    ethernet_do_cmd's status: the adapter's information
+    ethernet_do_cmd's status: the adapter's information (not with
+      `ethernet_vme')
     ethernet_mcast_add's status: a multicast address
     ethernet_load_mcast's status: the reload
     xns_idp_$register_addr's status: a new station address
@@ -51,7 +60,9 @@ procedure ethernet_$svc_ioctl(var unit: pinteger;
                               out status: status_$t);
   options(val_param);
 var
+%if not ethernet_vme %then
   pcb: ethernet_$pcb_t;
+%endif
   st2: status_$t;
   mcast: ethernet_$addr_t;
   t: pinteger;
@@ -68,10 +79,48 @@ var
 
   { set_station - give the adapter a station address, which must have
     both halves nonzero; the result of the command is not kept, its
-    status is. }
+    status is.  With `ethernet_vme', the address request and then, when
+    it succeeds, the request that turns the address on. }
   procedure set_station(u: ethernet_$unit_ptr_t;
                         var station: ethernet_$addr_t;
                         out status: status_$t);
+%if ethernet_vme %then
+  begin
+    if (station.high = 0) or else (station.low = 0) then
+      crash_system(status_$eth_illegal_dest_address);
+    ml_$exclusion_start(u^.cmd_lock);
+    with u^.cmd_ring^.slots[u^.cmd_idx] do begin
+      request := eth_vme_cmd_set_address;
+      param_2 := 1;
+      value_2 := 16#FD;
+      hw_addr := station;
+    end;
+    ethernet_start_cmd(u, status);
+    if status.all = status_$ok then begin
+      u^.cmd_idx := (u^.cmd_idx mod eth_vme_ring_slots) + 1;
+      ethernet_wait_cmd(u, status);
+    end
+    else
+      u^.flags := u^.flags - [eth_unit_cmd_pending];
+    ml_$exclusion_stop(u^.cmd_lock);
+    if status.all = status_$ok then begin
+      ml_$exclusion_start(u^.cmd_lock);
+      with u^.cmd_ring^.slots[u^.cmd_idx] do begin
+        request := eth_vme_cmd_x0a;
+        param := 5;
+        value := 16#FD;
+      end;
+      ethernet_start_cmd(u, status);
+      if status.all = status_$ok then begin
+        u^.cmd_idx := (u^.cmd_idx mod eth_vme_ring_slots) + 1;
+        ethernet_wait_cmd(u, status);
+      end
+      else
+        u^.flags := u^.flags - [eth_unit_cmd_pending];
+      ml_$exclusion_stop(u^.cmd_lock);
+    end;
+  end;
+%else
   begin
     if (station.high = 0) or else (station.low = 0) then
       crash_system(status_$eth_illegal_dest_address);
@@ -84,6 +133,7 @@ var
                             eth_cmd_set_station_address + eth_cmd_reply,
                             status));
   end;
+%endif
 
 begin
   if unit > eth_max_unit then begin
@@ -108,11 +158,15 @@ begin
     end;
 
     eth_ioctl_adapter_info: begin
+%if ethernet_vme %then
+      args.result := ether_ucb[unit].sh^.cfg.words[1];
+%else
       pcb.cmd := eth_cmd_adapter_info;
       pcb.len := 0;
       if ethernet_do_cmd(u, addr(pcb), eth_cmd_adapter_info + eth_cmd_reply,
                          status) then
         args.result := pcb.words[1];
+%endif
     end;
 
     eth_ioctl_get_address: begin
@@ -349,7 +403,7 @@ begin
     end;
 
     eth_ioctl_get_stats: begin
-      if args.max_len < 42 then begin
+      if args.max_len < eth_stats_len then begin
         args.result := 0;
         status.all := status_$eth_invalid_stats_block;
         return;
@@ -367,5 +421,5 @@ begin
 
   if status.all <> status_$ok then
     with u^ do
-      stats.counts[7] := stats.counts[7] + 1;
+      stats.counts[eth_stat_errors] := stats.counts[eth_stat_errors] + 1;
 end;

@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E33224  SUMA_$INIT
+    sau6  0x7803C734  SUMA_$INIT
 
   - The identification byte set to 1 marks a sample as the bitpad's
     (tpad/tpad.ins.pas dev_id "1 bitpad"); SUMA_$RCV never writes it, so

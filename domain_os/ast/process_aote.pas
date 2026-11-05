@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E01AD2  ast_$process_aote (module-local)
     sau4  0x0F801EEA  ast_$process_aote (module-local)
+    sau6  0x78002278  ast_$process_aote (module-local)
+    sau7  0x3C40268E  ast_$process_aote (module-local)
     sau9  0x3C402E8E  ast_$process_aote (module-local)
 
   Assume we're called with the AST lock held.

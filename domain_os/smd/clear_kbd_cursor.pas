@@ -4,6 +4,8 @@
     sau2  0x00E6E828  SMD_$CLEAR_KBD_CURSOR
     sau4  0x0F878FBA  SMD_$CLEAR_KBD_CURSOR
     sau5  0x00E70CA6  SMD_$CLEAR_KBD_CURSOR
+    sau6  0x7807801A  SMD_$CLEAR_KBD_CURSOR
+    sau7  0x3C481AFC  SMD_$CLEAR_KBD_CURSOR
     sau9  0x3C47521C  SMD_$CLEAR_KBD_CURSOR
 
   - The keyboard cursor's rectangle joins the tracking list.

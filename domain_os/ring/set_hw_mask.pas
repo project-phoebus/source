@@ -2,6 +2,8 @@
 
   Image addresses:
     sau2  0x00E767CC  ring_$set_hw_mask (module-local)
+    sau6  0x78084DDE  ring_$set_hw_mask (module-local)
+    sau7  0x3C48F8B2  ring_$set_hw_mask (module-local)
     sau8  0x03C830B2  ring_$set_hw_mask (module-local)
 
   - A new mask is kept in the unit, which is running when the mask has

@@ -1,6 +1,7 @@
 { COLOR5_$XOR_CURSOR - draw or remove the cursor.
 
   Image addresses:
+    sau7  0x3C48C3E2  COLOR5_$XOR_CURSOR
     sau8  0x03C806FE  COLOR5_$XOR_CURSOR
 
   Assume we're called without the SMD request lock; it is held here.

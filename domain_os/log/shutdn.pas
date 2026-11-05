@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E1758C  LOG_$SHUTDN
     sau4  0x0F817F44  LOG_$SHUTDN
+    sau6  0x78018060  LOG_$SHUTDN
+    sau7  0x3C41904C  LOG_$SHUTDN
     sau8  0x03C184FC  LOG_$SHUTDN
 
   - An open log gets a shutdown entry, loses LOG_$LOGFILE_PTR, and is

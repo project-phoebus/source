@@ -132,6 +132,23 @@ returns its address in D0, a linteger).
 - Used as they are: `base`, `cal` (ADD48), `ml`, `misc/crash_system`,
   `wp` (WP_$CALLOC).
 
+## The SAU6
+
+The SAU6's PROC1_ (WIRED_PROC 0xD18 bytes, OS_INIT_PROC 0xD0, the data
+block 0xCC4) is the SAU9's code; PROC1_$INIT's stack bounds are the
+map's OS_STACK and OS_STACK_END, which the SAU6 map also names OS_LOW
+and DBUF_BLKS.  The hand-written PROC1_ASM is the SAU8's but for the
+dispatcher's clear of the MMU's fault status, bit 6 of the byte at
+MMU + 3 alone (`mmu_status_bit_6`, `m68k/dispatch.s`).
+
+## The SAU7
+
+The SAU7's PROC1_ (WIRED_PROC 0xD18 bytes, OS_INIT_PROC 0xD0, the data
+block 0xCC4) is the SAU8's and SAU9's code: no SAU7 source.  The
+hand-written PROC1_ASM is the SAU8's but for the dispatcher's clear
+after MMU_$INSTALL_ASID, a word store to the start of the system
+control page, SC_PAGE (`dispatch_clear_sc_page`, `m68k/dispatch.s`).
+
 ## Open items
 
 ### Forms the image settles

@@ -4,13 +4,19 @@
     sau3  0x00E21854  MBUS_ data (WIRED_DATA, 0x84 bytes)
     sau4  0x0F824B30  MBUS_ data (WIRED_DATA, 0x84 bytes)
     sau5  0x00E2362C  MBUS_ data (WIRED_DATA, 0x84 bytes)
+    sau6  0x780251FC  MBUS_ data (WIRED_DATA, 0x84 bytes)
 
   One compilation unit, in two code sections and one data section: on
   the SAU5 the map's MBUS_ code segments in WIRED_PROC (0x70 bytes:
   MBUS_$UNDEF_INT, MBUS_$DEFINE_INT) and OS_INIT_PROC (0x74 bytes:
   MBUS_$INIT), and its MBUS_ data segment in WIRED_DATA (0x84 bytes).
   MBUS_$ENABLE_DEV and MBUS_$DISABLE_DEV are the VME_ module's
-  (vme/vme.pas); their fragments are in this directory.
+  (vme/vme.pas); their fragments are in this directory.  The SAU3's,
+  SAU4's and SAU6's WIRED_PROC segments hold a third routine, MBUS_$INT,
+  the bus's interrupt routine (mbus/int.pas), in three forms
+  (`mbus_polled_adapter', `mbus_vectored_adapter',
+  `mbus_vectored_enable'); on the SAU5 VME_$INT dispatches the
+  Multibus's levels.
 
   Present on the SAUs whose kernel has a Multibus, the part mbus_bus
   (base/config.ins.pas): the SR10.2 maps of the SAU3..SAU6 have the
@@ -45,21 +51,12 @@ module mbus_, wired_proc, wired_data;
 
 %if mbus_bus %then
 
-{ TODO(sau) MBUS_$INT on the SAU6
-
-  The SAU3's, SAU4's and SAU6's MBUS_ WIRED_PROC segments hold a third
-  routine, MBUS_$INT (0x6E, 0x5A and 0x4E bytes), the bus's interrupt
-  routine, which the SAU5's lacks (VME_$INT dispatches the Multibus's
-  levels there).  The SAU3's (`mbus_polled_adapter') and the SAU4's
-  (`mbus_vectored_adapter') are written (mbus/int.pas); the SAU6's is
-  another form (see the TODO(sau) in mbus/int.pas). }
-
 { The global routines and variables this module defines (ref 7.3.4 and
   7.2.2, Method 2), in map order. }
 define
   mbus_$undef_int;
   mbus_$define_int;
-%if mbus_polled_adapter or mbus_vectored_adapter %then
+%if mbus_polled_adapter or mbus_vectored_adapter or mbus_vectored_enable %then
   mbus_$int;
 %endif
   mbus_$init;
@@ -70,7 +67,7 @@ define
 { ---- WIRED_PROC ---- }
 %include 'mbus/undef_int.pas';            { MBUS_$UNDEF_INT    }
 %include 'mbus/define_int.pas';           { MBUS_$DEFINE_INT   }
-%if mbus_polled_adapter or mbus_vectored_adapter %then
+%if mbus_polled_adapter or mbus_vectored_adapter or mbus_vectored_enable %then
 %include 'mbus/int.pas';                  { MBUS_$INT          }
 %endif
 

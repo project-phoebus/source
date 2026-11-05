@@ -1,6 +1,7 @@
 { ring_8025_unwire_driver - unwire the driver when its last unit goes.
 
   Image addresses:
+    sau7  0x3C495AC0  ring_8025_unwire_driver
     sau8  0x03C892B8  ring_8025_unwire_driver
     sau9  0x3C484EB8  ring_8025_unwire_driver
 

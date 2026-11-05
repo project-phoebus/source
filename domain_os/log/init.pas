@@ -5,6 +5,10 @@
     sau2  0x00E2FF7C  log_$check_op_status (nested)
     sau4  0x0F8335C4  LOG_$INIT
     sau4  0x0F8334F8  log_$check_op_status (nested)
+    sau6  0x780389B0  LOG_$INIT
+    sau6  0x780388E4  log_$check_op_status (nested)
+    sau7  0x3C4387E8  LOG_$INIT
+    sau7  0x3C43871C  log_$check_op_status (nested)
     sau8  0x03C32FB8  LOG_$INIT
 
   - `node_data/system_logs/sys_error_log is resolved (created if need

@@ -1,6 +1,7 @@
 { FLP_$MOTOR_CALLBACK - the motor's time-queue callback.
 
   Image addresses:
+    sau7  0x3C44DBAC  FLP_$MOTOR_CALLBACK
     sau8  0x03C45BAC  FLP_$MOTOR_CALLBACK
 
   - With the motor on, under the driver's spin lock: a drive used since

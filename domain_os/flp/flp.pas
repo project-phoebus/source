@@ -4,6 +4,7 @@
   Image addresses:
     sau2  0x00E7AEF4  FLP_ data (.DATA, 0x13C bytes)
     sau4  0x0F8886F4  FLP_ data (.DATA, 0x138 bytes)
+    sau7  0x3C49CEF4  FLP_ data (.DATA, 0x1FC bytes)
     sau8  0x03C902F4  FLP_ data (.DATA, 0x1FC bytes)
 
   One compilation unit, in two code sections and one data section: the
@@ -117,6 +118,9 @@ module flp_;
 %if floppy_page_dma %then
 %include 'pbu/pbu.ins.pas';
 %endif
+%if floppy_iomap %then
+%include 'iomap/iomap.ins.pas';
+%endif
 %include 'flp/flp.ins.pas';
 
 %if floppy_atbus %then
@@ -210,7 +214,9 @@ var
   flp_callback_arg: univ_ptr;                    { +0x1D4 }
   flp_fmt_buf_pa: integer32;                     { +0x1D8 }
   flp_fmt_buf_pa2: integer32;                    { +0x1DC }
-  unused_1e0: integer32;                         { +0x1E0 }
+  flp_map_base: integer32;                       { +0x1E0: the I/O map
+                                                   region's bus address
+                                                   (`floppy_iomap') }
   flp_dma_retry: integer;                        { +0x1E4 }
   flp_cmd_retry: integer;                        { +0x1E6 }
   flp_delay: integer;                            { +0x1E8 }
@@ -224,6 +230,11 @@ var
 define
   flp_$used;                                     { +0x1F6 }
   flp_$motor_on;                                 { +0x1F8 }
+%if floppy_iomap %then
+
+var
+  flp_map_allocated: boolean;                    { +0x1FA }
+%endif
 
 { ---- WIRED_PROC ---- }
 %include 'flp/int.pas';                     { FLP_$INT }

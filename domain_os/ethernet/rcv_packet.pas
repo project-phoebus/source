@@ -2,8 +2,11 @@
   unit's header and data pages.
 
   Image addresses:
+    sau7  0x3C491F1E  drain (nested)
     sau8  0x03C8571A  drain (nested)
     sau9  0x3C48131A  drain (nested)
+    sau6  0x78087B18  ethernet_rcv_packet
+    sau7  0x3C491F98  ethernet_rcv_packet
     sau8  0x03C85794  ethernet_rcv_packet
     sau9  0x3C481394  ethernet_rcv_packet
 
@@ -19,6 +22,9 @@
   - A packet too long, or with too long a header or rest, is counted and
     drained (its bytes read and dropped).
   - The rest's read is not checked.
+  - With `ethernet_vme': the packet is copied from the receive buffer
+    the controller filled (rcv_va[rcv_idx]), the rest through a page
+    NETBUF_$GETVA maps; a packet too long is dropped uncounted.
 
   Status stored:
     status_$ok: the packet was taken, or its rest's read failed
@@ -26,6 +32,78 @@
     ethernet_$$pio_read's status: a header read failed
 }
 
+%if ethernet_vme %then
+procedure ethernet_rcv_packet(u: ethernet_$unit_ptr_t; len: integer;
+                              tag: integer; out status: status_$t);
+  internal;
+var
+  p: pkt_$bytes_ptr_t;
+  src: integer32;
+  h: ethernet_$rcv_hdr_ptr_t;
+  rest: pinteger;
+  n: pinteger;
+begin
+  status.all := status_$ok;
+  mmu_$mcr_change(4);
+  if len > 1514 then
+    status.all := status_$eth_adapter_hardware_error
+  else begin
+    src := integer32(u^.rcv_va[u^.rcv_idx]);
+    h := ethernet_$rcv_hdr_ptr_t(u^.hdr_va);
+    p := addr(h^.eth);
+    os_$data_copy(pkt_$bytes_ptr_t(src)^, p^, 14);
+    src := src + 14;
+    rest := len - 14;
+    u^.rcv_src := h^.eth.src;
+    if u^.rcv_src.ptype = eth_type_domain then begin
+      src := src + 30;
+      rest := rest - 30;
+      p := pkt_$bytes_ptr_t(h);
+      os_$data_copy(pkt_$bytes_ptr_t(src)^, p^, 24);
+      n := (h^.hdr_len + 1) & ~1;
+      src := src + 24;
+      if n > 952 then begin
+        status.all := status_$eth_adapter_hardware_error;
+        return;
+      end;
+      p := addr(h^.bytes[24]);
+      os_$data_copy(pkt_$bytes_ptr_t(src)^, p^, n - 24);
+      src := src + n - 24;
+      u^.rcv_hdr_len := h^.hdr_len;
+      u^.rcv_data_len := h^.data_len;
+    end
+    else begin
+      n := rest;
+      if n > 936 then
+        n := 936;
+      p := addr(h^.bytes[16]);
+      os_$data_copy(pkt_$bytes_ptr_t(src)^, p^, n);
+      src := src + n;
+      u^.rcv_hdr_len := 14 + n;
+      len := len - (14 + n);
+      u^.rcv_data_len := len;
+      h^.tag.tag := tag;
+    end;
+    rest := rest - n;
+    if rest > 1024 then
+      status.all := status_$eth_adapter_hardware_error
+    else begin
+      if rest <> 0 then begin
+        netbuf_$getva(u^.dat_va, u^.rcv_map_va, status);
+        ethernet_check_status(status);
+        os_$data_copy(pkt_$bytes_ptr_t(src)^,
+                      pkt_$bytes_ptr_t(u^.rcv_map_va)^, rest);
+        discard(netbuf_$rtnva(u^.rcv_map_va));
+      end
+      else begin
+        u^.spare_dat := u^.dat_va;
+        u^.dat_va := 0;
+      end;
+      status.all := status_$ok;
+    end;
+  end;
+end;
+%else
 procedure ethernet_rcv_packet(u: ethernet_$unit_ptr_t; len: integer;
                               tag: integer; out status: status_$t);
   internal;
@@ -127,3 +205,4 @@ begin
 done:
   u^.regs^.control := u^.regs^.control & ~eth_hcr_dir;
 end;
+%endif

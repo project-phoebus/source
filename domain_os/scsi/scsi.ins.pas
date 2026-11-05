@@ -18,8 +18,13 @@ var
     rounding. }
   scsi_$present: extern boolean;
 
-{ SCSI_$CINIT - initialize the SCSI controller. }
+{ SCSI_$CINIT - initialize the SCSI controller.  With the mailbox
+  host adapter (`scsi_mailbox_ctlr') it is the controller's DCTE's
+  init routine, its heading scsi/scsi_mbox.ins.pas's (it takes
+  io/io.ins.pas's dcte_t). }
+%if not scsi_mailbox_ctlr %then
 function scsi_$cinit: integer32; extern;
+%endif
 
 { SCSI_$FREE_ASID - free a process's SCSI resources. }
 procedure scsi_$free_asid(in asid: integer); extern;
@@ -35,14 +40,25 @@ const
   status_$scsi_bad_handle = 16#00380002;          { bad handle passed in call }
   status_$scsi_device_in_use = 16#00380003;       { device in use }
   status_$scsi_device_not_acquired = 16#00380004; { device not acquired }
+  status_$scsi_device_already_acquired = 16#00380005;
+                                        { device already acquired }
   status_$scsi_bad_parameter = 16#00380006;       { bad parameter }
+  status_$scsi_buffer_too_large = 16#00380007;    { buffer too large }
   status_$scsi_page_not_wired = 16#00380008;      { page not wired }
   status_$scsi_page_already_wired = 16#00380009;  { page already wired }
   status_$scsi_too_many_wired_pages = 16#0038000A; { too many wired pages }
   status_$scsi_bad_length = 16#0038000B;          { bad length }
   status_$scsi_unsupported_function = 16#0038000D; { unsupported function }
+  status_$scsi_device_already_allocated = 16#0038000F;
+                                        { device already allocated }
   status_$scsi_operation_timeout = 16#00380010;   { operation timeout }
+  status_$scsi_hardware_timeout = 16#00380011;    { hardware timeout }
+  status_$scsi_hardware_failure = 16#00380012;    { hardware failure }
   status_$scsi_internal_error = 16#00380013;      { internal manager error }
+  status_$scsi_quit_fault = 16#00380014;          { quit fault received
+                                                    during wait }
+  status_$scsi_all_devices_in_use = 16#00380015;  { all devices in use }
+  status_$scsi_illegal_bus_revision = 16#00380016; { illegal bus revision }
   status_$scsi_protection_violation = 16#00380017; { protection violation }
   status_$scsi_no_resources = 16#00380018;        { no resources available }
   status_$scsi_command_in_progress = 16#00380019; { command in progress }
@@ -106,6 +122,8 @@ type
           bus: [byte] 0..255;             { 0x02 }
           target: [byte] 0..255);         { 0x03 }
       2: (all: integer32);                { 0x00 }
+      3: (unused_gen: integer;            { 0x00 }
+          dev: pinteger);                 { 0x02: bus * 256 + target }
   end;
 
   { A command descriptor block, 12 bytes: its bytes, and byte 1's

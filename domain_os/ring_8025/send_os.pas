@@ -1,6 +1,7 @@
 { RING_8025_$SEND_OS - send a MAC_OS packet on a system channel.
 
   Image addresses:
+    sau7  0x3C499A92  RING_8025_$SEND_OS
     sau8  0x03C8D05E  RING_8025_$SEND_OS
     sau9  0x3C488C62  RING_8025_$SEND_OS
 
@@ -122,18 +123,36 @@ begin
 
   { the pieces: the headers, the caller's header, the data }
   ml_$exclusion_start(ring8025_ucb[line].xmit_lock);
+%if ring_8025_iomap %then
+  pieces[1].pa := ring_8025_vtop(
+                    integer32(addr(ring8025_$aux_da.ctl[line].xmit_hdr)),
+                    r8025_xmit_hdr_room,
+                    ring8025_ucb[line].iomap_page + r8025_map_ctl);
+%else
   pieces[1].pa := ring_8025_vtop(
                     integer32(addr(ring8025_$aux_da.ctl[line].xmit_hdr)));
+%endif
   pieces[1].cnt.len := rlen + 22;
   count := 1;
   if pkt.hdr_desc.length <> 0 then begin
+%if ring_8025_iomap %then
+    pieces[2].pa := ring_8025_vtop(pkt.hdr_desc.address,
+                                   pkt.hdr_desc.length,
+                                   ring8025_ucb[line].iomap_page);
+%else
     pieces[2].pa := ring_8025_vtop(pkt.hdr_desc.address);
+%endif
     pieces[2].cnt.len := pkt.hdr_desc.length;
     count := 2;
   end;
   if pkt.data_length <> 0 then begin
     count := count + 1;
+%if ring_8025_iomap %then
+    pieces[count].pa := ring_8025_map_pa(pkt.data_pages[1],
+                                         ring8025_ucb[line].iomap_page + 1);
+%else
     pieces[count].pa := pkt.data_pages[1];
+%endif
     pieces[count].cnt.len := pkt.data_length;
   end;
 

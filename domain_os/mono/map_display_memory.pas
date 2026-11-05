@@ -2,6 +2,7 @@
   address space.
 
   Image addresses:
+    sau7  0x3C4843FE  MONO_$MAP_DISPLAY_MEMORY
     sau8  0x03C79CAA  MONO_$MAP_DISPLAY_MEMORY
 
   - All of the display's object from its start, line_bits * word_74

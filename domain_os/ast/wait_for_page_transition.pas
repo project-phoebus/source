@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E00C08  ast_$wait_for_page_transition (module-local)
     sau4  0x0F801008  ast_$wait_for_page_transition (module-local)
+    sau6  0x780013E8  ast_$wait_for_page_transition (module-local)
+    sau7  0x3C4017E8  ast_$wait_for_page_transition (module-local)
     sau9  0x3C401FE8  ast_$wait_for_page_transition (module-local)
 
   Assume we're called with the PMAP lock held.

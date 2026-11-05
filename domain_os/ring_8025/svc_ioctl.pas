@@ -1,6 +1,7 @@
 { RING_8025_$SVC_IOCTL - a user channel's control request.
 
   Image addresses:
+    sau7  0x3C499028  RING_8025_$SVC_IOCTL
     sau8  0x03C8C5F4  RING_8025_$SVC_IOCTL
     sau9  0x3C4881F8  RING_8025_$SVC_IOCTL
 

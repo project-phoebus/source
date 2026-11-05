@@ -3,6 +3,7 @@
 
   Image addresses:
     sau5  0x00E73534  COLOR2_$GET_EC
+    sau6  0x7807A450  COLOR2_$GET_EC
 
   Status stored:
     ec2_$register_ec1's status: the handle was returned, or not

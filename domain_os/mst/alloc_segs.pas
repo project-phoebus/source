@@ -6,6 +6,10 @@
     sau2  0x00E43182  mst_$alloc_segs (module-local)
     sau4  0x0F84B1C6  mst_$audit_map (nested)
     sau4  0x0F84B278  mst_$alloc_segs (module-local)
+    sau6  0x7804A56A  mst_$audit_map (nested)
+    sau6  0x7804A61C  mst_$alloc_segs (module-local)
+    sau7  0x3C4532E4  mst_$audit_map (nested)
+    sau7  0x3C453396  mst_$alloc_segs (module-local)
     sau8  0x03C4B2DC  mst_$audit_map (nested)
     sau8  0x03C4B38E  mst_$alloc_segs (module-local)
     sau9  0x3C44A4E4  mst_$audit_map (nested)
@@ -183,7 +187,7 @@ bad_length:
       end;
     end
     else if b_space then begin
-%if large_address_space or vm_8192_segs %then
+%if large_address_space or vm_8192_segs or vm_65536_segs %then
       lo := mst_$seg_tn - mst_b_space_segs;
 %elseif run_time_layout %then
       lo := mst_$private_a_size + mst_b_space_first;

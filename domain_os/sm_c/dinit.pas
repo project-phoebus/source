@@ -4,6 +4,7 @@
     sau3  0x00E6F4C2  SM_C_$DINIT
     sau4  0x0F87C280  SM_C_$DINIT
     sau5  0x00E75026  SM_C_$DINIT
+    sau6  0x7807BD3C  SM_C_$DINIT
 
   - The driver is wired, and the first time the controller set up; a
     failure there crashes the system.

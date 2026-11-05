@@ -1,16 +1,26 @@
 { OS_$COLD_START - build the kernel's first translation tables.
 
   Image addresses:
+    sau7  0x01002D1E  OS_$COLD_START
+    sau7  0x01002A40  map_entry (nested)
     sau9  0x040033E4  OS_$COLD_START
     sau9  0x04003128  map_entry (nested)
 
   - Clears the root table (RARS's page), the global page maps (OS_PMAPS
     .. OS_PMAP_END), the segment descriptors (SMAPS .. OS_PAGE_END
-    rounded up) and MMAP (16#100000 bytes), by physical address.
+    rounded up) and MMAP (16#100000 bytes, with `cold_ram_16mb'
+    16#80000), by physical address.
   - Marks MMAP's entry of every page of memory pageable: mem_size
     bytes from page 16#10000 (physical 16#4000000).
   - Maps the boot map's entries in order (map_entry); the first that
     fails ends it, its status stored.
+  - `cold_probed_devices': the kernel's and the I/O entries first, then
+    the physical cache's tags and the display's entries that COLD's
+    flags (mem_flags) select, the display's CSR and frame pages and
+    counts stored in COLD's remap cells; without flag 2 the segment
+    descriptors are shared globally.
+  - `cold_ram_16mb': an entry of page count 0 (the kernel's moved part)
+    starts at MOVE_TO_PPN's page.
   - Points the root table: COLD's segment's table, root entries 237 and
     238 at global A's (SMAPS), 240..255 at the global segments'.
   - Stores the tables' physical addresses in MMU_ASM's and DUMP's cells
@@ -32,7 +42,7 @@
 
 procedure os_$cold_start(in boot_params: os_cold_boot_params_t;
                          in mem_size: linteger;
-                         in mem_flags: integer32;
+                         in mem_flags: os_cold_mem_flags_t;
                          out status: status_$t);
 var
   ppn: linteger;                          { the entry's next page }
@@ -59,11 +69,21 @@ var
   procedure map_entry(in e: os_cold_map_entry_t; out status: status_$t);
   begin
     ppn := e.pa div 1024;
+%if cold_ram_16mb %then
+    if e.count <> 0 then
+      count := e.count
+    else begin
+      count := (cold_page_round(integer32(addr(os_page_end))) -
+                integer32(addr(os_proc)) - os_cold_kernel_low) div 1024;
+      ppn := move_to_ppn;
+    end;
+%else
     if e.count = 0 then
       count := (cold_page_round(integer32(addr(os_page_end))) -
                 integer32(addr(os_proc))) div 1024
     else
       count := e.count;
+%endif
     va.ptr := e.va;
     segno := va.segno;
     table_seg := va.table_seg;
@@ -95,6 +115,10 @@ var
           bits_15_10 := 63;
           s := true;
           dt := 2;
+%if cold_probed_devices %then
+          if not (os_cold_flag_machine_id_2 in mem_flags) then
+            sg := true;
+%endif
           wp := not e.flags.write;
           table := pt_pa;
           valid := e.flags.valid;
@@ -158,18 +182,83 @@ begin
              integer32(addr(os_pmap_end)) - integer32(addr(os_pmaps)));
   cold_clear(smaps_pa, cold_page_round(integer32(addr(os_page_end))) -
              integer32(addr(smaps)));
-  cold_clear(mmap_pa, 16#100000);
+  cold_clear(mmap_pa, os_cold_mmap_bytes);
 
   { the memory present, pageable }
-  for ppn := os_cold_first_ppn to mem_size div 1024 + 16#FFFF do
+  for ppn := os_cold_first_ppn to
+             mem_size div 1024 + (os_cold_first_ppn - 1) do
     with os_cold_mmap_ptr_t(mmap_pa)^[ppn] do
       pageable := true;
 
+%if cold_probed_devices %then
+  { the kernel and the I/O pages }
+  for k := 14 to 29 do begin
+    map_entry(os_cold_map[k], status);
+    if status.all <> status_$ok then
+      return;
+  end;
+
+  { the physical cache's tags }
+  if os_cold_flag_physical_cache in mem_flags then
+    for k := 1 to 1 do begin
+      map_entry(os_cold_map[k], status);
+      if status.all <> status_$ok then
+        return;
+    end
+  else
+    for k := 2 to 2 do begin
+      map_entry(os_cold_map[k], status);
+      if status.all <> status_$ok then
+        return;
+    end;
+
+  { the display }
+  if os_cold_flag_matrox in mem_flags then
+    for k := 9 to 13 do begin
+      map_entry(os_cold_map[k], status);
+      if status.all <> status_$ok then
+        return;
+    end
+  else if not (os_cold_flag_display_5d800 in mem_flags) then begin
+    for k := 3 to 4 do begin
+      map_entry(os_cold_map[k], status);
+      if status.all <> status_$ok then
+        return;
+    end;
+    cold_remap_csr_ppn := os_cold_map[3].pa div 1024;
+    cold_remap_csr_cnt := os_cold_map[3].count;
+    cold_remap_frm_ppn := os_cold_map[4].pa div 1024;
+    cold_remap_frm_cnt := os_cold_map[4].count;
+  end
+  else if os_cold_flag_display_256 in mem_flags then begin
+    for k := 7 to 8 do begin
+      map_entry(os_cold_map[k], status);
+      if status.all <> status_$ok then
+        return;
+    end;
+    cold_remap_csr_ppn := os_cold_map[7].pa div 1024;
+    cold_remap_csr_cnt := os_cold_map[7].count;
+    cold_remap_frm_ppn := os_cold_map[8].pa div 1024;
+    cold_remap_frm_cnt := os_cold_map[8].count;
+  end
+  else begin
+    for k := 5 to 6 do begin
+      map_entry(os_cold_map[k], status);
+      if status.all <> status_$ok then
+        return;
+    end;
+    cold_remap_csr_ppn := os_cold_map[5].pa div 1024;
+    cold_remap_csr_cnt := os_cold_map[5].count;
+    cold_remap_frm_ppn := os_cold_map[6].pa div 1024;
+    cold_remap_frm_cnt := os_cold_map[6].count;
+  end;
+%else
   for k := 1 to 9 do begin
     map_entry(os_cold_map[k], status);
     if status.all <> status_$ok then
       return;
   end;
+%endif
 
   globals_pa := cold_phys(addr(smaps.global_b[0]));
   va.ptr := addr(cold);

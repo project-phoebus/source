@@ -4,6 +4,8 @@
     sau2  0x00E6D92E  SMD_$ALLOC_HDM
     sau4  0x0F877FF0  SMD_$ALLOC_HDM
     sau5  0x00E6FC68  SMD_$ALLOC_HDM
+    sau6  0x78077056  SMD_$ALLOC_HDM
+    sau7  0x3C480EF4  SMD_$ALLOC_HDM
     sau9  0x3C474614  SMD_$ALLOC_HDM
 
   - First fit: the block is removed, or shortened from its start.

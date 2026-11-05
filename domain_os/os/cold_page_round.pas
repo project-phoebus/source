@@ -1,6 +1,7 @@
 { cold_page_round - an address rounded up to a page.
 
   Image addresses:
+    sau7  0x010029D6  cold_page_round (module-local)
     sau9  0x040030BE  cold_page_round (module-local)
 
   Status stored: none.

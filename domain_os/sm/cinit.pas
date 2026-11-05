@@ -4,6 +4,7 @@
     sau3  0x00E6DF5C  SM_$CINIT
     sau4  0x0F8776B2  SM_$CINIT
     sau5  0x00E6F2B4  SM_$CINIT
+    sau6  0x78076702  SM_$CINIT
 
   - When the PBU is present and the controller answers the probe, the
     controller's PBU interrupt is acquired, its PBU space allocated and

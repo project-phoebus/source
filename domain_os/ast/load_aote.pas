@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E0238C  AST_$LOAD_AOTE
     sau4  0x0F8027A4  AST_$LOAD_AOTE
+    sau6  0x78002B14  AST_$LOAD_AOTE
+    sau7  0x3C402F2A  AST_$LOAD_AOTE
     sau8  0x03C0271E  AST_$LOAD_AOTE
     sau9  0x3C40372A  AST_$LOAD_AOTE
 

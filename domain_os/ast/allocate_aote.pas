@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E01D66  ast_$allocate_aote (module-local)
     sau4  0x0F80217E  ast_$allocate_aote (module-local)
+    sau6  0x780024FA  ast_$allocate_aote (module-local)
+    sau7  0x3C402910  ast_$allocate_aote (module-local)
     sau9  0x3C403110  ast_$allocate_aote (module-local)
 
   - A free AOTE is taken from the free list's head.  Otherwise seven

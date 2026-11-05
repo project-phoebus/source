@@ -4,6 +4,8 @@
     sau3  0x00E590FE  PBU_$GET_INFO
     sau4  0x0F861D0A  PBU_$GET_INFO
     sau5  0x00E592CE  PBU_$GET_INFO
+    sau6  0x78060F8E  PBU_$GET_INFO
+    sau7  0x3C469A1C  PBU_$GET_INFO
     sau8  0x03C6192A  PBU_$GET_INFO
 
   - The three words 1, pbu_info_2 and pbu_info_3: 2 and 1 on the

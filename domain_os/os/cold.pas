@@ -2,6 +2,8 @@
   built before the MMU is on.
 
   Image addresses:
+    sau7  0x010027FC  OS_COLD data (COLD, 0x15C bytes: the boot map)
+    sau7  0x01002958  OS_COLD code (COLD_PROC, 0x728 bytes)
     sau9  0x04002FFC  OS_COLD data (COLD, 0x6C bytes: the boot map)
     sau9  0x04003068  OS_COLD code (COLD_PROC, 0x568 bytes)
 
@@ -30,9 +32,30 @@
     +0x54  CPU            0x20000     4         the CPU and utility pages
     +0x60  DISP1_MEM      0x1000000   0x100     the display memory
 
+  With `cold_ram_16mb' the RAM starts at 16 MB: the kernel is loaded at
+  0x1003C00 for OS_PROC, DUMP's copy is at 0x1000C00, the root table at
+  0x1001400, MMAP's first page is 0x4000, and COLD moves the kernel past
+  its first 0x54000 bytes to the pages from MOVE_TO_PPN.  With
+  `cold_probed_devices' the boot map has 29 entries: the kernel's and
+  the I/O pages' (14..29), mapped first, then by COLD's flags the
+  physical cache's tags (1 or 2) and the display's registers and memory
+  (3..13); the display's CSR and frame pages go to COLD's remap cells:
+
+    +0x000  CACHE_TAGS  0x3000000, 1 page; flag 1 set
+    +0x00C  CACHE_TAGS  0x12000, 8 pages; flag 1 clear
+    +0x018  DISP1 0x5E800, 2 pages; DISP1_MEM 0xA0000, 128; flag 0 clear
+    +0x030  DISP1 0x5D800, 2; DISP1_MEM 0xFA0000, 128; flag 0, not 4
+    +0x048  DISP1 0x5D800, 2; DISP1_MEM 0xFA0000, 256; flags 0 and 4
+    +0x060  DISP1 0xC6000, the Matrox FIFO and two controls (0xD40000,
+            0xD80000, 0xDA0000), a page each; DISP1_MEM 0x900000, 256;
+            flag 3
+    +0x09C  OS_BEGIN, DUMP, TRAP_PAGE, the PROM, COLD, the kernel in two
+            parts (OS_PROC's first 336 pages; the moved part, page
+            count 0), RARS
+    +0x0FC  MMU, SIO, TIMR, DMA, PIC1, MAST_ENBL_REG, SC_PAGE, IOMAP
+
   With the part cold_proc_tables (base/config.ins.pas): only the SAU7's
-  and the SAU9's maps have OS_COLD (the SAU7's another form, not
-  written); elsewhere the module is empty.
+  and the SAU9's maps have OS_COLD; elsewhere the module is empty.
 
   The routines live in one fragment file each (os/<name>.pas), included
   below in image order.  Check: tools/pascal_check.sh.
@@ -50,20 +73,56 @@ const
 
   { Where the loader and COLD put the kernel and the DUMP page, and the
     root table's page (RARS's physical home). }
+%if cold_ram_16mb %then
+  os_cold_kernel_pa = 16#01003C00;        { OS_PROC as loaded (file 0x2000) }
+  os_cold_dump_pa = 16#01000C00;          { DUMP's copy }
+  os_cold_rars_pa = 16#01001400;          { the root table }
+
+  { The kernel's first 0x54000 bytes stay where they were loaded; COLD
+    moves the rest to the pages from MOVE_TO_PPN. }
+  os_cold_kernel_low = 16#54000;
+
+  { The pageable memory's first page (MMAP's first entry), and MMAP's
+    size. }
+  os_cold_first_ppn = 16#4000;
+  os_cold_mmap_bytes = 16#80000;
+%else
   os_cold_kernel_pa = 16#04004400;        { OS_PROC as loaded (file 0x2000) }
   os_cold_dump_pa = 16#04001400;          { DUMP's copy }
   os_cold_rars_pa = 16#04001C00;          { the root table }
 
-  { The pageable memory's first page (MMAP's first entry). }
+  { The pageable memory's first page (MMAP's first entry), and MMAP's
+    size. }
   os_cold_first_ppn = 16#10000;
+  os_cold_mmap_bytes = 16#100000;
+%endif
 
   { Segments: global A's two tables at root indices 237 and 238; the
     global segments (global B) from root index 240 (VA 16#3C000000),
-    segment 30720; COLD's own segment is 2048 (VA 16#04000000). }
+    segment 30720; COLD's own segment is 2048 (VA 16#04000000), with
+    `cold_ram_16mb' 512 (VA 16#01000000). }
   os_cold_global_a_root = 237;
   os_cold_global_root = 240;
   os_cold_global_seg = 30720;
+%if cold_ram_16mb %then
+  os_cold_cold_seg = 512;
+%else
   os_cold_cold_seg = 2048;
+%endif
+%if cold_probed_devices %then
+
+  { COLD's flags (OS_$COLD_START's mem_flags), set by its probes: the
+    display at 0x5D800 (its id 9 or 11), the physical cache (the PROM's
+    machine id bit 3), the PROM's machine id bit 2 (without it the
+    segment descriptors are shared globally), the Matrox display (the
+    PROM's display word 16#C4000), and with the first, 256 pages of
+    display memory (id 9). }
+  os_cold_flag_display_5d800 = 0;
+  os_cold_flag_physical_cache = 1;
+  os_cold_flag_machine_id_2 = 2;
+  os_cold_flag_matrox = 3;
+  os_cold_flag_display_256 = 4;
+%endif
 
 type
   { A boot map entry's flags, a word. }
@@ -88,6 +147,10 @@ type
           flags: os_cold_flags_t);        { 0x0A }
       2: (va_io: integer32);              {   an I/O address }
   end;
+
+  { COLD's flags, a longword set (the SAU7 image tests its members;
+    `cold_probed_devices' names them). }
+  os_cold_mem_flags_t = set of 0..31;
 
   { The boot record's start, COLD's cold_boot_params: the PROM's D1 and
     D2, the boot flags D2's low word (a word set: the SAU9 image masks
@@ -194,7 +257,11 @@ type
   os_cold_sd_ptr_t = ^os_cold_sd_t;
   os_cold_pmap_ptr_t = ^os_cold_pmap_t;
   os_cold_mmape_ptr_t = ^os_cold_mmape_t;
+%if cold_ram_16mb %then
+  os_cold_mmap_ptr_t = ^array[16#4000..16#BFFF] of os_cold_mmape_t;
+%else
   os_cold_mmap_ptr_t = ^array[16#10000..16#1FFFF] of os_cold_mmape_t;
+%endif
   os_cold_root_ptr_t = ^os_cold_root_t;
   os_cold_lp_t = ^integer32;
 
@@ -214,6 +281,100 @@ var
   { The cells that keep the tables' physical addresses (DUMP's,
     dump/sau9/dump.s; MMU_ASM's are mmu/mmu.ins.pas's). }
   dump_$smap_phaddr, dump_$rars_phaddr: extern integer32;
+%if cold_ram_16mb %then
+  { MOVE_TO_PPN (map symbol, COLD_START's): the first page of the
+    kernel's moved part.  KERNEL_HI_VA (the linker script's): its first
+    VA, OS_PROC + os_cold_kernel_low; only its address is used. }
+  move_to_ppn: extern integer32;
+  kernel_hi_va: extern char;
+%endif
+%if cold_probed_devices %then
+  { The I/O pages the boot map names (map symbols of the I/O
+    definitions; only their addresses are used; MMU's is
+    mmu/mmu_page.ins.pas's). }
+  cache_tags, disp1, disp_matrox_fifo, disp_matrox_ctl1: extern char;
+  disp_matrox_ctl2, sio, timr, dma, pic1, mast_enbl_reg: extern char;
+  sc_page, iomap: extern char;
+  { COLD_START's display remap cells (map symbols): the display's CSR
+    and frame pages, and their page counts. }
+  cold_remap_csr_ppn, cold_remap_frm_ppn: extern integer32;
+  cold_remap_csr_cnt, cold_remap_frm_cnt: extern integer;
+
+  { The boot map (the module's data block). }
+  os_cold_map: array[1..29] of os_cold_map_entry_t := [
+    [pa := 16#03000000, va := addr(cache_tags), count := 1,
+     flags := [valid := true, write := true, seg_bit_1 := true]],
+    [pa := 16#00012000, va := addr(cache_tags), count := 8,
+     flags := [valid := true, write := true, seg_bit_1 := true]],
+    [pa := 16#0005E800, va := addr(disp1), count := 2,
+     flags := [valid := true, write := true, seg_bit_1 := true]],
+    [pa := 16#000A0000, va := addr(disp1_mem), count := 128,
+     flags := [valid := true, write := true, seg_bit_1 := true]],
+    [pa := 16#0005D800, va := addr(disp1), count := 2,
+     flags := [valid := true, write := true, seg_bit_1 := true]],
+    [pa := 16#00FA0000, va := addr(disp1_mem), count := 128,
+     flags := [valid := true, write := true, seg_bit_1 := true]],
+    [pa := 16#0005D800, va := addr(disp1), count := 2,
+     flags := [valid := true, write := true, seg_bit_1 := true]],
+    [pa := 16#00FA0000, va := addr(disp1_mem), count := 256,
+     flags := [valid := true, write := true, seg_bit_1 := true]],
+    [pa := 16#000C6000, va := addr(disp1), count := 1,
+     flags := [valid := true, write := true, seg_bit_1 := true]],
+    [pa := 16#00D40000, va := addr(disp_matrox_fifo), count := 1,
+     flags := [valid := true, write := true, seg_bit_1 := true]],
+    [pa := 16#00D80000, va := addr(disp_matrox_ctl1), count := 1,
+     flags := [valid := true, write := true, seg_bit_1 := true]],
+    [pa := 16#00DA0000, va := addr(disp_matrox_ctl2), count := 1,
+     flags := [valid := true, write := true, seg_bit_1 := true]],
+    [pa := 16#00900000, va := addr(disp1_mem), count := 256,
+     flags := [valid := true, write := true, seg_bit_1 := true]],
+    [pa := 16#01000000, va := addr(os_begin), count := 2,
+     flags := [valid := true, write := true, seg_bit_1 := true,
+               seg_bit_0 := true, mmap_bit_7 := true,
+               cacheable := true]],
+    [pa := 16#01000C00, va := addr(dump), count := 2,
+     flags := [valid := true, write := true, seg_bit_1 := true,
+               seg_bit_0 := true, mmap_bit_7 := true,
+               cacheable := true]],
+    [pa := 16#01001800, va := addr(trap_page), count := 1,
+     flags := [valid := true, write := true, seg_bit_1 := true,
+               seg_bit_0 := true, mmap_bit_7 := true,
+               cacheable := true]],
+    [pa := 16#00000400, va_io := 16#3FFA0400,       { PROM + 16#400 }
+     count := 63,
+     flags := [valid := true, seg_bit_1 := true, seg_bit_0 := true,
+               mmap_bit_7 := true, cacheable := true]],
+    [pa := 16#01001C00, va := addr(cold), count := 6,
+     flags := [valid := true, write := true, seg_bit_1 := true,
+               seg_bit_0 := true, mmap_bit_6 := true, cacheable := true]],
+    [pa := os_cold_kernel_pa, va := addr(os_proc), count := 336,
+     flags := [valid := true, write := true, seg_bit_1 := true,
+               seg_bit_0 := true, mmap_bit_7 := true,
+               cacheable := true]],
+    [pa := 0, va := addr(kernel_hi_va), count := 0,
+     flags := [valid := true, write := true, seg_bit_1 := true,
+               seg_bit_0 := true, mmap_bit_7 := true,
+               cacheable := true]],
+    [pa := os_cold_rars_pa, va := addr(rars), count := 1,
+     flags := [valid := true, write := true, seg_bit_1 := true,
+               mmap_bit_7 := true, cacheable := true]],
+    [pa := 16#00010000, va := addr(mmu), count := 1,
+     flags := [valid := true, write := true, seg_bit_1 := true]],
+    [pa := 16#00010400, va := addr(sio), count := 1,
+     flags := [valid := true, write := true, seg_bit_1 := true]],
+    [pa := 16#00010800, va := addr(timr), count := 1,
+     flags := [valid := true, write := true, seg_bit_1 := true]],
+    [pa := 16#00010C00, va := addr(dma), count := 1,
+     flags := [valid := true, write := true, seg_bit_1 := true]],
+    [pa := 16#00011000, va := addr(pic1), count := 1,
+     flags := [valid := true, write := true, seg_bit_1 := true]],
+    [pa := 16#00011600, va := addr(mast_enbl_reg), count := 1,
+     flags := [valid := true, write := true, seg_bit_1 := true]],
+    [pa := 16#00016400, va := addr(sc_page), count := 1,
+     flags := [valid := true, write := true, seg_bit_1 := true]],
+    [pa := 16#00017000, va := addr(iomap), count := 2,
+     flags := [valid := true, write := true, seg_bit_1 := true]]];
+%else
 
   { The boot map (the module's data block). }
   os_cold_map: array[1..9] of os_cold_map_entry_t := [
@@ -248,6 +409,7 @@ var
     [pa := 16#01000000, va := addr(disp1_mem), count := 256,
      flags := [valid := true, write := true, seg_bit_1 := true,
                cacheable := true]]];
+%endif
 
 { The global routine this module defines (ref 7.3.4, Method 2). }
 define

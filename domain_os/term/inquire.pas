@@ -4,6 +4,7 @@
     sau2  0x00E66D90  TERM_$INQUIRE
     sau3  0x00E67CFC  TERM_$INQUIRE
     sau4  0x0F870884  TERM_$INQUIRE
+    sau7  0x3C47A408  TERM_$INQUIRE
 
   - The option (0..32) picks a TTY_$K_ inquiry, the line's DTTE flag, or
     the serial parameters (SIO_$K_INQ_PARAM); the status is converted at

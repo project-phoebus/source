@@ -5,6 +5,8 @@
     sau4  0x0F883EC2  RING_$RCV0
     sau3  0x00E77E32  RING_$RCV0
     sau5  0x00E7D8DA  RING_$RCV0
+    sau6  0x78084C78  RING_$RCV0
+    sau7  0x3C48F730  RING_$RCV0
     sau8  0x03C82F30  RING_$RCV0
 
   - It runs RING_$RCV_FROM_UNIT_PRIV for unit 0, which never returns.

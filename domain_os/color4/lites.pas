@@ -1,6 +1,7 @@
 { COLOR4_$LITES - draw the lights.
 
   Image addresses:
+    sau7  0x3C48C020  COLOR4_$LITES
     sau8  0x03C8033C  COLOR4_$LITES
 
   - Sixteen lights, one per bit of pattern (bit 0 first), each a word of

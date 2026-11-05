@@ -4,6 +4,8 @@
     sau2  0x00E34EB2  SMD_$INIT_BLINK
     sau4  0x0F8382BC  SMD_$INIT_BLINK
     sau5  0x00E37268  SMD_$INIT_BLINK
+    sau6  0x7803E8A0  SMD_$INIT_BLINK
+    sau7  0x3C43E634  SMD_$INIT_BLINK
     sau9  0x3C43B604  SMD_$INIT_BLINK
 
   - The first blink callback is queued 125000 ticks from now, only when

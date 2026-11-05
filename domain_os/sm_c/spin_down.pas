@@ -4,6 +4,7 @@
     sau3  0x00E6FA78  SM_C_$SPIN_DOWN
     sau4  0x0F87C7F0  SM_C_$SPIN_DOWN
     sau5  0x00E755E0  SM_C_$SPIN_DOWN
+    sau6  0x7807C2A8  SM_C_$SPIN_DOWN
 
   - A unit that answers the restore command is still spinning: a warning
     goes to the crash console, and the result is 20 instead of 0.

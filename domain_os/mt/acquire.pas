@@ -4,9 +4,11 @@
     sau3  0x00E7017E  MT_$ACQUIRE
     sau4  0x0F87CEF6  MT_$ACQUIRE
     sau5  0x00E75CE8  MT_$ACQUIRE
+    sau6  0x7807C9A2  MT_$ACQUIRE
     sau3  0x00E700A4  init_unit (nested)
     sau4  0x0F87CE1C  init_unit (nested)
     sau5  0x00E75C0C  init_unit (nested)
+    sau6  0x7807C8CE  init_unit (nested)
 
   - The first acquisition wires the driver's pages (the MT page and the
     MT_$SIO code); while the controller is not enabled it is set up,

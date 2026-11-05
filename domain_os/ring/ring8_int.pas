@@ -1,10 +1,13 @@
 { RING8_$INT - the ring controller's interrupt, for both units.
 
   Image addresses:
+    sau7  0x3C48E330  RING8_$INT
     sau8  0x03C81B30  RING8_$INT
     sau9  0x3C47D730  RING8_$INT
+    sau7  0x3C48E24A  ring8_$unit_int (nested)
     sau8  0x03C81A4A  ring8_$unit_int (nested)
     sau9  0x3C47D64A  ring8_$unit_int (nested)
+    sau7  0x3C48E2FA  ring8_$start_rx (nested)
     sau8  0x03C81AFA  ring8_$start_rx (nested)
     sau9  0x3C47D6FA  ring8_$start_rx (nested)
 

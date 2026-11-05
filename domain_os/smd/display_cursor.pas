@@ -4,6 +4,7 @@
     sau2  0x00E6E080  SMD_$DISPLAY_CURSOR
     sau4  0x0F878808  SMD_$DISPLAY_CURSOR
     sau5  0x00E704E4  SMD_$DISPLAY_CURSOR
+    sau6  0x78077880  SMD_$DISPLAY_CURSOR
 
   Status stored:
     smd_$cursor_op's status: always

@@ -2,6 +2,7 @@
   into a status.
 
   Image addresses:
+    sau7  0x3C484CE8  SCSI_WAIT
     sau9  0x3C47740C  SCSI_WAIT
 
   - After a reset (ct_scsi_reset) the reset's status is answered once,

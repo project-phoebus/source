@@ -1,6 +1,7 @@
 { COLOR5_$DISPLAY_LOGO - copy the boot logo into display memory.
 
   Image addresses:
+    sau7  0x3C484252  COLOR5_$DISPLAY_LOGO
     sau8  0x03C79AFE  COLOR5_$DISPLAY_LOGO
 
   - The display memory, its line length times its lines, is mapped here

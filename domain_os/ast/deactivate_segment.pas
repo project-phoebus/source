@@ -2,10 +2,14 @@
 
   Image addresses:
     sau2  0x00E01950  ast_$deactivate_segment (module-local)
-    sau4  0x0F801D58  ast_$deactivate_segment (module-local)
-    sau9  0x3C402CFE  ast_$deactivate_segment (module-local)
     sau2  0x00E01872  ast_$deactivate_segment_log (nested)
+    sau4  0x0F801D58  ast_$deactivate_segment (module-local)
     sau4  0x0F801C82  ast_$deactivate_segment_log (nested)
+    sau6  0x780020E8  ast_$deactivate_segment (module-local)
+    sau6  0x78002012  ast_$deactivate_segment_log (nested)
+    sau7  0x3C4024FE  ast_$deactivate_segment (module-local)
+    sau7  0x3C402426  ast_$deactivate_segment_log (nested)
+    sau9  0x3C402CFE  ast_$deactivate_segment (module-local)
     sau9  0x3C402C26  ast_$deactivate_segment_log (nested)
 
   - With the AST lock released, the segment's pages are flushed and,

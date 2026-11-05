@@ -1,10 +1,10 @@
 /*
  * smd/m68k/national_ktt.s - the national keyboard translation tables
- * (SAU2, SAU5, SAU9)
+ * (SAU2, SAU5, SAU7, SAU9)
  *
  * The keyboard tables MNK_$KTT_PTRS (smd/m68k/wired_data.s) points at,
  * 0x100 bytes each; NORWEGIAN and SWEDISH are one table under two names.
- * The SAU2, SAU5 and SAU9 images have the same bytes; the address
+ * The SAU2, SAU5, SAU7 and SAU9 images have the same bytes; the address
  * columns below are the SAU2 image's.
  *
  * Where they are:
@@ -18,6 +18,8 @@
  *         with no zero word (MONO9 follows); its SMD_UTILS has no drawing
  *         code (the driver draws through its devices: `display_devices',
  *         base/config.ins.pas)
+ *   SAU7  I 3C4831D0 SMD_UTILS size = 500  (.TEXT): the SAU9's form
+ *         (COLOR6 follows)
  *
  * A section of its own, keyed by SMD_$GERMAN_KTT: on the SAU2 and SAU5 it
  * follows the stubs' section in the link as the bytes follow them in the

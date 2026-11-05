@@ -1,6 +1,7 @@
 { ATBUS_$INT - dispatch an AT bus interrupt to its handler.
 
   Image addresses:
+    sau7  0x3C40C104  ATBUS_$INT
     sau8  0x03C0B7B0  ATBUS_$INT
 
   - The interrupt's controller input is masked and the controller told

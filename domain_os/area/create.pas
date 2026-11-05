@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E079C0  AREA_$CREATE
     sau4  0x0F807CAE  AREA_$CREATE
+    sau6  0x78007EFC  AREA_$CREATE
+    sau7  0x3C4087F0  AREA_$CREATE
     sau9  0x3C408FF0  AREA_$CREATE
 
   - A local create (remote UID 0) for the running process's address

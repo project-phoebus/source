@@ -4,6 +4,8 @@
     sau2  0x00E6FBC6  SMD_$LOAD_CRSR_BITMAP
     sau4  0x0F87A486  SMD_$LOAD_CRSR_BITMAP
     sau5  0x00E7207C  SMD_$LOAD_CRSR_BITMAP
+    sau6  0x78079390  SMD_$LOAD_CRSR_BITMAP
+    sau7  0x3C482980  SMD_$LOAD_CRSR_BITMAP
     sau9  0x3C4760A0  SMD_$LOAD_CRSR_BITMAP
 
   - The pattern is stored with the display acquired, yorg turned into the

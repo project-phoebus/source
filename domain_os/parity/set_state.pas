@@ -1,6 +1,7 @@
 { PARITY_$SET_STATE - note the pages a DMA channel's transfer uses.
 
   Image addresses:
+    sau7  0x3C40CC10  PARITY_$SET_STATE
     sau8  0x03C0C0FC  PARITY_$SET_STATE
     sau9  0x3C40D09A  PARITY_$SET_STATE
 

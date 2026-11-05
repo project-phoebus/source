@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E7080E  GPU_$TERM
     sau5  0x00E73D34  GPU_$TERM
+    sau6  0x7807ACB0  GPU_$TERM
 
   - Without `gpu_driver' (base/config.ins.pas; the SAU2) an empty
     procedure.

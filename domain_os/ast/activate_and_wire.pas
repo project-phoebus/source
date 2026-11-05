@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E02FB8  AST_$ACTIVATE_AND_WIRE
     sau4  0x0F8033E6  AST_$ACTIVATE_AND_WIRE
+    sau6  0x7800371C  AST_$ACTIVATE_AND_WIRE
+    sau7  0x3C403B0C  AST_$ACTIVATE_AND_WIRE
     sau9  0x3C40430C  AST_$ACTIVATE_AND_WIRE
 
   - Under the AST lock the object's AOTE is looked up, or the object

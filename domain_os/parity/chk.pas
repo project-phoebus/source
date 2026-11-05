@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E0AE68  PARITY_$CHK
+    sau7  0x3C40C880  PARITY_$CHK
     sau8  0x03C0BE18  PARITY_$CHK
     sau9  0x3C40CD04  PARITY_$CHK
 
@@ -23,6 +24,13 @@
     channel's transfer, or status bit 10, is only logged (the page
     flagged); bit 0 of the privilege byte is off while PAR_BUFF's
     longwords are read until the register shows a lane.
+  - With `parity_cache_check' as well, on a ROADRUNNER board the
+    physical cache is off while the check runs, an error the cache
+    register shows crashes the system first, and status bit 14 moves
+    the error's address to the second longword of the memory's 8-byte
+    word; an error with status bit 9 (an AT bus channel check) is only
+    logged, and one that is still set when no lane failed crashes the
+    system.
   - Returns false for a DMA or spurious error, else true.
 
   Status stored: none.
@@ -208,6 +216,9 @@ var
   log_entry: parity_$log_entry_t;
   unused_a: integer32;                    { the stand-ins (TODO) }
   unused_b: integer32;
+%if parity_cache_check %then
+  cache_status: parity_$cache_status_t;
+%endif
   unused_c: integer32;
   saved_asid: integer;
   did_install: boolean;
@@ -219,12 +230,25 @@ var
   ch: integer;
   found: boolean;
 begin
+%if parity_cache_check %then
+  { the physical cache off; an error of its own crashes the system }
+  if roadrunner then begin
+    cache_$disable_physical;
+    cache_status := mmu.cache;
+    if cache_status.bit_15 or else cache_status.bit_14
+       or else cache_status.bit_9 or else cache_status.bit_13 then
+      crash_system(fault_$cache_parity);
+  end;
+%endif
   result := true;
   did_install := false;
   with parity_$info do begin
     err.va := 0;
     err.pa := 0;
     err_data := 0;
+%if parity_cache_check %then
+    err_longword := 0;
+%endif
 
     { a check under way }
     if chk_in_progress then
@@ -236,9 +260,19 @@ begin
     if not (err_status.lane_0_err or err_status.lane_1_err
             or err_status.lane_2_err or err_status.lane_3_err) then
       goto spurious;
+%if parity_cache_check %then
+    err_ppn := mmu_$parity_ppn;
+    if roadrunner and then err_status.bit_14 then
+      err_longword := 1;
+    err.pa := lshft(err_ppn, 10);
+    mmu.status.all := 0;
+    if roadrunner then
+      err.pa := err.pa + err_longword * 4;
+%else
     err_ppn := mmu_$parity_ppn & 16#3FFF;
     err.pa := lshft(err_ppn, 10);
     mmu.status.all := 0;
+%endif
 
     { a page of a DMA channel's transfer, or bit 10: the page flagged,
       the error only logged }
@@ -255,7 +289,11 @@ begin
           found := true;
           exit;
         end;
+%if parity_cache_check %then
+    if (found or err_status.bit_10) or else err_status.bit_9 then begin
+%else
     if found or else err_status.bit_10 then begin
+%endif
       result := false;
       goto log_error;
     end;
@@ -297,6 +335,11 @@ begin
 
     { no error found }
 spurious:
+%if parity_cache_check %then
+    if mmu.status.bit_9 then
+      crash_system(fault_$io_chan_chk);
+    mmu.status.all := 0;
+%endif
     spurious_count := spurious_count + 1;
     result := false;
     if spurious_count = 0 then
@@ -329,6 +372,10 @@ finish:
       mmu_$remove(addr(par_buff), 0);
     cache_$clear;
   end;
+%if parity_cache_check %then
+  if roadrunner then
+    cache_$enable_physical;
+%endif
   parity_$chk := result;
 end;
 %else

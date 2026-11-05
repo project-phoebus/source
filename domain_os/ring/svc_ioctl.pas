@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E776B8  RING_$SVC_IOCTL
     sau3  0x00E78EA8  RING_$SVC_IOCTL
+    sau6  0x78085CA2  RING_$SVC_IOCTL
+    sau7  0x3C49077A  RING_$SVC_IOCTL
     sau8  0x03C83F7A  RING_$SVC_IOCTL
 
   - Command 1 answers 1; 2 adds packet-type ranges to the channel

@@ -2,6 +2,8 @@
   driver.
 
   Image addresses:
+    sau6  0x780A2004  ETHERNET data (ETHER_DATA, 0xE0 bytes)
+    sau7  0x3C4B0C04  ETHERNET data (ETHER_DATA, 0xE0 bytes)
     sau8  0x03C9FC04  ETHERNET data (ETHER_DATA, 0xE0 bytes)
     sau9  0x3C49F804  ETHERNET data (ETHER_DATA, 0xE0 bytes)
 
@@ -20,6 +22,14 @@
   hand assembly (ethernet/m68k/ethernet_asm.s).  Two more sections hold
   the driver's objects: ETHER_UCB (0x2570 bytes, the two units' records)
   and ETHERNET_$BUFFER (0x1000 bytes), overlay sections declared below.
+
+  With `ethernet_vme' (the SAU6): the driver of the Ethernet controller
+  on the VME bus.  The map's ETHERNET code segment is 0x48BC bytes (39
+  module-local routines, the nested one and 20 map routines: no
+  ETHERNET_$LOAD, and no ETHERNET_ASM segment); ETHER_UCB is 0x2670
+  bytes, and ETHERNET_VME_$SH (0x3848 bytes, the units' blocks the
+  controller shares) takes ETHERNET_$BUFFER's place.  The driver
+  record's detach entry is nil.
 
   Not part of the module: ETHER_PROC_START and ETHER_PROC_END, the zero
   longwords on either side of the code section; with ETHER_DATA_START
@@ -78,19 +88,29 @@ module ethernet, ether_proc, ether_data;
 %include 'os/os.ins.pas';
 %include 'fim/fim.ins.pas';
 %include 'network/network.ins.pas';
+%if ethernet_vme %then
+%include 'sysbus/sysbus.ins.pas';
+%endif
 %endif
 %include 'ethernet/ethernet.ins.pas';
 %if ethernet_driver %then
 %include 'ethernet/ethernet_3c505.ins.pas';
 
 { The two units' records (the map's ETHER_UCB, a load section with no
-  module segment in it, 0x2570 bytes) and the driver's buffer (the map's
-  ETHERNET_$BUFFER, 0x1000 bytes): overlay sections (ref 3.14 p. 3-52;
-  7.2.4, Method 4). }
+  module segment in it, 0x2570 bytes; with `ethernet_vme' 0x2670) and
+  the driver's buffer (the map's ETHERNET_$BUFFER, 0x1000 bytes), or
+  with `ethernet_vme' the units' blocks the controller shares (the
+  map's ETHERNET_VME_$SH, 0x3848 bytes): overlay sections (ref 3.14
+  p. 3-52; 7.2.4, Method 4). }
 var (ether_ucb)
   ether_ucb: array[0..eth_max_unit] of ethernet_$unit_t;
+%if ethernet_vme %then
+var (ethernet_vme_$sh)
+  ethernet_vme_$sh: array[0..eth_max_unit] of ethernet_$vme_sh_t;
+%else
 var (ethernet_$buffer)
   ethernet_$buffer: array[0..4095] of char;
+%endif
 
 { The module's own variables, in the order of the data block (above). }
 var
@@ -104,7 +124,11 @@ var
     get_stats2 := addr(ethernet_$get_stats2),
     start := addr(ethernet_$start),
     stop := addr(ethernet_$stop),
+%if ethernet_vme %then
+    detach := nil,
+%else
     detach := addr(ethernet_$load),
+%endif
     proc2_cleanup := addr(ethernet_$proc2_cleanup),
     ioctl := addr(ethernet_$ioctl),
     svc_open := addr(ethernet_$svc_open),
@@ -129,7 +153,9 @@ define
 %if ethernet_driver %then
   ethernet_$start;
   ethernet_$stop;
+%if not ethernet_vme %then
   ethernet_$load;
+%endif
   ethernet_$send;
   ethernet_$get_stats;
   ethernet_$get_stats2;
@@ -157,20 +183,30 @@ define
 %include 'ethernet/unwire_driver.pas';      { ethernet_unwire_driver }
 %include 'ethernet/probe.pas';              { ethernet_probe }
 %include 'ethernet/reset.pas';              { ethernet_reset }
+%if ethernet_vme %then
+%include 'ethernet/kick.pas';               { ethernet_kick }
+%else
 %include 'ethernet/get_pcb.pas';            { ethernet_get_pcb }
 %include 'ethernet/send_pcb.pas';           { ethernet_send_pcb }
+%endif
 %include 'ethernet/start_cmd.pas';          { ethernet_start_cmd }
 %include 'ethernet/wait_cmd.pas';           { ethernet_wait_cmd }
+%if not ethernet_vme %then
 %include 'ethernet/do_cmd.pas';             { ethernet_do_cmd }
+%endif
 %include 'ethernet/get_rcv_bufs.pas';       { ethernet_get_rcv_bufs }
 %include 'ethernet/start_rcv.pas';          { ethernet_start_rcv }
 %include 'ethernet/configure.pas';          { ethernet_configure }
+%if not ethernet_vme %then
 %include 'ethernet/do_cmd_polled.pas';      { ethernet_do_cmd_polled }
+%endif
 %include 'ethernet/setup.pas';              { ethernet_setup }
 %include 'ethernet/start_unit.pas';         { ethernet_start_unit }
 %include 'ethernet/stop_rcv.pas';           { ethernet_stop_rcv }
+%if not ethernet_vme %then
 %include 'ethernet/download.pas';           { ethernet_download }
 %include 'ethernet/execute.pas';            { ethernet_execute }
+%endif
 %include 'ethernet/transmit.pas';           { ethernet_transmit }
 %include 'ethernet/rcv_packet.pas';         { drain, ethernet_rcv_packet }
 %include 'ethernet/arp_request.pas';        { ethernet_arp_request }
@@ -192,7 +228,9 @@ define
 %if ethernet_driver %then
 %include 'ethernet/start.pas';              { ETHERNET_$START }
 %include 'ethernet/stop.pas';               { ETHERNET_$STOP }
+%if not ethernet_vme %then
 %include 'ethernet/load.pas';               { ETHERNET_$LOAD }
+%endif
 %include 'ethernet/send.pas';               { ETHERNET_$SEND }
 %include 'ethernet/get_stats.pas';          { ETHERNET_$GET_STATS }
 %include 'ethernet/get_stats2.pas';         { ETHERNET_$GET_STATS2 }

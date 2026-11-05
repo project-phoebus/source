@@ -4,6 +4,8 @@
     sau3  0x00E58AC4  PBU2_$ALLOCATE_MAP
     sau4  0x0F861804  PBU2_$ALLOCATE_MAP
     sau5  0x00E58AC4  PBU2_$ALLOCATE_MAP
+    sau6  0x78060730  PBU2_$ALLOCATE_MAP
+    sau7  0x3C469530  PBU2_$ALLOCATE_MAP
     sau8  0x03C615E4  PBU2_$ALLOCATE_MAP
 
   - IO_$ALLOC_MAP for the unit's I/O unit; its start is the result

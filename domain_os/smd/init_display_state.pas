@@ -4,6 +4,8 @@
     sau2  0x00E6F514  smd_$init_display_state (module-local)
     sau4  0x0F879D38  smd_$init_display_state (module-local)
     sau5  0x00E71902  smd_$init_display_state (module-local)
+    sau6  0x78078C5A  smd_$init_display_state (module-local)
+    sau7  0x3C482412  smd_$init_display_state (module-local)
     sau9  0x3C475B32  smd_$init_display_state (module-local)
 
   - With the display acquired, the controller gets SMD_$ACQ_DISPLAY's

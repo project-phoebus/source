@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E0255C  ast_$lookup_or_create_aste (module-local)
     sau4  0x0F802974  ast_$lookup_or_create_aste (module-local)
+    sau6  0x78002CDE  ast_$lookup_or_create_aste (module-local)
+    sau7  0x3C4030F4  ast_$lookup_or_create_aste (module-local)
     sau9  0x3C4038F4  ast_$lookup_or_create_aste (module-local)
 
   Assume we're called with the AST lock held.

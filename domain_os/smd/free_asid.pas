@@ -5,6 +5,8 @@
     sau3  0x00E767F0  SMD_$FREE_ASID
     sau4  0x0F882A0C  SMD_$FREE_ASID
     sau5  0x00E7C3F0  SMD_$FREE_ASID
+    sau6  0x780838B8  SMD_$FREE_ASID
+    sau7  0x3C48BA70  SMD_$FREE_ASID
     sau9  0x3C47CDCC  SMD_$FREE_ASID
 
   - For each display unit (1 here, 1 and 2 with `two_display_units',

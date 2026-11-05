@@ -3,6 +3,7 @@
 
   Image addresses:
     sau5  0x00E8C3B8  GPU data (.DATA, 0x5DC bytes)
+    sau6  0x7809F710  GPU data (.DATA, 0x5DC bytes)
 
   One compilation unit.  On the SAU2 one code segment and no data: the
   map's GPU code segment (section .TEXT, 0x14 bytes) holds GPU_$INIT and
@@ -20,7 +21,11 @@
   driver: code in OS_INIT_PROC (0x120 bytes on the SAU5, GPU_$COLD_INIT)
   and .TEXT (0x116C: GPU_$INIT .. GPU_$DIAG_WIRE and eleven module-local
   routines), and the .DATA block below.  Its hand-written GPU_ASM data
-  is gpu/sau5/gpu_asm.s.
+  is gpu/sau5/gpu_asm.s, and the SAU6's gpu/sau6/gpu_asm.s (two
+  interrupt handlers on vectors of their own, `gpu_own_vectors').  On
+  the SAU6 OS_INIT_PROC's code is 0x1A4 bytes and .TEXT's 0x11AC: the
+  register writes after a reset (`gpu_reset_registers') and the
+  physical page table from page 16#4000 (`mmap_ppns_4000').
 
   The .DATA block, 0x5DC bytes, zero in the SAU5 image; module variables
   in its order:

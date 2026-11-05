@@ -2,6 +2,8 @@
 
   Image addresses:
     sau2  0x00E1C9FC  kbd_$state_lookup (module-local)
+    sau6  0x7801E8F0  kbd_$state_lookup (module-local)
+    sau7  0x3C420BDC  kbd_$state_lookup (module-local)
 
   - The state's entries are kbd_$state_range[state].first .. limit - 1;
     when none matches, entry limit is the state's default.

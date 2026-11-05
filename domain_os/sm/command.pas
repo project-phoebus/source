@@ -5,6 +5,7 @@
     sau3  0x00E6DE20  sm_$command (module-local)
     sau4  0x0F87759C  sm_$command (module-local)
     sau5  0x00E6F178  sm_$command (module-local)
+    sau6  0x78076604  sm_$command (module-local)
 
   - The other command words (cylinder, head, buffer) are its callers'.
   - The wait for completion ends when the clock's high half advances by

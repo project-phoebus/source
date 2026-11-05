@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E24304  MST_WIRED data (WIRED_DATA, 0x164 bytes)
     sau4  0x0F82658C  MST_WIRED data (WIRED_DATA, 0x400 bytes)
+    sau6  0x78026E54  MST_WIRED data (WIRED_DATA, 0xA58 bytes)
+    sau7  0x3C4296CC  MST_WIRED data (WIRED_DATA, 0xA58 bytes)
     sau8  0x03C25EB0  MST_WIRED data (WIRED_DATA, 0x6E8 bytes)
     sau9  0x3C427298  MST_WIRED data (WIRED_DATA, 0xA58 bytes)
 
@@ -177,7 +179,7 @@ define
   mst_$seg_global_a := 16#640;            { +0x6E0 }
   mst_$global_a_size := 192;              { +0x6E2 }
   mst_$seg_tn := 1664;                    { +0x6E4 }
-%elseif not (large_address_space or vm_8192_segs) %then
+%elseif not (large_address_space or vm_8192_segs or vm_65536_segs) %then
   mst_$global_b_size := 96;               { +0x146 }
   mst_$seg_mem_top := 16#200;             { +0x148 }
   mst_$seg_high := 16#1F8;                { +0x14A }

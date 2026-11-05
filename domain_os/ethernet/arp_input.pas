@@ -2,6 +2,8 @@
   answer ARP requests for this node.
 
   Image addresses:
+    sau6  0x78087EEC  ethernet_arp_input
+    sau7  0x3C492394  ethernet_arp_input
     sau8  0x03C85B90  ethernet_arp_input
     sau9  0x3C481790  ethernet_arp_input
 

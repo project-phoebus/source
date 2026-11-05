@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E1A404  CHK
     sau3  0x00E1949C  CHK
+    sau7  0x3C41DF6C  CHK
     sau8  0x03C1B588  CHK
 
   - IO_$DCTE_LIST's entries of the type are walked, a match with status

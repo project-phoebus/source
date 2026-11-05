@@ -75,6 +75,16 @@ handler is the alignment pad, not a result slot: kbd_$set_type is a
 procedure (no caller reads D0), and the handler a procedure type
 (KBD_$RCV reads nothing after the call).
 
+## The SAU6
+
+The SAU6's KBD segments are the SAU9's sizes and code but OS_INIT_PROC,
+0xA4 bytes: KBD_$INIT takes the keyboard's type from the system
+revision word (`kbd_type_sysrev`, base/config.ins.pas), "2" when its
+keyboard bit is set and "3" otherwise, where the other forms always
+take "2".  The other routines, the module-locals and both data blocks
+are the SAU9's bytes but for the absolute addresses.  KBD_$RESET
+(OS_TERM_INIT's, `reset.pas`) has its own `kbd_type_sysrev` arm.
+
 ## The SAU3
 
 The DSP has no keyboard (`display_driver` off, base/config.ins.pas): the

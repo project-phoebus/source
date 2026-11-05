@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E2298C  PARITY data (WIRED_DATA, 4 bytes)
+    sau7  0x3C427C34  PARITY data (WIRED_DATA, 0x24 bytes)
     sau8  0x03C242E4  PARITY data (WIRED_DATA, 0x24 bytes)
     sau9  0x3C42571C  PARITY data (WIRED_DATA, 0x18C bytes)
 
@@ -120,11 +121,16 @@ type
 
   { MMU's page as PARITY_$CHK reaches it: the CPU status register's
     word at +0 and the CPU control register's at +0x100 (the Technical
-    Reference's two registers, a page apart). }
+    Reference's two registers, a page apart); with `parity_cache_check'
+    the physical cache's register at +0x200. }
   mmu_$cpu_regs_t = [device] record
     status: parity_$cpu_status_t;         { 0x000 }
     unused_002: array[1..127] of integer; { 0x002 }
     control: mmu_$pid_priv_t;             { 0x100 }
+%if parity_cache_check %then
+    unused_102: array[1..127] of integer; { 0x102 }
+    cache: parity_$cache_status_t;        { 0x200 }
+%endif
   end;
 
   { The latch-page-on-parity-error register's word. }
@@ -142,6 +148,14 @@ var
     Reference's latch-page-on-parity-error register, the failing page's
     number in its low 14 bits. }
   mmu_$parity_ppn: extern mmu_$parity_ppn_reg_t;
+%if parity_cache_check %then
+
+  { ROADRUNNER (map symbol without `$', in the hand-written MMU_ASM's
+    data): a boolean, its first byte's sign, set on the boards with the
+    physical cache (mmu/mmu.ins.pas declares it too, a file this module
+    does not include). }
+  roadrunner: extern boolean;
+%endif
 %endif
 
 { The global routines and variable this module defines (ref 7.3.4 and

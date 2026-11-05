@@ -2,6 +2,7 @@
 
   Image addresses:
     sau5  0x00E741D0  GPU_$CMND
+    sau6  0x7807B14A  GPU_$CMND
 
   - A processor that is not ready is reset; one without the process's
     context is flushed and given the process's pages again.

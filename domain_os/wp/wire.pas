@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E071B0  WP_$WIRE
     sau4  0x0F80751A  WP_$WIRE
+    sau6  0x7800776E  WP_$WIRE
     sau9  0x3C4083EA  WP_$WIRE
 
   - MMAP_$WIRE under ml_$pmap_lock.  A routine of the AST_ module.

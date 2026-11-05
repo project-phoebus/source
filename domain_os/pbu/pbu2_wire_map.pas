@@ -5,6 +5,8 @@
     sau3  0x00E59D7E  PBU2_$WIRE_MAP
     sau4  0x0F86292A  PBU2_$WIRE_MAP
     sau5  0x00E59FDE  PBU2_$WIRE_MAP
+    sau6  0x78061C58  PBU2_$WIRE_MAP
+    sau7  0x3C46A5AE  PBU2_$WIRE_MAP
     sau8  0x03C62476  PBU2_$WIRE_MAP
 
   - Under the exclusion lock each page is wired for the unit

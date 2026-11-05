@@ -4,6 +4,8 @@
     sau2  0x00E1D114  SIO2681_$SET_BREAK
     sau3  0x00E1C288  SIO2681_$SET_BREAK
     sau4  0x0F81E328  SIO2681_$SET_BREAK
+    sau6  0x7801F208  SIO2681_$SET_BREAK
+    sau7  0x3C4214F4  SIO2681_$SET_BREAK
     sau8  0x03C1E8AC  SIO2681_$SET_BREAK
 
   - Under the driver's spin lock the start-break command (enable true)

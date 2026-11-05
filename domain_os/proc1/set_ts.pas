@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E14A08  PROC1_$SET_TS
     sau4  0x0F81527C  PROC1_$SET_TS
+    sau6  0x780151B8  PROC1_$SET_TS
+    sau7  0x3C416710  PROC1_$SET_TS
 
   - The element expires timeslice ticks of the process's own CPU time
     from now.  TIME_$Q_REENTER_ELEM's status is ignored.

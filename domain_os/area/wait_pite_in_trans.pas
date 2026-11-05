@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E0778E  area_$wait_pite_in_trans (module-local)
     sau4  0x0F807A7C  area_$wait_pite_in_trans (module-local)
+    sau6  0x78007CCA  area_$wait_pite_in_trans (module-local)
+    sau7  0x3C4085BE  area_$wait_pite_in_trans (module-local)
     sau9  0x3C408DBE  area_$wait_pite_in_trans (module-local)
 
   Assume we're called with the AST lock held.

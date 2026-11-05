@@ -3,6 +3,8 @@
 
   Image addresses:
     sau4  0x0F882188  mst_$free_region (module-local)
+    sau6  0x78082FD8  mst_$free_region (module-local)
+    sau7  0x3C48B14E  mst_$free_region (module-local)
     sau8  0x03C7F3EA  mst_$free_region (module-local)
     sau9  0x3C47C4AA  mst_$free_region (module-local)
 
@@ -25,7 +27,8 @@
   - With the region registers the region's register is made invalid
     when its RARS page is installed, and loaded into the MMU when the
     address space is the current one; the group's BST page and its
-    four MST words are given back with the region.
+    four MST words are given back with the region; without them (the
+    65536 segments) the region's RARS entry is made invalid alone.
 
   Status stored: none.
 }
@@ -79,12 +82,16 @@ var
 begin
   if region in mst_$regions_active[asid] then begin
     mst_$set_clear(mst_$regions_active[asid], mst_region_members, region);
+%if region_registers %then
     { the region register, in its page of RARS (8 ASIDs' to a page) }
     if rshft(asid, 3) in mst_$rar_pages then begin
       rars[rars_asid_base[asid] + region].rar.valid := false;
       if asid = proc1_$as_id then
         mmu_$install_region(region, rars[rars_asid_base[asid] + region].all);
     end;
+%else
+    rars[rars_asid_base[asid] + region].rar.valid := false;
+%endif
     seg := group * mst_region_segs;
     mst_$unwire_page(addr(smaps[seg + smap_asid_base[asid]]));
     page := seg div 256;

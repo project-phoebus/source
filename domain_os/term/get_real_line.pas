@@ -4,6 +4,7 @@
     sau2  0x00E1A9D4  TERM_$GET_REAL_LINE
     sau3  0x00E1A038  TERM_$GET_REAL_LINE
     sau4  0x0F81BBE8  TERM_$GET_REAL_LINE
+    sau7  0x3C41EBC0  TERM_$GET_REAL_LINE
 
   - Line 0, and line 1 for process 1, become the display's control line;
     the result is the line, also on a refusal.  The compares are

@@ -8,6 +8,10 @@
     sau4  0x0F814058  PMAP_$FLUSH
     sau4  0x0F813E88  pmap_$update_seg_map (nested)
     sau4  0x0F813EF8  pmap_$flush_write_batch (nested)
+    sau6  0x78013F92  PMAP_$FLUSH
+    sau7  0x3C4154D6  PMAP_$FLUSH
+    sau7  0x3C415308  pmap_$update_seg_map (nested)
+    sau7  0x3C415378  pmap_$flush_write_batch (nested)
     sau8  0x03C14986  PMAP_$FLUSH
     sau8  0x03C147B8  pmap_$update_seg_map (nested)
     sau8  0x03C14828  pmap_$flush_write_batch (nested)

@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E143B2  PMAP_$UPDATE_CALLBACK
     sau4  0x0F814C26  PMAP_$UPDATE_CALLBACK
+    sau6  0x78014B7E  PMAP_$UPDATE_CALLBACK
+    sau7  0x3C4160D4  PMAP_$UPDATE_CALLBACK
     sau9  0x3C416698  PMAP_$UPDATE_CALLBACK
 
   - AST_$UPDATE writes the objects' attributes back.

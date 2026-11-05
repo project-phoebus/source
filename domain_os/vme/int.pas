@@ -1,3 +1,30 @@
+%if vme_vectored_ints %then
+{ VME_$INT - the VME bus's interrupt routine: call the handler of the
+  user interrupt whose vector it was entered by.
+
+  Image addresses:
+    sau6  0x7800B600  VME_$INT
+
+  - The vector gives the user interrupt (vme_$user_vector_base on); its
+    VME_$USER_VEC entry's handler is called with the entry's argument,
+    and its result is not looked at.
+  - handler_arg is declared first: the image's frame holds it at the
+    top.
+
+  Status stored: none.
+}
+
+procedure vme_$int(vector: integer);
+  options(val_param);
+var
+  handler_arg: univ_ptr;
+  handler: vme_$handler_t;
+begin
+  handler := vme_$user_vec[vector - vme_$user_vector_base].handler;
+  handler_arg := vme_$user_vec[vector - vme_$user_vector_base].handler_arg;
+  discard(handler^(handler_arg));
+end;
+%else
 { VME_$INT - the VME bus's interrupt routine: find the interrupting level
   and call its handler.
 
@@ -70,3 +97,4 @@ begin
     end;
   crash_system(status_$vme_undefined_interrupt);
 end;
+%endif

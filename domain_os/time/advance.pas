@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E16454  TIME_$ADVANCE
     sau4  0x0F816E34  TIME_$ADVANCE
+    sau6  0x78016ED6  TIME_$ADVANCE
+    sau7  0x3C417EC2  TIME_$ADVANCE
 
   - The element is queued on the real-time queue at when (relative or
     absolute), with TIME_$ADVANCE_CALLBACK and the eventcount as its

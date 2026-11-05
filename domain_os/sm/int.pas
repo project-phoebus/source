@@ -4,6 +4,7 @@
     sau3  0x00E6DED2  SM_$INT
     sau4  0x0F877648  SM_$INT
     sau5  0x00E6F22A  SM_$INT
+    sau6  0x7807669A  SM_$INT
 
   - After a DMA parity error the drive's parity flag is set from
     PARITY_$CHK_IO on the command block's and the buffer's pages

@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E1476E  PROC1_$RESUME
     sau4  0x0F814FE2  PROC1_$RESUME
+    sau6  0x78014F32  PROC1_$RESUME
+    sau7  0x3C41648A  PROC1_$RESUME
 
   - With interrupts off, a suspended process goes back on the ready
     list unless it waits on an eventcount, and the dispatcher runs; a

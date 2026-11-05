@@ -2,6 +2,8 @@
   address.
 
   Image addresses:
+    sau6  0x780883C8  ethernet_mcast_add
+    sau7  0x3C49286E  ethernet_mcast_add
     sau8  0x03C8606A  ethernet_mcast_add
     sau9  0x3C481C6A  ethernet_mcast_add
 

@@ -4,6 +4,8 @@
     sau2  0x00E72690  smd_$reschedule_blink_timer (module-local)
     sau4  0x0F87FC34  smd_$reschedule_blink_timer (module-local)
     sau5  0x00E79830  smd_$reschedule_blink_timer (module-local)
+    sau6  0x78080B98  smd_$reschedule_blink_timer (module-local)
+    sau7  0x3C488D38  smd_$reschedule_blink_timer (module-local)
     sau9  0x3C47A094  smd_$reschedule_blink_timer (module-local)
 
   - SMD_$BLINK_CURSOR_CALLBACK goes on the real-time queue interval ticks

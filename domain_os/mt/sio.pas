@@ -4,6 +4,7 @@
     sau3  0x00E70FD8  MT_$SIO
     sau4  0x0F87DD48  MT_$SIO
     sau5  0x00E76B48  MT_$SIO
+    sau6  0x7807D7E8  MT_$SIO
 
   - With nil (MT_$INT, the controller's interrupt) it finishes the
     started block; an error that ends the chain marks every later block

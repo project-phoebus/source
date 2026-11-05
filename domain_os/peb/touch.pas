@@ -2,6 +2,8 @@
 
   Image addresses:
     sau2  0x00E70810  PEB_$TOUCH
+    sau6  0x7807B658  PEB_$TOUCH
+    sau7  0x3C4849BC  PEB_$TOUCH
     sau9  0x3C4770E0  PEB_$TOUCH
 
   - When the faulting address lies in the board's private register page

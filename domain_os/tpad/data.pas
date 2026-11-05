@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E691BC  TPAD_$DATA
     sau4  0x0F872CB0  TPAD_$DATA
+    sau6  0x78071E18  TPAD_$DATA
+    sau7  0x3C47C780  TPAD_$DATA
 
   - A mouse packet (device byte 16#DF) gives button bits and two signed
     byte deltas, scaled with a fractional accumulator (1/1024); an idle

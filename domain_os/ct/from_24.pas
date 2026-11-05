@@ -1,6 +1,7 @@
 { ct_from_24 - a longword of a 24-bit value, its high byte cleared.
 
   Image addresses:
+    sau7  0x3C484B4E  ct_from_24 (module-local)
     sau9  0x3C477272  ct_from_24 (module-local)
 
   - The value goes through a ct_int24_t: its high byte cleared, the

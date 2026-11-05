@@ -18,6 +18,23 @@ const
     the controller does not get ready. }
   status_$unrecognized_interrupt = 16#00080026;
 
+  { The AT bus controller's delay loops (`floppy_atbus'): the settling
+    spin before FLP_$INT reads the main status and the polls it then
+    waits for its request bit, SHAKE's settling spin before each byte,
+    and the passes of the reset's hold (FLP_$CINIT, FLP_$DINIT); twice
+    as long with `floppy_long_delays'. }
+%if floppy_long_delays %then
+  flp_int_spin = 256;
+  flp_int_polls = 4000;
+  flp_shake_spin = 50;
+  flp_reset_hold = 200;
+%else
+  flp_int_spin = 128;
+  flp_int_polls = 2000;
+  flp_shake_spin = 25;
+  flp_reset_hold = 100;
+%endif
+
 type
   { An unsigned byte (suma's form). }
   flp_$byte_t = [byte] 0..255;

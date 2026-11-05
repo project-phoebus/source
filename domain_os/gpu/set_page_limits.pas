@@ -3,6 +3,7 @@
 
   Image addresses:
     sau5  0x00E7412E  GPU_$SET_PAGE_LIMITS
+    sau6  0x7807B0A6  GPU_$SET_PAGE_LIMITS
 
   - A maximum below the pages held releases them down to it: the
     processor taken (unless held) and, outside diagnostic mode, given

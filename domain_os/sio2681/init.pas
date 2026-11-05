@@ -4,6 +4,8 @@
     sau2  0x00E333DC  SIO2681_$INIT
     sau3  0x00E3192C  SIO2681_$INIT
     sau4  0x0F836684  SIO2681_$INIT
+    sau6  0x7803C8FC  SIO2681_$INIT
+    sau7  0x3C43C928  SIO2681_$INIT
     sau8  0x03C36C68  SIO2681_$INIT
 
   - The chip and both channels (A on the block's first half, B on its
@@ -17,6 +19,9 @@
   - With `sio2681_pbu_int' the chip's interrupt is then acquired as PBU
     unit 1, the stub's cell its handler, the chip's registers its CSR;
     the acquisition's status is not looked at.
+  - With `sio2681_chip_2_pbu_8' the second chip's registers are 16#100
+    bytes after the first's, and a chip given vector 2 has its stub in
+    SIO_VEC2 and its interrupt acquired as PBU unit 8.
 
   Status stored: none.
 }
@@ -39,7 +44,12 @@ var
   unused_8: integer32;                    { stand-in }
 begin
   { the chip }
+%if sio2681_chip_2_pbu_8 %then
+  chip.regs := sio2681_$regs_ptr_t(integer32(addr(sio[chip_num]))
+                                   + (chip_num - 1) * 224);
+%else
   chip.regs := addr(sio[chip_num]);
+%endif
   chip.config1.w := config[1];
   chip.config2.w := config[3];
   chip.imr_shadow.s := [1, 5, 7];
@@ -75,10 +85,23 @@ begin
   sio2681_$set_line(chan_a, chan_a_params, [0..13], line_status);
   sio2681_$set_line(chan_b, chan_b_params, [0..13], line_status);
 
+%if sio2681_chip_2_pbu_8 %then
+  if int_vec > 1 then begin
+    sio_vec2[int_vec] := int_vectors[chip_num];
+    pbu_$acquire_int(8, addr(int_vectors[chip_num]), nil, chip.regs, -1,
+                     1, -1, line_status);
+  end
+  else begin
+    sio_vec[int_vec] := int_vectors[chip_num];
+    pbu_$acquire_int(1, addr(int_vectors[chip_num]), nil, chip.regs, -1,
+                     1, -1, line_status);
+  end;
+%else
   sio_vec[int_vec] := int_vectors[chip_num];
 %if sio2681_pbu_int %then
   pbu_$acquire_int(1, addr(int_vectors[chip_num]), nil, chip.regs, -1, 1,
                    -1, line_status);
+%endif
 %endif
   chip.regs^.isr_imr := chip.imr_shadow.c;
 end;

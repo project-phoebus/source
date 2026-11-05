@@ -16,6 +16,8 @@
  * else; its SR test lets bits 7 and 6 through (SR & 0x3F20,
  * `sr_user_bits_76'), and its limit is its PROT, 0xF7C0000
  * (`vm_8192_segs').  Those lines carry the SAU4 image's addresses.
+ * The SAU6's (0x7802503A) is the SAU9's with its PROT, 0x77FC0000
+ * (`vm_65536_segs').
  *
  * Transcribed from the SAU2 image, 0x00E2277C..0x00E22865 (map
  * FIM_$GET_USER_SR_PTR to FIM_$DELIVER_TRACE_FAULT, 234 bytes: 118 of the
@@ -55,6 +57,8 @@
         .equ    USER_VA_LIMIT, 0x3BFC0000       /* sau9: the map's PROT */
         .elseif vm_8192_segs
         .equ    USER_VA_LIMIT, 0x0F7C0000       /* sau4: the map's PROT (f824a86) */
+        .elseif vm_65536_segs
+        .equ    USER_VA_LIMIT, 0x77FC0000       /* sau6: the map's PROT (780250f0) */
         .elseif run_time_layout
         /* sau8: PROT itself, a fixup-table cell (3c2412c), which COLD
            moves with the MC68851's layout (svc/m68k/svc_macros.inc) */

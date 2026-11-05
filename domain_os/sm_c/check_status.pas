@@ -4,6 +4,7 @@
     sau3  0x00E6EF0A  sm_c_$check_status (module-local)
     sau4  0x0F87BD08  sm_c_$check_status (module-local)
     sau5  0x00E74A6E  sm_c_$check_status (module-local)
+    sau6  0x7807B7BC  sm_c_$check_status (module-local)
 
   - Most codes are counted in the unit's counters; code 1 also clears the
     controller's command register.

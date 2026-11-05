@@ -4,6 +4,8 @@
     sau2  0x00E19BC0  WIN_$SPIN_DOWN
     sau4  0x0F81A6D4  WIN_$SPIN_DOWN
     sau5  0x00E1A0A4  WIN_$SPIN_DOWN
+    sau6  0x7801A486  WIN_$SPIN_DOWN
+    sau7  0x3C41C9A0  WIN_$SPIN_DOWN
     sau8  0x03C1A010  WIN_$SPIN_DOWN
 
   - The ANSI form issues SPIN CONTROL (16#55) with 0; the result is 20
@@ -20,7 +22,11 @@
 %if win_descriptor_ctlr %then
 function win_$spin_down(in unit: pinteger): integer;
 begin
+%if win6_ct6_board %then
+  if win_$dt.iopbs = 0 then
+%else
   if win_$dt = 0 then
+%endif
     discard(restore(unit, 0));
   win_$spin_down := 3;
 end;

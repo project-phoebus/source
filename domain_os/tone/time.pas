@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E172FC  TONE_$TIME
     sau4  0x0F817CB4  TONE_$TIME
+    sau7  0x3C418D38  TONE_$TIME
     sau9  0x3C419354  TONE_$TIME
 
   - The tone is on for the given time, a relative wait, with the process

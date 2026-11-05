@@ -5,6 +5,8 @@
     sau3  0x00E6E624  smd_$validate_unit (module-local)
     sau4  0x0F877D4C  smd_$validate_unit (module-local)
     sau5  0x00E6F97C  smd_$validate_unit (module-local)
+    sau6  0x78076DB0  smd_$validate_unit (module-local)
+    sau7  0x3C480C2C  smd_$validate_unit (module-local)
     sau9  0x3C47434C  smd_$validate_unit (module-local)
 
   - Only unit 1 exists (units 1 and 2 with `two_display_units',

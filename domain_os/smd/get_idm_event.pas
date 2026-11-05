@@ -5,6 +5,8 @@
     sau2  0x00E6EE28  SMD_$GET_IDM_EVENT
     sau4  0x0F87956C  SMD_$GET_IDM_EVENT
     sau5  0x00E711D8  SMD_$GET_IDM_EVENT
+    sau6  0x7807853E  SMD_$GET_IDM_EVENT
+    sau7  0x3C481F12  SMD_$GET_IDM_EVENT
     sau9  0x3C475632  SMD_$GET_IDM_EVENT
 
   - The record's last word: a button event's buttons (remembered), a

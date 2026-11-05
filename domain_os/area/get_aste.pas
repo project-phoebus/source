@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E09A6A  area_$get_aste (module-local)
     sau4  0x0F80A286  area_$get_aste (module-local)
+    sau6  0x7800A400  area_$get_aste (module-local)
+    sau7  0x3C40AD38  area_$get_aste (module-local)
     sau9  0x3C40B538  area_$get_aste (module-local)
 
   Assume we're called with the AST lock held.

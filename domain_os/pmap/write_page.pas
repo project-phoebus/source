@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E12E5E  pmap_$write_page
     sau4  0x0F81378E  pmap_$write_page (module-local)
+    sau7  0x3C414C0C  pmap_$write_page
     sau9  0x3C4151D0  pmap_$write_page
 
   Assume we're called with the PMAP lock held.

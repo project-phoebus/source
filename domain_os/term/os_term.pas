@@ -8,6 +8,8 @@
     sau3  0x00E83B3C  OS_TERM data (.DATA, 4 bytes)
     sau4  0x0F82F548  OS_TERM data (WIRED_DATA, 0x64 bytes)
     sau4  0x0F890B9C  OS_TERM data (.DATA, 4 bytes)
+    sau7  0x3C433BF4  OS_TERM data (WIRED_DATA, 0x64 bytes)
+    sau7  0x3C4AB71C  OS_TERM data (.DATA, 4 bytes)
 
   One compilation unit, `module os_term;': the map's OS_TERM code
   segments in WIRED_PROC (TERM_$GET_REAL_LINE, KBD_$GET_DESC,

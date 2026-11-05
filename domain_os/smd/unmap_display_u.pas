@@ -4,6 +4,8 @@
     sau2  0x00E6F97C  SMD_$UNMAP_DISPLAY_U
     sau4  0x0F87A236  SMD_$UNMAP_DISPLAY_U
     sau5  0x00E71E2C  SMD_$UNMAP_DISPLAY_U
+    sau6  0x78079148  SMD_$UNMAP_DISPLAY_U
+    sau7  0x3C4828CC  SMD_$UNMAP_DISPLAY_U
     sau9  0x3C475FEC  SMD_$UNMAP_DISPLAY_U
 
   - The process's address is forgotten whatever MST_$UNMAP answers

@@ -5,6 +5,7 @@
     sau3  0x00E6FC66  mt_$queue_request
     sau4  0x0F87C9DE  mt_$queue_request
     sau5  0x00E757CE  mt_$queue_request
+    sau6  0x7807C496  mt_$queue_request
 
   - Unless op is mt_op_check_only, every unit's finished requests are
     first retired; mt_op_check and mt_op_check_only stop after the

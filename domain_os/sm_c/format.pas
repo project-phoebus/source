@@ -4,6 +4,7 @@
     sau3  0x00E6F67C  sm_c_$format (module-local)
     sau4  0x0F87C434  sm_c_$format (module-local)
     sau5  0x00E751E2  sm_c_$format (module-local)
+    sau6  0x7807BEF4  sm_c_$format (module-local)
 
   Assume we're called with the controller's ML lock held.
 

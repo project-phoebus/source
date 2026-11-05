@@ -2,8 +2,12 @@
 
   Image addresses:
     sau2  0x00E7649E  ring_$receive_packet (module-local)
+    sau6  0x78084AD4  ring_$receive_packet (module-local)
+    sau7  0x3C48F58C  ring_$receive_packet (module-local)
     sau8  0x03C82D8C  ring_$receive_packet (module-local)
     sau2  0x00E76470  ring_$discard_packet (nested)
+    sau6  0x78084AA6  ring_$discard_packet (nested)
+    sau7  0x3C48F55E  ring_$discard_packet (nested)
     sau8  0x03C82D5E  ring_$discard_packet (nested)
 
   - A packet without the ring's own flag goes to NET_IO_$PUT_IN_SOCK.

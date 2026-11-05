@@ -1,6 +1,7 @@
 { ring_8025_send_xid - send an XID frame.
 
   Image addresses:
+    sau7  0x3C496D14  ring_8025_send_xid
     sau8  0x03C8A368  ring_8025_send_xid
     sau9  0x3C485F6C  ring_8025_send_xid
 
@@ -55,7 +56,11 @@ begin
   llc^.xid_window := 0;
   len := rif_len + 20;
   ml_$exclusion_start(u^.xmit_lock);
+%if ring_8025_iomap %then
+  pieces[1].pa := ring_8025_map_pa(pa, u^.iomap_page);
+%else
   pieces[1].pa := pa;
+%endif
   pieces[1].cnt.len := len;
   ring_8025_transmit(u, len, pieces, 1, hdr^.dest, fstat, status);
   ml_$exclusion_stop(u^.xmit_lock);

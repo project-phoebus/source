@@ -65,8 +65,14 @@ type
 
   { The table, indexed by physical page number from 512: every user
     reaches page p at the table's pointer + 12 * p - 0x1800.  GPU_$INIT
-    maps it, 0xA800 bytes (3584 entries), from a file of its own. }
+    maps it, 0xA800 bytes (3584 entries), from a file of its own.  With
+    `mmap_ppns_4000' (base/config.ins.pas) the pages are 16#4000..16#FFFF:
+    page p at + 12 * p - 0x30000, 0x90000 bytes (49152 entries). }
+%if mmap_ppns_4000 %then
+  gpu_page_table_t = array[16#4000..16#FFFF] of gpu_page_entry_t;
+%else
   gpu_page_table_t = array[512..4095] of gpu_page_entry_t;
+%endif
   gpu_page_table_ptr_t = ^gpu_page_table_t;
 
   { The eventcounts GPU_$CMND waits on (EC_$WAITN's list) and their
@@ -102,4 +108,21 @@ var
 
   { COLOR2_$INT_EC, which GPU_$COLD_INIT puts in GPU_$CMND's wait
     list, is color2/color2.ins.pas's. }
+%if gpu_own_vectors %then
+
+  { GPU_DONE_VEC and GPU_PAGE_VEC (the TRAP_PAGE's map symbols, 16#280
+    and 16#284: vectors 16#A0 and 16#A1): the processor's two interrupt
+    vectors, which GPU_$COLD_INIT points at the handlers below. }
+  gpu_done_vec: extern univ_ptr;
+  gpu_page_vec: extern univ_ptr;
+
+{ GPU_$DONE_INT and GPU_$PAGE_INT (map symbols; hand assembly in the
+  SAU6's GPU_ASM, gpu/sau6/gpu_asm.s): the two interrupt handlers, which
+  advance GPU_$DONE_EC and GPU_$PAGE_EC.  Only their addresses are
+  taken. }
+procedure gpu_$done_int;
+  extern;
+procedure gpu_$page_int;
+  extern;
+%endif
 %endif

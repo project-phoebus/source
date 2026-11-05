@@ -245,6 +245,40 @@ with these arms.
 TERM_$CONTROL, TERM_$INQUIRE and the other routines are the SAU2's
 code at the SAU3's addresses and offsets.
 
+## The SAU6
+
+The DN5xxT's OS_TERM_INIT is the SAU4's four-line form
+(`sio2681_four_lines`) with the SAU8's keyboard (`kbd_tone`,
+`kbd_key_ring_512`, `kbd_commands`), and a keyboard of either type
+(`kbd_type_sysrev`): bit 7 of the system revision word's low byte
+(MMU+5) is set for the type 2 keyboard.
+
+- `os_term_init.pas`: the four-line block with the larger keyboard
+  descriptor, 0x1B14 bytes (DTTE +0x1A10, TERM_$MAX_DTTE +0x1AFC);
+  `term_$console_chan_ptr` at +0x1AF4 and the two tone strings at the
+  end.
+- `init.pas`: the four-line form; each chip gets the interrupt vector
+  of its own number (`sio2681_vec_by_chip`), and channel A is recorded
+  as the console's channel.
+- `../kbd/reset.pas`: the SAU8's form, for the type 3 keyboard only.
+- `../tone/enable.pas`: the keyboard's tone commands for the type 3
+  keyboard, SIO2681_$TONE on the speaker's channel for the type 2.
+- `pchist_enable.pas`: the third serial line's channel
+  (`pchist_third_line`).
+
+SIO_$INIT, TERM_$SET_REAL_LINE_DISCIPLINE, TERM_$INQ_DISCIPLINE,
+TERM_$P2_CLEANUP and TERM_$ENQUEUE_TPAD are the SAU8's code at the
+SAU6's offsets.
+
+## The SAU7
+
+The SAU7's OS_TERM_INIT is the SAU6's, with one keyboard type: the
+console's channel A is recorded and KBD_$RESET always sends its bytes
+through it (`kbd_reset_chan_a`), TONE_$ENABLE always sends the
+keyboard's tone commands (`kbd_tone`), and TERM_$PCHIST_ENABLE takes the
+last serial line's channel.  The first chip's auxiliary control word in
+TERM_$INIT's configuration table is 16#EA00 (`sio2681_acr_timer`).
+
 ## Open items
 
 ### Forms the image settles

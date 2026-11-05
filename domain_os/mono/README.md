@@ -35,6 +35,14 @@ empty objects elsewhere.
 MONO_$END_WIRED_PROC is compiled: an empty procedure, the last of the
 wired section, whose address ends the vectors' code area.
 
+### The SAU7
+
+The SAU7's MONO and MONO_DCTE segments have the SAU8's sizes, code and
+data at other addresses: the instructions are the same but for their
+address operands, the data blocks the same bytes but for their address
+cells.  The SAU7 build is the SAU8's source; every fragment has its
+`sau7` address row.
+
 ## Routines and their fragments
 
 | routine | fragment |

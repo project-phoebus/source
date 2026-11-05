@@ -3,6 +3,7 @@
 
   Image addresses:
     sau5  0x00E73EAE  GPU_$DIAG_ACQUIRE
+    sau6  0x7807AE28  GPU_$DIAG_ACQUIRE
 
   - A process that holds the processor in diagnostic mode already only
     gets the addresses back.

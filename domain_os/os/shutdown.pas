@@ -5,6 +5,8 @@
     sau3  0x00E6D850  OS_$SHUTDOWN
     sau4  0x0F876F72  OS_$SHUTDOWN
     sau5  0x00E6EB52  OS_$SHUTDOWN
+    sau6  0x78075FDA  OS_$SHUTDOWN
+    sau7  0x3C480952  OS_$SHUTDOWN
     sau8  0x03C7681A  OS_$SHUTDOWN
     sau9  0x3C474082  OS_$SHUTDOWN
 
@@ -20,6 +22,8 @@
   - VOLX_$SHUTDOWN runs twice, the first result dropped; the two
     MST_$WIRE_AREA calls share one page list.
   - With `pbu_driver', PBU_$SHUTDOWN's status is cleared.
+  - `fpa_board': the accelerator's save-area base is cleared after the
+    FPU's.
   - Other SAUs' parts (base/config.ins.pas): the color boards stopped;
     with `power_down', after a good shutdown and a power-off request,
     the disks spun down and the interrupts disabled.
@@ -71,7 +75,7 @@ begin
   term_$control(0, term_$opt_kbd_mode, 0, status_l);
 %endif
 
-%if gpu_driver %then
+%if gpu_driver and not color2_shutdown_in_smd %then
   { the color boards }
   case smd_$graphic_device_id of
     smd_gdev_color2, smd_gdev_color3:
@@ -92,6 +96,9 @@ begin
 
 %if not shutdown_keeps_fp_savep %then
   fp_$savep := nil;
+%endif
+%if fpa_board %then
+  fpa_$savep := nil;
 %endif
 
   { wire the shutdown-wired code, then data }

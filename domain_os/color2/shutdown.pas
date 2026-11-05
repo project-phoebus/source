@@ -3,6 +3,7 @@
 
   Image addresses:
     sau5  0x00E7327E  COLOR2_$SHUTDOWN
+    sau6  0x7807A190  COLOR2_$SHUTDOWN
 
   - Once the display has been associated, the current process takes it
     over and gives it back (COLOR2_$DISSOC).

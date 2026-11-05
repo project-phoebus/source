@@ -2,6 +2,7 @@
 
   Image addresses:
     sau2  0x00E15214  EC_$READ
+    sau7  0x3C416EE0  EC_$READ
 
   - A fragment of the PROC1_ module (proc1/proc1.pas), as ec/init.pas.
 

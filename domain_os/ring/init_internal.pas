@@ -4,12 +4,17 @@
     sau2  0x00E2FA86  ring_$init_internal (module-local)
     sau4  0x0F832F7E  ring_$init_internal (module-local)
     sau5  0x00E30FA6  ring_$init_internal (module-local)
+    sau6  0x780383B4  ring_$init_internal (module-local)
+    sau7  0x3C437FB0  ring_$init_internal (module-local)
     sau8  0x03C32780  ring_$init_internal (module-local)
     sau9  0x3C435678  ring_$init_internal (module-local)
 
   - The unit takes the DCTE's register block, which TESTPAGE probes.
   - With the vector registers (`ring_vector_regs', the SAU5's
     controller) the three are set to 16#3D00.
+  - With `ring_sysbus_vector' RING_$INT is defined for the DCTE's
+    vector, and the vector registers are set to 16#0D00 or 16#1B00 (the
+    first by bit 0 of the mode register), 16#0D00 and 16#1B00.
   - With `ring_board_dma' the three vectors from the DCTE's base go to
     RING_$RCV_INT (two) and RING_$XMIT_INT, and the controller and its
     two DMA controllers are reset and given their modes.
@@ -154,7 +159,7 @@ var
   regs: ring_$regs_ptr_t;
   location: univ_ptr;
   data: integer;
-%if ring_board_dma %then
+%if ring_board_dma or ring_sysbus_vector %then
   int_id: io_$int_id_t;
 %endif
 begin
@@ -185,6 +190,28 @@ begin
 %else
     regs^.xmit_csr := [];
     regs^.rcv_csr := [];
+%endif
+%if ring_sysbus_vector %then
+    { TODO(pascal) the mode register's bit 0 read as a byte
+
+      The image tests the bit in the register block's byte 7 alone,
+      where every other read of the mode word (RING_$POLL_STICKY_BPHERR's
+      bits 12 and 13) and of the other status words is the whole word,
+      as a `[device]' record's set field gives it.  A byte-wide
+      declaration of the register at 7 (a `[byte]' set, an `odd' of a
+      byte field) would give the byte test, but nothing else in the
+      image shows one; `0 in regs^.mode' is kept. }
+
+    { the unit's interrupt on the DCTE's vector, and the controller's
+      vector registers }
+    int_id.vector := dcte.disk_error_que_lo;
+    sysbus_$define_int(int_id, addr(ring_$int), addr(dcte));
+    if not (0 in regs^.mode) then
+      regs^.vector_40 := 16#1B00
+    else
+      regs^.vector_40 := 16#0D00;
+    regs^.vector_48 := 16#0D00;
+    regs^.vector_50 := 16#1B00;
 %endif
 %if ring_vector_regs %then
     regs^.vector_40 := 16#3D00;

@@ -4,6 +4,7 @@
     sau2  0x00E19CE8  WIN_$DINIT
     sau4  0x0F81A956  WIN_$DINIT
     sau5  0x00E19EBC  WIN_$DINIT
+    sau6  0x7801A2B2  WIN_$DINIT
 
   - Under the unit record's ML lock: the ANSI form runs DISK_INIT; the
     descriptor-list form (`win_descriptor_ctlr') restores the drive and

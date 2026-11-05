@@ -1,6 +1,7 @@
 { WIN8_$GET_STATS - the statistics entry.
 
   Image addresses:
+    sau7  0x3C41D8C4  WIN8_$GET_STATS
     sau8  0x03C1AEE4  WIN8_$GET_STATS
 
   - Controller 0, drive 0 or 1 gets the drive's 22 bytes of statistics;

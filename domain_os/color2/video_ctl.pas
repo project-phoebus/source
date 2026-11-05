@@ -2,6 +2,7 @@
 
   Image addresses:
     sau5  0x00E1E6C0  COLOR2_$VIDEO_CTL
+    sau6  0x7801FC38  COLOR2_$VIDEO_CTL
 
   - In WIRED_PROC: SMD calls it at interrupt level.  The DN580's display
     takes member 3 of the board's control word; the DN570's bit 3 of

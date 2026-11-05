@@ -2,6 +2,8 @@
 
   Image addresses:
     sau2  0x00E709E8  PEB_$GET_INFO
+    sau6  0x7807B662  PEB_$GET_INFO
+    sau7  0x3C4849C6  PEB_$GET_INFO
     sau9  0x3C4770EA  PEB_$GET_INFO
 
   - A word set of five of PEB_$INFO's flags (WCS loaded, the 68881's

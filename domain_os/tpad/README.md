@@ -31,6 +31,12 @@ multiplies are the DN460's extended instructions where the other SAUs
 call M$MIS$LLW and M$MIS$LLL, so its .TEXT segment is 0x994 bytes.  The
 data segment's bytes are the SAU2's and SAU5's.
 
+### The SAU7
+
+The SAU7's TPAD is the same source, and its code and data are the
+SAU9's (.TEXT 0x998 bytes, OS_INIT_PROC 0xFC, data 0x180), the same
+instructions at other addresses.
+
 ## Routines and their fragments
 
 | routine                   | fragment |

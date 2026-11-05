@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E04542  AST_$ASSOC_AREA
     sau4  0x0F8048FE  AST_$ASSOC_AREA
+    sau6  0x78004BE8  AST_$ASSOC_AREA
+    sau7  0x3C40503E  AST_$ASSOC_AREA
     sau8  0x03C04832  AST_$ASSOC_AREA
     sau9  0x3C40583E  AST_$ASSOC_AREA
 
@@ -46,8 +48,7 @@ begin
 %if pmmu_page_maps %then
         vpn := disk_addr.all;
 %else
-        all := all & 16#FF800000;
-        all := all ! disk_addr.all;
+        fentry.fm_daddr := linteger(disk_addr.all);
 %endif
         mmap_$free_remove(mmap[old_ppn], old_ppn);
       end;
@@ -70,7 +71,7 @@ begin
 %if pmmu_page_maps %then
         disk_addr.all := vpn;
 %else
-        disk_addr.all := all & 16#7FFFFF;
+        disk_addr.all := fentry.fm_daddr;
 %endif
         if wired = 0 then
           mmap_$install_list(ppn, 1, false);

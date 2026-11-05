@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E05380  AST_$SET_ATTRIBUTE
     sau4  0x0F80572C  AST_$SET_ATTRIBUTE
+    sau6  0x780059CC  AST_$SET_ATTRIBUTE
+    sau7  0x3C405E2A  AST_$SET_ATTRIBUTE
     sau9  0x3C40662A  AST_$SET_ATTRIBUTE
 
   - For the ACL merge (attribute 16#14) the caller's extended SID record

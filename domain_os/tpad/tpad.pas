@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E8245C  TPAD data (.DATA, 0x180 bytes)
     sau4  0x0F890BD0  TPAD data (.DATA, 0x180 bytes)
+    sau6  0x7809CB34  TPAD data (.DATA, 0x1A8 bytes)
+    sau7  0x3C4AB750  TPAD data (.DATA, 0x180 bytes)
 
   One compilation unit, in two code sections and one data section: the
   map's TPAD code segments in OS_INIT_PROC (0xFC bytes, TPAD_$INIT) and
@@ -31,6 +33,10 @@
     +0x17E  tpad_$re_origin_flag 1
     +0x17F  1 byte of rounding (the block is padded to 4, as LOG_'s
             +0x19)
+
+  With `tpad_block_head' (base/config.ins.pas) the block is 0x1A8 bytes:
+  40 bytes, zero in the image, before the unit records (tpad_head), and
+  every offset above 0x28 on.
 
   These are module-level variables (the LOG and KBD model, log/log.pas,
   kbd/kbd.pas), used by routines in both code sections, and the block's
@@ -83,6 +89,16 @@ define
   Bytes that the initializers do not name are zero in the image, as the
   whole of LOG_'s block is (log/log.pas, uninitialized). }
 var
+%if tpad_block_head %then
+  { +0x000: 40 bytes, zero in the image; TPAD_$INIT tests the boolean
+    at +0x05, and nothing else addresses them. }
+  tpad_head: record
+    unused_0: array[0..4] of char;
+    flag_5: boolean;
+    unused_6: array[6..39] of char;
+  end;
+
+%endif
   { +0x000: eight unit records of 0x2C bytes, each initialized in the
     image: sample_count 0, mode tpad_$absolute, x_scale and y_scale 99,
     x_range and y_range 16#200, x_min and y_min 16#100, the display

@@ -4,6 +4,8 @@
   Image addresses:
     sau2  0x00E00F16  AST_$INVALIDATE_PAGE
     sau4  0x0F801320  AST_$INVALIDATE_PAGE
+    sau6  0x780016F8  AST_$INVALIDATE_PAGE
+    sau7  0x3C401AFC  AST_$INVALIDATE_PAGE
     sau8  0x03C012FC  AST_$INVALIDATE_PAGE
     sau9  0x3C4022FC  AST_$INVALIDATE_PAGE
 
@@ -42,8 +44,7 @@ begin
     end;
 
     entry.flags := entry.flags - [ast_$pmap_installed];
-    entry.all := entry.all & 16#FF800000;
-    entry.all := entry.all ! disk_addr.all;
+    entry.fentry.fm_daddr := linteger(disk_addr.all);
 %endif
 
     mmap_$free_remove(mmap[vpn], vpn);

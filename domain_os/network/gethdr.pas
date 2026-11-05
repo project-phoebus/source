@@ -2,6 +2,8 @@
 
   Image addresses:
     sau2  0x00E0F37A  NETWORK_$GETHDR
+    sau6  0x7800FCEA  NETWORK_$GETHDR
+    sau7  0x3C411202  NETWORK_$GETHDR
     sau8  0x03C106B2  NETWORK_$GETHDR
 
   - A send that stays on this node (loopback on, or the destination this

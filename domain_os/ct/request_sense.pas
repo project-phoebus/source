@@ -2,6 +2,7 @@
   status.
 
   Image addresses:
+    sau7  0x3C484B8C  ct_request_sense (module-local)
     sau9  0x3C4772B0  ct_request_sense (module-local)
 
   - Sends REQUEST SENSE (ct_sense_cdb, set up by CT_$ACQUIRE) into

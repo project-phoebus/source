@@ -5,6 +5,8 @@
     sau3  0x00E8A054  PBU_MAP data (PBU_WIRED_DATA, 0xC bytes)
     sau4  0x0F897FD8  PBU_MAP data (PBU_WIRED_DATA, 0xC bytes)
     sau5  0x00E9241C  PBU_MAP data (PBU_WIRED_DATA, 0xC bytes)
+    sau6  0x780A77FC  PBU_MAP data (PBU_WIRED_DATA, 0xC bytes)
+    sau7  0x3C4B7148  PBU_MAP data (PBU_WIRED_DATA, 0xA0C bytes)
     sau8  0x03CA5CB8  PBU_MAP data (PBU_WIRED_DATA, 0xC bytes)
 
   On the SAUs with the PBU driver (`pbu_driver', base/config.ins.pas):
@@ -26,6 +28,16 @@
   bus's DMA channels (`pbu_atbus_units', `atbus_dma'), PBU2_$MAP and
   PBU2_$UNMAP as stubs (no I/O map space, `io_regions'), PBU_$WAIT.
 
+  On the SAU6 0x42C bytes: the SAU5's routines with the page owners
+  from 16#4000 (`mmap_ppns_4000') and pbu_map_owned_ppn's answer masked
+  to the I/O map entry's page field (`pbu_iomap_page_mask').
+
+  On the SAU7 0xA84 bytes: the SAU8's module-local routines (the page
+  owners from `pbu_ppns_4000') and PBU_$WAIT, the DMA entries reaching
+  the buffer through the unit's I/O map space (`pbu_dma_iomap': the
+  mappings in PBU_$MAPPED_INFO), and PBU2_$MAP and PBU2_$UNMAP with
+  word entries (`word_iomap'); the data segment 0xA0C bytes.
+
   Without the driver the module compiles to nothing.
 
   Its code is wired with the PBU page (PBU_$WIRE_PBU): user handlers
@@ -35,11 +47,19 @@
 
   Not part of the module: PBU_$PAGE_END, the map's symbol at the
   module's first byte, a marker: the end of the PBU page's hand-written
-  part (pbu/sau5/pbu_asm.s, pbu/sau3/pbu_asm.s, pbu/sau4/pbu_asm.s).
+  part (pbu/sau5/pbu_asm.s, pbu/sau3/pbu_asm.s, pbu/sau4/pbu_asm.s,
+  pbu/sau6/pbu_asm.s).
 
   The data block, 0xC bytes, zero: a longword nothing names, then the
   map's PBU_$DCTE_INT_PTR and PBU_$VME_DISABLE_COUNT, defined variables
   (pbu/pbu.ins.pas).  Nothing in the SAU5 image refers to any of it.
+  With `pbu_dma_iomap' the block is 0xA0C bytes:
+
+    +0x000  a longword nothing names
+    +0x004  PBU_$MAPPED_INFO, 16 units of 8 channel records, 20 bytes
+            each (pbu_$mapped_info_t)
+    +0xA04  PBU_$DCTE_INT_PTR
+    +0xA08  PBU_$VME_DISABLE_COUNT
 
   The routines live in one fragment file each (pbu/<name>.pas), in image
   order.
@@ -65,18 +85,6 @@ module pbu_map, pbu_wired_proc, pbu_wired_data;
 %include 'pbu/pbu.ins.pas';
 
 %if pbu_driver %then
-{ TODO(sau) the SAU4, SAU6 and SAU7 PBU_MAP code
-
-  The module's code below is the SAU5's, the SAU3's and the SAU8's.
-  tools/sau_catalog.py finds PBU2_$MAP and PBU2_$UNMAP different on
-  each of the SAU3..SAU8, the DMA entries real on the SAU7 and SAU8 (the
-  SAU3..SAU6 share the SAU5's stubs), and PBU_$WAIT in four families
-  (the SAU3's is the SAU5's); the code segments
-  differ in size (0x450 on the SAU3, 0x434 on the SAU4, 0x44C on the
-  SAU5, 0x42C on the SAU6, 0xA84 on the SAU7, 0x5F4 on the SAU8).  The
-  SAU7's DMA entries keep a mapping record per unit (PBU_$MAPPED_INFO,
-  its 0xA0C-byte data segment) and are not the SAU8's. }
-
 var
   unused_00: integer32;                         { +0x0: stand-in }
 
@@ -91,6 +99,9 @@ define
   pbu2_$map;
   pbu2_$unmap;
   pbu_$wait;
+%if pbu_dma_iomap %then
+  pbu_$mapped_info;
+%endif
   pbu_$dcte_int_ptr;
   pbu_$vme_disable_count;
 

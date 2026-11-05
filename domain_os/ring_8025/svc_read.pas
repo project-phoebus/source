@@ -1,6 +1,7 @@
 { RING_8025_$SVC_READ - receive a frame on a user channel.
 
   Image addresses:
+    sau7  0x3C498988  RING_8025_$SVC_READ
     sau8  0x03C8BF78  RING_8025_$SVC_READ
     sau9  0x3C487B7C  RING_8025_$SVC_READ
 

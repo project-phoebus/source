@@ -4,6 +4,8 @@
     sau2  0x00E1D4FC  SIO2681_$XMIT
     sau3  0x00E1C670  SIO2681_$XMIT
     sau4  0x0F81E710  SIO2681_$XMIT
+    sau6  0x7801F59A  SIO2681_$XMIT
+    sau7  0x3C42181E  SIO2681_$XMIT
     sau8  0x03C1EBD6  SIO2681_$XMIT
 
   - The character goes to the transmit holding register; the channel's

@@ -2,6 +2,7 @@
   device.
 
   Image addresses:
+    sau7  0x3C4B9150  scsi_wire_page
     sau9  0x3C4A67B8  scsi_wire_page
 
   - The page's first owner has its caching inhibited; any later one

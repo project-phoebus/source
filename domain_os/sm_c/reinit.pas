@@ -4,6 +4,7 @@
     sau3  0x00E6F616  sm_c_$reinit (module-local)
     sau4  0x0F87C3CE  sm_c_$reinit (module-local)
     sau5  0x00E7517C  sm_c_$reinit (module-local)
+    sau6  0x7807BE8E  sm_c_$reinit (module-local)
 
   - The drive comes up with the volume's own geometry; the unit's status
     word and the current request are put back, and sm_c_$start_drive's

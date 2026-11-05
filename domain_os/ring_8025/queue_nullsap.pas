@@ -1,6 +1,7 @@
 { ring_8025_queue_nullsap - queue a frame to the null SAP for its answer.
 
   Image addresses:
+    sau7  0x3C49762A  ring_8025_queue_nullsap
     sau8  0x03C8AC4A  ring_8025_queue_nullsap
     sau9  0x3C48684E  ring_8025_queue_nullsap
 

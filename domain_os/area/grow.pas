@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E08BE8  AREA_$GROW
     sau4  0x0F8090FC  AREA_$GROW
+    sau6  0x780092E2  AREA_$GROW
+    sau7  0x3C409BDA  AREA_$GROW
     sau9  0x3C40A3DA  AREA_$GROW
 
   - Under the area lock, after waiting out any operation in transition,

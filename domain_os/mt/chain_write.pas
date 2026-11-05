@@ -5,6 +5,7 @@
     sau3  0x00E707D2  MT_$CHAIN_WRITE
     sau4  0x0F87D54A  MT_$CHAIN_WRITE
     sau5  0x00E7633C  MT_$CHAIN_WRITE
+    sau6  0x7807CFEA  MT_$CHAIN_WRITE
 
   - MT_$CHAIN_READ's code but for the operation: header and buffer are
     written as one transfer.

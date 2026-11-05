@@ -2,10 +2,14 @@
 
   Image addresses:
     sau2  0x00E01566  ast_$update_aste (module-local)
-    sau4  0x0F801976  ast_$update_aste (module-local)
-    sau9  0x3C40295E  ast_$update_aste (module-local)
     sau2  0x00E01502  ast_$update_aste_log (nested)
+    sau4  0x0F801976  ast_$update_aste (module-local)
     sau4  0x0F801912  ast_$update_aste_log (nested)
+    sau6  0x78001D46  ast_$update_aste (module-local)
+    sau6  0x78001CE6  ast_$update_aste_log (nested)
+    sau7  0x3C40215E  ast_$update_aste (module-local)
+    sau7  0x3C4020FE  ast_$update_aste_log (nested)
+    sau9  0x3C40295E  ast_$update_aste (module-local)
     sau9  0x3C4028FE  ast_$update_aste_log (nested)
 
   - A dirty local segment's 32 page-map entries are turned into their

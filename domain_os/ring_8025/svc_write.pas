@@ -1,6 +1,7 @@
 { RING_8025_$SVC_WRITE - send a frame on a user channel.
 
   Image addresses:
+    sau7  0x3C498C84  RING_8025_$SVC_WRITE
     sau8  0x03C8C274  RING_8025_$SVC_WRITE
     sau9  0x3C487E78  RING_8025_$SVC_WRITE
 
@@ -87,7 +88,9 @@ begin
 
     { the header page: the MAC header and the LLC header }
     netbuf_$get_hdr(hdr_pa, hdr_va);
+%if not ring_8025_iomap %then
     pa := hdr_pa;
+%endif
     h := ring_8025_$mac_hdr_ptr_t(hdr_va);
     idx := 1;
     off := 0;
@@ -133,7 +136,11 @@ begin
 
     { the pieces: the header page, then the data pages }
     ml_$exclusion_start(u^.xmit_lock);
+%if ring_8025_iomap %then
+    pieces[1].pa := ring_8025_map_pa(hdr_pa, u^.iomap_page);
+%else
     pieces[1].pa := pa;
+%endif
     pieces[1].cnt.len := hlen;
     count := 1;
     if u^.channels[channel].strip_rif then begin
@@ -150,7 +157,12 @@ begin
       mmu_$set_pmape(u^.win1_va, u^.win1_pmape, rshft(data_pa[npages], 10));
       n := min(rest, 1024);
       ring_8025_copy_data(iov, iov_cnt, idx, off, u^.win1_va, n);
+%if ring_8025_iomap %then
+      pieces[count].pa := ring_8025_map_pa(data_pa[npages],
+                                           u^.iomap_page + count - 1);
+%else
       pieces[count].pa := data_pa[npages];
+%endif
       pieces[count].cnt.len := n;
       rest := rest - n;
     end;

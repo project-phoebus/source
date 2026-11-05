@@ -1,6 +1,7 @@
 { ring_8025_wait - wait for a number of clock ticks.
 
   Image addresses:
+    sau7  0x3C495822  ring_8025_wait
     sau8  0x03C89022  ring_8025_wait
     sau9  0x3C484C22  ring_8025_wait
 

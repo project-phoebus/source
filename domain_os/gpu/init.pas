@@ -3,6 +3,7 @@
   Image addresses:
     sau2  0x00E707FC  GPU_$INIT
     sau5  0x00E73BD2  GPU_$INIT
+    sau6  0x7807AAE2  GPU_$INIT
 
   - Without `gpu_driver' (base/config.ins.pas; the SAU2) the routine only
     stores status_$gpu_device_not_present.
@@ -45,8 +46,13 @@ begin
       if page_table = nil then begin
         file_$create(uid_$nil, file_uid, status_ret);
         if status_ret.all = status_$ok then begin
+%if mmap_ppns_4000 %then
+          table := mst_$maps(0, true, file_uid, 0, 589824, 6, 0, true,
+                             map_info, status_ret);
+%else
           table := mst_$maps(0, true, file_uid, 0, 43008, 6, 0, true,
                              map_info, status_ret);
+%endif
           if status_ret.all = status_$ok then
             page_table := table;
         end;

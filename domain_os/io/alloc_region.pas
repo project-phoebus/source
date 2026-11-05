@@ -7,7 +7,11 @@
     sau4  0x0F81B670  fits (nested)
     sau5  0x00E1AE0A  io_$alloc_region
     sau5  0x00E1AD68  fits (nested)
+    sau6  0x7801C3B2  io_$alloc_region
+    sau6  0x7801C30E  fits (nested)
+    sau7  0x3C41E616  io_$alloc_region
     sau8  0x03C1BC32  io_$alloc_region
+    sau7  0x3C41E572  fits (nested)
     sau8  0x03C1BB8E  fits (nested)
 
   - Under io_$exclusion: with fixed the range starts at iova; without,

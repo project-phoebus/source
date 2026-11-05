@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E0CD1C  MMAP_$UNWIRE
     sau4  0x0F80D36C  MMAP_$UNWIRE
+    sau6  0x7800D500  MMAP_$UNWIRE
+    sau7  0x3C40E750  MMAP_$UNWIRE
     sau8  0x03C0DC3C  MMAP_$UNWIRE
     sau9  0x3C40EC78  MMAP_$UNWIRE
 

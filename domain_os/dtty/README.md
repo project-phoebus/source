@@ -36,8 +36,9 @@ No routine is nested.
 | routine | fragment |
 |---------|----------|
 | dtty_$get_disp_type | `get_disp_type.pas` (internal function; with `smd_display_memory` an empty procedure) |
+| dtty_$gpu_command | `gpu_command.pas` (internal; `dtty_gpu`) |
 | dtty_$color_command | `color_command.pas` (internal; `dtty_color_board`) |
-| dtty_$color_clear_window | `color_clear_window.pas` (internal; `dtty_color_board`) |
+| dtty_$color_clear_window | `color_clear_window.pas` (internal; `dtty_color_board` or `dtty_gpu`) |
 | dtty_$clear_window | `clear_window.pas` (internal) |
 | dtty_$report_error | `report_error.pas` (internal; its constant cells follow it) |
 | dtty_$load_font | `load_font.pas` (internal function; loads A5, called from OS_INIT_PROC) |
@@ -73,6 +74,24 @@ them, and dtty_$load_font sends the board its mode word first.
 DTTY_$INIT is the `second_display_unit` form.  The WIRED_PROC segment
 is 0x2E4 bytes, the data block the SAU2's 0xC.
 
+## The SAU6
+
+With `dtty_gpu` the display TTY drives the graphics processor's color
+displays (smd_$color2_display, the DN580's; smd_$color3_display, the
+DN570's) itself, through the processor's control block at KOLOR_CTL:
+dtty_$get_disp_type waits until the processor is done (status member
+14), the module-local dtty_$gpu_command sends it commands (the DN580's
+through its count, argument and operation registers, the DN570's
+through its FIFO as its free count allows) and then waits,
+dtty_$color_clear_window sends the processor's clear command, 16#E000,
+dtty_$clear_window clears a color display's window through it, and
+dtty_$load_font sends the processor's font command, 16#48B0, first.
+The processor is there when SMD_$GRAPHIC_DEVICE_ID is 1 or 2.  The
+WIRED_PROC segment is 0x3AC bytes (six module-local routines), the data
+block the SAU2's 0xC; DTTY_$INIT is the `gpu_driver` form without
+`second_display_unit`.  The SAU5's segment has this form and the color
+board's together (the TODO(sau) in `dtty.pas`).
+
 ## The SAU3
 
 Without `display_driver` (the DSP has no display) the map's DTTY unit is
@@ -83,6 +102,13 @@ the WIRED_PROC routines and dtty_$disp_type, dtty_flag_04, dtty_flag_06
 under the part; `init.pas` has the short arm (its frame TODO(pascal)
 says how its 0x2C bytes are filled).  DTTY_WIRED and DTTY_ASM (hand
 assembly) are the SAU2's.
+
+## The SAU7
+
+The SAU7's DTTY (WIRED_PROC 0x1A0 bytes, OS_INIT_PROC 0x128, the data
+block 0xC) is the SAU9's code (`smd_display_memory`), and its
+hand-written DTTY_WIRED and DTTY_ASM are `m68k/`'s with the SAU9's
+parts (`trap_page_high`): no SAU7 source.
 
 ## Open items
 
@@ -97,7 +123,13 @@ assembly) are the SAU2's.
   user sees is dtty_$load_font's D0 left in place.
 - The buffer's third field is `end_pos` (`end` is a reserved word).
 
+### TODO(sau)
+
+- `dtty.pas`: the SAU5's WIRED_PROC routines (the color board's and the
+  graphics processor's forms together).
+
 ### TODO(pascal)
 
 - `init.pas`: 36 frame bytes (stand-ins `unused_20`, `unused_40`,
   `unused_44`).
+- `gpu_command.pas`: 12 frame bytes nothing addresses.

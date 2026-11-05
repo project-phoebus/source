@@ -4,25 +4,23 @@
     sau2  0x00E1AB28  KBD_$RESET
     sau3  0x00E1A190  KBD_$RESET
     sau4  0x0F81BD3C  KBD_$RESET
+    sau6  0x7801C9F4  KBD_$RESET
+    sau7  0x3C41ED10  KBD_$RESET
     sau8  0x03C1C0C8  KBD_$RESET
     sau9  0x3C41D660  KBD_$RESET
 
   - An empty procedure but with `kbd_tone'.  With it, the two reset
     bytes go to the keyboard's serial channel, if it has one, each once
     the transmitter can take it: the 16550's (`sio16550_lines') or the
-    SIO2681's channel A (`console_sio2681').
+    SIO2681's channel A (`console_sio2681' or `kbd_reset_chan_a', and
+    `kbd_type_sysrev' for the type 3 keyboard; the type 2 keyboard gets
+    none).
   - A fragment of the OS_TERM_INIT module, not of KBD: the first symbol
     of that module's WIRED_PROC segment (term/os_term_init.pas includes
     it).
 
   Status stored: none.
 }
-
-{ TODO(sau) KBD_$RESET's form on the SAU6 and SAU7
-
-  Their KBD_$RESET sends the same two bytes on an SIO2681 channel, the
-  SAU8's form (`console_sio2681'), the SAU7's with its block's offsets;
-  the SAU6's tests a display register first. }
 
 { TODO(pascal) KBD_$RESET's frame has 4 bytes no object accounts for
 
@@ -38,7 +36,7 @@ var
   lsr: sio16550_$bits_t;
   i: integer;
   unused_8: integer32;                    { see the TODO }
-%elseif console_sio2681 %then
+%elseif console_sio2681 or kbd_type_sysrev or kbd_reset_chan_a %then
 const
   sr_txrdy = 2;                           { the status register's TxRDY }
 var
@@ -47,7 +45,10 @@ var
   unused_8: integer32;                    { see the TODO }
 %endif
 begin
-%if console_sio2681 %then
+%if console_sio2681 or kbd_type_sysrev or kbd_reset_chan_a %then
+%if kbd_type_sysrev %then
+  if not mmu.mem_err.sysrev.kbd_type_2 then
+%endif
   if term_$console_chan_ptr <> nil then
     for i := 1 to 2 do begin
       repeat

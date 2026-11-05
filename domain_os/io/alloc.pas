@@ -5,6 +5,8 @@
     sau3  0x00E19D40  IO_$ALLOC
     sau4  0x0F81B8F8  IO_$ALLOC
     sau5  0x00E1AFF0  IO_$ALLOC
+    sau6  0x7801C592  IO_$ALLOC
+    sau7  0x3C41E7F6  IO_$ALLOC
     sau8  0x03C1BE12  IO_$ALLOC
 
   - With the PBU (`pbu_driver'): the length rounded up to 1024-byte
@@ -15,6 +17,9 @@
   - With `pbu_alloc_atbus_windows' the range must be fixed, and a unit
     on the AT bus allocates in one of the bus's two memory windows,
     the one that holds iova.
+  - With `io_atbus_map_windows' as well, an iova of 0 allocates
+    anywhere in the AT bus's 0..16#80000, and the second window is
+    16#100000..16#1000000.
   - Nothing is recorded in the region list.
   - Without it (the SAU2): a stub, the result 0.
   - The result is assigned only when a range is allocated.
@@ -63,6 +68,21 @@ begin
         return;
       end;
       if bus = io_$bus_atbus then begin
+%if io_atbus_map_windows %then
+        if iova = 0 then begin
+          io_$alloc := io_$alloc_region(bus, 0, 16#80000, false, pages, 0,
+                                        status);
+          return;
+        end;
+        if (iova >= 16#80000) and then (iova < 16#100000) then begin
+          lo := 16#80000;
+          hi := 16#100000;
+        end
+        else if (iova >= 16#100000) and then (iova < 16#1000000) then begin
+          lo := 16#100000;
+          hi := 16#1000000;
+        end
+%else
         if (iova >= 16#80000) and then (iova < 16#100000) then begin
           lo := 16#80000;
           hi := 16#100000;
@@ -71,6 +91,7 @@ begin
           lo := 16#900000;
           hi := 16#1000000;
         end
+%endif
         else begin
           status.all := status_$pbu_invalid_iova;
           io_$alloc := 0;

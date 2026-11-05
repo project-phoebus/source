@@ -1,6 +1,7 @@
 { scsi_unwire_page - unwire a physical page for a device.
 
   Image addresses:
+    sau7  0x3C4B91CE  scsi_unwire_page
     sau9  0x3C4A6836  scsi_unwire_page
 
   - The page's last owner restores its caching and gives the wiring

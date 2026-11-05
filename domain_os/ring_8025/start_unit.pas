@@ -2,11 +2,13 @@
   the ring.
 
   Image addresses:
+    sau7  0x3C49632E  ring_8025_start_unit
     sau8  0x03C89A06  ring_8025_start_unit
     sau9  0x3C4855EA  ring_8025_start_unit
 
-  - Acquires the unit with RING_8025_$INT as its interrupt routine,
-    maps the map page (not with `ring_8025_dma_channel') and the unit's
+  - Acquires the unit with RING_8025_$INT as its interrupt routine
+    (with `ring_8025_iomap' and the unit's I/O map region, freed again
+    when the controller does not initialize), maps the map page (not with `ring_8025_dma_channel') and the unit's
     two window pages (at first onto the unit record's page), initializes
     the controller, enables the device and starts the unit's receive
     process.
@@ -22,15 +24,30 @@
     status_$io_controller_not_in_system: the unit is not configured
     status_$r8025_device_already_online: it is already started
     io_$acquire's status: the unit could not be acquired
+    io_$alloc_map's status: no I/O map region
     status_$r8025_adapter_hardware_error: the controller did not
       initialize (the unit is released)
     io_$enable_device's status: the device could not be enabled
     proc1_$create_p's status: no receive process
 }
 
+{ TODO(pascal) 8 frame bytes of ring_8025_start_unit with `ring_8025_iomap'
+
+  The SAU7 image's frame is 8 bytes larger than the SAU8's and the
+  SAU9's (72 against 64), and its three addressed locals (the vtop
+  status, the page number, the acquired unit) lie 8 bytes lower; nothing
+  addresses the 8 bytes above them.  Two longword locals declared first
+  would account for them (the I/O map region's address, say, which the
+  code keeps in a register); the stand-ins unused_4 and unused_8 hold
+  the place. }
+
 procedure ring_8025_start_unit(u: ring_8025_$unit_ptr_t;
                                out status: status_$t); internal;
 var
+%if ring_8025_iomap %then
+  unused_4: integer32;                    { stand-ins: the TODO above }
+  unused_8: integer32;
+%endif
   st: status_$t;
   ppn: integer32;
   unit: io_$unit_num_t;
@@ -46,7 +63,11 @@ begin
     return;
   end;
   with u^.regs^ do begin
+%if ring_8025_iomap %then
+    control_3 := control_3 & 16#FD;
+%else
     control_3 := control_3 ! 2;
+%endif
 %if ring_8025_dma_channel %then
     reset := reset ! 16#14;
 %else
@@ -64,6 +85,12 @@ begin
               addr(ring_8025_$int), u^.dcte, unit, status);
   if status.all <> status_$ok then
     return;
+%if ring_8025_iomap %then
+  u^.iomap_page := rshft(io_$alloc_map(unit, r8025_iomap_len, false, 0,
+                                       status), 10);
+  if status.all <> status_$ok then
+    return;
+%endif
   ml_$exclusion_init(u^.xmit_lock);
   ml_$exclusion_init(u^.route_lock);
   ml_$exclusion_init(u^.nullsap_lock);
@@ -86,6 +113,9 @@ begin
 %endif
   ring_8025_initialize(u, status);
   if status.all <> status_$ok then begin
+%if ring_8025_iomap %then
+    io_$free_map(unit, status);
+%endif
     io_$release(unit, status);
     status.all := status_$r8025_adapter_hardware_error;
     return;
@@ -118,8 +148,17 @@ begin
     for i := 1 to r8025_list_data do begin
       rcv[1].data[i].cnt.count := r8025_frame_size;
       rcv[1].data[i].cnt.mark := true;
+%if ring_8025_iomap %then
+      rcv[1].data[i].pa := ring_8025_vtop(integer32(addr(ring8025_$aux_da.ctl[u^.cnum].frame)),
+                                          r8025_frame_size,
+                                          u^.iomap_page + r8025_map_frame);
+      rcv[1].forward := ring_8025_vtop(integer32(addr(ring8025_$aux_da.ctl[u^.cnum].rcv[2])),
+                                       sizeof(ring_8025_$list_t),
+                                       u^.iomap_page + r8025_map_ctl);
+%else
       rcv[1].data[i].pa := ring_8025_vtop(integer32(addr(ring8025_$aux_da.ctl[u^.cnum].frame)));
       rcv[1].forward := ring_8025_vtop(integer32(addr(ring8025_$aux_da.ctl[u^.cnum].rcv[2])));
+%endif
     end;
     rcv[1].data[r8025_list_data].cnt.mark := false;
     rcv[1].next := addr(ring8025_$aux_da.ctl[u^.cnum].rcv[2]);
@@ -129,8 +168,17 @@ begin
     for i := 1 to r8025_list_data do begin
       rcv[2].data[i].cnt.count := r8025_frame_size;
       rcv[2].data[i].cnt.mark := true;
+%if ring_8025_iomap %then
+      rcv[2].data[i].pa := ring_8025_vtop(integer32(addr(ring8025_$aux_da.ctl[u^.cnum].frame)),
+                                          r8025_frame_size,
+                                          u^.iomap_page + r8025_map_frame);
+      rcv[2].forward := ring_8025_vtop(integer32(addr(ring8025_$aux_da.ctl[u^.cnum].rcv[1])),
+                                       sizeof(ring_8025_$list_t),
+                                       u^.iomap_page + r8025_map_ctl);
+%else
       rcv[2].data[i].pa := ring_8025_vtop(integer32(addr(ring8025_$aux_da.ctl[u^.cnum].frame)));
       rcv[2].forward := ring_8025_vtop(integer32(addr(ring8025_$aux_da.ctl[u^.cnum].rcv[1])));
+%endif
     end;
     rcv[2].data[r8025_list_data].cnt.mark := false;
     rcv[2].next := addr(ring8025_$aux_da.ctl[u^.cnum].rcv[1]);
@@ -141,17 +189,35 @@ begin
   { the transmit lists, a ring of three }
   with ring8025_$aux_da.ctl[u^.cnum] do begin
     xmit[1].cstat := [];
+%if ring_8025_iomap %then
+    xmit[1].forward := ring_8025_vtop(integer32(addr(ring8025_$aux_da.ctl[u^.cnum].xmit[2])),
+                                      sizeof(ring_8025_$list_t),
+                                      u^.iomap_page + r8025_map_ctl);
+%else
     xmit[1].forward := ring_8025_vtop(integer32(addr(ring8025_$aux_da.ctl[u^.cnum].xmit[2])));
+%endif
     xmit[1].next := addr(ring8025_$aux_da.ctl[u^.cnum].xmit[2]);
   end;
   with ring8025_$aux_da.ctl[u^.cnum] do begin
     xmit[2].cstat := [];
+%if ring_8025_iomap %then
+    xmit[2].forward := ring_8025_vtop(integer32(addr(ring8025_$aux_da.ctl[u^.cnum].xmit[3])),
+                                      sizeof(ring_8025_$list_t),
+                                      u^.iomap_page + r8025_map_ctl);
+%else
     xmit[2].forward := ring_8025_vtop(integer32(addr(ring8025_$aux_da.ctl[u^.cnum].xmit[3])));
+%endif
     xmit[2].next := addr(ring8025_$aux_da.ctl[u^.cnum].xmit[3]);
   end;
   with ring8025_$aux_da.ctl[u^.cnum] do begin
     xmit[3].cstat := [];
+%if ring_8025_iomap %then
+    xmit[3].forward := ring_8025_vtop(integer32(addr(ring8025_$aux_da.ctl[u^.cnum].xmit[1])),
+                                      sizeof(ring_8025_$list_t),
+                                      u^.iomap_page + r8025_map_ctl);
+%else
     xmit[3].forward := ring_8025_vtop(integer32(addr(ring8025_$aux_da.ctl[u^.cnum].xmit[1])));
+%endif
     xmit[3].next := addr(ring8025_$aux_da.ctl[u^.cnum].xmit[1]);
   end;
   u^.xmit_list := addr(ring8025_$aux_da.ctl[u^.cnum].xmit[1]);

@@ -4,6 +4,8 @@
     sau3  0x00E594E0  PBU_$SETUP
     sau4  0x0F8620E8  PBU_$SETUP
     sau5  0x00E596D0  PBU_$SETUP
+    sau6  0x78061388  PBU_$SETUP
+    sau7  0x3C469DAA  PBU_$SETUP
     sau8  0x03C61CB8  PBU_$SETUP
 
   - Under the exclusion lock.  The DDF's unit must be free; its bus is
@@ -11,6 +13,10 @@
     otherwise.
   - The CSR pages (none when csr_pa is 16#FFFFFFFF) start on a page, on
     the VME bus in 16#C000..16#D000 unless the DDF allows any address.
+  - With the turbo boards' VME windows (`pbu_vme_windows') the VME CSR
+    pages may also lie in 16#0..16#8000, and pages of the bus's short
+    space (below 16#10000) outside 16#C000..16#D000 are its pages from
+    16#300000.
   - Without the VME bus, bus is always the Multibus; with the AT bus's
     units (`pbu_atbus_units') the AT bus, whose CSR pages are groups of
     8 I/O ports in 16#100..16#3FF.
@@ -26,6 +32,9 @@
     the 64 KB Multibus map (`mbus_map_64k'), which has none.
   - A Multibus unit's CSR pages are the bus's from page 16#1C0, or with
     its window at 16#10000 (`mbus_low_window') from page 16#60.
+  - With the DMA through the I/O map space (`pbu_dma_iomap') an AT bus
+    unit's eight channel records have their byte at +0x0A cleared
+    (cleared_10).
 
   Status stored:
     status_$ok: the units were set up
@@ -67,6 +76,9 @@ var
   va: linteger;
   setdown_unit: integer;
   setdown_status: status_$t;
+%if pbu_dma_iomap %then
+  ch: integer;
+%endif
 begin
   d := ddf;
   if (lib_version <> pbu_lib_version) or else
@@ -122,6 +134,19 @@ begin
     end;
     csr_end := d^.csr_pages * pbu_csr_page_size + d^.csr_pa;
     if bus = io_$bus_vme then begin
+%if pbu_vme_windows %then
+      if not d^.flags.any_address then
+        if ((d^.csr_pa < 0) or else (csr_end > 16#8000)) and then
+           ((linteger(d^.csr_pa) < 16#C000) or else (csr_end > 16#D000)) then
+        begin
+          status.all := status_$pbu_invalid_csr_page_address;
+          goto unlock;
+        end;
+      csr_ppn := linteger(d^.csr_pa) div 1024;
+      if (d^.csr_pa >= 0) and (csr_end <= 16#10000) then
+        if not ((linteger(d^.csr_pa) >= 16#C000) and (csr_end <= 16#D000)) then
+          csr_ppn := (linteger(d^.csr_pa) + 16#300000) div 1024;
+%else
       if not d^.flags.any_address then
         if (linteger(d^.csr_pa) < 16#C000) or else (csr_end > 16#D000) then
         begin
@@ -129,6 +154,7 @@ begin
           goto unlock;
         end;
       csr_ppn := linteger(d^.csr_pa) div 1024;
+%endif
     end;
     if bus = io_$bus_mbus then begin
       if (d^.csr_pa < 0) or else (csr_end > 16#10000) then begin
@@ -236,7 +262,7 @@ begin
     dcte^.ec_ptr := addr(dcte^.ec);
 %if pbu_atbus_units %then
     dcte^.flags.attr_set := false;
-    dcte^.flags.cleared_7 := false;
+    dcte^.flags.dma_mapped := false;
 %else
     dcte^.flags.cleared_8_7 := 0;
 %endif
@@ -249,10 +275,26 @@ begin
 %else
     dcte^.ctl.all := 0;
 %endif
+%if pbu_dma_iomap %then
+    case dcte^.unit_info.bus of
+      3: begin
+        dcte^.flags.dma_bus := true;
+        for ch := 0 to 7 do
+          pbu_$mapped_info[sub, ch].cleared_10 := false;
+      end;
+      2: begin
+        dcte^.flags.dma_bus := true;
+      end;
+      1: begin
+        dcte^.flags.dma_bus := false;
+      end;
+    end;
+%else
     case dcte^.unit_info.bus of
       2, 3: dcte^.flags.dma_bus := true;
       1: dcte^.flags.dma_bus := false;
     end;
+%endif
   end;
 
 %if large_vm %then

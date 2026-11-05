@@ -1,6 +1,8 @@
 { ETHERNET_$CLOSE_OS - close a system channel MAC_OS opened.
 
   Image addresses:
+    sau6  0x7808A42A  ETHERNET_$CLOSE_OS
+    sau7  0x3C494A42  ETHERNET_$CLOSE_OS
     sau8  0x03C8823E  ETHERNET_$CLOSE_OS
     sau9  0x3C483E3E  ETHERNET_$CLOSE_OS
 

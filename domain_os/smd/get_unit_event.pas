@@ -4,6 +4,8 @@
     sau2  0x00E6EEA8  SMD_$GET_UNIT_EVENT
     sau4  0x0F8795EC  SMD_$GET_UNIT_EVENT
     sau5  0x00E71258  SMD_$GET_UNIT_EVENT
+    sau6  0x780785B6  SMD_$GET_UNIT_EVENT
+    sau7  0x3C481F8A  SMD_$GET_UNIT_EVENT
     sau9  0x3C4756AA  SMD_$GET_UNIT_EVENT
 
   - Under the SMD request lock the keyboard's characters go to the ring

@@ -1,6 +1,7 @@
 { ring_8025_start_rcv - start the adapter's receiver.
 
   Image addresses:
+    sau7  0x3C496248  ring_8025_start_rcv
     sau8  0x03C8992C  ring_8025_start_rcv
     sau9  0x3C485510  ring_8025_start_rcv
 
@@ -20,7 +21,13 @@ begin
   u^.rcv_list := addr(ring8025_$aux_da.ctl[u^.cnum].rcv[1]);
   for i := 1 to r8025_rcv_lists do
     ring8025_$aux_da.ctl[u^.cnum].rcv[i].cstat := [r8025_cstat_valid, r8025_cstat_rcv_ifw];
+%if ring_8025_iomap %then
+  u^.scb^.parm := ring_8025_vtop(integer32(u^.rcv_list),
+                                 sizeof(ring_8025_$list_t),
+                                 u^.iomap_page + r8025_map_ctl);
+%else
   u^.scb^.parm := ring_8025_vtop(integer32(u^.rcv_list));
+%endif
   u^.scb^.cmd := r8025_cmd_receive;
   u^.flags := u^.flags + [r8025_unit_scb_busy];
   u^.scb_wait_val := ec_$read(u^.scb_ec) + 1;

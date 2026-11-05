@@ -4,6 +4,8 @@
     sau2  0x00E6F4BE  SMD_$SEND_RESPONSE
     sau4  0x0F879CE0  SMD_$SEND_RESPONSE
     sau5  0x00E718AC  SMD_$SEND_RESPONSE
+    sau6  0x78078C06  SMD_$SEND_RESPONSE
+    sau7  0x3C4823BE  SMD_$SEND_RESPONSE
     sau9  0x3C475ADE  SMD_$SEND_RESPONSE
 
   - The screen manager's answer to a request to borrow the display:

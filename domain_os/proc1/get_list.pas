@@ -3,6 +3,8 @@
   Image addresses:
     sau2  0x00E15362  PROC1_$GET_LIST
     sau4  0x0F815BD6  PROC1_$GET_LIST
+    sau6  0x78015AC6  PROC1_$GET_LIST
+    sau7  0x3C41701E  PROC1_$GET_LIST
 
   - Each PCB that exists, is bound and has address space 0 adds its pid
     and type to the list.

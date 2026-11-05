@@ -5,6 +5,8 @@
     sau3  0x00E1C734  SMD_$LITES
     sau4  0x0F81EC76  SMD_$LITES
     sau5  0x00E1E678  SMD_$LITES
+    sau6  0x7801FC16  SMD_$LITES
+    sau7  0x3C421B70  SMD_$LITES
     sau9  0x3C420288  SMD_$LITES
 
   - The hand-written DISP_LITES draws the pattern's 16 lights on row

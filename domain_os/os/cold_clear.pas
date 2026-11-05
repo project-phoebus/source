@@ -1,6 +1,7 @@
 { cold_clear - clear a table before the MMU is on.
 
   Image addresses:
+    sau7  0x01002958  cold_clear (module-local)
     sau9  0x04003068  cold_clear (module-local)
 
   - p is the table's physical address, len its length in bytes; the

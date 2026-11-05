@@ -232,6 +232,63 @@ CRASH_$OK_TO_REBOOT, SERVER_$FLAG), `fim/fim.ins.pas` (FIM_$NMI),
 includes `mbus.ins.pas` and `vme.ins.pas` under `vme_bus`, and
 `iic/iic.ins.pas` under `iic_driver`.
 
+The SAU4's display apertures and color board register are in its I/O
+space at 16#0FFA0000 and above (`io_space_0ff`, constants in `os.pas`).
+
+The SAU6's OS is the same source with the SAU5's devices on the SAU4's
+kind of VM; its blocks: OS_INIT_DATA 0xCB8 bytes (MMAP_$INIT's table of
+768 longwords, the vector table's 44 cells), .DATA 0x18 (the restart
+code at +0xC), WIRED_DATA 0x20; its code: OS_INIT_PROC 0x1940, .TEXT
+0x5FC, WIRED_PROC 0x38.
+
+- OS_$INIT (`init.pas`): vectors 128..255 VME_$UNDEF_INT's and no VME
+  cells in the table (`vme_undef_vectors`), FIM_$NMI and the FPU parity
+  error's FIM_$FP_PARITY (vector 127) in it; COLD's region's root entry
+  cleared and os_$free_gap_pmaps twice (`vm_65536_segs`: the ranges
+  below the low region and between it and the I/O space); the boot
+  flags' diskless and server settings (`boot_flags_diskless`,
+  `boot_flags_server`); the node id from the boot record without a
+  ring controller (`node_id_boot_record`); the FPX's CPU board check
+  (`fpx_eco_check`, the system revision word through
+  `mmu/mmu_page.ins.pas`); the display apertures at 16#7FFA0000 and
+  above (`io_space_7ff`).
+- OS_$SHUTDOWN (`shutdown.pas`): no COLOR2_$SHUTDOWN
+  (`color2_shutdown_in_smd`).
+- os_$free_gap_pmaps (`free_gap_pmaps.pas`): the segment map entries'
+  valid bit.
+- OS_$INSTALL_DISPLAY_ASTE, OS_$BOOT_ERRCHK, VTOP_OR_CRASH, the power
+  off check and the module-local routines: existing code, addresses
+  only.
+
+The SAU7's OS is the same source with the SAU8's devices on the SAU9's
+kind of VM; its blocks: OS_INIT_DATA 0x8F0 bytes (MMAP_$INIT's table of
+512 longwords, the vector table's 58 cells), .DATA 0x18; its code:
+OS_INIT_PROC 0x16D4, .TEXT 0x5AC.  OS_COLD is in `cold.pas` with its
+own boot map.
+
+- OS_$INIT (`init.pas`): the boot record's bus from its controller
+  word's high byte, for OS_$BOOT_DEVICE and VOLX_$MOUNT
+  (`boot_record_bus`); FIM_$NMI on vector 30 as well as 31
+  (`nmi_vector_30`) and the interrupt controllers' nil cells
+  (`pic_vector_cells`) in the table; the physical cache turned on after
+  AUDIT_$INIT (`physical_cache_enable`, ROADRUNNER in `os.pas`,
+  `cache/cache.ins.pas` included); otherwise the SAU8's arms
+  (`boot_flags_diskless`, `boot_flags_server`, `pbu_wire_at_boot`) and
+  the SAU9's (`large_address_space`, `pmmu_page_maps`, `large_vm`,
+  `fim_nmi`, `crash_reboot`, `vector_alignment_check`).
+- OS_$SHUTDOWN (`shutdown.pas`): FPA_$SAVEP cleared after FP_$SAVEP
+  (`fpa_board`, `fp/fp.ins.pas`).
+- OS_$COLD_START (`cold.pas`, `cold_start.pas`, `cold_phys.pas`): the
+  RAM from 16 MB, the kernel's moved part (`cold_ram_16mb`); the
+  29-entry boot map, mapped by COLD's flags, and the display's remap
+  cells (`cold_probed_devices`); OS_$COLD_START's mem_flags is a set.
+- os_$free_gap_pmaps, OS_$INSTALL_DISPLAY_ASTE, OS_$BOOT_ERRCHK,
+  VTOP_OR_CRASH and the module-local routines: the SAU9's or the
+  SAU8's code, addresses only.
+
+The SAU7's NULLPROC and OS_END (`m68k/nullproc.s`, `m68k/os_end.s`)
+assemble to its image's bytes.
+
 ## Open items
 
 The salvage path of OS_$INIT crashes when MMU_$NORMAL_MODE returns true,

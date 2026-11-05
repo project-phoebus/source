@@ -4,6 +4,9 @@
   Image addresses:
     sau3  0x00E59F52  PBU_$WIRE_SPECIAL
     sau5  0x00E5A1C4  PBU_$WIRE_SPECIAL
+    sau6  0x78061E2E  PBU_$WIRE_SPECIAL
+    sau7  0x3C46A762  release_pages (nested)
+    sau7  0x3C46A7F8  PBU_$WIRE_SPECIAL
     sau8  0x03C6248A  release_pages (nested)
     sau8  0x03C62520  PBU_$WIRE_SPECIAL
 
@@ -20,7 +23,9 @@
     whole number of pages up to 32, none wired.  Its pages come from
     AST_$ALLOC_CONTIG, retried after a clock tick and then with a page
     fewer each time (no page left crashes the system); each is wired
-    for the unit and put at the buffer's address (MST_$ASSOC).
+    for the unit and put at the buffer's address (MST_$ASSOC); with the
+    cache-inhibited pages (`pmap_cache_inhibit') each is then
+    cache-inhibited (AST_$CACHE_INHIBIT_PPN).
   - release_pages (nested) gives back the contiguous pages from a failed
     one on: those before it are unwired, the rest freed.
 
@@ -65,6 +70,9 @@ var
   undo_status: status_$t;
   ppns: ast_$ppn_list_t;
   k: integer;
+%if pmap_cache_inhibit %then
+  last_page: integer;
+%endif
 
   procedure release_pages(n: integer);
   var
@@ -198,8 +206,17 @@ begin
             release_pages(i + 1);
             exit;
           end;
+%if pmap_cache_inhibit %then
+          last_page := i;
+%endif
           va := va + 1024;
         end;
+%if pmap_cache_inhibit %then
+      { The pages placed are cache-inhibited. }
+      if status.all = status_$ok then
+        for j := 1 to last_page do
+          ast_$cache_inhibit_ppn(ppns[j]);
+%endif
     end;
   ml_$exclusion_stop(pbu_$exclusion_lock);
   if status.all = status_$ok then
