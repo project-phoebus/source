@@ -5,8 +5,7 @@
  * byte columns below are the SAU2 image's.
  *
  * Byte gate (tools/asm_compare.py, `make check'): encodings identical to
- * the image, except the one documented widening below; address operands
- * resolve to our objects.
+ * the image; address operands resolve to our objects.
  *
  * Original address: 0x00E2E846, 22 bytes (IO_$TBLS, between
  * IO_$USE_INT_STACK and io_$flih_dispatch):
@@ -24,9 +23,10 @@
  * its own return address and leaves with `jmp (A1)', since SP may change.
  * Caller: TIME_$TIMER_HANDLER's spurious-interrupt arm (0x00E2B270).
  *
- * Widening: `movea.l (IO_$SAVED_OS_SP,PC),SP' becomes an absolute long
- * operand - the cell is not in reach of a 16-bit displacement from this
- * section.
+ * The save cell is reached PC-relative, as in the image: the layout keeps
+ * it within a 16-bit displacement, and the routine's size matters, since
+ * io_$flih_dispatch after it is an exception handler and must stay
+ * longword-aligned.
  */
 
         .section ".text.IO_$COND_SWITCH_BACK","ax",@progbits
@@ -43,6 +43,6 @@ IO_$COND_SWITCH_BACK:
         movea.l (%sp)+,%a1                      /* 00e2e846 */
         cmpa.l  #IO_INT_STACK_TOP,%sp           /* 00e2e848 */
         bne.b   1f                              /* 00e2e84e */
-        movea.l (IO_$SAVED_OS_SP).l,%sp         /* 00e2e850: (-0x30,PC) */
+        movea.l (IO_$SAVED_OS_SP:w,%pc),%sp     /* 00e2e850 */
         clr.l   (IO_$SAVED_OS_SP).l             /* 00e2e854 */
 1:      jmp     (%a1)                           /* 00e2e85a */

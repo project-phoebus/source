@@ -17,7 +17,7 @@ machines):
 | sau4 | DN460, DN660, DSP160 | builds and passes its checks                        |
 | sau5 | DN550/DN560 family   | builds and passes its checks                        |
 | sau6 | DN560T family        | builds and passes its checks                        |
-| sau7 | DN3500/DN4000 family | builds and passes its checks                        |
+| sau7 | DN3500/DN4000 family | boots an SR10.2 volume to the Display Manager login |
 | sau8 | DN3000 family        | builds and passes its checks                        |
 | sau9 | DN2500               | boots an SR10.2 volume to the Display Manager login |
 
