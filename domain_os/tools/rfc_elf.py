@@ -126,9 +126,11 @@ class Elf:
             return glob[0]
         return found[0][1] if found else None
 
-    def relocations(self):
+    def relocations(self, section_names=False):
         """[(target Section, r_offset, type, symbol name, addend)] of every
-        .rela section that applies to an allocated section."""
+        .rela section that applies to an allocated section.  With
+        section_names, a section symbol (no name of its own) is named by
+        its section (`.moddata.ACL_'), as objdump shows it."""
         out = []
         syms = None
         for s in self.sections:
@@ -144,6 +146,10 @@ class Elf:
                     '>IIi', self.data, s.offset + i * 12)
                 symi, typ = r_info >> 8, r_info & 0xFF
                 name = syms[symi][0] if symi < len(syms) else ''
+                if (section_names and not name and symi < len(syms)
+                        and syms[symi][3] & 0xF == 3
+                        and 0 < syms[symi][4] < len(self.sections)):
+                    name = self.sections[syms[symi][4]].name
                 out.append((target, r_offset, typ, name, r_addend))
         return out
 

@@ -16,6 +16,8 @@ machines):
 | sau3 | DSP80, DSP80A, DSP90 | builds and passes its checks                        |
 | sau4 | DN460, DN660, DSP160 | builds and passes its checks                        |
 | sau5 | DN550/DN560 family   | builds and passes its checks                        |
+| sau6 | DN560T family        | builds and passes its checks                        |
+| sau7 | DN3500/DN4000 family | builds and passes its checks                        |
 | sau8 | DN3000 family        | builds and passes its checks                        |
 | sau9 | DN2500               | boots an SR10.2 volume to the Display Manager login |
 
@@ -33,12 +35,12 @@ The running kernels were tested under MAME's Apollo machines.
 ## Building
 
 In `domain_os/`: `make` builds the SAU2 kernel (`dist/sau2/domain_os`);
-`make TARGET_SAU=sau3`, `sau4`, `sau5`, `sau8` and `sau9` build the others,
-and `make check` runs the layout and image checks.  The build needs the GNU
-binutils for `m68k-elf` and Python 3, and the Domain Pascal compiler
-`dpc` (set `DPC` to its path), a separate project.  The checks that compare
-against the original image need reference data extracted from your own copy
-of it; without that data they are skipped.
+`make TARGET_SAU=sau3`, `sau4`, `sau5`, `sau6`, `sau7`, `sau8` and `sau9`
+build the others, and `make check` runs the layout and image checks.  The
+build needs the GNU binutils for `m68k-elf` and Python 3, and the Domain
+Pascal compiler `dpc` (set `DPC` to its path), a separate project.  The
+checks that compare against the original image need reference data
+extracted from your own copy of it; without that data they are skipped.
 
 ## How this was made
 
